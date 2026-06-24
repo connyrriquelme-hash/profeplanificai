@@ -1,0 +1,458 @@
+[
+  {
+    "codigo": "OA 1",
+    "nivel": "Prekinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Expresarse oralmente en forma clara y comprensible, empleando vocabulario progresivamente más preciso y variado en situaciones cotidianas de comunicación.",
+    "habilidades": ["Expresar", "Comunicar", "Ampliar vocabulario"],
+    "indicadores": ["Utilizan palabras nuevas en conversaciones", "Se expresan con oraciones de 3 a 5 palabras", "Responden preguntas simples sobre experiencias"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "Prekinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Comprender mensajes orales sencillos y seguir instrucciones verbales de dos a tres pasos en contextos lúdicos y cotidianos.",
+    "habilidades": ["Comprender", "Seguir instrucciones"],
+    "indicadores": ["Siguen instrucciones de dos pasos", "Responden preguntas literales sobre un cuento", "Identifican personajes principales de un relato"]
+  },
+  {
+    "codigo": "OA 3",
+    "nivel": "Prekinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Descubrir y explorar sonidos iniciales y finales de palabras mediante juegos de conciencia fonológica, rimas y segmentación silábica.",
+    "habilidades": ["Descubrir", "Explorar", "Segmentar"],
+    "indicadores": ["Reconocen sonido inicial de palabras", "Juegan con rimas simples", "Segmentan palabras en sílabas con apoyo"]
+  },
+  {
+    "codigo": "OA 4",
+    "nivel": "Prekinder",
+    "asignatura": "Pensamiento Matemático",
+    "descripcion": "Establecer relaciones de correspondencia, clasificación y seriación con material concreto y representaciones pictóricas simples.",
+    "habilidades": ["Clasificar", "Seriar", "Corresponder"],
+    "indicadores": ["Clasifican objetos por un atributo", "Ordenan secuencias de 3 elementos", "Establecen correspondencia uno a uno"]
+  },
+  {
+    "codigo": "OA 5",
+    "nivel": "Prekinder",
+    "asignatura": "Pensamiento Matemático",
+    "descripcion": "Reconocer y nombrar números del 1 al 10 en contextos cotidianos, asociando la cantidad con su representación simbólica.",
+    "habilidades": ["Reconocer", "Nombrar", "Asociar"],
+    "indicadores": ["Cuentan oralmente del 1 al 10", "Asocian cantidad con número", "Identifican números en entorno cercano"]
+  },
+  {
+    "codigo": "OA 6",
+    "nivel": "Prekinder",
+    "asignatura": "Exploración del Entorno",
+    "descripcion": "Explorar y describir elementos y seres vivos de su entorno natural, manifestando curiosidad e interés por conocerlos.",
+    "habilidades": ["Explorar", "Describir", "Observar"],
+    "indicadores": ["Describen características de animales", "Muestran curiosidad por fenómenos naturales", "Diferencian seres vivos de objetos"]
+  },
+  {
+    "codigo": "OA 7",
+    "nivel": "Prekinder",
+    "asignatura": "Identidad y Autonomía",
+    "descripcion": "Reconocer emociones básicas en sí mismo y en los demás, expresándolas de manera progresivamente autónoma y regulada.",
+    "habilidades": ["Reconocer", "Expresar", "Regular"],
+    "indicadores": ["Nombran emociones básicas (alegría, tristeza, enojo)", "Expresan lo que sienten con palabras", "Reconocen emociones en otros"]
+  },
+  {
+    "codigo": "OA 8",
+    "nivel": "Prekinder",
+    "asignatura": "Identidad y Autonomía",
+    "descripcion": "Desarrollar progresivamente autonomía en rutinas diarias como vestirse, guardar materiales y seguir normas simples de convivencia.",
+    "habilidades": ["Desarrollar autonomía", "Seguir rutinas"],
+    "indicadores": ["Realizan acciones sin ayuda del adulto", "Guardan materiales después de usarlos", "Siguen normas de convivencia básicas"]
+  },
+  {
+    "codigo": "OA 9",
+    "nivel": "Prekinder",
+    "asignatura": "Expresión Artística",
+    "descripcion": "Expresar creativamente sensaciones, ideas y emociones a través del dibujo, la pintura, el modelado y la música.",
+    "habilidades": ["Expresar", "Crear", "Experimentar"],
+    "indicadores": ["Dibujan libremente con intención comunicativa", "Exploran distintos materiales de arte", "Cantan y se mueven al ritmo de la música"]
+  },
+  {
+    "codigo": "OA 10",
+    "nivel": "Prekinder",
+    "asignatura": "Corporalidad y Movimiento",
+    "descripcion": "Desarrollar habilidades motrices básicas como correr, saltar, lanzar y atrapar, en juegos individuales y grupales.",
+    "habilidades": ["Desarrollar motricidad", "Coordinar", "Participar"],
+    "indicadores": ["Corren y saltan con control progresivo", "Lanzan y atrapan objetos", "Participan en juegos grupales"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "Kinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Expresarse oralmente en forma clara y coherente, utilizando oraciones completas y un vocabulario variado y preciso en diferentes contextos comunicativos.",
+    "habilidades": ["Expresar", "Narrar", "Argumentar"],
+    "indicadores": ["Relatan experiencias con secuencia lógica", "Usan oraciones de 5 a 8 palabras", "Explican sus preferencias con fundamentos simples"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "Kinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Comprender textos orales breves como cuentos, poemas y adivinanzas, identificando información explícita e implícita simple.",
+    "habilidades": ["Comprender", "Inferir", "Predecir"],
+    "indicadores": ["Responden preguntas explícitas e implícitas", "Predicen final de una historia", "Identifican secuencia narrativa"]
+  },
+  {
+    "codigo": "OA 3",
+    "nivel": "Kinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Descubrir la relación entre sonidos y letras, reconociendo vocales y algunas consonantes en palabras significativas.",
+    "habilidades": ["Descubrir", "Reconocer", "Asociar"],
+    "indicadores": ["Identifican vocales en palabras", "Reconocen sonido de consonantes familiares", "Asocian letra con su sonido"]
+  },
+  {
+    "codigo": "OA 4",
+    "nivel": "Kinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Iniciar la escritura de palabras significativas mediante copia, dictado o escritura espontánea, respetando la direccionalidad.",
+    "habilidades": ["Escribir", "Copiar", "Dictar"],
+    "indicadores": ["Escriben su nombre sin modelo", "Copian palabras cortas", "Escriben letras con direccionalidad correcta"]
+  },
+  {
+    "codigo": "OA 5",
+    "nivel": "Kinder",
+    "asignatura": "Pensamiento Matemático",
+    "descripcion": "Reconocer y nombrar números del 1 al 20, cuantificar colecciones y resolver problemas simples de agregar y quitar.",
+    "habilidades": ["Reconocer", "Cuantificar", "Resolver"],
+    "indicadores": ["Cuentan oralmente hasta el 20", "Cuantifican colecciones hasta 10 elementos", "Resuelven problemas de agregar y quitar con material concreto"]
+  },
+  {
+    "codigo": "OA 6",
+    "nivel": "Kinder",
+    "asignatura": "Pensamiento Matemático",
+    "descripcion": "Reconocer figuras geométricas básicas (círculo, cuadrado, triángulo, rectángulo) y sus características en objetos del entorno.",
+    "habilidades": ["Reconocer", "Identificar", "Comparar"],
+    "indicadores": ["Nombran figuras geométricas básicas", "Identifican figuras en objetos cotidianos", "Comparan formas según atributos"]
+  },
+  {
+    "codigo": "OA 7",
+    "nivel": "Kinder",
+    "asignatura": "Exploración del Entorno",
+    "descripcion": "Reconocer y describir cambios en la naturaleza, como estaciones, crecimiento de plantas y fenómenos atmosféricos simples.",
+    "habilidades": ["Reconocer", "Describir", "Comparar"],
+    "indicadores": ["Identifican estaciones del año", "Describen cambios observables en plantas", "Asocian fenómenos atmosféricos con estaciones"]
+  },
+  {
+    "codigo": "OA 8",
+    "nivel": "Kinder",
+    "asignatura": "Identidad y Autonomía",
+    "descripcion": "Desarrollar habilidades sociales básicas como compartir, esperar turnos, resolver conflictos simples y colaborar en grupo.",
+    "habilidades": ["Socializar", "Colaborar", "Resolver conflictos"],
+    "indicadores": ["Comparten materiales con otros", "Esperan su turno en juegos", "Resuelven conflictos con mediación"]
+  },
+  {
+    "codigo": "OA 9",
+    "nivel": "Kinder",
+    "asignatura": "Expresión Artística",
+    "descripcion": "Representar creativamente experiencias, ideas y emociones mediante diversas técnicas artísticas como dibujo, pintura, collage y modelado.",
+    "habilidades": ["Representar", "Crear", "Experimentar"],
+    "indicadores": ["Crean obras con intención expresiva", "Combinan técnicas artísticas", "Explican el significado de sus creaciones"]
+  },
+  {
+    "codigo": "OA 10",
+    "nivel": "Kinder",
+    "asignatura": "Corporalidad y Movimiento",
+    "descripcion": "Desarrollar coordinación motriz fina y gruesa mediante actividades como recortar, dibujar, ensartar, trepar y mantener equilibrio.",
+    "habilidades": ["Coordinar", "Recortar", "Equilibrar"],
+    "indicadores": ["Recortan siguiendo líneas simples", "Dibujan figuras reconocibles", "Mantienen equilibrio en diferentes posturas"]
+  },
+  {
+    "codigo": "OA 11",
+    "nivel": "Kinder",
+    "asignatura": "Lenguaje Verbal",
+    "descripcion": "Disfrutar de la literatura infantil escuchando cuentos, poemas y fábulas, manifestando preferencias y opiniones sobre ellos.",
+    "habilidades": ["Disfrutar", "Opinar", "Preferir"],
+    "indicadores": ["Solicitan la lectura de cuentos favoritos", "Expresan si les gustó o no una historia", "Recomiendan cuentos a sus pares"]
+  },
+  {
+    "codigo": "OA 12",
+    "nivel": "Kinder",
+    "asignatura": "Pensamiento Matemático",
+    "descripcion": "Medir objetos y magnitudes usando unidades no convencionales como pasos, manos, lápices y tazas en contextos lúdicos.",
+    "habilidades": ["Medir", "Comparar", "Estimar"],
+    "indicadores": ["Miden largo con unidades no convencionales", "Comparan capacidades usando tazas", "Estiman cantidades con referentes"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "1° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Reconocer que los textos escritos transmiten mensajes y que se escriben y leen de izquierda a derecha y de arriba abajo.",
+    "habilidades": ["Reconocer", "Identificar"],
+    "indicadores": ["Siguen con el dedo la dirección de la lectura", "Identifican portada, título e ilustraciones"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "1° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Comprender textos orales breves y sencillos, identificando la información explícita.",
+    "habilidades": ["Comprender", "Identificar"],
+    "indicadores": ["Responden preguntas explícitas", "Siguen instrucciones orales simples"]
+  },
+  {
+    "codigo": "OA 3",
+    "nivel": "1° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Contar números del 0 al 100 de 1 en 1, de 2 en 2, de 5 en 5 y de 10 en 10, hacia adelante y hacia atrás.",
+    "habilidades": ["Contar", "Secuenciar"],
+    "indicadores": ["Cuentan oralmente en secuencia ascendente y descendente", "Representan cantidades con material concreto"]
+  },
+  {
+    "codigo": "OA 4",
+    "nivel": "1° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Leer, escribir y comparar números hasta el 100, usando lenguaje matemático básico.",
+    "habilidades": ["Leer", "Escribir", "Comparar"],
+    "indicadores": ["Escriben números dictados", "Usan signos <, >, = para comparar cantidades"]
+  },
+  {
+    "codigo": "OA 5",
+    "nivel": "1° básico",
+    "asignatura": "Ciencias Naturales",
+    "descripcion": "Observar y describir las características de los seres vivos (plantas y animales) y distinguirlos de los objetos no vivos.",
+    "habilidades": ["Observar", "Describir", "Clasificar"],
+    "indicadores": ["Nombran características de seres vivos", "Clasifican elementos en vivos y no vivos"]
+  },
+  {
+    "codigo": "OA 6",
+    "nivel": "1° básico",
+    "asignatura": "Historia, Geografía y Cs. Sociales",
+    "descripcion": "Identificar y describir su entorno familiar, escolar y comunitario, reconociendo roles y funciones.",
+    "habilidades": ["Identificar", "Describir"],
+    "indicadores": ["Nombran miembros de su familia y sus roles", "Describen espacios de su escuela y comunidad"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "2° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Leer y comprender textos narrativos breves, localizando información explícita e infiriendo características de personajes.",
+    "habilidades": ["Localizar información", "Inferir", "Interpretar"],
+    "indicadores": ["Identifican personajes, lugar y tiempo", "Responden preguntas explícitas", "Infiere características a partir de acciones"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "2° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Desarrollar vocabulario a partir de palabras nuevas en textos orales y escritos.",
+    "habilidades": ["Ampliar vocabulario", "Comprender"],
+    "indicadores": ["Reconocen significado por contexto", "Usan palabras nuevas en oraciones"]
+  },
+  {
+    "codigo": "OA 3",
+    "nivel": "2° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Escribir respuestas completas usando mayúscula, punto y conectores simples.",
+    "habilidades": ["Escribir", "Organizar ideas"],
+    "indicadores": ["Usan mayúscula al inicio", "Usan punto final", "Emplean conectores básicos"]
+  },
+  {
+    "codigo": "OA 4",
+    "nivel": "2° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Resolver problemas usando estrategias de conteo, representación pictórica, concreta y simbólica.",
+    "habilidades": ["Resolver problemas", "Representar", "Comunicar"],
+    "indicadores": ["Usan material concreto para representar", "Dibujan situaciones problema", "Explican procedimiento usado"]
+  },
+  {
+    "codigo": "OA 5",
+    "nivel": "2° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Comunicar procedimientos matemáticos de forma oral, escrita y con representaciones.",
+    "habilidades": ["Comunicar", "Argumentar"],
+    "indicadores": ["Explican paso a paso su solución", "Usan vocabulario matemático básico"]
+  },
+  {
+    "codigo": "OA 6",
+    "nivel": "2° básico",
+    "asignatura": "Ciencias Naturales",
+    "descripcion": "Observar, comparar y comunicar características de seres vivos, materiales o fenómenos naturales.",
+    "habilidades": ["Observar", "Comparar", "Comunicar"],
+    "indicadores": ["Describen características observables", "Comparan semejanzas y diferencias", "Registran con dibujos o tablas"]
+  },
+  {
+    "codigo": "OA 7",
+    "nivel": "2° básico",
+    "asignatura": "Historia, Geografía y Cs. Sociales",
+    "descripcion": "Ubicar acontecimientos en secuencias temporales y reconocer cambios y continuidades.",
+    "habilidades": ["Ubicar", "Secuenciar", "Comparar"],
+    "indicadores": ["Ordenan eventos en línea de tiempo", "Identifican cambios en su entorno"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "3° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Leer y comprender textos literarios (cuentos, poemas) y no literarios (noticias, instrucciones), extrayendo información explícita e implícita.",
+    "habilidades": ["Comprender", "Extraer información", "Inferir"],
+    "indicadores": ["Responden preguntas literales e inferenciales", "Identifican propósito del texto"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "3° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Resolver problemas rutinarios y no rutinarios que involucren adición, sustracción y multiplicación.",
+    "habilidades": ["Resolver", "Calcular", "Verificar"],
+    "indicadores": ["Identifican la operación adecuada", "Verifican resultados", "Explican su razonamiento"]
+  },
+  {
+    "codigo": "OA 3",
+    "nivel": "3° básico",
+    "asignatura": "Ciencias Naturales",
+    "descripcion": "Formular predicciones simples y registrar evidencias mediante tablas o dibujos.",
+    "habilidades": ["Predecir", "Registrar", "Analizar"],
+    "indicadores": ["Formulan hipótesis simple", "Registran observaciones", "Comparan predicción con resultado"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "4° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Comprender textos narrativos y poemas, extrayendo información explícita e implícita.",
+    "habilidades": ["Localizar", "Inferir", "Interpretar"],
+    "indicadores": ["Identifican propósito del texto", "Explican lenguaje figurado básico", "Responden preguntas inferenciales"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "4° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Resolver problemas rutinarios y no rutinarios aplicando estrategias de cálculo mental y escrito.",
+    "habilidades": ["Resolver", "Calcular", "Verificar"],
+    "indicadores": ["Seleccionan estrategia adecuada", "Verifican resultados", "Explican su razonamiento"]
+  },
+  {
+    "codigo": "OA 3",
+    "nivel": "4° básico",
+    "asignatura": "Historia, Geografía y Cs. Sociales",
+    "descripcion": "Leer fuentes, imágenes o mapas simples para obtener información y responder preguntas.",
+    "habilidades": ["Interpretar", "Analizar fuentes", "Responder"],
+    "indicadores": ["Extraen información de imágenes", "Usan leyendas de mapas", "Responden preguntas basadas en fuentes"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "5° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Analizar textos narrativos y no narrativos, identificando estructura, propósito y recursos lingüísticos.",
+    "habilidades": ["Analizar", "Identificar", "Interpretar"],
+    "indicadores": ["Identifican estructura del texto", "Reconocen propósito comunicativo", "Analizan recursos lingüísticos"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "5° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Resolver problemas que involucren fracciones, decimales y porcentajes en contextos cotidianos.",
+    "habilidades": ["Aplicar", "Resolver", "Modelar"],
+    "indicadores": ["Representan fracciones pictorialmente", "Convierten entre formas", "Resuelven problemas de porcentaje"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "6° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Analizar textos narrativos, identificando conflicto, personajes, ambiente y narrador.",
+    "habilidades": ["Analizar", "Interpretar", "Evaluar"],
+    "indicadores": ["Describen conflicto principal", "Caracterizan personajes", "Identifican tipo de narrador"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "6° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Aplicar operaciones con fracciones, decimales y porcentajes en la resolución de problemas diversos.",
+    "habilidades": ["Aplicar", "Calcular", "Resolver"],
+    "indicadores": ["Realizan operaciones con fracciones", "Aplican porcentajes en contextos", "Resuelven problemas combinados"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "7° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Interpretar textos literarios y no literarios, analizando recursos expresivos, estructura y propósito.",
+    "habilidades": ["Interpretar", "Analizar", "Evaluar"],
+    "indicadores": ["Identifican figuras literarias", "Analizan estructura textual", "Evalúan propósito del autor"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "7° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Utilizar números enteros, racionales y sus operaciones en la resolución de problemas cotidianos.",
+    "habilidades": ["Utilizar", "Operar", "Resolver"],
+    "indicadores": ["Representan números enteros en recta numérica", "Resuelven problemas con números racionales"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "8° básico",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Analizar críticamente textos de diversa procedencia, evaluando argumentos, evidencias y recursos persuasivos.",
+    "habilidades": ["Analizar críticamente", "Evaluar", "Argumentar"],
+    "indicadores": ["Identifican tesis y argumentos", "Evalúan validez de evidencias", "Reconocen recursos persuasivos"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "8° básico",
+    "asignatura": "Matemática",
+    "descripcion": "Modelar situaciones cotidianas usando expresiones algebraicas y ecuaciones de primer grado.",
+    "habilidades": ["Modelar", "Resolver", "Representar"],
+    "indicadores": ["Traducen situaciones a expresiones algebraicas", "Resuelven ecuaciones simples"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "1° medio",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Analizar e interpretar obras literarias significativas, considerando contexto, género, temas y recursos estéticos.",
+    "habilidades": ["Analizar", "Interpretar", "Contextualizar"],
+    "indicadores": ["Relacionan obra con su contexto histórico", "Analizan temas y motivos literarios", "Interpretan recursos estéticos"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "1° medio",
+    "asignatura": "Matemática",
+    "descripcion": "Resolver problemas utilizando números reales, potencias y raíces en contextos científicos y cotidianos.",
+    "habilidades": ["Resolver", "Aplicar", "Calcular"],
+    "indicadores": ["Usan notación científica", "Resuelven problemas con potencias", "Aplican raíces en contextos geométricos"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "2° medio",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Producir textos argumentativos y expositivos, organizando ideas con coherencia, cohesión y adecuación.",
+    "habilidades": ["Producir", "Organizar", "Argumentar"],
+    "indicadores": ["Escriben ensayos breves con tesis clara", "Utilizan conectores argumentativos", "Organizan párrafos con coherencia"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "2° medio",
+    "asignatura": "Matemática",
+    "descripcion": "Analizar funciones lineales, afines y cuadráticas, representándolas en forma algebraica, tabular y gráfica.",
+    "habilidades": ["Analizar", "Representar", "Interpretar"],
+    "indicadores": ["Grafican funciones lineales y cuadráticas", "Interpretan parámetros de la función", "Resuelven problemas de optimización simple"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "3° medio",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Evaluar críticamente discursos orales y escritos, considerando postura del emisor, contexto y recursos retóricos.",
+    "habilidades": ["Evaluar críticamente", "Analizar", "Argumentar"],
+    "indicadores": ["Identifican falacias argumentativas", "Analizan recursos retóricos", "Evaluán postura del emisor"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "3° medio",
+    "asignatura": "Matemática",
+    "descripcion": "Modelar situaciones del mundo real usando funciones exponenciales, logarítmicas y trigonométricas.",
+    "habilidades": ["Modelar", "Aplicar", "Analizar"],
+    "indicadores": ["Identifican crecimiento exponencial en contextos", "Usan funciones trigonométricas en fenómenos periódicos"]
+  },
+  {
+    "codigo": "OA 1",
+    "nivel": "4° medio",
+    "asignatura": "Lenguaje y Comunicación",
+    "descripcion": "Sintetizar y comunicar información de múltiples fuentes, evaluando su pertinencia y validez en la construcción de un discurso propio.",
+    "habilidades": ["Sintetizar", "Evaluar", "Comunicar"],
+    "indicadores": ["Integran información de diversas fuentes", "Citan adecuadamente", "Construyen discurso propio fundamentado"]
+  },
+  {
+    "codigo": "OA 2",
+    "nivel": "4° medio",
+    "asignatura": "Matemática",
+    "descripcion": "Resolver problemas que involucren probabilidad, estadística inferencial y toma de decisiones basada en datos.",
+    "habilidades": ["Resolver", "Analizar datos", "Decidir"],
+    "indicadores": ["Calculan probabilidades condicionales", "Interpretan intervalos de confianza", "Toman decisiones basadas en datos"]
+  }
+]

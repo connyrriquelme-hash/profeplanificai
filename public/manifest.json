@@ -1,0 +1,15 @@
+{
+  "name": "PlanificaIA Chile",
+  "short_name": "PlanificaIA",
+  "description": "Plataforma docente chilena para crear planificaciones, evaluaciones y recursos educativos alineados al Currículum Nacional MINEDUC.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1119",
+  "theme_color": "#6d5dfc",
+  "orientation": "any",
+  "categories": ["education", "productivity"],
+  "lang": "es-CL",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

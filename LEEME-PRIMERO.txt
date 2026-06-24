@@ -1,0 +1,24 @@
+PLANIFICAIA CHILE PORTABLE
+===========================
+
+Esta versión NO usa npm, NO requiere terminal y NO necesita instalar dependencias.
+
+INSTRUCCIONES:
+1. Descomprime el ZIP completo.
+2. Entra a la carpeta PlanificaIA-Chile-Portable.
+3. Haz doble clic en ABRIR-PLANIFICAIA.bat.
+4. También puedes abrir index.html directamente con Chrome o Edge.
+
+FUNCIONA SIN API KEY:
+- Genera planificaciones.
+- Genera recursos educativos.
+- Genera evaluaciones tipo SIMCE.
+- Permite copiar, descargar HTML e imprimir/guardar como PDF.
+
+IA GRATUITA/OPCIONAL:
+En la pestaña "Conectar IA gratuita" puedes guardar una API key de Gemini, OpenRouter o Hugging Face.
+La clave queda guardada solamente en tu navegador mediante localStorage.
+Si la conexión externa falla por cuota, CORS o modelo, la app vuelve al generador local.
+
+RECOMENDACIÓN:
+Para uso formal, pega el OA ministerial exacto en cada generación.
