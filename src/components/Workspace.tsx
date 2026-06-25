@@ -1,16 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SelectorOA } from './SelectorOA';
-import { FileText, Play, Sparkles, Plus, Search, CheckCircle, Loader, X } from 'lucide-react';
+import { FileText, Play, Sparkles, Plus, Search, CheckCircle, Loader } from 'lucide-react';
 import { useProject, type ProjectData } from '../contexts/ProjectContext';
 import { niveles, getAsignaturas, getOAs, type CurriculumItem } from '../data/curriculumData';
 import { AIAssistant, type PedagogicalContext } from './AIAssistant';
-import { generarConIA, type GenAIOpts } from '../services/aiService';
-
-interface SuggestionModalState {
-  suggestion: string;
-  edited: string;
-}
+import { generarConIA } from '../services/aiService';
 
 interface WorkspaceProps {
   onNavigate?: (view: string) => void;
@@ -35,52 +30,6 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
   );
 }
 
-function SuggestionModal({
-  state,
-  onInsert,
-  onCancel,
-  onEdit,
-}: {
-  state: SuggestionModalState;
-  onInsert: (text: string) => void;
-  onCancel: () => void;
-  onEdit: (text: string) => void;
-}) {
-  return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal suggestion-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 700 }}>
-        <div className="suggestion-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Sparkles size={20} style={{ color: 'var(--brand)' }} />
-            <div>
-              <h3 style={{ margin: 0, fontSize: 16 }}>Sugerencia IA — Estructura de la Clase</h3>
-              <p className="muted" style={{ margin: '2px 0 0', fontSize: 12 }}>Revisa y edita la propuesta antes de insertarla</p>
-            </div>
-          </div>
-          <button className="ghost" onClick={onCancel} style={{ padding: 6 }}><X size={18} /></button>
-        </div>
-        <div style={{ padding: '0 20px 20px' }}>
-          <textarea
-            value={state.edited}
-            onChange={e => onEdit(e.target.value)}
-            style={{
-              width: '100%', minHeight: 400, padding: 14, border: '1px solid var(--line)',
-              borderRadius: 'var(--radius)', fontFamily: 'monospace', fontSize: 13,
-              lineHeight: 1.6, resize: 'vertical', background: '#fff', marginTop: 14,
-            }}
-          />
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 14 }}>
-            <button className="secondary" onClick={onCancel}>Cancelar</button>
-            <button className="primary" onClick={() => onInsert(state.edited)}>
-              <Sparkles size={14} /> Insertar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function Workspace({ onNavigate }: WorkspaceProps) {
   const { currentProject, updateProjectField, addToLibrary } = useProject();
 
@@ -93,7 +42,6 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [suggestionModal, setSuggestionModal] = useState<SuggestionModalState | null>(null);
   const [selectedNivel, setSelectedNivel] = useState('');
   const [selectedAsignatura, setSelectedAsignatura] = useState('');
   const [selectedOA, setSelectedOA] = useState<CurriculumItem | null>(null);
@@ -212,31 +160,24 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         oa: selectedOA.oa_texto,
         habilidad: selectedHabilidad,
         promptExt: [
-          `Eres un/una docente chileno/a experto/a en planificación curricular.`,
-          `Genera la estructura completa de una planificación de clase con las secciones INICIO, DESARROLLO y CIERRE.`,
+          `Eres un Mentor Pedagógico Experto en el sistema educativo chileno. Tu tarea es generar una secuencia didáctica completa (Inicio, Desarrollo y Cierre) dentro de un único bloque de texto.`,
+          ``,
+          `Debes usar el siguiente contexto pedagógico:`,
           `Nivel: ${selectedNivel}`,
           `Asignatura: ${selectedAsignatura}`,
           `OA: ${selectedOA.oa_id} - ${selectedOA.oa_texto}`,
-          `Habilidad: ${selectedHabilidad || 'No especificada'}`,
-          ...(selectedOA.indicadores.length ? ['Indicadores:', ...selectedOA.indicadores.map(i => `- ${i}`)] : []),
+          `Habilidad(es): ${selectedHabilidad || 'No especificada'}`,
+          ...(selectedOA.indicadores.length ? [`Indicadores:`, ...selectedOA.indicadores.map(i => `- ${i}`)] : []),
           '',
-          `Formato esperado:`,
-          `### INICIO (10-15 min)`,
-          `[contenido del inicio]`,
-          ``,
-          `### DESARROLLO (25-30 min)`,
-          `[contenido del desarrollo]`,
-          ``,
-          `### CIERRE (5-10 min)`,
-          `[contenido del cierre]`,
+          `Tu respuesta debe estar estructurada obligatoriamente con estos tres encabezados claros:`,
+          `- Inicio: (con activación de conocimientos previos y motivación)`,
+          `- Desarrollo: (con actividades específicas, metodologías activas como ABP o DUA, y mediación docente)`,
+          `- Cierre: (con síntesis, metacognición y ticket de salida)`,
           '',
-          `Requisitos:`,
+          `Usa un tono innovador, amigable y profesional. Incluye sugerencias de material didáctico concreto que sea fácil de implementar en una sala de clases chilena.`,
           `- Lenguaje docente chileno claro y directo.`,
-          `- Actividades concretas y aplicables en aula chilena real.`,
           `- Incluir preguntas de mediación para el docente.`,
           `- Incluir sugerencias de evaluación formativa.`,
-          `- Usar metodologías activas (ABP, DUA, Gamificación, Aula Invertida).`,
-          `- Incluir recursos materiales tangibles (fáciles de encontrar en una escuela).`,
           `- Formato listo para copiar y pegar.`,
           `- Extensión total: entre 600 y 1000 palabras.`,
         ].join('\n'),
@@ -244,28 +185,18 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         duracion: '90 min',
         onStatus: () => {},
       });
-      const text = result.texto || '### INICIO (10-15 min)\n\nActivación de conocimientos previos…\n\n### DESARROLLO (25-30 min)\n\nEstrategia principal…\n\n### CIERRE (5-10 min)\n\nTicket de salida…';
-      setSuggestionModal({ suggestion: text, edited: text });
+      const text = result.texto || `**Inicio (10-15 min):**\nActivación de conocimientos previos mediante lluvia de ideas…\n\n**Desarrollo (25-30 min):**\nTrabajo colaborativo en grupos…\n\n**Cierre (5-10 min):**\nTicket de salida con pregunta de metacognición…`;
+      setEstructuraClase(text);
+      updateProjectField('inicio', text);
+      showToast('Estructura de clase generada con IA.');
     } catch {
-      setSuggestionModal({
-        suggestion: '### INICIO (10-15 min)\n\nActivación de conocimientos previos…\n\n### DESARROLLO (25-30 min)\n\nEstrategia principal…\n\n### CIERRE (5-10 min)\n\nTicket de salida…',
-        edited: '### INICIO (10-15 min)\n\nActivación de conocimientos previos…\n\n### DESARROLLO (25-30 min)\n\nEstrategia principal…\n\n### CIERRE (5-10 min)\n\nTicket de salida…',
-      });
+      const fallback = `**Inicio (10-15 min):**\nActivación de conocimientos previos mediante lluvia de ideas…\n\n**Desarrollo (25-30 min):**\nTrabajo colaborativo en grupos…\n\n**Cierre (5-10 min):**\nTicket de salida con pregunta de metacognición…`;
+      setEstructuraClase(fallback);
+      updateProjectField('inicio', fallback);
+      showToast('Generado en modo local (fallback).');
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleInsertSuggestion = (text: string) => {
-    if (!suggestionModal) return;
-    setEstructuraClase(text);
-    updateProjectField('inicio', text);
-    setSuggestionModal(null);
-    showToast('Estructura de clase insertada correctamente.');
-  };
-
-  const handleEditSuggestion = (text: string) => {
-    setSuggestionModal(prev => prev ? { ...prev, edited: text } : null);
   };
 
   const handleSaveToLibrary = () => {
@@ -278,15 +209,6 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   return (
     <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
       <Toast message={toastMessage} visible={toastVisible} />
-
-      {suggestionModal && (
-        <SuggestionModal
-          state={suggestionModal}
-          onInsert={handleInsertSuggestion}
-          onCancel={() => setSuggestionModal(null)}
-          onEdit={handleEditSuggestion}
-        />
-      )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* ── Cascading selectors ── */}
