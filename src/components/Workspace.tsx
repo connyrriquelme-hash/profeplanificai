@@ -3,6 +3,7 @@ import { CollapsibleSection } from './CollapsibleSection';
 import { SelectorOA } from './SelectorOA';
 import { FileText, Play, Target, Sparkles, Plus, Search, CheckCircle, Loader, X, List, Table, Layout } from 'lucide-react';
 import { useProject, type ProjectData } from '../contexts/ProjectContext';
+import { niveles, getAsignaturas, getOAs, type CurriculumItem } from '../data/curriculumData';
 
 type SectionKey = 'inicio' | 'desarrollo' | 'cierre';
 
@@ -125,6 +126,13 @@ const MOCK_SUGGESTIONS: Record<SectionKey, string> = {
 3. Autoevaluación: Los estudiantes reflexionan sobre su propio aprendizaje usando una escala sencilla (pulgar arriba/abajo o semáforo).
 
 4. Conexión con la próxima clase: Anticipar brevemente el tema de la siguiente sesión para mantener el interés y la continuidad.`,
+};
+
+const selectStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', border: '1px solid var(--line)',
+  borderRadius: 'var(--radius)', background: 'var(--card)', color: 'var(--ink)',
+  fontSize: 13, fontFamily: 'Inter, system-ui, sans-serif', cursor: 'pointer',
+  outline: 'none', transition: 'border-color .15s',
 };
 
 function FloatingAssistant({
@@ -302,6 +310,10 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestionModal, setSuggestionModal] = useState<SuggestionModalState | null>(null);
   const [focusedSection, setFocusedSection] = useState<SectionKey | null>(null);
+  const [selectedNivel, setSelectedNivel] = useState('');
+  const [selectedAsignatura, setSelectedAsignatura] = useState('');
+  const [selectedOA, setSelectedOA] = useState<CurriculumItem | null>(null);
+  const [selectedHabilidad, setSelectedHabilidad] = useState('');
 
   useEffect(() => {
     if (!currentProject) return;
@@ -325,6 +337,20 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
     const t = setTimeout(() => setToastVisible(false), 3000);
     return () => clearTimeout(t);
   }, [toastVisible]);
+
+  // Reset dependent selectors when parent changes
+  useEffect(() => { setSelectedAsignatura(''); setSelectedOA(null); setSelectedHabilidad(''); }, [selectedNivel]);
+  useEffect(() => { setSelectedOA(null); setSelectedHabilidad(''); }, [selectedAsignatura]);
+
+  // Auto-fill OA text, indicadores, and habilidades when OA is selected
+  useEffect(() => {
+    if (!selectedOA) return;
+    setObjetivos(selectedOA.oa_texto);
+    updateProjectField('objetivos', selectedOA.oa_texto);
+    setIndicadores(selectedOA.indicadores.map(i => `• ${i}`).join('\n'));
+    updateProjectField('indicadores', selectedOA.indicadores.map(i => `• ${i}`).join('\n'));
+    setSelectedHabilidad(selectedOA.habilidades[0] || '');
+  }, [selectedOA]);
 
   const handleChange = (field: keyof ProjectData, setter: typeof setInicio) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setter(e.target.value);
@@ -391,14 +417,63 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-          {['Asignatura', 'Curso', 'Unidad', 'Tiempo'].map(label => (
-            <span key={label} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 16px', borderRadius: 'var(--radius-full)', background: 'var(--bg2)', fontSize: 12, fontWeight: 500, color: 'var(--muted)' }}>
-              {label}
-            </span>
-          ))}
+        {/* ── Cascading selectors ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Nivel</label>
+            <select
+              value={selectedNivel}
+              onChange={e => setSelectedNivel(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Seleccionar nivel</option>
+              {niveles.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Asignatura</label>
+            <select
+              value={selectedAsignatura}
+              onChange={e => setSelectedAsignatura(e.target.value)}
+              style={selectStyle}
+              disabled={!selectedNivel}
+            >
+              <option value="">{selectedNivel ? 'Seleccionar asignatura' : 'Primero elige nivel'}</option>
+              {selectedNivel && getAsignaturas(selectedNivel).map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Objetivo (OA)</label>
+            <select
+              value={selectedOA?.oa_id || ''}
+              onChange={e => {
+                const oas = getOAs(selectedNivel, selectedAsignatura);
+                setSelectedOA(oas.find(o => o.oa_id === e.target.value) || null);
+              }}
+              style={selectStyle}
+              disabled={!selectedAsignatura}
+            >
+              <option value="">{selectedAsignatura ? 'Seleccionar OA' : 'Primero elige asignatura'}</option>
+              {selectedNivel && selectedAsignatura && getOAs(selectedNivel, selectedAsignatura).map(o => (
+                <option key={o.oa_id} value={o.oa_id}>{o.oa_id} — {o.oa_texto.slice(0, 60)}…</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Habilidad</label>
+            <select
+              value={selectedHabilidad}
+              onChange={e => setSelectedHabilidad(e.target.value)}
+              style={selectStyle}
+              disabled={!selectedOA}
+            >
+              <option value="">{selectedOA ? 'Seleccionar habilidad' : 'Primero elige OA'}</option>
+              {selectedOA?.habilidades.map(h => <option key={h} value={h}>{h}</option>)}
+            </select>
+          </div>
         </div>
 
+        {/* ── OA card with auto-filled text ── */}
         <div style={{ border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: 24, marginBottom: 20, background: 'var(--card)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted2)' }}>OBJETIVO DE APRENDIZAJE (OA)</div>
@@ -415,9 +490,21 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             className="output"
             value={objetivos}
             onChange={handleChange('objetivos', setObjetivos)}
-            placeholder="Haz clic en 'Buscar OA' para seleccionar un objetivo..."
+            placeholder="Haz clic en 'Buscar OA' o selecciona desde los filtros superiores..."
             style={{ minHeight: 60, fontSize: 16, fontWeight: 600, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
           />
+          {selectedOA && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+              <span style={{ fontSize: 11, background: 'var(--brand)', color: '#fff', padding: '2px 10px', borderRadius: 12, fontWeight: 500 }}>
+                {selectedOA.oa_id}
+              </span>
+              {selectedOA.habilidades.map(h => (
+                <span key={h} style={{ fontSize: 11, background: 'var(--bg2)', color: 'var(--ink2)', padding: '2px 10px', borderRadius: 12 }}>
+                  {h}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <CollapsibleSection title="OAT E INDICADORES" icon={<Target size={20} />} defaultExpanded>
@@ -438,7 +525,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
               value={indicadores}
               onChange={handleChange('indicadores', setIndicadores)}
               style={{ minHeight: 80, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-              placeholder="Indicadores para evaluar el logro del OA…"
+              placeholder="Se llenan automáticamente al seleccionar un OA…"
             />
           </div>
         </CollapsibleSection>
