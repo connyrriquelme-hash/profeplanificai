@@ -1,21 +1,18 @@
 import { useState } from 'react';
-import { Sparkles, Layers, FileEdit, FolderOpen, Search, Plus, BookOpen, Clock, Trash2, Users, X } from 'lucide-react';
+import { FolderOpen, Search, Plus, BookOpen, Clock, Trash2, Users, X } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
+import { CreativeHub } from './CreativeHub';
 
 interface BibliotecaViewProps {
   onNavigate?: (view: string) => void;
 }
 
-const CREATIVE_ACTIONS = [
-  { icon: Sparkles, title: 'Lección individual', desc: 'Una lección puntual', color: '#6d5dfc' },
-  { icon: Layers, title: 'Serie de lecciones', desc: 'Varias lecciones sobre un tema', color: '#00a7a7' },
-  { icon: FileEdit, title: 'Fichas de actividades', desc: 'Fichas de tareas listas para imprimir', color: '#f59e0b' },
-];
-
 export function BibliotecaView({ onNavigate }: BibliotecaViewProps) {
   const { library, removeFromLibrary, newProject } = useProject();
   const [query, setQuery] = useState('');
   const [isBannerVisible, setIsBannerVisible] = useState(true);
+  const [step, setStep] = useState(0);
+  const [creationType, setCreationType] = useState('');
 
   const handleNew = () => {
     newProject();
@@ -28,28 +25,19 @@ export function BibliotecaView({ onNavigate }: BibliotecaViewProps) {
 
   return (
     <div className="view biblioteca">
-      {/* Biblioteca Creativa */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-6">¿Qué creamos hoy? ✨</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {CREATIVE_ACTIONS.map(({ icon: Icon, title, desc, color }) => (
-            <div
-              key={title}
-              className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
-              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
-            >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}
-              >
-                <Icon size={24} className="text-white" />
-              </div>
-              <h3 className="text-base font-semibold text-[var(--ink)] mb-1">{title}</h3>
-              <p className="text-sm text-[var(--muted)]">{desc}</p>
-            </div>
-          ))}
+      {step === 0 ? (
+        <>
+          <CreativeHub onSelect={(tipo) => { setCreationType(tipo); setStep(1); }} />
+        </>
+      ) : (
+        <div className="mb-8 p-6 rounded-2xl border border-[var(--line)] bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Crear: {creationType === 'leccion' ? 'Lección individual' : creationType === 'serie' ? 'Serie de lecciones' : 'Fichas de actividades'}</h2>
+            <button className="ghost" onClick={() => setStep(0)}>Volver</button>
+          </div>
+          <p className="text-sm text-[var(--muted)]">Aquí irá el flujo de creación para {creationType}.</p>
         </div>
-      </div>
+      )}
 
       {/* Collaborative Banner */}
       {isBannerVisible && (
