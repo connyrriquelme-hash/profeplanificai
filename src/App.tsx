@@ -72,22 +72,20 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
-      <main className="flex-1 min-w-0 p-4 lg:p-6" style={{ display: 'flex', gap: 16 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <ErrorBoundary>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeView + (viewState?.tab || '')}
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                {renderView()}
-              </motion.div>
-            </AnimatePresence>
-          </ErrorBoundary>
-        </div>
+      <main className="flex-1 min-w-0 p-4 lg:p-6">
+        <ErrorBoundary>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeView + (viewState?.tab || '')}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {renderView()}
+            </motion.div>
+          </AnimatePresence>
+        </ErrorBoundary>
       </main>
     </div>
   );
