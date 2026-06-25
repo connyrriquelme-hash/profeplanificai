@@ -6,7 +6,6 @@ import type { ViewType } from './types';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { WorkspaceView } from './components/WorkspaceView';
-import { AIAssistant } from './components/AIAssistant';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
 import { BibliotecaView } from './components/BibliotecaView';
 import { BancoRecursosView } from './components/BancoRecursosView';
@@ -86,9 +85,6 @@ function AppContent() {
             </AnimatePresence>
           </ErrorBoundary>
         </div>
-        <aside style={{ width: 300, flexShrink: 0, display: activeView === 'workspace' ? 'block' : 'none' }}>
-          <AIAssistant />
-        </aside>
       </main>
     </div>
   );
