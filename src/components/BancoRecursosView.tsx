@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Database, Search, Copy, FileDown, ExternalLink, X, Clock, BookOpen } from 'lucide-react';
+import { Database, Search, Copy, FileDown, X, Clock, BookOpen, AlertCircle } from 'lucide-react';
 import { useResources } from '../hooks/useResources';
 import { exportToPDF } from '../utils/exportPdf';
 
@@ -14,7 +14,7 @@ interface Resource {
 }
 
 export function BancoRecursosView() {
-  const { resources, isLoading, error, fetchResources, saveResource } = useResources();
+  const { resources, isLoading, error, fetchResources } = useResources();
   const [search, setSearch] = useState('');
   const [detail, setDetail] = useState<Resource | null>(null);
 
@@ -38,7 +38,7 @@ export function BancoRecursosView() {
         <div className="module-header">
           <h2 className="module-title"><Database size={22} /> Banco de Recursos</h2>
         </div>
-        <div className="card empty-state"><Database size={3 size={38} /><p>Cargando recursos…</p></div>
+        <div className="card empty-state"><Database size={38} /><p>Cargando recursos…</p></div>
       </div>
     );
   }
@@ -142,6 +142,3 @@ export function BancoRecursosView() {
     </div>
   );
 }
-
-// Need to import AlertCircle
-import { AlertCircle } from 'lucide-react';
