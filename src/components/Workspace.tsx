@@ -203,7 +203,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   };
 
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       <Toast message={toastMessage} visible={toastVisible} />
 
       {/* ── Left panel: configuration ── */}
