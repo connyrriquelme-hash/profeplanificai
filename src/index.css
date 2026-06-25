@@ -721,11 +721,12 @@ button {
 
 /* Print */
 @media print {
-  body {
+  html, body {
     background: white !important;
     color: black !important;
   }
   .sidebar,
+  .ai-buttons,
   .no-print,
   button,
   .btnrow {
@@ -734,6 +735,11 @@ button {
   .main-content {
     padding: 0 !important;
     margin: 0 !important;
+    max-width: 100% !important;
+  }
+  .print-mode {
+    width: 100% !important;
+    padding: 20px !important;
   }
   .card {
     box-shadow: none !important;

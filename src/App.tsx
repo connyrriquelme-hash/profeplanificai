@@ -9,6 +9,7 @@ import { WorkspaceView } from './components/WorkspaceView';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
 import { BibliotecaView } from './components/BibliotecaView';
 import { BancoRecursosView } from './components/BancoRecursosView';
+import { EvaluacionesView } from './components/EvaluacionesView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -43,6 +44,8 @@ function AppContent() {
         return <CurriculumCloudView />;
       case 'agente':
         return <BibliotecaView onNavigate={handleViewChange} />;
+      case 'evaluaciones':
+        return <EvaluacionesView onNavigate={handleViewChange} />;
       case 'banco-recursos':
         return <BancoRecursosView initialTab={viewState?.tab as any} onNavigate={handleViewChange} />;
       case 'admin':

@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SelectorOA } from './SelectorOA';
 import { FileText, Play, Sparkles, Plus, Search, CheckCircle, Loader, X, List, Table, Layout } from 'lucide-react';
 import { useProject, type ProjectData } from '../contexts/ProjectContext';
 import { niveles, getAsignaturas, getOAs, type CurriculumItem } from '../data/curriculumData';
 import { AIAssistant, type PedagogicalContext } from './AIAssistant';
+import { generarConIA, type GenAIOpts } from '../services/aiService';
 
 type SectionKey = 'inicio' | 'desarrollo' | 'cierre';
 
@@ -314,17 +315,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   const [selectedAsignatura, setSelectedAsignatura] = useState('');
   const [selectedOA, setSelectedOA] = useState<CurriculumItem | null>(null);
   const [selectedHabilidad, setSelectedHabilidad] = useState('');
-
-  useEffect(() => {
-    if (!currentProject) return;
-    setObjetivos(currentProject.objetivos || '');
-    setIndicadores(currentProject.indicadores || '');
-    setInicio(currentProject.inicio || '');
-    setDesarrollo(currentProject.desarrollo || '');
-    setCierre(currentProject.cierre || '');
-    setRecursos(currentProject.recursos || '');
-    setEvaluacion(currentProject.evaluacion || '');
-  }, [currentProject]);
+  const [oaSearch, setOaSearch] = useState('');
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -337,9 +328,28 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
     return () => clearTimeout(t);
   }, [toastVisible]);
 
-  // Reset dependent selectors when parent changes
-  useEffect(() => { setSelectedAsignatura(''); setSelectedOA(null); setSelectedHabilidad(''); }, [selectedNivel]);
-  useEffect(() => { setSelectedOA(null); setSelectedHabilidad(''); }, [selectedAsignatura]);
+  // Rehydrate all fields when a saved project is loaded
+  useEffect(() => {
+    if (!currentProject) return;
+    setObjetivos(currentProject.objetivos || '');
+    setIndicadores(currentProject.indicadores || '');
+    setInicio(currentProject.inicio || '');
+    setDesarrollo(currentProject.desarrollo || '');
+    setCierre(currentProject.cierre || '');
+    setRecursos(currentProject.recursos || '');
+    setEvaluacion(currentProject.evaluacion || '');
+    setSelectedNivel(currentProject.nivel || '');
+    setSelectedAsignatura(currentProject.asignatura || '');
+    setSelectedHabilidad(currentProject.habilidad || '');
+    setOaSearch('');
+    if (currentProject.oa_id && currentProject.nivel && currentProject.asignatura) {
+      const oas = getOAs(currentProject.nivel, currentProject.asignatura);
+      const found = oas.find(o => o.oa_id === currentProject.oa_id);
+      setSelectedOA(found || null);
+    } else {
+      setSelectedOA(null);
+    }
+  }, [currentProject]);
 
   // Build pedagogical context for the AI agent
   const pedagogicalContext: PedagogicalContext | null = selectedOA ? {
@@ -351,7 +361,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
     indicadores: selectedOA.indicadores,
   } : null;
 
-  // Auto-fill OA text, indicadores, and habilidades when OA is selected
+  // Auto-fill OA text, indicadores, habilidades and persist curriculum context
   useEffect(() => {
     if (!selectedOA) return;
     setObjetivos(selectedOA.oa_texto);
@@ -359,11 +369,44 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
     setIndicadores(selectedOA.indicadores.map(i => `• ${i}`).join('\n'));
     updateProjectField('indicadores', selectedOA.indicadores.map(i => `• ${i}`).join('\n'));
     setSelectedHabilidad(selectedOA.habilidades[0] || '');
+    updateProjectField('oa_id', selectedOA.oa_id);
+    updateProjectField('indicadores_raw', JSON.stringify(selectedOA.indicadores));
+    updateProjectField('nivel', selectedNivel);
+    updateProjectField('asignatura', selectedAsignatura);
   }, [selectedOA]);
+
+  // Persist habilidad whenever it changes
+  useEffect(() => {
+    updateProjectField('habilidad', selectedHabilidad);
+  }, [selectedHabilidad]);
 
   const handleChange = (field: keyof ProjectData, setter: typeof setInicio) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setter(e.target.value);
     if (field) updateProjectField(field, e.target.value);
+  };
+
+  const handleNivelChange = (value: string) => {
+    setSelectedNivel(value);
+    setSelectedAsignatura('');
+    setSelectedOA(null);
+    setSelectedHabilidad('');
+    setOaSearch('');
+    updateProjectField('nivel', value);
+    updateProjectField('asignatura', '');
+    updateProjectField('oa_id', '');
+    updateProjectField('habilidad', '');
+    updateProjectField('indicadores_raw', '[]');
+  };
+
+  const handleAsignaturaChange = (value: string) => {
+    setSelectedAsignatura(value);
+    setSelectedOA(null);
+    setSelectedHabilidad('');
+    setOaSearch('');
+    updateProjectField('asignatura', value);
+    updateProjectField('oa_id', '');
+    updateProjectField('habilidad', '');
+    updateProjectField('indicadores_raw', '[]');
   };
 
   const handleSelectOA = (texto: string) => {
@@ -374,13 +417,52 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
     }
   };
 
-  const handleGenerate = (section: SectionKey) => {
+  const handleGenerate = async (section: SectionKey) => {
+    if (!selectedOA) {
+      showToast('Selecciona un OA primero.');
+      return;
+    }
     setIsGenerating(true);
-    setTimeout(() => {
-      const suggestion = MOCK_SUGGESTIONS[section];
-      setSuggestionModal({ section, suggestion, edited: suggestion });
+    try {
+      const sectionLabel = { inicio: 'Inicio', desarrollo: 'Desarrollo', cierre: 'Cierre' }[section];
+      const result = await generarConIA({
+        tipo: 'planificacion',
+        nivel: selectedNivel,
+        asignatura: selectedAsignatura,
+        oa: selectedOA.oa_texto,
+        habilidad: selectedHabilidad,
+        promptExt: [
+          `Eres un/una docente chileno/a experto/a en planificación curricular.`,
+          `Genera únicamente la sección "${sectionLabel}" de una planificación de clase.`,
+          `Nivel: ${selectedNivel}`,
+          `Asignatura: ${selectedAsignatura}`,
+          `OA: ${selectedOA.oa_id} - ${selectedOA.oa_texto}`,
+          `Habilidad: ${selectedHabilidad || 'No especificada'}`,
+          ...(selectedOA.indicadores.length ? ['Indicadores:', ...selectedOA.indicadores.map(i => `- ${i}`)] : []),
+          '',
+          `Requisitos:`,
+          `- Lenguaje docente chileno claro y directo.`,
+          `- Actividades concretas y aplicables en aula chilena real.`,
+          `- Incluir preguntas de mediación para el docente.`,
+          `- Incluir sugerencias de evaluación formativa.`,
+          `- Usar metodologías activas (ABP, DUA, Gamificación, Aula Invertida).`,
+          `- Incluir recursos materiales tangibles (fáciles de encontrar en una escuela).`,
+          `- Formato listo para copiar y pegar.`,
+          `- Extensión: entre 200 y 400 palabras.`,
+          `- NO incluir encabezados de la planificación completa, solo el contenido de "${sectionLabel}".`,
+        ].join('\n'),
+        estilo: 'completo',
+        duracion: section === 'inicio' ? '10-15 min' : section === 'desarrollo' ? '25-30 min' : '5-10 min',
+        onStatus: () => {},
+      });
+      const text = result.texto || MOCK_SUGGESTIONS[section];
+      setSuggestionModal({ section, suggestion: text, edited: text });
+    } catch {
+      const fallback = MOCK_SUGGESTIONS[section];
+      setSuggestionModal({ section, suggestion: fallback, edited: fallback });
+    } finally {
       setIsGenerating(false);
-    }, 900);
+    }
   };
 
   const handleInsertSuggestion = (text: string) => {
@@ -432,7 +514,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Nivel</label>
             <select
               value={selectedNivel}
-              onChange={e => setSelectedNivel(e.target.value)}
+              onChange={e => handleNivelChange(e.target.value)}
               style={selectStyle}
             >
               <option value="">Seleccionar nivel</option>
@@ -443,7 +525,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Asignatura</label>
             <select
               value={selectedAsignatura}
-              onChange={e => setSelectedAsignatura(e.target.value)}
+              onChange={e => handleAsignaturaChange(e.target.value)}
               style={selectStyle}
               disabled={!selectedNivel}
             >
@@ -453,6 +535,23 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Objetivo (OA)</label>
+            {selectedAsignatura && (
+              <div style={{ position: 'relative', marginBottom: 6 }}>
+                <Search size={13} style={{ position: 'absolute', left: 10, top: 9, color: 'var(--muted2)', pointerEvents: 'none' }} />
+                <input
+                  type="text"
+                  value={oaSearch}
+                  onChange={e => setOaSearch(e.target.value)}
+                  placeholder="Buscar OA por código o texto…"
+                  style={{
+                    width: '100%', padding: '8px 10px 8px 30px', border: '1px solid var(--line)',
+                    borderRadius: 'var(--radius)', background: 'var(--card)', color: 'var(--ink)',
+                    fontSize: 12, fontFamily: 'Inter, system-ui, sans-serif', outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
             <select
               value={selectedOA?.oa_id || ''}
               onChange={e => {
@@ -463,7 +562,9 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
               disabled={!selectedAsignatura}
             >
               <option value="">{selectedAsignatura ? 'Seleccionar OA' : 'Primero elige asignatura'}</option>
-              {selectedNivel && selectedAsignatura && getOAs(selectedNivel, selectedAsignatura).map(o => (
+              {selectedNivel && selectedAsignatura && getOAs(selectedNivel, selectedAsignatura)
+                .filter(o => !oaSearch || o.oa_id.toLowerCase().includes(oaSearch.toLowerCase()) || o.oa_texto.toLowerCase().includes(oaSearch.toLowerCase()))
+                .map(o => (
                 <option key={o.oa_id} value={o.oa_id}>{o.oa_id} — {o.oa_texto.slice(0, 60)}…</option>
               ))}
             </select>

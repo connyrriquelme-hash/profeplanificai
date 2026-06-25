@@ -7,6 +7,11 @@ export interface ProjectData {
   objetivos: string;
   oat: string;
   indicadores: string;
+  nivel: string;
+  asignatura: string;
+  oa_id: string;
+  habilidad: string;
+  indicadores_raw: string;
   inicio: string;
   desarrollo: string;
   cierre: string;
@@ -39,6 +44,11 @@ function emptyProject(): ProjectData {
     objetivos: '',
     oat: '',
     indicadores: '',
+    nivel: '',
+    asignatura: '',
+    oa_id: '',
+    habilidad: '',
+    indicadores_raw: '[]',
     inicio: '',
     desarrollo: '',
     cierre: '',
