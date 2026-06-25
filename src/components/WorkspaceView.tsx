@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { BookOpen, FileText, Users } from 'lucide-react';
-import { SelectorOA } from './SelectorOA';
 import { Workspace } from './Workspace';
 
 interface WorkspaceViewProps {
@@ -57,12 +56,7 @@ export function WorkspaceView(_props: WorkspaceViewProps) {
       </div>
 
       <div style={{ animation: 'fadeIn .2s ease' }}>
-        {activeTab === 'planificacion' && (
-          <>
-            <SelectorOA onSelect={oa => console.log('OA seleccionado:', oa)} />
-            <div style={{ marginTop: 16 }}><Workspace /></div>
-          </>
-        )}
+        {activeTab === 'planificacion' && <Workspace />}
         {activeTab === 'evaluaciones' && (
           <div className="card" style={{ textAlign: 'center', padding: 48 }}>
             <p className="muted" style={{ fontSize: 15 }}>En construcción</p>
