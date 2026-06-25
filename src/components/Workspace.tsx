@@ -297,7 +297,6 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   const { currentProject, updateProjectField, addToLibrary } = useProject();
 
   const [objetivos, setObjetivos] = useState(currentProject?.objetivos || '');
-  const [oat, setOat] = useState(currentProject?.oat || '');
   const [indicadores, setIndicadores] = useState(currentProject?.indicadores || '');
   const [inicio, setInicio] = useState(currentProject?.inicio || '');
   const [desarrollo, setDesarrollo] = useState(currentProject?.desarrollo || '');
@@ -318,7 +317,6 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   useEffect(() => {
     if (!currentProject) return;
     setObjetivos(currentProject.objetivos || '');
-    setOat(currentProject.oat || '');
     setIndicadores(currentProject.indicadores || '');
     setInicio(currentProject.inicio || '');
     setDesarrollo(currentProject.desarrollo || '');
@@ -507,28 +505,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
           )}
         </div>
 
-        <CollapsibleSection title="OAT E INDICADORES" icon={<Target size={20} />} defaultExpanded>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink2)', marginBottom: 6 }}>Objetivo de Aprendizaje Transversal (OAT)</label>
-            <textarea
-              className="output"
-              value={oat}
-              onChange={handleChange('oat', setOat)}
-              style={{ minHeight: 80, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-              placeholder="Escribe el OAT relacionado…"
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink2)', marginBottom: 6 }}>Indicadores de Evaluación</label>
-            <textarea
-              className="output"
-              value={indicadores}
-              onChange={handleChange('indicadores', setIndicadores)}
-              style={{ minHeight: 80, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-              placeholder="Se llenan automáticamente al seleccionar un OA…"
-            />
-          </div>
-        </CollapsibleSection>
+
 
         <CollapsibleSection title="DETALLE DE ACTIVIDADES" icon={<Play size={20} />} defaultExpanded>
           <div style={{ marginBottom: 20 }}>

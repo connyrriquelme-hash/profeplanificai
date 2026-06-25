@@ -21,7 +21,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           P
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">PlanificaIA Chile</h2>
+          <h2 className="text-lg font-semibold text-gray-900">ProfePlanificaI</h2>
           <div className="text-xs text-gray-500">Gestión docente</div>
         </div>
       </div>
@@ -48,7 +48,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       </div>
 
       <div className="px-4 py-2 border-t border-gray-200 text-center text-xs text-gray-500">
-        PlanificaIA v2.0
+        ProfePlanificaI v2.0
       </div>
     </nav>
   );
