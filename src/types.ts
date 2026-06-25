@@ -252,17 +252,10 @@ export interface EstudianteData {
 }
 
 export type ViewType =
-  | 'inicio'
-  | 'planificador'
-  | 'recursos'
-  | 'evaluaciones'
+  | 'dashboard'
+  | 'workspace'
   | 'banco'
-  | 'banco_recursos'
-  | 'colaboracion'
-  | 'drive'
-  | 'docente'
   | 'agente'
-  | 'config'
   | 'admin'
   | 'print';
 

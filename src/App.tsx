@@ -1,22 +1,14 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
-import type { ViewType, AIConfig } from './types';
-import { getConfig } from './services/storageService';
+import type { ViewType } from './types';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
-import { PlanificadorView } from './components/PlanificadorView';
-import { RecursosView } from './components/RecursosView';
-import { EvaluacionesView } from './components/EvaluacionesView';
+import { WorkspaceView } from './components/WorkspaceView';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
-import { BancoRecursosView } from './components/BancoRecursosView';
-import { ConfigView } from './components/ConfigView';
-import { ColaboracionView } from './components/ColaboracionView';
-import { DriveView } from './components/DriveView';
-import { DocenteView } from './components/DocenteView';
+import { BibliotecaView } from './components/BibliotecaView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
-import { AgenteView } from './components/AgenteView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const pageVariants = {
@@ -27,51 +19,32 @@ const pageVariants = {
 
 export default function App() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<ViewType>('inicio');
-  const [config, setConfig] = useState<AIConfig>(getConfig());
-  const handleNavigate = useCallback((view: string) => {
+  const [activeView, setActiveView] = useState<ViewType>('dashboard');
+  const handleViewChange = useCallback((view: string) => {
     setActiveView(view as ViewType);
-  }, []);
-
-  const handleConfigChange = useCallback((cfg: AIConfig) => {
-    setConfig(cfg);
   }, []);
 
   const renderView = () => {
     switch (activeView) {
-      case 'inicio':
-        return <DashboardView onNavigate={handleNavigate} />;
-      case 'planificador':
-        return <PlanificadorView onNavigate={handleNavigate} />;
-      case 'recursos':
-        return <RecursosView onNavigate={handleNavigate} />;
-      case 'evaluaciones':
-        return <EvaluacionesView onNavigate={handleNavigate} />;
+      case 'dashboard':
+        return <DashboardView onNavigate={handleViewChange} />;
+      case 'workspace':
+        return <WorkspaceView />;
       case 'banco':
         return <CurriculumCloudView />;
-      case 'banco_recursos':
-        return <BancoRecursosView />;
-      case 'colaboracion':
-        return <ColaboracionView />;
-      case 'drive':
-        return <DriveView />;
-      case 'docente':
-        return <DocenteView />;
       case 'agente':
-        return <AgenteView />;
+        return <BibliotecaView />;
       case 'admin':
         return <AdminView />;
-      case 'config':
-        return <ConfigView onConfigChange={handleConfigChange} />;
       default:
-        return <DashboardView onNavigate={handleNavigate} />;
+        return <DashboardView onNavigate={handleViewChange} />;
     }
   };
 
   if (loading) {
     return (
       <ErrorBoundary>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
       </ErrorBoundary>
@@ -83,9 +56,9 @@ export default function App() {
   }
 
   return (
-    <div className="app-layout">
-      <Sidebar activeView={activeView} onNavigate={handleNavigate} config={config} user={user} />
-      <main className="main-content">
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar activeView={activeView} onViewChange={handleViewChange} />
+      <main className="flex-1 min-w-0">
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             <motion.div
