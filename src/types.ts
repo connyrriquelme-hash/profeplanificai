@@ -255,6 +255,7 @@ export type ViewType =
   | 'dashboard'
   | 'workspace'
   | 'banco'
+  | 'banco-recursos'
   | 'agente'
   | 'admin'
   | 'print';
