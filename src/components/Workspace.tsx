@@ -620,73 +620,67 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
 
 
         <CollapsibleSection title="ESTRUCTURA DE LA CLASE" icon={<Play size={20} />} defaultExpanded>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Inicio</label>
-                <button
-                  className="small secondary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  onClick={() => handleGenerate('inicio')}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? <Loader size={12} className="spin" /> : <Sparkles size={12} />} IA
-                </button>
-              </div>
-              <textarea
-                className="output"
-                value={inicio}
-                onChange={handleChange('inicio', setInicio)}
-                onFocus={() => setFocusedSection('inicio')}
-                onBlur={() => setTimeout(() => setFocusedSection(null), 200)}
-                style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-                placeholder="Actividades de inicio, activación de conocimientos previos, motivación…"
-              />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Inicio</label>
+              <button
+                className="small secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                onClick={() => handleGenerate('inicio')}
+                disabled={isGenerating}
+              >
+                {isGenerating ? <Loader size={12} className="spin" /> : <Sparkles size={12} />} IA
+              </button>
             </div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Desarrollo</label>
-                <button
-                  className="small secondary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  onClick={() => handleGenerate('desarrollo')}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? <Loader size={12} className="spin" /> : <Sparkles size={12} />} IA
-                </button>
-              </div>
-              <textarea
-                className="output"
-                value={desarrollo}
-                onChange={handleChange('desarrollo', setDesarrollo)}
-                onFocus={() => setFocusedSection('desarrollo')}
-                onBlur={() => setTimeout(() => setFocusedSection(null), 200)}
-                style={{ minHeight: 200, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-                placeholder="Estrategias de enseñanza, actividades principales, trabajo colaborativo…"
-              />
+            <textarea
+              className="output"
+              value={inicio}
+              onChange={handleChange('inicio', setInicio)}
+              onFocus={() => setFocusedSection('inicio')}
+              onBlur={() => setTimeout(() => setFocusedSection(null), 200)}
+              style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
+              placeholder="Actividades de inicio, activación de conocimientos previos, motivación…"
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Desarrollo</label>
+              <button
+                className="small secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                onClick={() => handleGenerate('desarrollo')}
+                disabled={isGenerating}
+              >
+                {isGenerating ? <Loader size={12} className="spin" /> : <Sparkles size={12} />} IA
+              </button>
             </div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Cierre</label>
-                <button
-                  className="small secondary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  onClick={() => handleGenerate('cierre')}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? <Loader size={12} className="spin" /> : <Sparkles size={12} />} IA
-                </button>
-              </div>
-              <textarea
-                className="output"
-                value={cierre}
-                onChange={handleChange('cierre', setCierre)}
-                onFocus={() => setFocusedSection('cierre')}
-                onBlur={() => setTimeout(() => setFocusedSection(null), 200)}
-                style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-                placeholder="Síntesis, ticket de salida, retroalimentación, conexión con próxima clase…"
-              />
+            <textarea
+              className="output"
+              value={desarrollo}
+              onChange={handleChange('desarrollo', setDesarrollo)}
+              onFocus={() => setFocusedSection('desarrollo')}
+              onBlur={() => setTimeout(() => setFocusedSection(null), 200)}
+              style={{ minHeight: 200, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
+              placeholder="Estrategias de enseñanza, actividades principales, trabajo colaborativo…"
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Cierre</label>
+              <button
+                className="small secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                onClick={() => handleGenerate('cierre')}
+                disabled={isGenerating}
+              >
+                {isGenerating ? <Loader size={12} className="spin" /> : <Sparkles size={12} />} IA
+              </button>
             </div>
+            <textarea
+              className="output"
+              value={cierre}
+              onChange={handleChange('cierre', setCierre)}
+              onFocus={() => setFocusedSection('cierre')}
+              onBlur={() => setTimeout(() => setFocusedSection(null), 200)}
+              style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
+              placeholder="Síntesis, ticket de salida, retroalimentación, conexión con próxima clase…"
+            />
           </div>
         </CollapsibleSection>
 
