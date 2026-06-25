@@ -70,7 +70,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex w-full">
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
       <main className="flex-1 min-w-0 p-4 lg:p-6">
         <ErrorBoundary>
