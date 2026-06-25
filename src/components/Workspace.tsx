@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SelectorOA } from './SelectorOA';
-import { FileText, Play, Target, Sparkles, Plus, Search, CheckCircle, Loader, X, List, Table, Layout } from 'lucide-react';
+import { FileText, Play, Sparkles, Plus, Search, CheckCircle, Loader, X, List, Table, Layout } from 'lucide-react';
 import { useProject, type ProjectData } from '../contexts/ProjectContext';
 import { niveles, getAsignaturas, getOAs, type CurriculumItem } from '../data/curriculumData';
+import { AIAssistant, type PedagogicalContext } from './AIAssistant';
 
 type SectionKey = 'inicio' | 'desarrollo' | 'cierre';
 
@@ -340,6 +341,16 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   useEffect(() => { setSelectedAsignatura(''); setSelectedOA(null); setSelectedHabilidad(''); }, [selectedNivel]);
   useEffect(() => { setSelectedOA(null); setSelectedHabilidad(''); }, [selectedAsignatura]);
 
+  // Build pedagogical context for the AI agent
+  const pedagogicalContext: PedagogicalContext | null = selectedOA ? {
+    nivel: selectedNivel,
+    asignatura: selectedAsignatura,
+    oa_id: selectedOA.oa_id,
+    oa_texto: selectedOA.oa_texto,
+    habilidades: selectedOA.habilidades,
+    indicadores: selectedOA.indicadores,
+  } : null;
+
   // Auto-fill OA text, indicadores, and habilidades when OA is selected
   useEffect(() => {
     if (!selectedOA) return;
@@ -600,6 +611,10 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
           </div>
         </CollapsibleSection>
       </div>
+
+      <aside style={{ width: 280, flexShrink: 0, display: 'block' }}>
+        <AIAssistant context={pedagogicalContext} />
+      </aside>
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
