@@ -3,6 +3,18 @@ import { BookOpen, FileText, Users } from 'lucide-react';
 import { SelectorOA } from './SelectorOA';
 import { Workspace } from './Workspace';
 
+interface WorkspaceViewProps {
+  output?: string;
+  onNavigate?: (view: string) => void;
+  onSave?: () => void;
+  onCopy?: () => void;
+  onPrint?: () => void;
+  onExportPDF?: () => void;
+  onExportWord?: () => void;
+  onClose?: () => void;
+  initialMessage?: string;
+}
+
 type Tab = 'planificacion' | 'evaluaciones' | 'colaboracion';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -11,7 +23,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'colaboracion', label: 'Colaboración', icon: <Users size={16} /> },
 ];
 
-export function WorkspaceView() {
+export function WorkspaceView(_props: WorkspaceViewProps) {
   const [activeTab, setActiveTab] = useState<Tab>('planificacion');
 
   return (
@@ -63,7 +75,7 @@ export function WorkspaceView() {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn:hover:not(.active) { background: var(--bg2); border-color: var(--brand); color: var(--brand); }
