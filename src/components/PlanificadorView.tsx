@@ -382,7 +382,7 @@ Solo escribe tu solicitud y generaré una versión mejorada para ti.`;
         <div className="card workspace-section">
           <WorkspaceView
             output={output}
-            onNavigate={onNavigate}
+            onNavigate={onNavigate ?? (() => {})}
             onSave={() => {
               const material: MaterialSaved = {
                 id: generateId(),

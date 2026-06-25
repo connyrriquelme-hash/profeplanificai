@@ -11,7 +11,7 @@ import { StatusBar } from './shared/StatusBar';
 import { ResultActions } from './shared/ResultActions';
 import { MaterialList } from './shared/MaterialList';
 import { Stepper } from './shared/Stepper';
-import { BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download, Copy, Check, BarChart3 } from 'lucide-react';
+import { BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download, Copy, Check, BarChart3, ArrowRight, ArrowLeft } from 'lucide-react';
 import { AdaptarPanel } from './AdaptarPanel';
 
 interface RecursosViewProps {

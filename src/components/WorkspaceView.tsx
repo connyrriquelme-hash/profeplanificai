@@ -47,6 +47,9 @@ export function WorkspaceView({
       const { generarConIA } = await import('../services/aiService');
       const modifiedResponse = await generarConIA({
         tipo: 'ajustar',
+        nivel: '',
+        asignatura: '',
+        oa: '',
         promptExt: `El usuario quiere que modifiques el siguiente documento según su solicitud: "${messageInput}"
 
 Documento actual:
