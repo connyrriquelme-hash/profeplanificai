@@ -1,39 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FolderOpen, Search, Plus, BookOpen, Clock, Trash2 } from 'lucide-react';
+import { useProject } from '../contexts/ProjectContext';
 
-const STORAGE_KEY = 'planificaciones_guardadas';
-
-interface PlanificacionGuardada {
-  id: string;
-  titulo: string;
-  fecha: string;
-  objetivos: string;
-  inicio: string;
-  desarrollo: string;
-  cierre: string;
-  detalleClase: string;
-  recursos: string;
-  evaluacion: string;
+interface BibliotecaViewProps {
+  onNavigate?: (view: string) => void;
 }
 
-export function BibliotecaView() {
-  const [items, setItems] = useState<PlanificacionGuardada[]>([]);
+export function BibliotecaView({ onNavigate }: BibliotecaViewProps) {
+  const { library, removeFromLibrary, newProject } = useProject();
   const [query, setQuery] = useState('');
 
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    setItems(data);
-  }, []);
-
-  const handleDelete = (id: string) => {
-    const next = items.filter(i => i.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setItems(next);
+  const handleNew = () => {
+    newProject();
+    onNavigate?.('workspace');
   };
 
   const filtered = query
-    ? items.filter(i => i.titulo.toLowerCase().includes(query.toLowerCase()) || i.objetivos.toLowerCase().includes(query.toLowerCase()))
-    : items;
+    ? library.filter(i => i.titulo.toLowerCase().includes(query.toLowerCase()) || i.objetivos.toLowerCase().includes(query.toLowerCase()))
+    : library;
 
   return (
     <div className="view biblioteca">
@@ -47,7 +31,7 @@ export function BibliotecaView() {
             <Search className="search-icon" size={16} />
             <input placeholder="Buscar en tu biblioteca…" value={query} onChange={e => setQuery(e.target.value)} />
           </div>
-          <button className="primary"><Plus size={14} /> Nuevo</button>
+          <button className="primary" onClick={handleNew}><Plus size={14} /> Nuevo</button>
         </div>
       </div>
 
@@ -69,7 +53,7 @@ export function BibliotecaView() {
                     {new Date(item.fecha).toLocaleString('es-CL')}
                   </div>
                 </div>
-                <button className="ghost" style={{ padding: 4, color: 'var(--muted)' }} onClick={() => handleDelete(item.id)} title="Eliminar">
+                <button className="ghost" style={{ padding: 4, color: 'var(--muted)' }} onClick={() => removeFromLibrary(item.id)} title="Eliminar">
                   <Trash2 size={16} />
                 </button>
               </div>

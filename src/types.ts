@@ -254,6 +254,7 @@ export interface EstudianteData {
 export type ViewType =
   | 'dashboard'
   | 'workspace'
+  | 'evaluaciones'
   | 'banco'
   | 'banco-recursos'
   | 'agente'

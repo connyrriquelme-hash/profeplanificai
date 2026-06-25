@@ -381,47 +381,7 @@ Solo escribe tu solicitud y generaré una versión mejorada para ti.`;
       {output && (
         <div className="card workspace-section">
           <WorkspaceView
-            output={output}
             onNavigate={onNavigate ?? (() => {})}
-            onSave={() => {
-              const material: MaterialSaved = {
-                id: generateId(),
-                tipo: 'planificacion',
-                titulo: `Planificación - ${form.nivel} ${form.asignatura}`,
-                contenido: output,
-                nivel: form.nivel,
-                asignatura: form.asignatura,
-                oa: form.oa,
-                fecha: new Date().toISOString(),
-                etiquetas: [form.enfoque],
-              };
-              saveMaterial(material);
-              setSavedMaterials(getMaterials().filter((m) => m.tipo === 'planificacion'));
-              setStatus('Planificación guardada en Mis materiales.');
-              setStatusType('ok');
-            }}
-            onCopy={() => {
-              navigator.clipboard.writeText(output);
-              setStatus('Contenido copiado al portapapeles.');
-              setStatusType('ok');
-            }}
-            onPrint={() => {
-              printAndOpen();
-            }}
-            onExportPDF={() => {
-              import('../utils/exportPdf').then(({ exportToPDF }) => {
-                exportToPDF('Planificación', output);
-              });
-            }}
-            onExportWord={() => {
-              exportToWord();
-            }}
-            onClose={() => {
-              setOutput('');
-              setStatus('Completa los campos y presiona generar.');
-              setStatusType('');
-            }}
-            initialMessage={getInitialMessage()}
           />
         </div>
       )}

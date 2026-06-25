@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
+import { ProjectProvider } from './contexts/ProjectContext';
 import type { ViewType } from './types';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
@@ -19,11 +20,18 @@ const pageVariants = {
   exit: { opacity: 0, y: -12, transition: { duration: 0.15 } },
 };
 
-export default function App() {
+interface ViewState {
+  tab?: string;
+}
+
+function AppContent() {
   const { user, loading, isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
-  const handleViewChange = useCallback((view: string) => {
+  const [viewState, setViewState] = useState<ViewState | null>(null);
+
+  const handleViewChange = useCallback((view: string, state?: ViewState) => {
     setActiveView(view as ViewType);
+    setViewState(state ?? null);
   }, []);
 
   const renderView = () => {
@@ -31,13 +39,13 @@ export default function App() {
       case 'dashboard':
         return <DashboardView onNavigate={handleViewChange} />;
       case 'workspace':
-        return <WorkspaceView />;
+        return <WorkspaceView onNavigate={handleViewChange} />;
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':
-        return <BibliotecaView />;
+        return <BibliotecaView onNavigate={handleViewChange} />;
       case 'banco-recursos':
-        return <BancoRecursosView />;
+        return <BancoRecursosView initialTab={viewState?.tab as any} onNavigate={handleViewChange} />;
       case 'admin':
         return <AdminView />;
       default:
@@ -67,7 +75,7 @@ export default function App() {
           <ErrorBoundary>
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeView}
+                key={activeView + (viewState?.tab || '')}
                 variants={pageVariants}
                 initial="initial"
                 animate="animate"
@@ -83,5 +91,13 @@ export default function App() {
         </aside>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ProjectProvider>
+      <AppContent />
+    </ProjectProvider>
   );
 }

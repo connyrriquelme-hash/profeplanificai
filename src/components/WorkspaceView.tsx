@@ -3,15 +3,7 @@ import { BookOpen, FileText, Users } from 'lucide-react';
 import { Workspace } from './Workspace';
 
 interface WorkspaceViewProps {
-  output?: string;
   onNavigate?: (view: string) => void;
-  onSave?: () => void;
-  onCopy?: () => void;
-  onPrint?: () => void;
-  onExportPDF?: () => void;
-  onExportWord?: () => void;
-  onClose?: () => void;
-  initialMessage?: string;
 }
 
 type Tab = 'planificacion' | 'evaluaciones' | 'colaboracion';
@@ -56,7 +48,7 @@ export function WorkspaceView(_props: WorkspaceViewProps) {
       </div>
 
       <div style={{ animation: 'fadeIn .2s ease' }}>
-        {activeTab === 'planificacion' && <Workspace />}
+        {activeTab === 'planificacion' && <Workspace onNavigate={_props.onNavigate} />}
         {activeTab === 'evaluaciones' && (
           <div className="card" style={{ textAlign: 'center', padding: 48 }}>
             <p className="muted" style={{ fontSize: 15 }}>En construcción</p>

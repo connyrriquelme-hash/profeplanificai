@@ -1,8 +1,9 @@
-interface DashboardViewProps {
-  onNavigate: (view: string) => void;
-}
-
 import { ClipboardEdit, Package, FileText, Database } from 'lucide-react';
+import { useProject } from '../contexts/ProjectContext';
+
+interface DashboardViewProps {
+  onNavigate: (view: string, state?: { tab?: string }) => void;
+}
 
 const ACTIONS = [
   { view: 'workspace', icon: ClipboardEdit, color: '#6d5dfc', title: 'Crear Planificación', desc: 'Diseña clases y unidades completas con inicio, desarrollo y cierre.' },
@@ -12,6 +13,13 @@ const ACTIONS = [
 ];
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
+  const { newProject } = useProject();
+
+  const handleClick = (view: string) => {
+    if (view === 'workspace') newProject();
+    onNavigate(view, view === 'banco-recursos' ? { tab: 'planificaciones' } : undefined);
+  };
+
   return (
     <div className="view" id="inicio">
       <div style={{ textAlign: 'center', marginBottom: 28, marginTop: 16 }}>
@@ -24,7 +32,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         {ACTIONS.map(a => {
           const Icon = a.icon;
           return (
-            <div key={a.view} className="action-card" onClick={() => onNavigate(a.view)}>
+            <div key={a.view} className="action-card" onClick={() => handleClick(a.view)}>
               <div className="action-icon" style={{ background: `linear-gradient(135deg, ${a.color}, ${a.color}dd)` }}>
                 <Icon size={28} />
               </div>

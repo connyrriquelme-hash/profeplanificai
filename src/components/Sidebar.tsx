@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookOpen, Database, Archive } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Database, Archive, FileText } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -9,6 +9,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
     { id: 'workspace', label: 'Espacio de Trabajo', icon: BookOpen },
+    { id: 'evaluaciones', label: 'Evaluaciones', icon: FileText },
     { id: 'banco', label: 'Biblioteca', icon: Database },
     { id: 'banco-recursos', label: 'Banco de Recursos', icon: Archive },
   ];
