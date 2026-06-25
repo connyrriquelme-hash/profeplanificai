@@ -11,12 +11,8 @@ interface WorkspaceProps {
   onNavigate?: (view: string) => void;
 }
 
-const selectStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)', background: 'var(--card)', color: 'var(--ink)',
-  fontSize: 13, fontFamily: 'Inter, system-ui, sans-serif', cursor: 'pointer',
-  outline: 'none', transition: 'border-color .15s',
-};
+const selectClass =
+  'w-full px-3 py-[10px] text-[13px] sm:text-sm border border-[var(--line)] rounded-[var(--radius)] bg-[var(--card)] text-[var(--ink)] font-[Inter,system-ui,sans-serif] cursor-pointer outline-none transition-[border-color] duration-150';
 
 
 
@@ -207,37 +203,38 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   };
 
   return (
-    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <Toast message={toastMessage} visible={toastVisible} />
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      {/* ── Left panel: configuration ── */}
+      <div className="lg:col-span-4 space-y-5">
         {/* ── Cascading selectors ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Nivel</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Nivel</label>
             <select
               value={selectedNivel}
               onChange={e => handleNivelChange(e.target.value)}
-              style={selectStyle}
+              className={selectClass}
             >
               <option value="">Seleccionar nivel</option>
               {niveles.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Asignatura</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Asignatura</label>
             <select
               value={selectedAsignatura}
               onChange={e => handleAsignaturaChange(e.target.value)}
-              style={selectStyle}
+              className={selectClass}
               disabled={!selectedNivel}
             >
               <option value="">{selectedNivel ? 'Seleccionar asignatura' : 'Primero elige nivel'}</option>
               {selectedNivel && getAsignaturas(selectedNivel).map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Objetivo (OA)</label>
+          <div className="col-span-2">
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Objetivo (OA)</label>
             {selectedAsignatura && (
               <div style={{ position: 'relative', marginBottom: 6 }}>
                 <Search size={13} style={{ position: 'absolute', left: 10, top: 9, color: 'var(--muted2)', pointerEvents: 'none' }} />
@@ -261,7 +258,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                 const oas = getOAs(selectedNivel, selectedAsignatura);
                 setSelectedOA(oas.find(o => o.oa_id === e.target.value) || null);
               }}
-              style={selectStyle}
+              className={selectClass}
               disabled={!selectedAsignatura}
             >
               <option value="">{selectedAsignatura ? 'Seleccionar OA' : 'Primero elige asignatura'}</option>
@@ -273,11 +270,11 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Habilidad</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Habilidad</label>
             <select
               value={selectedHabilidad}
               onChange={e => setSelectedHabilidad(e.target.value)}
-              style={selectStyle}
+              className={selectClass}
               disabled={!selectedOA}
             >
               <option value="">{selectedOA ? 'Seleccionar habilidad' : 'Primero elige OA'}</option>
@@ -287,9 +284,9 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         </div>
 
         {/* ── OA card with auto-filled text ── */}
-        <div style={{ border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: 24, marginBottom: 20, background: 'var(--card)' }}>
+        <div style={{ border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: 24, background: 'var(--card)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted2)' }}>OBJETIVO DE APRENDIZAJE (OA)</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted2)' }} className="text-[10px] sm:text-[11px] lg:text-xs">OBJETIVO DE APRENDIZAJE (OA)</div>
             <button className="primary" onClick={() => setIsSelectorOpen(!isSelectorOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '6px 14px' }}>
               <Search size={12} /> Buscar OA
             </button>
@@ -320,11 +317,17 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
           )}
         </div>
 
+        <aside>
+          <AIAssistant context={pedagogicalContext} />
+        </aside>
+      </div>
 
+      {/* ── Right panel: content ── */}
+      <div className="lg:col-span-8 space-y-5">
 
         <CollapsibleSection title="ESTRUCTURA DE LA CLASE" icon={<Play size={20} />} defaultExpanded>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>Secuencia didáctica completa</label>
+            <label className="text-xs sm:text-sm" style={{ fontWeight: 600, color: 'var(--ink2)' }}>Secuencia didáctica completa</label>
             <button
               className="small secondary"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
@@ -335,17 +338,17 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             </button>
           </div>
           <textarea
-            className="output"
+            className="output p-3 sm:p-4 lg:p-5"
             value={estructuraClase}
             onChange={handleChange(setEstructuraClase, 'inicio')}
-            style={{ minHeight: 460, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff', border: 'none', borderRadius: 0, padding: 0 }}
+            style={{ minHeight: 460, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff', border: 'none', borderRadius: 0 }}
             placeholder={`### INICIO (10-15 min)\nActivación de conocimientos previos…\n\n### DESARROLLO (25-30 min)\nEstrategias de enseñanza…\n\n### CIERRE (5-10 min)\nTicket de salida…`}
           />
         </CollapsibleSection>
 
         <CollapsibleSection title="RECURSOS Y MATERIALES" icon={<FileText size={20} />}>
           <textarea
-            className="output"
+            className="output p-3 sm:p-4"
             value={recursos}
             onChange={handleChange(setRecursos, 'recursos')}
             style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
@@ -355,7 +358,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
 
         <CollapsibleSection title="INSTRUMENTO DE EVALUACIÓN" icon={<FileText size={20} />}>
           <textarea
-            className="output"
+            className="output p-3 sm:p-4"
             value={evaluacion}
             onChange={handleChange(setEvaluacion, 'evaluacion')}
             style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
@@ -368,17 +371,10 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         </CollapsibleSection>
       </div>
 
-      <aside style={{ width: 280, flexShrink: 0, display: 'block' }}>
-        <AIAssistant context={pedagogicalContext} />
-      </aside>
-
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; padding: 40px 20px; overflow-y: auto; }
-        .modal { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); max-width: 680px; width: 100%; }
-        .suggestion-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px; border-bottom: 1px solid var(--line); }
       `}</style>
     </div>
   );
