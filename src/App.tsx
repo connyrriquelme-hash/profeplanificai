@@ -72,7 +72,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
-      <main className="flex-1 min-w-0" style={{ display: 'flex', gap: 16, padding: '24px 32px', maxWidth: 1400 }}>
+      <main className="flex-1 min-w-0 p-4 lg:p-6" style={{ display: 'flex', gap: 16 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <ErrorBoundary>
             <AnimatePresence mode="wait">
