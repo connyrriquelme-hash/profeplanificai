@@ -8,6 +8,7 @@ import { WorkspaceView } from './components/WorkspaceView';
 import { AIAssistant } from './components/AIAssistant';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
 import { BibliotecaView } from './components/BibliotecaView';
+import { BancoRecursosView } from './components/BancoRecursosView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -35,6 +36,8 @@ export default function App() {
         return <CurriculumCloudView />;
       case 'agente':
         return <BibliotecaView />;
+      case 'banco-recursos':
+        return <BancoRecursosView />;
       case 'admin':
         return <AdminView />;
       default:

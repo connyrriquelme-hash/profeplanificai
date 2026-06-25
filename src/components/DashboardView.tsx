@@ -5,10 +5,10 @@ interface DashboardViewProps {
 import { ClipboardEdit, Package, FileText, Database } from 'lucide-react';
 
 const ACTIONS = [
-  { view: 'planificador', icon: ClipboardEdit, color: '#6d5dfc', title: 'Crear Planificación', desc: 'Diseña clases y unidades completas con inicio, desarrollo y cierre.' },
-  { view: 'recursos', icon: Package, color: '#00a7a7', title: 'Generar Recurso / Guía', desc: 'Crea guías, fichas, presentaciones y actividades para tus estudiantes.' },
-  { view: 'evaluaciones', icon: FileText, color: '#f59e0b', title: 'Crear Evaluación', desc: 'Elabora evaluaciones formativas, sumativas y tipo SIMCE con pauta.' },
-  { view: 'banco_recursos', icon: Database, color: '#a78bfa', title: 'Ir a mi Banco de Recursos', desc: 'Revisa, descarga y gestiona todo tu material generado.' },
+  { view: 'workspace', icon: ClipboardEdit, color: '#6d5dfc', title: 'Crear Planificación', desc: 'Diseña clases y unidades completas con inicio, desarrollo y cierre.' },
+  { view: 'banco', icon: Package, color: '#00a7a7', title: 'Generar Recurso / Guía', desc: 'Crea guías, fichas, presentaciones y actividades para tus estudiantes.' },
+  { view: 'agente', icon: FileText, color: '#f59e0b', title: 'Crear Evaluación', desc: 'Elabora evaluaciones formativas, sumativas y tipo SIMCE con pauta.' },
+  { view: 'banco-recursos', icon: Database, color: '#a78bfa', title: 'Ir a mi Banco de Recursos', desc: 'Revisa, descarga y gestiona todo tu material generado.' },
 ];
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
