@@ -278,6 +278,7 @@ body {
 /* Views */
 .view {
   display: block;
+  width: 100%;
 }
 
 .view.hidden {

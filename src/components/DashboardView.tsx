@@ -24,7 +24,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
     <div className="view" id="inicio">
       <div style={{ textAlign: 'center', marginBottom: 28, marginTop: 16 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>¿Qué vamos a preparar hoy, Profe?</h1>
-        <p className="muted" style={{ fontSize: 15, maxWidth: 500, margin: '0 auto' }}>
+        <p className="muted" style={{ fontSize: 15 }}>
           Crea materiales educativos alineados al Currículum Nacional de Chile en minutos.
         </p>
       </div>
@@ -43,7 +43,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         })}
       </div>
       <style>{`
-        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
         .action-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 24px; cursor: pointer; transition: all var(--t-base); position: relative; overflow: hidden; }
         .action-card:hover { border-color: var(--brand); transform: translateY(-4px); box-shadow: 0 8px 32px rgba(109,93,252,0.15); }
         .action-card:active { transform: translateY(-1px); }
