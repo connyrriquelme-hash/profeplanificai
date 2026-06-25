@@ -257,6 +257,7 @@ export type ViewType =
   | 'recursos'
   | 'evaluaciones'
   | 'banco'
+  | 'banco_recursos'
   | 'colaboracion'
   | 'drive'
   | 'docente'

@@ -9,6 +9,7 @@ import { PlanificadorView } from './components/PlanificadorView';
 import { RecursosView } from './components/RecursosView';
 import { EvaluacionesView } from './components/EvaluacionesView';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
+import { BancoRecursosView } from './components/BancoRecursosView';
 import { ConfigView } from './components/ConfigView';
 import { ColaboracionView } from './components/ColaboracionView';
 import { DriveView } from './components/DriveView';
@@ -16,6 +17,7 @@ import { DocenteView } from './components/DocenteView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
 import { AgenteView } from './components/AgenteView';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -47,6 +49,8 @@ export default function App() {
         return <EvaluacionesView onNavigate={handleNavigate} />;
       case 'banco':
         return <CurriculumCloudView />;
+      case 'banco_recursos':
+        return <BancoRecursosView />;
       case 'colaboracion':
         return <ColaboracionView />;
       case 'drive':
@@ -66,31 +70,35 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <ErrorBoundary>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </ErrorBoundary>
     );
   }
 
   if (!isAuthenticated) {
-    return <LoginView />;
+    return <ErrorBoundary><LoginView /></ErrorBoundary>;
   }
 
   return (
     <div className="app-layout">
       <Sidebar activeView={activeView} onNavigate={handleNavigate} config={config} user={user} />
       <main className="main-content">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeView}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            {renderView()}
-          </motion.div>
-        </AnimatePresence>
+        <ErrorBoundary>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeView}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {renderView()}
+            </motion.div>
+          </AnimatePresence>
+        </ErrorBoundary>
       </main>
     </div>
   );

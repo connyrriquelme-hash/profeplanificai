@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { MaterialSaved } from '../types';
 import { NIVELES, ASIGNATURAS, EVAL_TIPOS, DIFICULTADES, HABILIDADES } from '../types';
 import { generarConIA } from '../services/aiService';
@@ -9,14 +9,18 @@ import type { CurriculumItem } from '../types';
 import { buildCurriculumHeaderFromItem } from '../utils/curriculum';
 import { StatusBar } from './shared/StatusBar';
 import { MaterialList } from './shared/MaterialList';
-import { BookOpen, Sparkles, Send, Printer, Download, Copy, Check, CopyPlus, Edit3 } from 'lucide-react';
+import { Stepper } from './shared/Stepper';
+import { BookOpen, Sparkles, Send, Printer, Download, Copy, Check, CopyPlus, Edit3, FileText, ClipboardEdit, ArrowRight, ArrowLeft } from 'lucide-react';
 import { AdaptarPanel } from './AdaptarPanel';
 
 interface EvaluacionesViewProps {
   onNavigate: (view: string) => void;
 }
 
+const STEPS = ['Configuración', 'Contenido', 'Personalización'];
+
 export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
+  const [step, setStep] = useState(1);
   const [selectedItem, setSelectedItem] = useState<CurriculumItem | null>(null);
   const [tipo, setTipo] = useState('Evaluación formativa');
   const [nivel, setNivel] = useState('2° básico');
@@ -322,9 +326,13 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
         </div>
       )}
 
-      <div className="two-col">
+      <Stepper steps={STEPS} current={step} />
+
+      {step === 1 && (
         <div className="card">
-          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+          <h3>Paso 1: Configuración</h3>
+          <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Define el tipo, nivel y asignatura de la evaluación.</p>
+          <div className="grid">
             <div>
               <label>Tipo de evaluación</label>
               <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
@@ -344,104 +352,126 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </select>
             </div>
             <div>
-              <label>Habilidad</label>
+              <label>Habilidad principal</label>
               <select value={habilidad} onChange={(e) => setHabilidad(e.target.value)}>
                 {HABILIDADES.map((h) => <option key={h}>{h}</option>)}
               </select>
             </div>
-            <div>
-              <label>Dificultad</label>
-              <select value={dificultad} onChange={(e) => setDificultad(e.target.value)}>
-                {DIFICULTADES.map((d) => <option key={d}>{d}</option>)}
-              </select>
+          </div>
+          <div className="btnrow" style={{ justifyContent: 'flex-end', marginTop: 16 }}>
+            <button className="primary" onClick={() => setStep(2)}>
+              Siguiente <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="two-col">
+          <div className="card">
+            <h3>Paso 2: Contenido (OA e Indicadores)</h3>
+            <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Selecciona un OA desde el Banco Curricular o completa el campo manualmente.</p>
+            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              OA / habilidad
+              <button className="small ghost" onClick={handleBuscarOA} style={{ fontSize: 11 }}>
+                <BookOpen size={10} /> Buscar en banco OA
+              </button>
+            </label>
+            <textarea
+              value={oa}
+              onChange={(e) => setOa(e.target.value)}
+              placeholder="Pega el OA aquí o selecciona desde el Banco OA..."
+              style={{ minHeight: 50, fontSize: 13 }}
+            />
+            {selectedItem && (
+              <div style={{ marginTop: 8, padding: 8, background: 'var(--surface)', borderRadius: 6, fontSize: 12 }}>
+                <code>{selectedItem.id}</code>
+                <span style={{ color: 'var(--muted)', marginLeft: 8 }}>{selectedItem.curso} · {selectedItem.eje}</span>
+              </div>
+            )}
+            <div className="btnrow" style={{ justifyContent: 'space-between', marginTop: 16 }}>
+              <button className="ghost" onClick={() => setStep(1)}>
+                <ArrowLeft size={14} /> Atrás
+              </button>
+              <button className="primary" onClick={() => setStep(3)}>
+                Siguiente <ArrowRight size={14} />
+              </button>
             </div>
-            {isSIMCE && (
-              <div>
-                <label>N° preguntas</label>
-                <input type="number" min={3} max={20} value={nPreguntas}
-                  onChange={(e) => setNPreguntas(parseInt(e.target.value) || 5)} />
+          </div>
+          <div className="card">
+            <h3>Indicadores de evaluación</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+                Selecciona al menos un indicador a evaluar ({selectedInds.size} de {indicadores.length} seleccionados)
+              </p>
+              <div className="btnrow" style={{ gap: 4 }}>
+                <button className="small ghost" onClick={selectAllInds} style={{ fontSize: 11 }}>Todo</button>
+                <button className="small ghost" onClick={deselectAllInds} style={{ fontSize: 11 }}>Ninguno</button>
+              </div>
+            </div>
+            {indicadores.length === 0 ? (
+              <p className="muted" style={{ fontSize: 13, fontStyle: 'italic' }}>
+                Selecciona un OA desde el Banco OA para ver sus indicadores.
+              </p>
+            ) : (
+              <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                {indicadores.map((ind, i) => (
+                  <label key={i} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0',
+                    borderBottom: '1px solid var(--border)', fontSize: 13, cursor: 'pointer',
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedInds.has(i)}
+                      onChange={() => toggleIndicador(i)}
+                      style={{ marginTop: 2 }}
+                    />
+                    <span style={{ color: selectedInds.has(i) ? 'var(--ink)' : 'var(--muted)' }}>
+                      {ind}
+                    </span>
+                  </label>
+                ))}
               </div>
             )}
           </div>
+        </div>
+      )}
 
-          <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            OA / habilidad
-            <button className="small ghost" onClick={handleBuscarOA} style={{ fontSize: 11 }}>
-              <BookOpen size={10} /> Buscar en banco OA
-            </button>
-          </label>
-          <textarea
-            value={oa}
-            onChange={(e) => setOa(e.target.value)}
-            placeholder="Pega el OA aquí o selecciona desde el Banco OA..."
-            style={{ minHeight: 50, fontSize: 13 }}
-          />
-
-          {isSIMCE && (
-            <>
-              <label>Texto base o tema</label>
-              <textarea
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                placeholder="Texto breve, situación o tema para contextualizar las preguntas SIMCE..."
-                style={{ minHeight: 60, fontSize: 13 }}
-              />
-            </>
-          )}
-
-          <div className="btnrow">
-            <button className="primary" onClick={handleGenerar}>
-              <Sparkles size={14} /> Generar {isSIMCE ? 'SIMCE' : 'evaluación'}
-            </button>
+      {step === 3 && (
+        <div className="two-col">
+          <div className="card">
+            <h3>Paso 3: Personalización y DUA</h3>
+            <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Configura dificultad, preguntas SIMCE (si aplica) y genera la evaluación.</p>
+            <label>Dificultad</label>
+            <select value={dificultad} onChange={(e) => setDificultad(e.target.value)}>
+              {DIFICULTADES.map((d) => <option key={d}>{d}</option>)}
+            </select>
+            {isSIMCE && (
+              <>
+                <label style={{ marginTop: 12 }}><b>Evaluación tipo SIMCE</b></label>
+                <label>Número de preguntas</label>
+                <input type="number" min={3} max={20} value={nPreguntas}
+                  onChange={(e) => setNPreguntas(parseInt(e.target.value) || 5)} />
+                <label>Texto base o tema para contextualizar las preguntas</label>
+                <textarea
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  placeholder="Texto breve, situación o tema..."
+                  style={{ minHeight: 60, fontSize: 13, marginTop: 8 }}
+                />
+              </>
+            )}
+            <div className="btnrow" style={{ justifyContent: 'space-between', marginTop: 16 }}>
+              <button className="ghost" onClick={() => setStep(2)}>
+                <ArrowLeft size={14} /> Atrás
+              </button>
+              <button className="primary" onClick={handleGenerar} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={14} /> Generar {isSIMCE ? 'SIMCE' : 'evaluación'}
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <h3>Indicadores de evaluación</h3>
-            <div className="btnrow" style={{ gap: 4 }}>
-              <button className="small ghost" onClick={selectAllInds} style={{ fontSize: 11 }}>Todo</button>
-              <button className="small ghost" onClick={deselectAllInds} style={{ fontSize: 11 }}>Ninguno</button>
-            </div>
-          </div>
-          {indicadores.length === 0 ? (
-            <p className="muted" style={{ fontSize: 13, fontStyle: 'italic' }}>
-              Selecciona un OA desde el Banco OA para ver sus indicadores.
-            </p>
-          ) : (
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-              {indicadores.map((ind, i) => (
-                <label key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0',
-                  borderBottom: '1px solid var(--border)', fontSize: 13, cursor: 'pointer',
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedInds.has(i)}
-                    onChange={() => toggleIndicador(i)}
-                    style={{ marginTop: 2 }}
-                  />
-                  <span style={{ color: selectedInds.has(i) ? 'var(--ink)' : 'var(--muted)' }}>
-                    {ind}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-          {selectedInds.size > 0 && (
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-              {selectedInds.size} de {indicadores.length} indicadores seleccionados
-            </p>
-          )}
-
-          {selectedItem && (
-            <div style={{ marginTop: 10, padding: 8, background: 'var(--surface)', borderRadius: 6, fontSize: 12 }}>
-              <code>{selectedItem.id}</code>
-              <span style={{ color: 'var(--muted)', marginLeft: 8 }}>{selectedItem.curso} · {selectedItem.eje}</span>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -453,6 +483,9 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </button>
               <button className="small ghost" onClick={handleEnviarDrive} title="Enviar a Drive personal">
                 <Send size={12} /> Drive
+              </button>
+              <button className="small ghost" onClick={() => { onNavigate('planificador'); }} title="Convertir en planificación">
+                <ClipboardEdit size={12} /> Planificar
               </button>
               <button className="small ghost" onClick={handleImprimir} title="Imprimir">
                 <Printer size={12} /> Imprimir

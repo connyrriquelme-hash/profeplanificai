@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Copy, Database, ExternalLink, FileDown, Save, Search, Sparkles } from 'lucide-react';
+import { BookOpen, Copy, Database, ExternalLink, FileDown, RotateCw, Save, Search, Sparkles } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { saveDriveItem, generateId } from '../services/storageService';
 import { exportToPDF } from '../utils/exportPdf';
@@ -34,12 +34,38 @@ export function CurriculumCloudView() {
   const [status, setStatus] = useState('Cargando base curricular…');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { api.get<{ data: Course[] }>('/api/courses').then(r => { setCourses(r.data); setStatus(r.data.some(c => Number(c.objective_count)) ? 'Base oficial conectada.' : 'La base está preparada, pero aún no contiene OA importados.'); }).catch(e => setStatus(e.message)); }, []);
-  useEffect(() => { api.get<{ data: Subject[] }>(`/api/subjects${course ? `?course=${encodeURIComponent(course)}` : ''}`).then(r => setSubjects(r.data)).catch(() => setSubjects([])); }, [course]);
+  const loadCourses = () => {
+    setStatus('Cargando cursos…');
+    api.get<{ data: Course[] }>('/api/courses')
+      .then(r => {
+        setCourses(r.data);
+        if (r.data.length && !course) setCourse(r.data[0].code);
+        setStatus(r.data.some(c => Number(c.objective_count)) ? `${r.data.length} cursos disponibles.` : 'Base preparada. Selecciona un curso.');
+      })
+      .catch(e => setStatus('Error al cargar cursos: ' + e.message));
+  };
+
+  useEffect(() => { loadCourses(); }, []);
+
+  useEffect(() => {
+    const c = course;
+    api.get<{ data: Subject[] }>(`/api/subjects${c ? `?course=${encodeURIComponent(c)}` : ''}`)
+      .then(r => setSubjects(r.data))
+      .catch(() => setSubjects([]));
+  }, [course]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(); if (course) params.set('course', course); if (subject) params.set('subject', subject); if (query.trim()) params.set('q', query.trim()); params.set('limit', '120');
-      api.get<{ data: Objective[] }>(`/api/objectives?${params}`).then(r => { setObjectives(r.data); if (r.data.length) setStatus(`${r.data.length} OA oficiales encontrados.`); }).catch(e => setStatus(e.message));
+      const params = new URLSearchParams();
+      if (course) params.set('course', course);
+      if (subject) params.set('subject', subject);
+      if (query.trim()) params.set('q', query.trim());
+      params.set('limit', '120');
+      const qs = params.toString();
+      if (!qs) { setObjectives([]); return; }
+      api.get<{ data: Objective[] }>(`/api/objectives?${qs}`)
+        .then(r => { setObjectives(r.data); setStatus(`${r.data.length} OA encontrados.`); })
+        .catch(e => setStatus('Error: ' + e.message));
     }, 250);
     return () => clearTimeout(timer);
   }, [course, subject, query]);
@@ -77,14 +103,14 @@ export function CurriculumCloudView() {
         <div><label>Asignatura</label><select value={subject} onChange={e => setSubject(e.target.value)}><option value="">Todas las asignaturas</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.objective_count || 0})</option>)}</select></div>
         <div><label>Buscar OA</label><div className="search-bar"><Search className="search-icon" size={16} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Código o texto oficial…" /></div></div>
       </div>
-      <div className="status">{status}</div>
+      <div className="status">{status} <button className="secondary" onClick={loadCourses} title="Recargar datos" style={{ padding: '2px 8px', fontSize: 12 }}><RotateCw size={14} /></button></div>
     </div>
     <div className="curriculum-layout">
       <div className="curriculum-results">
         {objectives.map(oa => <button key={oa.code} className={`curriculum-oa-card${selected?.code === oa.code ? ' selected' : ''}`} onClick={() => openObjective(oa.code)}>
           <div><code>{oa.code}</code><span>{oa.course_name} · {oa.subject_name}{oa.axis_name ? ` · ${oa.axis_name}` : ''}</span></div><p>{oa.official_text}</p>
         </button>)}
-        {!objectives.length && <div className="empty-state"><BookOpen size={34} /><p>No hay OA para estos filtros.</p></div>}
+        {!objectives.length && <div className="empty-state"><BookOpen size={34} /><p>Selecciona un curso y asignatura para ver los OA disponibles.</p></div>}
       </div>
       <div className="curriculum-detail">
         {!selected ? <div className="card empty-state"><BookOpen size={38} /><p>Selecciona un Objetivo de Aprendizaje.</p></div> : <>

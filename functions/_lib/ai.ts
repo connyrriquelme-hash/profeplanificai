@@ -30,7 +30,7 @@ Incluir DUA: ${request.include_dua}
 Estilo SIMCE: ${request.include_simce_style}
 
 Exige indicadores observables, inicio/desarrollo/cierre, evaluación formativa, adecuaciones DUA y español chileno claro. No alteres el texto oficial ni inventes otros códigos OA.
-Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
+Devuelve SOLO JSON válido, sin markdown, escapando correctamente comillas dobles y saltos de línea dentro de strings. Usa esta forma exacta:
 {"titulo":"","objetivo":"","inicio":"","desarrollo":"","cierre":"","materiales":[],"evaluacion":[],"rubrica":[{"criterio":"","niveles":[]}],"adecuaciones_dua":[],"indicadores":[],"preguntas":[{"enunciado":"","alternativas":[],"respuesta":""}]}`;
 }
 

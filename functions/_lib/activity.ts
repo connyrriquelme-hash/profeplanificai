@@ -47,7 +47,14 @@ export function validateActivityRequest(value: unknown): ActivityRequest {
 
 export function parseActivityJson(raw: string): ActivityResult {
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-  const parsed = JSON.parse(cleaned) as Partial<ActivityResult>;
+  let parsed: Partial<ActivityResult>;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    const posMatch = String(e).match(/position\s+(\d+)/);
+    const pos = posMatch ? ` (posición ${posMatch[1]})` : '';
+    throw new Error(`La IA devolvió JSON inválido${pos}. Reintenta la generación.`);
+  }
   const required = ['titulo', 'objetivo', 'inicio', 'desarrollo', 'cierre'] as const;
   for (const key of required) if (typeof parsed[key] !== 'string' || !parsed[key]?.trim()) throw new Error(`Respuesta IA sin campo ${key}`);
   const strings = (value: unknown) => Array.isArray(value) ? value.map(String).filter(Boolean) : [];

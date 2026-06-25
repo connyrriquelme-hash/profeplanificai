@@ -7,6 +7,3 @@ binding = "DB"
 database_name = "planificaia-db"
 database_id = "19c4fea3-444e-4094-8c66-610704c674be"
 preview_database_id = "19c4fea3-444e-4094-8c66-610704c674be"
-
-[limits]
-subrequests = 1000

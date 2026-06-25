@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ClipboardEdit, Package, FileText, BookOpen, Users, Folder, GraduationCap, Settings, LogOut, Minimize2, BarChart3, Bot } from 'lucide-react';
+import { LayoutDashboard, ClipboardEdit, Package, FileText, BookOpen, Users, Folder, GraduationCap, LogOut, Minimize2, BarChart3, Bot, Database } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth as useAuthContext } from '../contexts/AuthContext';
 import type { ViewType, AIConfig } from '../types';
@@ -40,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { view: 'drive', label: 'Drive', icon: <Folder size={18} />, badgeKey: 'planificaia_drive' },
   { view: 'docente', label: 'Docente', icon: <GraduationCap size={18} />, badgeKey: 'planificaia_cursos' },
   { view: 'admin', label: 'Admin', icon: <BarChart3 size={18} />, adminOnly: true },
-  { view: 'config', label: 'Conectar IA', icon: <Settings size={18} /> },
+  { view: 'banco_recursos', label: 'Banco Recursos', icon: <Database size={18} /> },
 ];
 
 export function Sidebar({ activeView, onNavigate, config, user }: SidebarProps) {
@@ -65,36 +65,39 @@ export function Sidebar({ activeView, onNavigate, config, user }: SidebarProps) 
       : `IA: ${config.provider}`;
 
   return (
-    <nav className="sidebar no-print">
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-badge">P</div>
+    <nav className="w-64 min-w-[260px] bg-white border-r border-gray-200 flex flex-col h-screen sticky top-0 z-10 no-print">
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-teal-600 flex items-center justify-center text-white font-bold text-xl shadow-sm">
+          P
+        </div>
         <div>
-          <h2>PlanificaIA Chile</h2>
-          <div className="subtitle">Gestión docente</div>
+          <h2 className="text-lg font-semibold text-gray-900">PlanificaIA Chile</h2>
+          <div className="text-xs text-gray-500">Gestión docente</div>
         </div>
       </div>
-      <div className="nav-list">
+
+      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
         {NAV_ITEMS.filter((item) => !item.adminOnly || user?.rol === 'admin').map((item) => {
           const count = badges[item.view];
+          const isActive = activeView === item.view;
           return (
             <motion.button
               key={item.view}
-              className={`nav-btn${activeView === item.view ? ' active' : ''}`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                isActive
+                  ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
               onClick={() => onNavigate(item.view)}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 300 }}
               style={{ position: 'relative' }}
             >
-              <span className="nav-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>{item.icon}</span>
-              {item.label}
+              <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{item.icon}</span>
+              <span className="flex-1 text-left truncate">{item.label}</span>
               {count !== undefined && count > 0 && (
-                <span style={{
-                  position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-                  background: 'linear-gradient(135deg, var(--brand), var(--brand2))',
-                  color: '#fff', fontSize: 10, fontWeight: 700,
-                  padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
-                }}>
+                <span className="flex-shrink-0 px-2 py-0.5 text-xs font-bold text-white rounded-full bg-gradient-to-r from-indigo-600 to-teal-600">
                   {count > 99 ? '99+' : count}
                 </span>
               )}
@@ -102,8 +105,13 @@ export function Sidebar({ activeView, onNavigate, config, user }: SidebarProps) 
           );
         })}
       </div>
-      <div className="sidebar-pill">{modeLabel}</div>
-      {user && <UserBar nombre={user.nombre} />}
+
+      <div className="px-4 py-2 border-t border-gray-200">
+        <div className="text-center text-xs text-gray-500 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          {modeLabel}
+        </div>
+        {user && <UserBar nombre={user.nombre} />}
+      </div>
     </nav>
   );
 }
@@ -119,13 +127,15 @@ function UserBar({ nombre }: { nombre: string }) {
   }, [compact]);
 
   return (
-    <div className="sidebar-user">
-      <div className="sidebar-user-avatar">{initial}</div>
-      <span className="sidebar-user-name" title={nombre}>{nombre}</span>
-      <button onClick={() => setCompact((c) => !c)} className="sidebar-logout" title={compact ? 'Modo normal' : 'Modo compacto'}>
+    <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-600 to-teal-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0">
+        {initial}
+      </div>
+      <span className="flex-1 text-sm font-medium text-gray-700 truncate" title={nombre}>{nombre}</span>
+      <button onClick={() => setCompact((c) => !c)} className="p-1.5 rounded text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors" title={compact ? 'Modo normal' : 'Modo compacto'}>
         <Minimize2 size={14} />
       </button>
-      <button onClick={logout} className="sidebar-logout" title="Cerrar sesión">
+      <button onClick={logout} className="p-1.5 rounded text-gray-500 hover:bg-gray-200 hover:text-red-600 transition-colors" title="Cerrar sesión">
         <LogOut size={14} />
       </button>
     </div>
