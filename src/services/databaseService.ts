@@ -86,6 +86,22 @@ export const db = {
         nivel TEXT, asignatura TEXT, tamano INTEGER, created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
       )`,
+      // Biblioteca Creativa — objetivos de aprendizaje con indicadores y habilidades
+      `CREATE TABLE IF NOT EXISTS learning_objectives (
+        id TEXT PRIMARY KEY,
+        code TEXT NOT NULL,
+        level TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        axis TEXT,
+        source TEXT DEFAULT 'oficial',
+        text TEXT NOT NULL,
+        indicators TEXT NOT NULL DEFAULT '[]',
+        skills TEXT NOT NULL DEFAULT '[]'
+      )`,
+      // Migración: agregar indicadores y habilidades a la tabla objectives existente
+      // (ejecutar solo si la columna no existe aún)
+      `ALTER TABLE objectives ADD COLUMN indicators TEXT DEFAULT '[]'`,
+      `ALTER TABLE objectives ADD COLUMN skills TEXT DEFAULT '[]'`,
     ];
 
     for (const sql of migrations) {

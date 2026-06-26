@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { FolderOpen, Search, Plus, BookOpen, Clock, Trash2, Users, X } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { CreativeHub } from './CreativeHub';
+import { CreativeLibraryView } from './CreativeLibraryView';
 
 interface BibliotecaViewProps {
   onNavigate?: (view: string) => void;
 }
 
 export function BibliotecaView({ onNavigate }: BibliotecaViewProps) {
-  const { library, removeFromLibrary, newProject } = useProject();
+  const { library, removeFromLibrary, newProject, addToLibrary, updateProjectField } = useProject();
   const [query, setQuery] = useState('');
   const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [step, setStep] = useState(0);
@@ -17,6 +18,15 @@ export function BibliotecaView({ onNavigate }: BibliotecaViewProps) {
   const handleNew = () => {
     newProject();
     onNavigate?.('workspace');
+  };
+
+  const handleSaveGenerated = (text: string) => {
+    newProject();
+    updateProjectField('titulo', `Recurso - ${new Date().toLocaleDateString('es-CL')}`);
+    updateProjectField('inicio', text);
+    addToLibrary();
+    setStep(0);
+    setCreationType('');
   };
 
   const filtered = query
@@ -30,13 +40,11 @@ export function BibliotecaView({ onNavigate }: BibliotecaViewProps) {
           <CreativeHub onSelect={(tipo) => { setCreationType(tipo); setStep(1); }} />
         </>
       ) : (
-        <div className="mb-8 p-6 rounded-2xl border border-[var(--line)] bg-white">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Crear: {creationType === 'leccion' ? 'Lección individual' : creationType === 'serie' ? 'Serie de lecciones' : 'Fichas de actividades'}</h2>
-            <button className="ghost" onClick={() => setStep(0)}>Volver</button>
-          </div>
-          <p className="text-sm text-[var(--muted)]">Aquí irá el flujo de creación para {creationType}.</p>
-        </div>
+        <CreativeLibraryView
+          creationType={creationType}
+          onBack={() => { setStep(0); setCreationType(''); }}
+          onSave={handleSaveGenerated}
+        />
       )}
 
       {/* Collaborative Banner */}
