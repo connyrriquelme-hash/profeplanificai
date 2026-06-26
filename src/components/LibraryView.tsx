@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Sparkles, Layers, FileEdit, BookOpen, ClipboardCheck, HeartHandshake, Users, ArrowLeft, ArrowRight, Check, FileUp, Link2, FolderOpen, Search, Loader2, X } from 'lucide-react';
+import { WandSparkles, Layers3, NotebookPen, ClipboardCheck, BookOpenCheck, HeartHandshake, Users, ArrowLeft, ArrowRight, Check, FileUp, Link2, FolderOpen, Search, Loader2, GraduationCap, Target, X } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { getLevels, getSubjectsByLevel, getObjectives, type LearningObjective } from '../data/libraryMockData';
 import { generateResource, type GenerateResourceRequest } from '../services/libraryGenerationService';
 import { GeneratedResourcePanel } from './GeneratedResourcePanel';
+import { IconBadge } from './ui/IconBadge';
 
 type LibraryStep = 'hub' | 'curriculum' | 'topic' | 'refine' | 'design' | 'generating' | 'result';
 
@@ -30,11 +31,11 @@ const REFINE_OPTIONS = [
 ];
 
 const HUB_CARDS = [
-  { tipo: 'Clase', label: 'Lección individual', desc: 'Una clase puntual lista para aplicar.', icon: Sparkles, color: '#6d5dfc' },
-  { tipo: 'Unidad', label: 'Serie de lecciones', desc: 'Una secuencia de clases conectadas por un objetivo.', icon: Layers, color: '#00a7a7' },
-  { tipo: 'Ficha', label: 'Fichas de actividades', desc: 'Material imprimible o digital para trabajar en aula.', icon: FileEdit, color: '#f59e0b' },
+  { tipo: 'Clase', label: 'Lección individual', desc: 'Una clase puntual lista para aplicar.', icon: WandSparkles, color: '#6d5dfc' },
+  { tipo: 'Unidad', label: 'Serie de lecciones', desc: 'Una secuencia de clases conectadas por un objetivo.', icon: Layers3, color: '#00a7a7' },
+  { tipo: 'Ficha', label: 'Fichas de actividades', desc: 'Material imprimible o digital para trabajar en aula.', icon: NotebookPen, color: '#f59e0b' },
   { tipo: 'Evaluacion', label: 'Evaluación formativa', desc: 'Instrumento de evaluación para monitorear el aprendizaje.', icon: ClipboardCheck, color: '#ec4899' },
-  { tipo: 'Simce', label: 'Evaluación tipo SIMCE', desc: 'Formato de evaluación estandarizada con alternativas.', icon: BookOpen, color: '#8b5cf6' },
+  { tipo: 'Simce', label: 'Evaluación tipo SIMCE', desc: 'Formato de evaluación estandarizada con alternativas.', icon: GraduationCap, color: '#8b5cf6' },
   { tipo: 'Dua', label: 'Recurso inclusivo DUA', desc: 'Material accesible con Diseño Universal para el Aprendizaje.', icon: HeartHandshake, color: '#14b8a6' },
 ];
 
@@ -148,6 +149,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-2 mb-3">
+          <IconBadge icon={WandSparkles} size={24} color="#6d5dfc" variant="gradient" className="mr-1" />
           <h1 className="text-3xl font-bold text-gray-900">Biblioteca Creativa</h1>
           <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">IA curricular</span>
         </div>
@@ -157,7 +159,10 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">¿Qué creamos hoy? ✨</h2>
+        <div className="flex items-center gap-2 mb-6">
+          <WandSparkles size={20} className="text-indigo-600" strokeWidth={2.25} />
+          <h2 className="text-xl font-semibold text-gray-800">Que creamos hoy?</h2>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {HUB_CARDS.map(({ tipo, label, desc, icon: Icon, color }) => (
             <div
@@ -165,9 +170,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
               onClick={() => handleHubSelect(tipo)}
               className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg hover:border-indigo-200 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
             >
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110" style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}>
-                <Icon size={24} className="text-white" />
-              </div>
+              <IconBadge icon={Icon} size={22} color={color} variant="gradient" className="mb-4 transition-transform duration-200 group-hover:scale-110" />
               <h3 className="text-base font-semibold text-gray-900 mb-1.5">{label}</h3>
               <p className="text-sm text-gray-500 leading-relaxed flex-1">{desc}</p>
             </div>
@@ -195,25 +198,32 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     <div>
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => setStep('hub')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
+        <IconBadge icon={BookOpenCheck} size={18} color="#6d5dfc" variant="soft" />
         <div>
-          <h2 className="text-xl font-bold">Base Curricular Oficial 📚</h2>
+          <h2 className="text-xl font-bold">Base Curricular Oficial</h2>
           <p className="text-sm text-[var(--muted)]">Selecciona el nivel, asignatura, Objetivo de Aprendizaje, indicador y habilidad.</p>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Nivel</label>
+            <div className="flex items-center gap-2 mb-1.5">
+              <GraduationCap size={16} className="text-indigo-600" strokeWidth={2.25} />
+              <label className="block text-sm font-medium text-gray-700">Nivel</label>
+            </div>
             <select value={level} onChange={e => { setLevel(e.target.value); setSubject(''); setSelectedOA(null); }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
-              <option value="">Seleccionar nivel…</option>
+              <option value="">Seleccionar nivel...</option>
               {levels.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
           {level && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Asignatura</label>
+              <div className="flex items-center gap-2 mb-1.5">
+                <BookOpenCheck size={16} className="text-teal-600" strokeWidth={2.25} />
+                <label className="block text-sm font-medium text-gray-700">Asignatura</label>
+              </div>
               <select value={subject} onChange={e => { setSubject(e.target.value); setSelectedOA(null); }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
-                <option value="">Seleccionar asignatura…</option>
+                <option value="">Seleccionar asignatura...</option>
                 {subjects.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -223,19 +233,22 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Buscar OA</label>
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input value={oaSearch} onChange={e => setOaSearch(e.target.value)} placeholder="Buscar por código o texto…" className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+                <input value={oaSearch} onChange={e => setOaSearch(e.target.value)} placeholder="Buscar por codigo o texto..." className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
               </div>
             </div>
           )}
           {level && subject && (
             <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
               {objectives.length === 0 ? (
-                <p className="text-sm text-[var(--muted)] text-center py-8">No se encontraron objetivos para esta búsqueda.</p>
+                <p className="text-sm text-[var(--muted)] text-center py-8">No se encontraron objetivos para esta busqueda.</p>
               ) : objectives.map(oa => (
                 <div key={oa.id} onClick={() => handleSelectOA(oa)} className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedOA?.id === oa.id ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <span className="inline-block text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md mb-1.5">{oa.code}</span>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Target size={14} className="text-indigo-500" strokeWidth={2.25} />
+                        <span className="inline-block text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md">{oa.code}</span>
+                      </div>
                       <p className="text-sm text-gray-800 leading-relaxed line-clamp-2">{oa.text}</p>
                       {oa.axis && <span className="inline-block text-xs text-gray-500 mt-1">Eje: {oa.axis}</span>}
                     </div>
@@ -250,23 +263,26 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
           {selectedOA ? (
             <div className="sticky top-4 space-y-4">
               <div className="p-5 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
-                <h3 className="text-sm font-semibold text-indigo-700 uppercase tracking-wider mb-3">Articulación curricular</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <BookOpenCheck size={18} className="text-indigo-600" strokeWidth={2.25} />
+                  <h3 className="text-sm font-semibold text-indigo-700 uppercase tracking-wider">Articulacion curricular</h3>
+                </div>
                 <div className="space-y-3">
                   <div>
                     <span className="text-xs text-gray-500">OA seleccionado</span>
                     <p className="text-sm font-medium text-gray-800">{selectedOA.code} — {selectedOA.text}</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Indicador de evaluación</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Indicador de evaluacion</label>
                     <select value={selectedIndicator} onChange={e => setSelectedIndicator(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
-                      <option value="">Seleccionar indicador…</option>
+                      <option value="">Seleccionar indicador...</option>
                       {selectedOA.indicators.map((ind, i) => <option key={i} value={ind}>{ind}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1.5">Habilidad</label>
                     <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
-                      <option value="">Seleccionar habilidad…</option>
+                      <option value="">Seleccionar habilidad...</option>
                       {selectedOA.skills.map((sk, i) => <option key={i} value={sk}>{sk}</option>)}
                     </select>
                   </div>
@@ -276,7 +292,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                       <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded-lg">{level}</span>
                       <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded-lg">{subject}</span>
                       <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded-lg">{selectedOA.code}</span>
-                      {selectedIndicator && <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded-lg">{selectedIndicator.slice(0, 30)}…</span>}
+                      {selectedIndicator && <span className="text-xs bg-white border border-gray-200 px-2 py-1 rounded-lg">{selectedIndicator.slice(0, 30)}...</span>}
                     </div>
                   </div>
                 </div>
@@ -288,7 +304,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
           ) : (
             <div className="p-8 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center text-center min-h-[300px]">
               <FolderOpen size={40} className="text-gray-300 mb-3" />
-              <p className="text-sm text-gray-500">Selecciona un nivel, asignatura y OA para ver la articulación curricular.</p>
+              <p className="text-sm text-gray-500">Selecciona un nivel, asignatura y OA para ver la articulacion curricular.</p>
             </div>
           )}
         </div>
@@ -310,14 +326,14 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       <div className="max-w-2xl space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Tema del recurso</label>
-          <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ej: La fotosíntesis en plantas nativas chilenas" className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+          <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ej: La fotosintesis en plantas nativas chilenas" className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Contexto adicional (opcional)</label>
-          <textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} rows={4} placeholder="Ej: Curso de 32 estudiantes, 5 con NEE, 2 descendidos. Interés por actividades al aire libre." className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-none" />
+          <textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} rows={4} placeholder="Ej: Curso de 32 estudiantes, 5 con NEE, 2 descendidos. Interes por actividades al aire libre." className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-none" />
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-3">Resumen de tu selección</p>
+          <p className="text-sm font-medium text-gray-700 mb-3">Resumen de tu seleccion</p>
           <div className="flex flex-wrap gap-2">
             {level && <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl font-medium">{level}</span>}
             {subject && <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl font-medium">{subject}</span>}
@@ -340,7 +356,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
               <span className="text-xs font-medium">Recurso existente</span>
             </div>
           </div>
-          <p className="text-xs text-gray-400">Próximamente podrás adjuntar recursos directamente.</p>
+          <p className="text-xs text-gray-400">Proximamente podras adjuntar recursos directamente.</p>
         </div>
         <button onClick={() => setStep('refine')} disabled={!topic.trim()} className={`w-full sm:w-auto py-3 px-8 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${topic.trim() ? 'bg-gradient-to-r from-indigo-600 to-teal-600 text-white hover:scale-[1.02]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
           Continuar a refinar <ArrowRight size={16} />
@@ -376,7 +392,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
         ))}
       </div>
       <button onClick={() => setStep('design')} className="w-full sm:w-auto py-3 px-8 rounded-xl bg-gradient-to-r from-indigo-600 to-teal-600 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2">
-        Continuar al diseño <ArrowRight size={16} />
+        Continuar al diseno <ArrowRight size={16} />
       </button>
     </div>
   );
@@ -389,7 +405,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
         <button onClick={() => setStep('refine')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
         <div>
           <h2 className="text-xl font-bold">Elige un estilo visual</h2>
-          <p className="text-sm text-[var(--muted)]">Selecciona la apariencia que tendrá tu recurso generado.</p>
+          <p className="text-sm text-[var(--muted)]">Selecciona la apariencia que tendra tu recurso generado.</p>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -406,7 +422,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
         ))}
       </div>
       <button onClick={handleGenerate} className="w-full sm:w-auto py-3 px-10 rounded-xl bg-gradient-to-r from-indigo-600 to-teal-600 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2">
-        Generar recurso ✨
+        <WandSparkles size={18} strokeWidth={2.25} /> Generar recurso
       </button>
     </div>
   );
@@ -416,8 +432,8 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   const renderGenerating = () => (
     <div className="flex flex-col items-center justify-center py-24">
       <Loader2 size={48} className="text-indigo-600 animate-spin mb-6" />
-      <h3 className="text-lg font-bold text-gray-800 mb-2">Generando con IA…</h3>
-      <p className="text-sm text-[var(--muted)]">Estamos creando una propuesta pedagógica alineada al currículum chileno.</p>
+      <h3 className="text-lg font-bold text-gray-800 mb-2">Generando con IA...</h3>
+      <p className="text-sm text-[var(--muted)]">Estamos creando una propuesta pedagogica alineada al curriculo chileno.</p>
     </div>
   );
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, BookOpen, Database, Archive, FileText, Sparkles, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Menu, X } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -11,11 +11,11 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
   const menuItems = [
     { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
-    { id: 'workspace', label: 'Espacio de Trabajo', icon: BookOpen },
-    { id: 'evaluaciones', label: 'Evaluaciones', icon: FileText },
-    { id: 'biblioteca-creativa', label: 'Biblioteca Creativa', icon: Sparkles },
-    { id: 'banco', label: 'Biblioteca', icon: Database },
-    { id: 'banco-recursos', label: 'Banco de Recursos', icon: Archive },
+    { id: 'workspace', label: 'Espacio de Trabajo', icon: FolderKanban },
+    { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
+    { id: 'biblioteca-creativa', label: 'Biblioteca Creativa', icon: WandSparkles },
+    { id: 'banco', label: 'Biblioteca', icon: LibraryBig },
+    { id: 'banco-recursos', label: 'Banco de Recursos', icon: Boxes },
   ];
 
   const handleNavigate = (view: string) => {
@@ -42,14 +42,16 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           return (
             <button
               key={item.id}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                  ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm border-l-[3px] border-indigo-500'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               }`}
               onClick={() => handleNavigate(item.id)}
             >
-              <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center"><Icon size={18} /></span>
+              <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center ${isActive ? 'text-indigo-600' : 'text-gray-400'}`}>
+                <Icon size={20} strokeWidth={2.25} />
+              </span>
               <span className="flex-1 text-left truncate">{item.label}</span>
             </button>
           );
@@ -64,7 +66,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile hamburger button */}
       <button
         className="lg:hidden fixed top-3 left-3 z-50 p-2.5 rounded-xl bg-white border border-gray-200 shadow-md text-gray-700 hover:bg-gray-50 transition-colors"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -73,7 +74,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Overlay backdrop on mobile */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/30 lg:hidden"
@@ -81,7 +81,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         />
       )}
 
-      {/* Mobile sidebar (fixed overlay) */}
       <nav
         className={`
           lg:hidden fixed inset-y-0 left-0 z-40 w-64 min-w-[260px] bg-white border-r border-gray-200 flex flex-col
@@ -101,7 +100,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         {sidebarContent}
       </nav>
 
-      {/* Desktop sidebar (sticky, in-flow) */}
       <nav className="hidden lg:flex w-64 min-w-[260px] bg-white border-r border-gray-200 flex-col h-screen sticky top-0 z-10 no-print">
         {sidebarContent}
       </nav>

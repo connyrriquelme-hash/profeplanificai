@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Copy, Database, ExternalLink, RotateCw, Search } from 'lucide-react';
+import { LibraryBig, BookOpenCheck, Copy, ExternalLink, RotateCw, Search, GraduationCap, GitBranch } from 'lucide-react';
 import { api } from '../services/apiClient';
+import { IconBadge } from './ui/IconBadge';
 
 interface Course { id: string; code: string; name: string; cycle: string; objective_count: number }
 interface Subject { id: string; name: string; normalized_name: string; objective_count: number }
@@ -15,11 +16,11 @@ export function CurriculumCloudView() {
   const [subject, setSubject] = useState('');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<ObjectiveDetail | null>(null);
-  const [status, setStatus] = useState('Cargando base curricular…');
+  const [status, setStatus] = useState('Cargando base curricular...');
   const [busy, setBusy] = useState(false);
 
   const loadCourses = () => {
-    setStatus('Cargando cursos…');
+    setStatus('Cargando cursos...');
     api.get<{ data: Course[] }>('/api/courses')
       .then(r => {
         setCourses(r.data);
@@ -69,23 +70,32 @@ export function CurriculumCloudView() {
   return (
     <div className="view curriculum-cloud">
       <div className="module-header">
-        <div>
-          <h2 className="module-title"><Database size={22} /> Base Curricular Oficial</h2>
-          <p className="muted">Explora, filtra y revisa Objetivos de Aprendizaje importados desde el Currículum Nacional — Ministerio de Educación de Chile.</p>
+        <div className="flex items-center gap-3">
+          <IconBadge icon={LibraryBig} size={22} color="#4f46e5" variant="gradient" />
+          <div>
+            <h2 className="module-title">Base Curricular Oficial</h2>
+            <p className="muted">Explora, filtra y revisa Objetivos de Aprendizaje importados desde el Curriculo Nacional — Ministerio de Educacion de Chile.</p>
+          </div>
         </div>
       </div>
 
       <div className="card curriculum-toolbar">
         <div className="grid3">
           <div>
-            <label>Curso</label>
+            <div className="flex items-center gap-2 mb-1.5">
+              <GraduationCap size={15} className="text-indigo-600" strokeWidth={2.25} />
+              <label>Curso</label>
+            </div>
             <select value={course} onChange={e => { setCourse(e.target.value); setSubject(''); setSelected(null); }}>
               <option value="">Todos los cursos</option>
               {courses.map(c => <option key={c.id} value={c.code}>{c.name} ({c.objective_count || 0})</option>)}
             </select>
           </div>
           <div>
-            <label>Asignatura</label>
+            <div className="flex items-center gap-2 mb-1.5">
+              <BookOpenCheck size={15} className="text-teal-600" strokeWidth={2.25} />
+              <label>Asignatura</label>
+            </div>
             <select value={subject} onChange={e => { setSubject(e.target.value); setSelected(null); }}>
               <option value="">Todas las asignaturas</option>
               {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.objective_count || 0})</option>)}
@@ -95,7 +105,7 @@ export function CurriculumCloudView() {
             <label>Buscar OA</label>
             <div className="search-bar">
               <Search className="search-icon" size={16} />
-              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Código o texto oficial…" />
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Codigo o texto oficial..." />
             </div>
           </div>
         </div>
@@ -122,7 +132,7 @@ export function CurriculumCloudView() {
           ))}
           {!objectives.length && (
             <div className="empty-state">
-              <BookOpen size={34} />
+              <BookOpenCheck size={34} />
               <p>Selecciona un curso y asignatura para ver los OA disponibles.</p>
             </div>
           )}
@@ -131,7 +141,7 @@ export function CurriculumCloudView() {
         <div className="curriculum-detail">
           {!selected ? (
             <div className="card empty-state">
-              <BookOpen size={38} />
+              <BookOpenCheck size={38} />
               <p>Selecciona un Objetivo de Aprendizaje para ver su detalle.</p>
             </div>
           ) : (
@@ -144,8 +154,11 @@ export function CurriculumCloudView() {
               </div>
               <h3>{selected.subject_name} · {selected.course_name}</h3>
               <p className="oa-official">{selected.official_text}</p>
-              <p className="muted">Eje: {selected.axis_name || 'No informado'} · Fuente: Currículum Nacional — MINEDUC Chile</p>
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-2">
+                <GitBranch size={13} strokeWidth={2.25} />
+                <span>Eje: {selected.axis_name || 'No informado'} · Fuente: Curriculo Nacional — MINEDUC Chile</span>
+              </div>
+              <div className="flex items-center gap-2 mt-4">
                 <button className="secondary" onClick={handleCopyOA}>
                   <Copy size={14} /> Copiar OA
                 </button>

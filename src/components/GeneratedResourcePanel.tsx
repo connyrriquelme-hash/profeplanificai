@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Download, Save, Eye, ClipboardList, RotateCcw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, FileDown, Save, Presentation, ClipboardPlus, Undo2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { IconBadge } from './ui/IconBadge';
 
 interface GeneratedResourcePanelProps {
   resultText: string;
@@ -18,7 +19,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
   };
 
   const handleCreateEvaluation = () => {
-    showToast('Próximamente podrás convertir este recurso en evaluación.');
+    showToast('Proximamente podras convertir este recurso en evaluacion.');
   };
 
   const handleExportPDF = () => {
@@ -26,7 +27,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
   };
 
   const handlePresentation = () => {
-    showToast('Modo presentación próximamente disponible.');
+    showToast('Modo presentacion proximamente disponible.');
   };
 
   return (
@@ -38,26 +39,25 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
         </div>
       )}
 
-      {/* Action bar */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <button onClick={onBack} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all shadow-sm flex items-center gap-1.5 text-sm">
           <ArrowLeft size={16} /> Volver
         </button>
         <div className="flex-1 min-w-[1px]" />
         <button onClick={handleExportPDF} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <Download size={16} /> Exportar PDF
+          <FileDown size={16} strokeWidth={2.25} /> Exportar PDF
         </button>
         <button onClick={onSave} className="p-2.5 rounded-xl bg-indigo-600 text-white border border-indigo-600 hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-1.5 text-sm font-medium">
-          <Save size={16} /> Guardar en biblioteca
+          <Save size={16} strokeWidth={2.25} /> Guardar en biblioteca
         </button>
         <button onClick={handlePresentation} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <Eye size={16} /> Presentación
+          <Presentation size={16} strokeWidth={2.25} /> Presentacion
         </button>
         <button onClick={handleCreateEvaluation} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <ClipboardList size={16} /> Crear evaluación
+          <ClipboardPlus size={16} strokeWidth={2.25} /> Crear evaluacion
         </button>
         <button onClick={onBack} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <RotateCcw size={16} /> Volver a editar
+          <Undo2 size={16} strokeWidth={2.25} /> Volver a editar
         </button>
       </div>
 
@@ -65,7 +65,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-3">
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <span className="font-medium">Error parcial:</span> {error} — Se ha usado una versión preliminar.
+            <span className="font-medium">Error parcial:</span> {error} — Se ha usado una version preliminar.
           </div>
           <button onClick={onRegenerate} className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-medium transition-colors">
             Reintentar
@@ -73,7 +73,6 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
         </div>
       )}
 
-      {/* Document card */}
       <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-6 lg:p-8">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8 lg:p-10">
           <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
