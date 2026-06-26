@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { WandSparkles, Layers3, NotebookPen, ClipboardCheck, BookOpenCheck, HeartHandshake, Users, ArrowRight, Target, GraduationCap, Layout, BookText, GitBranch, ClipboardList, Sun, FlaskConical, Calculator, FileText, Palette, Moon, Sparkles, Loader2, Search, X, Check, ArrowLeft, BrainCircuit } from 'lucide-react';
+import { WandSparkles, Layers3, NotebookPen, ClipboardCheck, BookOpenCheck, HeartHandshake, Users, ArrowRight, Target, GraduationCap, Layout, BookText, GitBranch, ClipboardList, Sun, FlaskConical, Calculator, FileText, Palette, Moon, Sparkles, Loader2, Search, X, Check, ArrowLeft, BrainCircuit, DoorOpen, TrendingDown, Accessibility } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { getLevels, getSubjectsByLevel, getObjectives, type LearningObjective } from '../data/libraryMockData';
 import { generateResource, type GenerateResourceRequest } from '../services/libraryGenerationService';
@@ -49,7 +49,11 @@ const REFINE_OPTIONS = [
   { id: 'differentiation', icon: GitBranch, label: 'Actividades diferenciadas', desc: 'Variedad de niveles y estilos de aprendizaje' },
   { id: 'dua', icon: HeartHandshake, label: 'DUA', desc: 'Diseño Universal para el Aprendizaje' },
   { id: 'rubric', icon: ClipboardList, label: 'Rúbrica', desc: 'Criterios de evaluación detallados' },
+  { id: 'formativeEvaluation', icon: ClipboardCheck, label: 'Evaluación formativa', desc: 'Monitoreo del aprendizaje durante el proceso' },
   { id: 'simce', icon: GraduationCap, label: 'Evaluación tipo SIMCE', desc: 'Formato y preguntas estilo SIMCE' },
+  { id: 'exitTicket', icon: DoorOpen, label: 'Ticket de salida', desc: 'Pregunta rápida al cierre para verificar comprensión' },
+  { id: 'descendingStudents', icon: TrendingDown, label: 'Recursos para estudiantes descendidos', desc: 'Material de apoyo para nivelación y refuerzo' },
+  { id: 'neeAccommodations', icon: Accessibility, label: 'Adecuaciones NEE', desc: 'Ajustes razonables para necesidades educativas especiales' },
 ];
 
 const STEP_ICONS: Record<string, typeof BookOpenCheck> = {
@@ -79,7 +83,9 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   const [additionalContext, setAdditionalContext] = useState('');
   const [refineOptions, setRefineOptions] = useState<Record<string, boolean>>({
     lessonFramework: true, curriculumAlignment: true, learningObjectives: true,
-    keyVocabulary: true, differentiation: false, dua: true, rubric: false, simce: false,
+    keyVocabulary: true, differentiation: false, dua: true, rubric: false,
+    formativeEvaluation: false, simce: false, exitTicket: false,
+    descendingStudents: false, neeAccommodations: false,
   });
   const [designStyle, setDesignStyle] = useState('claro');
   const [resultText, setResultText] = useState('');
@@ -165,7 +171,6 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   };
 
   const stepIndex = STEPS.findIndex(s => s.key === step);
-  const currentStepLabel = STEPS.find(s => s.key === step)?.label;
 
   const renderStepper = () => (
     <div className="flex items-center gap-0 mb-8 overflow-x-auto pb-1">
