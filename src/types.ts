@@ -258,6 +258,7 @@ export type ViewType =
   | 'banco'
   | 'banco-recursos'
   | 'agente'
+  | 'biblioteca-creativa'
   | 'admin'
   | 'print';
 

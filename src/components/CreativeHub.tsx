@@ -49,7 +49,7 @@ export function CreativeHub({ onSelect }: CreativeHubProps) {
             <Users size={28} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-orange-900 mb-1">ProfePlanificaI es mejor en equipo</h3>
+            <h3 className="text-lg font-bold text-orange-900 mb-1">ProfePlanificAI es mejor en equipo</h3>
             <p className="text-sm text-orange-700 leading-relaxed">
               Comparte y remixea lecciones con tus colegas para crear mejores planificaciones juntos.
             </p>

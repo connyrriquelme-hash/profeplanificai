@@ -1,9 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Search, Check, FileUp, Link2, FolderOpen, Loader2, Download, Save, Eye, ClipboardList, RotateCcw } from 'lucide-react';
-import { getLevels, getSubjectsByLevel, getObjectives, searchObjectives, type LearningObjective } from '../data/libraryMockData';
+import { Sparkles, Layers, FileEdit, BookOpen, ClipboardCheck, HeartHandshake, Users, ArrowLeft, ArrowRight, Check, FileUp, Link2, FolderOpen, Search, Loader2, X } from 'lucide-react';
+import { useProject } from '../contexts/ProjectContext';
+import { getLevels, getSubjectsByLevel, getObjectives, type LearningObjective } from '../data/libraryMockData';
 import { generateResource, type GenerateResourceRequest } from '../services/libraryGenerationService';
+import { GeneratedResourcePanel } from './GeneratedResourcePanel';
 
-type WizardStep = 'curriculum' | 'topic' | 'refine' | 'design' | 'generating' | 'result';
+type LibraryStep = 'hub' | 'curriculum' | 'topic' | 'refine' | 'design' | 'generating' | 'result';
 
 const DESIGN_STYLES = [
   { id: 'claro', name: 'Claro', desc: 'Diseño minimalista y limpio', color: '#ffffff', bg: '#f8fafc' },
@@ -27,14 +29,24 @@ const REFINE_OPTIONS = [
   { id: 'simce', label: 'Evaluación tipo SIMCE', desc: 'Formato y preguntas estilo SIMCE' },
 ];
 
-interface CreativeLibraryViewProps {
-  creationType: string;
-  onBack: () => void;
-  onSave: (text: string) => void;
+const HUB_CARDS = [
+  { tipo: 'Clase', label: 'Lección individual', desc: 'Una clase puntual lista para aplicar.', icon: Sparkles, color: '#6d5dfc' },
+  { tipo: 'Unidad', label: 'Serie de lecciones', desc: 'Una secuencia de clases conectadas por un objetivo.', icon: Layers, color: '#00a7a7' },
+  { tipo: 'Ficha', label: 'Fichas de actividades', desc: 'Material imprimible o digital para trabajar en aula.', icon: FileEdit, color: '#f59e0b' },
+  { tipo: 'Evaluacion', label: 'Evaluación formativa', desc: 'Instrumento de evaluación para monitorear el aprendizaje.', icon: ClipboardCheck, color: '#ec4899' },
+  { tipo: 'Simce', label: 'Evaluación tipo SIMCE', desc: 'Formato de evaluación estandarizada con alternativas.', icon: BookOpen, color: '#8b5cf6' },
+  { tipo: 'Dua', label: 'Recurso inclusivo DUA', desc: 'Material accesible con Diseño Universal para el Aprendizaje.', icon: HeartHandshake, color: '#14b8a6' },
+];
+
+interface LibraryViewProps {
+  onNavigate?: (view: string) => void;
 }
 
-export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLibraryViewProps) {
-  const [step, setStep] = useState<WizardStep>('curriculum');
+export function LibraryView({ onNavigate }: LibraryViewProps) {
+  const { newProject, addToLibrary, updateProjectField } = useProject();
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
+  const [step, setStep] = useState<LibraryStep>('hub');
+  const [creationType, setCreationType] = useState('');
   const [level, setLevel] = useState('');
   const [subject, setSubject] = useState('');
   const [oaSearch, setOaSearch] = useState('');
@@ -61,6 +73,17 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     const q = oaSearch.toLowerCase();
     return items.filter(o => o.code.toLowerCase().includes(q) || o.text.toLowerCase().includes(q));
   }, [level, subject, oaSearch]);
+
+  const typeLabel = creationType === 'Clase' ? 'Lección individual' : creationType === 'Unidad' ? 'Serie de lecciones' : creationType === 'Ficha' ? 'Fichas de actividades' : creationType === 'Evaluacion' ? 'Evaluación formativa' : creationType === 'Simce' ? 'Evaluación tipo SIMCE' : 'Recurso inclusivo DUA';
+
+  const handleSaveGenerated = (text: string) => {
+    newProject();
+    updateProjectField('titulo', `Recurso - ${new Date().toLocaleDateString('es-CL')}`);
+    updateProjectField('inicio', text);
+    addToLibrary();
+    setStep('hub');
+    setCreationType('');
+  };
 
   const handleSelectOA = useCallback((oa: LearningObjective) => {
     setSelectedOA(oa);
@@ -114,10 +137,64 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     setGenerating(false);
   }, [creationType, level, subject, selectedOA, selectedIndicator, selectedSkill, topic, additionalContext, designStyle, refineOptions]);
 
-  const renderCurriculumStep = () => (
+  const handleHubSelect = (tipo: string) => {
+    setCreationType(tipo);
+    setStep('curriculum');
+  };
+
+  // ── Hub (Step 0) ──
+
+  const renderHub = () => (
+    <div className="max-w-5xl mx-auto">
+      <div className="text-center mb-10">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900">Biblioteca Creativa</h1>
+          <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">IA curricular</span>
+        </div>
+        <p className="text-base text-gray-500 max-w-2xl mx-auto">
+          Crea clases, secuencias, fichas y evaluaciones alineadas al currículum chileno en minutos.
+        </p>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">¿Qué creamos hoy? ✨</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {HUB_CARDS.map(({ tipo, label, desc, icon: Icon, color }) => (
+            <div
+              key={tipo}
+              onClick={() => handleHubSelect(tipo)}
+              className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg hover:border-indigo-200 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110" style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}>
+                <Icon size={24} className="text-white" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5">{label}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed flex-1">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {isBannerVisible && (
+        <div className="relative rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/60 p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+          <button className="absolute top-3 right-3 p-1 rounded-lg text-orange-400 hover:text-orange-600 hover:bg-orange-100 transition-colors" onClick={() => setIsBannerVisible(false)} aria-label="Cerrar banner"><X size={16} /></button>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center flex-shrink-0 shadow-sm"><Users size={28} className="text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-orange-900 mb-1">ProfePlanificAI es mejor en equipo</h3>
+            <p className="text-sm text-orange-700 leading-relaxed">Comparte y remixea lecciones con tus colegas para crear mejores planificaciones juntos.</p>
+          </div>
+          <button className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 text-white text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200">Crear un equipo</button>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Curriculum (Step 1) ──
+
+  const renderCurriculum = () => (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
+        <button onClick={() => setStep('hub')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
         <div>
           <h2 className="text-xl font-bold">Base Curricular Oficial 📚</h2>
           <p className="text-sm text-[var(--muted)]">Selecciona el nivel, asignatura, Objetivo de Aprendizaje, indicador y habilidad.</p>
@@ -219,7 +296,9 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     </div>
   );
 
-  const renderTopicStep = () => (
+  // ── Topic (Step 2) ──
+
+  const renderTopic = () => (
     <div>
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => setStep('curriculum')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
@@ -243,7 +322,7 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
             {level && <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl font-medium">{level}</span>}
             {subject && <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl font-medium">{subject}</span>}
             {selectedOA && <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-xl font-medium">{selectedOA.code}</span>}
-            <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-xl font-medium">{creationType === 'leccion' ? 'Lección individual' : creationType === 'serie' ? 'Serie de lecciones' : 'Fichas de actividades'}</span>
+            <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-xl font-medium">{typeLabel}</span>
           </div>
         </div>
         <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-8 text-center">
@@ -270,7 +349,9 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     </div>
   );
 
-  const renderRefineStep = () => (
+  // ── Refine (Step 3) ──
+
+  const renderRefine = () => (
     <div>
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => setStep('topic')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
@@ -300,7 +381,9 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     </div>
   );
 
-  const renderDesignStep = () => (
+  // ── Design (Step 4) ──
+
+  const renderDesign = () => (
     <div>
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => setStep('refine')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
@@ -328,7 +411,9 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     </div>
   );
 
-  const renderGeneratingStep = () => (
+  // ── Generating (Step 5) ──
+
+  const renderGenerating = () => (
     <div className="flex flex-col items-center justify-center py-24">
       <Loader2 size={48} className="text-indigo-600 animate-spin mb-6" />
       <h3 className="text-lg font-bold text-gray-800 mb-2">Generando con IA…</h3>
@@ -336,57 +421,30 @@ export function CreativeLibraryView({ creationType, onBack, onSave }: CreativeLi
     </div>
   );
 
-  const renderResultStep = () => {
-    if (!resultText) return null;
-    const sections = resultText.split(/(?=^## )/m);
-    const title = sections[0] || '';
-    const body = sections.slice(1).join('');
+  // ── Result (Step 6) ──
 
+  const renderResult = () => {
+    if (!resultText) return null;
     return (
-      <div className="print-mode">
-        <div className="flex items-center gap-3 mb-6 no-print">
-          <button onClick={() => setStep('design')} className="p-2 rounded-xl hover:bg-gray-100 transition-colors"><ArrowLeft size={20} /></button>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold">Recurso generado ✨</h2>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => window.print()} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm"><Download size={16} /> Exportar PDF</button>
-            <button onClick={() => onSave(resultText)} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm"><Save size={16} /> Guardar en biblioteca</button>
-            <button className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm"><Eye size={16} /> Presentación</button>
-            <button className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm"><ClipboardList size={16} /> Crear evaluación</button>
-            <button onClick={() => setStep('design')} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm"><RotateCcw size={16} /> Volver a editar</button>
-          </div>
-        </div>
-        {error && (
-          <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
-            {error} — Se ha usado una versión preliminar.
-            <button onClick={handleGenerate} className="ml-3 underline font-medium">Reintentar</button>
-          </div>
-        )}
-        <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 lg:p-10 shadow-sm">
-          <div className="text-sm leading-relaxed text-gray-800 space-y-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:pb-2 [&_h2]:border-b [&_h2]:border-gray-200 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-900 [&_h1]:mb-4 [&_table]:w-full [&_table]:border-collapse [&_th]:bg-gray-50 [&_th]:text-left [&_th]:p-2.5 [&_th]:text-xs [&_th]:font-semibold [&_th]:text-gray-600 [&_th]:border [&_th]:border-gray-200 [&_td]:p-2.5 [&_td]:text-sm [&_td]:border [&_td]:border-gray-200 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_li]:text-sm">
-            {resultText.split('\n').map((line, i) => {
-              if (line.startsWith('# ')) return <h1 key={i}>{line.replace(/^# /, '')}</h1>;
-              if (line.startsWith('## ')) return <h2 key={i}>{line.replace(/^## /, '')}</h2>;
-              if (line.startsWith('- ')) return <li key={i} className="text-sm">{line.replace(/^- /, '')}</li>;
-              if (line.startsWith('| ')) return null; // skip raw table lines (rendered as text is fine)
-              if (line.trim() === '') return <div key={i} className="h-2" />;
-              return <p key={i} className="text-sm">{line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>;
-            })}
-          </div>
-        </div>
-      </div>
+      <GeneratedResourcePanel
+        resultText={resultText}
+        error={error}
+        onBack={() => setStep('design')}
+        onSave={() => handleSaveGenerated(resultText)}
+        onRegenerate={handleGenerate}
+      />
     );
   };
 
   return (
-    <div className="view creative-library">
-      {step === 'curriculum' && renderCurriculumStep()}
-      {step === 'topic' && renderTopicStep()}
-      {step === 'refine' && renderRefineStep()}
-      {step === 'design' && renderDesignStep()}
-      {step === 'generating' && renderGeneratingStep()}
-      {step === 'result' && renderResultStep()}
+    <div className="view biblioteca">
+      {step === 'hub' && renderHub()}
+      {step === 'curriculum' && renderCurriculum()}
+      {step === 'topic' && renderTopic()}
+      {step === 'refine' && renderRefine()}
+      {step === 'design' && renderDesign()}
+      {step === 'generating' && renderGenerating()}
+      {step === 'result' && renderResult()}
     </div>
   );
 }

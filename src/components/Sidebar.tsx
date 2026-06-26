@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, BookOpen, Database, Archive, FileText, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Database, Archive, FileText, Sparkles, Menu, X } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -13,6 +13,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
     { id: 'workspace', label: 'Espacio de Trabajo', icon: BookOpen },
     { id: 'evaluaciones', label: 'Evaluaciones', icon: FileText },
+    { id: 'biblioteca-creativa', label: 'Biblioteca Creativa', icon: Sparkles },
     { id: 'banco', label: 'Biblioteca', icon: Database },
     { id: 'banco-recursos', label: 'Banco de Recursos', icon: Archive },
   ];
@@ -29,7 +30,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           P
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">ProfePlanificaI</h2>
+          <h2 className="text-lg font-semibold text-gray-900">ProfePlanificAI</h2>
           <div className="text-xs text-gray-500">Gestión docente</div>
         </div>
       </div>
@@ -56,7 +57,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       </div>
 
       <div className="px-4 py-2 border-t border-gray-200 text-center text-xs text-gray-500">
-        ProfePlanificaI v2.0
+        ProfePlanificAI v2.0
       </div>
     </>
   );

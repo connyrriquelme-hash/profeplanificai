@@ -7,7 +7,7 @@ import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
-import { BibliotecaView } from './components/BibliotecaView';
+import { LibraryView } from './components/LibraryView';
 import { BancoRecursosView } from './components/BancoRecursosView';
 import { EvaluacionesView } from './components/EvaluacionesView';
 import AdminView from './components/AdminView';
@@ -43,7 +43,8 @@ function AppContent() {
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':
-        return <BibliotecaView onNavigate={handleViewChange} />;
+      case 'biblioteca-creativa':
+        return <LibraryView onNavigate={handleViewChange} />;
       case 'evaluaciones':
         return <EvaluacionesView onNavigate={handleViewChange} />;
       case 'banco-recursos':
