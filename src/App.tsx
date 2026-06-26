@@ -5,6 +5,7 @@ import { ProjectProvider } from './contexts/ProjectContext';
 import type { ViewType } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
+import { AppShell } from './components/ui/AppShell';
 import { DashboardView } from './components/DashboardView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
@@ -72,27 +73,24 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
-      <Sidebar activeView={activeView} onViewChange={handleViewChange} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          <ErrorBoundary>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeView + (viewState?.tab || '')}
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                {renderView()}
-              </motion.div>
-            </AnimatePresence>
-          </ErrorBoundary>
-        </main>
-      </div>
-    </div>
+    <AppShell
+      sidebar={<Sidebar activeView={activeView} onViewChange={handleViewChange} />}
+      topbar={<Topbar />}
+    >
+      <ErrorBoundary>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeView + (viewState?.tab || '')}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            {renderView()}
+          </motion.div>
+        </AnimatePresence>
+      </ErrorBoundary>
+    </AppShell>
   );
 }
 

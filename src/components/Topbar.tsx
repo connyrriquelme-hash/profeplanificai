@@ -1,5 +1,7 @@
-import { Search, Bell, HelpCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Bell, HelpCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { SearchInput } from './ui/SearchInput';
 
 interface TopbarProps {
   title?: string;
@@ -7,6 +9,8 @@ interface TopbarProps {
 
 export function Topbar({ title }: TopbarProps) {
   const { user } = useAuth();
+  const [search, setSearch] = useState('');
+
   const initials = user?.nombre
     ? user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'P';
@@ -17,13 +21,11 @@ export function Topbar({ title }: TopbarProps) {
         <h1 className="text-lg font-semibold text-gray-900 lg:hidden">{title}</h1>
       )}
       <div className="flex-1 flex items-center gap-3 max-w-md">
-        <div className="relative w-full group">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-indigo-500" strokeWidth={2.25} />
-          <input
-            placeholder="Buscar recursos, OA, clases..."
-            className="w-full h-10 pl-10 pr-4 rounded-2xl bg-gray-50/80 border border-gray-200/80 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar recursos, OA, clases..."
+        />
       </div>
       <div className="flex items-center gap-2 ml-auto">
         <button className="p-2.5 rounded-2xl text-gray-400 hover:text-gray-600 hover:bg-gray-100/80 transition-all" aria-label="Ayuda">
