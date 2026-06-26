@@ -1,4 +1,4 @@
-import { WandSparkles, ClipboardCheck, LibraryBig, Sparkles, Boxes, BookOpenCheck, NotebookPen, FileText, Notebook, ClipboardList, HeartHandshake, GraduationCap, Layers, ArrowRight, Target, BrainCircuit } from 'lucide-react';
+import { ClipboardCheck, LibraryBig, Sparkles, Boxes, BookOpenCheck, NotebookPen, FileText, Notebook, ClipboardList, HeartHandshake, GraduationCap, Layers, ArrowRight, Target, BrainCircuit } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IconBadge } from './ui/IconBadge';

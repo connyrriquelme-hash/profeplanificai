@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Archive, Search, Plus, BookOpen, Clock, Trash2, FileText, ClipboardCheck, Copy, FileDown, X, AlertCircle, Loader2, Sparkles, FolderOpen, BookMarked, GraduationCap, Presentation, FileSpreadsheet, Eye, ExternalLink, Check } from 'lucide-react';
+import { Archive, Search, Plus, BookOpen, Clock, Trash2, FileText, ClipboardCheck, Copy, FileDown, X, AlertCircle, Loader2, Sparkles, FolderOpen, BookMarked, GraduationCap, Presentation, FileSpreadsheet, Eye, Check } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useResources } from '../hooks/useResources';
 import { exportToPDF } from '../utils/exportPdf';
