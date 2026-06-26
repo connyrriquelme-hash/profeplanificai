@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, FileDown, Save, Presentation, ClipboardPlus, Undo2, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
+import { FileDown, Save, Presentation, ClipboardPlus, Undo2, CheckCircle2, AlertTriangle, Sparkles, FileText } from 'lucide-react';
 import { IconBadge } from './ui/IconBadge';
+import { Badge } from './ui/Badge';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
+import { EmptyState } from './ui/EmptyState';
 
 interface GeneratedResourcePanelProps {
   resultText: string;
@@ -8,6 +12,11 @@ interface GeneratedResourcePanelProps {
   onBack: () => void;
   onSave: () => void;
   onRegenerate: () => void;
+}
+
+function extractTitle(text: string): string | null {
+  const firstLine = text.split('\n').find(l => l.startsWith('# '));
+  return firstLine ? firstLine.replace(/^# /, '').trim() : null;
 }
 
 export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRegenerate }: GeneratedResourcePanelProps) {
@@ -20,7 +29,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
   };
 
   const handleCreateEvaluation = () => {
-    showToast('Proximamente podras convertir este recurso en evaluacion.');
+    showToast('Próximamente podrás convertir este recurso en evaluación.');
   };
 
   const handleExportPDF = () => {
@@ -28,7 +37,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
   };
 
   const handlePresentation = () => {
-    showToast('Modo presentacion proximamente disponible.');
+    showToast('Modo presentación próximamente disponible.');
   };
 
   const handleCopyContent = async () => {
@@ -41,8 +50,27 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
     }
   };
 
+  if (!resultText && !error) {
+    return (
+      <EmptyState
+        icon={FileText}
+        title="Aún no hay recurso generado"
+        description="Completa el flujo de Biblioteca Creativa para crear una propuesta pedagógica."
+        action={
+          <Button variant="primary" size="md" onClick={onBack}>
+            Volver a Biblioteca Creativa
+          </Button>
+        }
+      />
+    );
+  }
+
+  const title = extractTitle(resultText);
+  const contentLines = resultText.split('\n');
+  const bodyLines = title ? contentLines.filter(l => !l.startsWith('# ') || l !== contentLines[0]) : contentLines;
+
   return (
-    <div className="max-w-5xl mx-auto animate-fade-in">
+    <div className="max-w-4xl mx-auto animate-fade-in">
       {toast && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-2.5 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium animate-scale-in">
           <CheckCircle2 size={18} />
@@ -50,75 +78,109 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 mb-8">
-        <button onClick={onBack} className="p-2.5 rounded-2xl bg-white border border-gray-200/80 text-gray-500 hover:text-gray-800 hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm font-medium">
-          <ArrowLeft size={16} strokeWidth={2.25} />
-          <span className="hidden sm:inline">Volver</span>
-        </button>
-        <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
-        <button onClick={handleCopyContent} className={`p-2.5 rounded-2xl border transition-all shadow-sm flex items-center gap-1.5 text-sm ${copied ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-gray-200/80 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'}`}>
-          {copied ? <CheckCircle2 size={16} strokeWidth={2.25} /> : <FileDown size={16} strokeWidth={2.25} />}
-          <span className="hidden sm:inline">{copied ? 'Copiado' : 'Copiar'}</span>
-        </button>
-        <button onClick={handleExportPDF} className="p-2.5 rounded-2xl bg-white border border-gray-200/80 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <FileDown size={16} strokeWidth={2.25} /> PDF
-        </button>
-        <button onClick={onSave} className="p-2.5 rounded-2xl bg-indigo-600 text-white border border-indigo-600 hover:bg-indigo-700 transition-all shadow-sm shadow-indigo-200/40 flex items-center gap-1.5 text-sm font-semibold">
-          <Save size={16} strokeWidth={2.25} />
-          <span className="hidden sm:inline">Guardar</span>
-        </button>
-        <button onClick={handlePresentation} className="p-2.5 rounded-2xl bg-white border border-gray-200/80 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <Presentation size={16} strokeWidth={2.25} /> Presentar
-        </button>
-        <button onClick={handleCreateEvaluation} className="p-2.5 rounded-2xl bg-white border border-gray-200/80 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <ClipboardPlus size={16} strokeWidth={2.25} /> Evaluación
-        </button>
-        <button onClick={onBack} className="p-2.5 rounded-2xl bg-white border border-gray-200/80 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-1.5 text-sm">
-          <Undo2 size={16} strokeWidth={2.25} /> Editar
-        </button>
+      {/* Document header */}
+      <Card variant="elevated" className="p-5 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <IconBadge icon={Sparkles} size="lg" color="#4f46e5" variant="gradient" className="flex-shrink-0" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge color="indigo" size="sm">Recurso generado</Badge>
+                <Badge color="green" size="sm" dot>Listo para revisar</Badge>
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 truncate">{title || 'Recurso pedagógico generado'}</h2>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" iconLeft={Undo2} onClick={onBack}>
+            Volver a editar
+          </Button>
+        </div>
+      </Card>
+
+      {/* Action bar */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <Button variant="premium" size="sm" iconLeft={FileDown} onClick={handleExportPDF}>
+          Exportar PDF
+        </Button>
+        <Button variant="secondary" size="sm" iconLeft={Save} onClick={onSave}>
+          Guardar en biblioteca
+        </Button>
+        <Button variant="outline" size="sm" iconLeft={Presentation} onClick={handlePresentation}>
+          Presentación
+        </Button>
+        <Button variant="outline" size="sm" iconLeft={ClipboardPlus} onClick={handleCreateEvaluation}>
+          Crear evaluación
+        </Button>
+        <Button variant="ghost" size="sm" onClick={handleCopyContent}>
+          {copied ? 'Copiado' : 'Copiar contenido'}
+        </Button>
       </div>
 
+      {/* Error bar */}
       {error && (
         <div className="mb-6 p-4 rounded-2xl bg-amber-50/80 border border-amber-200/60 text-sm text-amber-800 flex items-start gap-3 animate-slide-up">
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <span className="font-medium">Error parcial:</span> {error} — Se ha usado una version preliminar.
+            <span className="font-medium">Error parcial:</span> {error} — Se ha usado una versión preliminar.
           </div>
-          <button onClick={onRegenerate} className="flex-shrink-0 px-4 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-semibold transition-colors">
+          <Button variant="danger" size="sm" onClick={onRegenerate}>
             Reintentar
-          </button>
+          </Button>
         </div>
       )}
 
-      <div className="bg-gradient-to-b from-gray-50 to-white rounded-3xl border border-gray-200/70 shadow-sm p-4 sm:p-6 lg:p-10">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-200/50 p-6 sm:p-8 lg:p-12">
-          <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-            {resultText.split('\n').map((line, i) => {
+      {/* Document body */}
+      <Card variant="elevated" className="p-4 sm:p-6 lg:p-8 xl:p-10">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8 lg:p-10 xl:p-12">
+          <div className="max-w-none text-slate-800 leading-relaxed space-y-1">
+            {bodyLines.map((line, i) => {
               if (line.startsWith('# ')) {
-                return <h1 key={i} className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100 tracking-tight">{line.replace(/^# /, '')}</h1>;
+                return <h1 key={i} className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100 tracking-tight">{line.replace(/^# /, '')}</h1>;
               }
               if (line.startsWith('## ')) {
-                return <h2 key={i} className="text-lg font-bold text-gray-900 mt-8 mb-3 pb-2 border-b border-gray-50 tracking-tight">{line.replace(/^## /, '')}</h2>;
+                return <h2 key={i} className="text-xl font-bold text-gray-900 mt-8 mb-4 pb-2 border-b border-gray-100 tracking-tight">{line.replace(/^## /, '')}</h2>;
               }
               if (line.startsWith('### ')) {
-                return <h3 key={i} className="text-base font-semibold text-gray-800 mt-6 mb-2">{line.replace(/^### /, '')}</h3>;
+                return <h3 key={i} className="text-base font-semibold text-gray-900 mt-6 mb-3">{line.replace(/^### /, '')}</h3>;
               }
               if (line.startsWith('- ')) {
-                return <li key={i} className="text-sm ml-5 pl-1.5 text-gray-700 leading-relaxed marker:text-gray-300">{line.replace(/^- /, '')}</li>;
+                return (
+                  <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
+                    <li>{line.replace(/^- /, '')}</li>
+                  </ul>
+                );
+              }
+              if (/^\d+\.\s/.test(line)) {
+                const content = line.replace(/^\d+\.\s/, '');
+                return (
+                  <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
+                    <li>{content}</li>
+                  </ol>
+                );
               }
               if (line.startsWith('| ')) {
                 return null;
               }
+              if (line.trim() === '---' || line.trim() === '***') {
+                return <hr key={i} className="my-8 border-gray-200" />;
+              }
               if (line.trim() === '') {
-                return <div key={i} className="h-3" />;
+                return <div key={i} className="h-3 sm:h-4" />;
               }
               const html = line
                 .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em class="text-gray-600">$1</em>');
-              return <p key={i} className="text-sm text-gray-700 leading-relaxed mb-1.5" dangerouslySetInnerHTML={{ __html: html }} />;
+                .replace(/\*(.+?)\*/g, '<em class="text-slate-600">$1</em>');
+              return <p key={i} className="text-sm sm:text-base text-slate-700 leading-relaxed mb-2" dangerouslySetInnerHTML={{ __html: html }} />;
             })}
           </div>
         </div>
+      </Card>
+
+      {/* Footer action */}
+      <div className="flex justify-center mt-8 mb-4">
+        <Button variant="ghost" size="sm" iconLeft={Undo2} onClick={onBack}>
+          Volver a editar
+        </Button>
       </div>
     </div>
   );
