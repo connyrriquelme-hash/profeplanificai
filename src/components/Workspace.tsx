@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CollapsibleSection } from './CollapsibleSection';
-import { FileText, Play, Sparkles, Plus, Search, CheckCircle, Loader } from 'lucide-react';
+import { Play, Sparkles, Plus, Search, CheckCircle, Loader } from 'lucide-react';
 import { useProject, type ProjectData } from '../contexts/ProjectContext';
 import { niveles, getAsignaturas, getOAs, type CurriculumItem } from '../data/curriculumData';
 import { AIAssistant, type PedagogicalContext } from './AIAssistant';
@@ -299,29 +299,26 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
           />
         </CollapsibleSection>
 
-        <CollapsibleSection title="RECURSOS Y MATERIALES" icon={<FileText size={20} />}>
-          <textarea
-            className="output p-3 sm:p-4"
-            value={recursos}
-            onChange={handleChange(setRecursos, 'recursos')}
-            style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-            placeholder="Enlaces, archivos, referencias, materiales didácticos…"
-          />
-        </CollapsibleSection>
-
-        <CollapsibleSection title="INSTRUMENTO DE EVALUACIÓN" icon={<FileText size={20} />}>
-          <textarea
-            className="output p-3 sm:p-4"
-            value={evaluacion}
-            onChange={handleChange(setEvaluacion, 'evaluacion')}
-            style={{ minHeight: 120, fontFamily: 'sans-serif', resize: 'vertical', background: '#fff' }}
-            placeholder="Criterios de evaluación, rúbrica, lista de cotejo, pauta de observación…"
-          />
-          <div className="btnrow" style={{ marginTop: 12 }}>
-            <button className="primary"><Sparkles size={14} /> Generar plan completo</button>
-            <button className="secondary" onClick={handleSaveToLibrary}><Plus size={14} /> Guardar en Biblioteca</button>
+        <div className="flex items-center justify-between gap-2 p-3 sm:p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex-wrap">
+          <span className="text-xs text-gray-500 font-medium">¿Necesitas complementar este plan?</span>
+          <div className="flex items-center gap-2">
+            <button className="small secondary" onClick={() => onNavigate?.('banco-recursos')}>
+              Ir a Banco de Recursos
+            </button>
+            <button className="small secondary" onClick={() => onNavigate?.('evaluaciones')}>
+              Crear evaluación
+            </button>
           </div>
-        </CollapsibleSection>
+        </div>
+
+        <div className="flex items-center gap-3 pt-1">
+          <button className="primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 600 }}>
+            <Sparkles size={14} /> Generar plan completo
+          </button>
+          <button className="secondary" onClick={handleSaveToLibrary} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 'var(--radius-md)', fontSize: 13, fontWeight: 600 }}>
+            <Plus size={14} /> Guardar en Biblioteca
+          </button>
+        </div>
       </div>
 
       <style>{`
