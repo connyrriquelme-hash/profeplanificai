@@ -75,7 +75,7 @@ function AppContent() {
   return (
     <AppShell
       sidebar={<Sidebar activeView={activeView} onViewChange={handleViewChange} />}
-      topbar={<Topbar />}
+      topbar={<Topbar onNavigate={handleViewChange} />}
     >
       <ErrorBoundary>
         <AnimatePresence mode="wait">
