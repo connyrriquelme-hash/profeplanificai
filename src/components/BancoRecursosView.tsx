@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Database, Search, Plus, BookOpen, Clock, Trash2, FileText, ClipboardCheck, Copy, FileDown, X, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Archive, Search, Plus, BookOpen, Clock, Trash2, FileText, ClipboardCheck, Copy, FileDown, X, AlertCircle, Loader2, Sparkles, FolderOpen, BookMarked, GraduationCap, Presentation, FileSpreadsheet, Eye, ExternalLink, Check } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useResources } from '../hooks/useResources';
 import { exportToPDF } from '../utils/exportPdf';
+import { Card } from './ui/Card';
+import { Badge } from './ui/Badge';
+import { Button } from './ui/Button';
+import { IconBadge } from './ui/IconBadge';
+import { SearchInput } from './ui/SearchInput';
+import { EmptyState } from './ui/EmptyState';
+import { SectionHeader } from './ui/SectionHeader';
 
 type Tab = 'planificaciones' | 'recursos' | 'evaluaciones';
 
@@ -21,6 +28,17 @@ interface Resource {
   created_at: string;
 }
 
+const QUICK_CATEGORIES = [
+  { icon: FileText, label: 'Fichas de actividades', color: '#0d9488' },
+  { icon: ClipboardCheck, label: 'Evaluaciones', color: '#7c3aed' },
+  { icon: Presentation, label: 'Presentaciones', color: '#ea580c' },
+  { icon: BookMarked, label: 'Recursos DUA', color: '#2563eb' },
+  { icon: BookOpen, label: 'Lectura y comprensión', color: '#16a34a' },
+  { icon: GraduationCap, label: 'Matemática', color: '#4f46e5' },
+  { icon: FileSpreadsheet, label: 'SIMCE', color: '#d97706' },
+  { icon: FolderOpen, label: 'Plantillas docentes', color: '#0891b2' },
+];
+
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'planificaciones', label: 'Mis Planificaciones', icon: <BookOpen size={16} /> },
   { id: 'recursos', label: 'Mis Recursos', icon: <FileText size={16} /> },
@@ -32,7 +50,10 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   const { library, removeFromLibrary, newProject } = useProject();
   const { resources, isLoading, error, fetchResources } = useResources();
   const [query, setQuery] = useState('');
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterLevel, setFilterLevel] = useState('');
   const [detail, setDetail] = useState<Resource | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialTab) setActiveTab(initialTab);
@@ -42,16 +63,37 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
     if (activeTab === 'recursos') fetchResources();
   }, [activeTab, fetchResources]);
 
+  const uniqueSubjects = useMemo(() => {
+    if (activeTab !== 'recursos') return [];
+    return [...new Set(resources.map(r => r.subject).filter(Boolean))].sort();
+  }, [resources, activeTab]);
+
+  const uniqueLevels = useMemo(() => {
+    if (activeTab !== 'recursos') return [];
+    return [...new Set(resources.map(r => r.level).filter(Boolean))].sort();
+  }, [resources, activeTab]);
+
   const filteredPlans = query
     ? library.filter(i => i.titulo.toLowerCase().includes(query.toLowerCase()) || i.objetivos.toLowerCase().includes(query.toLowerCase()))
     : library;
 
-  const filteredResources = query.trim()
-    ? resources.filter(r =>
-        r.title?.toLowerCase().includes(query.toLowerCase()) ||
-        r.subject?.toLowerCase().includes(query.toLowerCase()) ||
-        r.level?.toLowerCase().includes(query.toLowerCase()))
-    : resources;
+  const filteredResources = resources.filter(r => {
+    const matchesQuery = !query || 
+      r.title?.toLowerCase().includes(query.toLowerCase()) ||
+      r.subject?.toLowerCase().includes(query.toLowerCase()) ||
+      r.level?.toLowerCase().includes(query.toLowerCase());
+    const matchesSubject = !filterSubject || r.subject === filterSubject;
+    const matchesLevel = !filterLevel || r.level === filterLevel;
+    return matchesQuery && matchesSubject && matchesLevel;
+  });
+
+  const recommendedResource = filteredResources.length > 0 ? filteredResources[0] : null;
+
+  const clearFilters = () => {
+    setQuery('');
+    setFilterSubject('');
+    setFilterLevel('');
+  };
 
   const handleNewClick = () => {
     newProject();
@@ -61,188 +103,328 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleString('es-CL');
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'planificaciones':
-        return (
-          <>
-            {filteredPlans.length === 0 ? (
-              <div className="card empty-state" style={{ minHeight: 300 }}>
-                <BookOpen size={48} />
-                <p>{query ? 'No se encontraron planificaciones.' : 'Aún no tienes planificaciones guardadas.'}</p>
-                <p className="muted" style={{ marginTop: 8 }}>Crea tu primera planificación desde el Espacio de Trabajo.</p>
-                <button className="primary" style={{ marginTop: 16 }} onClick={handleNewClick}>
-                  <Plus size={14} /> Crear Planificación
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-                {filteredPlans.map(item => (
-                  <div key={item.id} className="card" style={{ padding: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                      <div>
-                        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>{item.titulo}</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>
-                          <Clock size={12} />
-                          {formatDate(item.fecha)}
-                        </div>
-                      </div>
-                      <button className="ghost" style={{ padding: 4, color: 'var(--muted)' }} onClick={() => removeFromLibrary(item.id)} title="Eliminar">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                      {item.objetivos && <span style={{ fontSize: 11, background: 'var(--bg2)', padding: '2px 8px', borderRadius: 4, color: 'var(--muted)' }}><BookOpen size={10} style={{ marginRight: 4 }} />OA</span>}
-                      {item.inicio && <span style={{ fontSize: 11, background: 'var(--bg2)', padding: '2px 8px', borderRadius: 4, color: 'var(--muted)' }}>Inicio</span>}
-                      {item.desarrollo && <span style={{ fontSize: 11, background: 'var(--bg2)', padding: '2px 8px', borderRadius: 4, color: 'var(--muted)' }}>Desarrollo</span>}
-                      {item.cierre && <span style={{ fontSize: 11, background: 'var(--bg2)', padding: '2px 8px', borderRadius: 4, color: 'var(--muted)' }}>Cierre</span>}
-                    </div>
-                    <p style={{ fontSize: 13, color: 'var(--ink2)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
-                      {item.objetivos || item.inicio || 'Sin contenido'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        );
-
-      case 'recursos':
-        if (isLoading && resources.length === 0) {
-          return <div className="card empty-state"><Database size={38} /><p>Cargando recursos…</p></div>;
-        }
-        return (
-          <>
-            {error && (
-              <div className="card" style={{ borderColor: 'var(--error)', background: 'var(--error-bg)' }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', color: 'var(--error)' }}>
-                  <AlertCircle size={18} /> {error}
-                </div>
-              </div>
-            )}
-            {!isLoading && !filteredResources.length ? (
-              <div className="card empty-state">
-                <Database size={38} />
-                <p>{query ? 'No hay recursos que coincidan con tu búsqueda.' : 'Aún no hay recursos guardados.'}</p>
-              </div>
-            ) : (
-              <div className="recursos-grid">
-                {filteredResources.map(r => (
-                  <div key={r.id} className="card recurso-card" onClick={() => setDetail(r)} style={{ cursor: 'pointer' }}>
-                    <h3 style={{ fontSize: 15, marginBottom: 6, lineHeight: 1.3 }}>{r.title || 'Sin título'}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span><BookOpen size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />{r.subject}</span>
-                      <span><BookOpen size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />{r.level}</span>
-                      <span><Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />{formatDate(r.created_at)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        );
-
-      case 'evaluaciones':
-        return (
-          <div className="card empty-state" style={{ minHeight: 300 }}>
-            <ClipboardCheck size={48} />
-            <p>Próximamente: gestión de evaluaciones.</p>
-            <p className="muted" style={{ marginTop: 8 }}>Aquí podrás crear y gestionar rúbricas, listas de cotejo y pautas de evaluación.</p>
-          </div>
-        );
-    }
+  const handleCopy = async (text: string, id: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
-    <div className="view banco-recursos">
-      <div className="module-header">
-        <div>
-          <h2 className="module-title"><Database size={22} /> Banco de Recursos</h2>
-          <p className="muted">Gestiona tus planificaciones, recursos y evaluaciones.</p>
+    <div className="view">
+      <Card className="bg-gradient-to-br from-teal-50 to-blue-50/50 border-teal-100/80 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <IconBadge icon={Archive} size="xl" color="#0d9488" variant="gradient" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Banco de Recursos</h1>
+                <Badge color="teal" size="md">Recursos docentes</Badge>
+              </div>
+              <p className="text-sm text-gray-500 mt-1.5 max-w-2xl leading-relaxed">
+                Explora, organiza y reutiliza materiales pedagógicos para tus clases.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="premium"
+            size="sm"
+            iconLeft={Sparkles}
+            onClick={() => onNavigate?.('biblioteca-creativa')}
+            className="flex-shrink-0"
+          >
+            Crear recurso con IA
+          </Button>
         </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div className="search-bar" style={{ flex: 1, maxWidth: 360 }}>
-            <Search className="search-icon" size={16} />
-            <input
+      </Card>
+
+      <Card className="mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={activeTab === 'recursos' ? 'lg:col-span-1' : 'lg:col-span-2'}>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <Search size={13} strokeWidth={2.25} />
+              {activeTab === 'planificaciones' ? 'Buscar planificaciones' : activeTab === 'recursos' ? 'Buscar recursos' : 'Buscar evaluaciones'}
+            </label>
+            <SearchInput
               value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={activeTab === 'planificaciones' ? 'Buscar planificaciones…' : activeTab === 'recursos' ? 'Buscar por título, asignatura o nivel…' : 'Buscar evaluaciones…'}
+              onChange={setQuery}
+              placeholder={activeTab === 'planificaciones' ? 'Buscar planificaciones…' : 'Buscar por título, asignatura o nivel…'}
             />
           </div>
-          <button className="primary" onClick={handleNewClick}>
-            <Plus size={14} /> Nuevo
-          </button>
           {activeTab === 'recursos' && (
-            <button className="secondary" onClick={fetchResources} disabled={isLoading}>
-              {isLoading ? 'Cargando…' : 'Recargar'}
-            </button>
+            <>
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+                  <BookOpen size={13} strokeWidth={2.25} />
+                  Asignatura
+                </label>
+                <select
+                  value={filterSubject}
+                  onChange={e => setFilterSubject(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="">Todas las asignaturas</option>
+                  {uniqueSubjects.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+                  <GraduationCap size={13} strokeWidth={2.25} />
+                  Nivel
+                </label>
+                <select
+                  value={filterLevel}
+                  onChange={e => setFilterLevel(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="">Todos los niveles</option>
+                  {uniqueLevels.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          {(query || filterSubject || filterLevel) && (
+            <div className="flex items-end">
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                Limpiar filtros
+              </Button>
+            </div>
           )}
         </div>
+      </Card>
+
+      <SectionHeader
+        icon={FolderOpen}
+        iconColor="#0d9488"
+        title="Explorar categorías"
+        description="Accede rápidamente a tipos de recursos pedagógicos."
+        className="mb-4"
+      />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        {QUICK_CATEGORIES.map(cat => (
+          <Card key={cat.label} variant="interactive" className="p-3.5 flex items-center gap-3">
+            <IconBadge icon={cat.icon} size="md" color={cat.color} variant="soft" />
+            <span className="text-sm font-medium text-gray-700">{cat.label}</span>
+          </Card>
+        ))}
       </div>
 
-      <div className="tabs" role="tablist" style={{ marginBottom: 20 }}>
+      <div className="flex gap-2 mb-6 flex-wrap" role="tablist">
         {TABS.map(({ id, label, icon }) => (
           <button
             key={id}
             role="tab"
             aria-selected={activeTab === id}
-            className={`tab-btn ${activeTab === id ? 'active' : ''}`}
             onClick={() => setActiveTab(id)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 ${
+              activeTab === id
+                ? 'bg-teal-600 text-white shadow-sm shadow-teal-200/40'
+                : 'bg-white text-gray-600 border border-gray-200/80 hover:bg-gray-50 hover:border-gray-300'
+            }`}
           >
             {icon} {label}
           </button>
         ))}
       </div>
 
-      <div style={{ animation: 'fadeIn .2s ease' }}>{renderTabContent()}</div>
+      {activeTab === 'planificaciones' && (
+        <>
+          {filteredPlans.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title={query ? 'No se encontraron planificaciones' : 'Aún no tienes planificaciones guardadas'}
+              description={query ? undefined : 'Crea tu primera planificación desde el Espacio de Trabajo.'}
+              action={
+                query ? undefined : (
+                  <Button variant="primary" iconLeft={Plus} onClick={handleNewClick}>
+                    Crear Planificación
+                  </Button>
+                )
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredPlans.map(item => {
+                const hasContent = item.inicio || item.desarrollo || item.cierre;
+                return (
+                  <Card key={item.id} className="p-5 flex flex-col">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{item.titulo}</h3>
+                        <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400">
+                          <Clock size={11} strokeWidth={2.25} />
+                          {formatDate(item.fecha)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeFromLibrary(item.id)}
+                        className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
+                        aria-label="Eliminar planificación"
+                      >
+                        <Trash2 size={14} strokeWidth={2.25} />
+                      </button>
+                    </div>
+                    <div className="flex gap-1.5 flex-wrap mb-3">
+                      {item.objetivos && <Badge color="indigo" size="sm">OA</Badge>}
+                      {item.inicio && <Badge color="teal" size="sm">Inicio</Badge>}
+                      {item.desarrollo && <Badge color="indigo" size="sm">Desarrollo</Badge>}
+                      {item.cierre && <Badge color="amber" size="sm">Cierre</Badge>}
+                      {item.nivel && <Badge color="slate" size="sm">{item.nivel}</Badge>}
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 flex-1">
+                      {hasContent ? item.objetivos || item.inicio || 'Sin contenido' : 'Sin contenido'}
+                    </p>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
 
-      {detail && (
-        <div className="modal-overlay" onClick={() => setDetail(null)}>
-          <div className="modal detail-modal" onClick={e => e.stopPropagation()}>
-            <div className="detail-header">
-              <div>
-                <h2>{detail.title}</h2>
-                <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                  {detail.subject} · {detail.level} · {formatDate(detail.created_at)}
+      {activeTab === 'recursos' && (
+        <>
+          {error && (
+            <Card className="mb-4 border-red-200 bg-red-50/50">
+              <div className="flex items-center gap-2 text-sm text-red-700">
+                <AlertCircle size={16} strokeWidth={2.25} />
+                {error}
+              </div>
+            </Card>
+          )}
+
+          {isLoading && resources.length === 0 && (
+            <EmptyState
+              icon={Loader2}
+              title="Cargando recursos…"
+              size="lg"
+            />
+          )}
+
+          {!isLoading && !filteredResources.length && !error && (
+            <EmptyState
+              icon={FileText}
+              title={query || filterSubject || filterLevel ? 'No hay recursos que coincidan con tu búsqueda' : 'Aún no hay recursos guardados'}
+              description={query || filterSubject || filterLevel ? 'Prueba con otros filtros o palabras clave.' : 'Crea recursos desde Biblioteca Creativa o guarda materiales para reutilizarlos aquí.'}
+              action={
+                query || filterSubject || filterLevel ? undefined : (
+                  <Button variant="premium" iconLeft={Sparkles} onClick={() => onNavigate?.('biblioteca-creativa')}>
+                    Crear recurso con IA
+                  </Button>
+                )
+              }
+            />
+          )}
+
+          {recommendedResource && filteredResources.length > 0 && (
+            <Card className="mb-6 bg-gradient-to-br from-teal-50 to-blue-50/50 border-teal-100/80">
+              <div className="flex items-start gap-4">
+                <IconBadge icon={Sparkles} size="lg" color="#0d9488" variant="gradient" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge color="teal" size="sm">Recomendado</Badge>
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900">{recommendedResource.title || 'Sin título'}</h3>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{recommendedResource.content}</p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <Button variant="secondary" size="sm" iconLeft={Eye} onClick={() => setDetail(recommendedResource)}>
+                      Ver recurso
+                    </Button>
+                    <Button variant="outline" size="sm" iconLeft={Sparkles} onClick={() => onNavigate?.('biblioteca-creativa')}>
+                      Crear versión con IA
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'start' }}>
-                <button className="secondary" onClick={() => navigator.clipboard.writeText(detail.content)}>
-                  <Copy size={14} />
-                </button>
-                <button className="primary" onClick={() => exportToPDF(detail.title, detail.content)}>
-                  <FileDown size={14} /> PDF
-                </button>
-                <button className="ghost" onClick={() => setDetail(null)}>
-                  <X size={14} />
+            </Card>
+          )}
+
+          {filteredResources.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredResources.map(r => (
+                <Card
+                  key={r.id}
+                  variant="interactive"
+                  className="p-5"
+                  onClick={() => setDetail(r)}
+                >
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
+                  <div className="flex gap-1.5 flex-wrap mb-3">
+                    {r.subject && <Badge color="teal" size="sm">{r.subject}</Badge>}
+                    {r.level && <Badge color="indigo" size="sm">{r.level}</Badge>}
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content}</p>
+                  <div className="flex items-center text-xs text-gray-400">
+                    <Clock size={11} strokeWidth={2.25} className="mr-1" />
+                    {formatDate(r.created_at)}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'evaluaciones' && (
+        <Card className="py-12">
+          <EmptyState
+            icon={ClipboardCheck}
+            title="Próximamente: gestión de evaluaciones"
+            description="Aquí podrás crear y gestionar rúbricas, listas de cotejo y pautas de evaluación."
+          />
+        </Card>
+      )}
+
+      {detail && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-8 overflow-y-auto" onClick={() => setDetail(null)}>
+          <div className="max-w-2xl w-full animate-fade-in" onClick={e => e.stopPropagation()}>
+          <Card
+            variant="elevated"
+            className="p-0 overflow-hidden"
+          >
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-start justify-between gap-4 z-10">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold text-gray-900 leading-snug">{detail.title}</h2>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  {detail.subject && <Badge color="teal" size="sm">{detail.subject}</Badge>}
+                  {detail.level && <Badge color="indigo" size="sm">{detail.level}</Badge>}
+                  <span className="text-xs text-gray-400">{formatDate(detail.created_at)}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  iconLeft={copiedId === detail.id ? Check : Copy}
+                  onClick={() => handleCopy(detail.content, detail.id)}
+                >
+                  {copiedId === detail.id ? '¡Copiado!' : 'Copiar'}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  iconLeft={FileDown}
+                  onClick={() => exportToPDF(detail.title, detail.content)}
+                >
+                  PDF
+                </Button>
+                <button
+                  onClick={() => setDetail(null)}
+                  className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                  aria-label="Cerrar"
+                >
+                  <X size={16} strokeWidth={2.25} />
                 </button>
               </div>
             </div>
-            <div className="detail-body" style={{ padding: '20px 24px', maxHeight: '70vh', overflowY: 'auto' }}>
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, fontSize: 14, color: 'var(--ink2)' }}>
+            <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">
+              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {detail.content}
               </div>
             </div>
+          </Card>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-        .tab-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--card); color: var(--ink); font-weight: 500; font-size: 13; cursor: pointer; transition: all .15s; }
-        .tab-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-        .tab-btn:hover:not(.active) { background: var(--bg2); border-color: var(--brand); color: var(--brand); }
-        .recursos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-        .recurso-card { padding: 18px; transition: box-shadow var(--t-fast), transform var(--t-fast); }
-        .recurso-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; padding: 40px 20px; overflow-y: auto; }
-        .modal { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); max-width: 800px; width: 100%; }
-        .detail-modal { max-width: 900px; }
-        .detail-header { display: flex; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); border-radius: var(--radius) var(--radius) 0 0; z-index: 1; }
-        .detail-header h2 { font-size: 18px; margin: 0 0 4px; }
-        .detail-body { max-height: 70vh; overflow-y: auto; }
-      `}</style>
     </div>
   );
 }
