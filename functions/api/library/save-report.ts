@@ -17,16 +17,29 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const now = new Date().toISOString();
     const title = `Informe para apoderados — ${body.subject || ''} — ${body.course || ''}`;
 
-    // Try to save to resources table (existing library)
-    const insertResult = await context.env.DB.prepare(`
-      INSERT OR IGNORE INTO resources (id, objective_id, title, type, source_url, metadata_json)
+    // Find a valid objective_id for the FK constraint
+    let objectiveId = '';
+    if (body.objectives?.[0]?.code) {
+      const obj = await context.env.DB.prepare(`SELECT id FROM objectives WHERE code = ?`).bind(body.objectives[0].code).first<any>();
+      if (obj) objectiveId = obj.id;
+    }
+    if (!objectiveId) {
+      const anyObj = await context.env.DB.prepare(`SELECT id FROM objectives LIMIT 1`).first<any>();
+      if (anyObj) objectiveId = anyObj.id;
+    }
+    if (!objectiveId) {
+      return Response.json({ error: 'No hay objetivos en D1 para vincular el informe.' }, { status: 400 });
+    }
+
+    await context.env.DB.prepare(`
+      INSERT INTO resources (id, objective_id, title, type, source_url, metadata_json)
       VALUES (?, ?, ?, ?, ?, ?)
     `).bind(
       id,
-      body.objectiveId || '',
+      objectiveId,
       title,
       'parent_report',
-      'manual',
+      `parent-report/${id}`,
       JSON.stringify({
         type: 'parent_report',
         title,

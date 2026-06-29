@@ -415,11 +415,12 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   <div className="flex gap-1.5 flex-wrap mb-3">
                     {r.type === 'presentacion_clase_visual' && <Badge color="orange" size="sm">Presentación</Badge>}
                     {r.type === 'planificacion' && <Badge color="teal" size="sm">Planificación</Badge>}
+                    {r.type === 'parent_report' && <Badge color="violet" size="sm">Informe Apoderados</Badge>}
                     {r.subject && <Badge color="teal" size="sm">{r.subject}</Badge>}
                     {r.level && <Badge color="indigo" size="sm">{r.level}</Badge>}
                     {r.objective_code && <Badge color="amber" size="sm">{r.objective_code}</Badge>}
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content || (() => { try { const m = JSON.parse(r.metadata_json || '{}'); return m.course ? `${m.subject} — ${m.course} • ${m.studentCount || 0} estudiantes` : ''; } catch { return ''; } })()}</p>
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
                     <div className="flex items-center text-xs text-gray-400">
                       <Clock size={11} strokeWidth={2.25} className="mr-1" />

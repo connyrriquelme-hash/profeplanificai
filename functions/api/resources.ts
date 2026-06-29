@@ -21,7 +21,7 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
           return Response.json({ data: resource ?? null });
         }
         const { results } = await context.env.DB.prepare(
-          'SELECT * FROM resources ORDER BY created_at DESC'
+          'SELECT * FROM resources ORDER BY id DESC'
         ).all();
         return Response.json({ data: results });
       }
