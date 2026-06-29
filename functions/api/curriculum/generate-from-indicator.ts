@@ -19,6 +19,16 @@ interface GenerateRequest {
 
 const RESOURCE_TYPES = ['actividad', 'evaluacion', 'rubrica', 'guia', 'presentacion', 'imagen'] as const;
 
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function parseJsonSafe(raw: string): any {
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   try { return JSON.parse(cleaned); } catch { return null; }
@@ -194,25 +204,40 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     // Try Gemini
     if (context.env.GEMINI_API_KEY) {
-      const model = 'gemini-2.5-flash';
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.5, responseMimeType: 'application/json', maxOutputTokens: 8000 },
-        }),
-      });
-      const data = await response.json() as any;
-      if (!response.ok) {
-        return Response.json({ error: data?.error?.message || `Gemini error ${response.status}` }, { status: 502 });
+      try {
+        const model = 'gemini-2.5-flash';
+        const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.5, responseMimeType: 'application/json', maxOutputTokens: 8000 },
+          }),
+        }, 15000);
+        const data = await response.json() as any;
+        if (!response.ok) {
+          return Response.json({
+            ok: true, provider: 'mock', model: 'deterministic-local',
+            recursos: mockResources(indicator, resourceType),
+            warning: `No fue posible conectar con Gemini (${response.status}). Se generó una versión base local.`,
+          });
+        }
+        const raw = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('');
+        const parsed = parseJsonSafe(raw);
+        if (parsed?.recursos) {
+          return Response.json({ ok: true, provider: 'gemini', model, recursos: parsed.recursos, warning: warningMsg });
+        }
+        return Response.json({ ok: true, provider: 'gemini', model, raw_text: raw, warning: warningMsg });
+      } catch (err: any) {
+        const isTimeout = err?.name === 'AbortError' || err?.message?.includes('abort');
+        return Response.json({
+          ok: true, provider: 'mock', model: 'deterministic-local',
+          recursos: mockResources(indicator, resourceType),
+          warning: isTimeout
+            ? 'Gemini tardó demasiado. Se generó una versión base local.'
+            : `No fue posible conectar con Gemini. Se generó una versión base local.`,
+        });
       }
-      const raw = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('');
-      const parsed = parseJsonSafe(raw);
-      if (parsed?.recursos) {
-        return Response.json({ ok: true, provider: 'gemini', model, recursos: parsed.recursos, warning: warningMsg });
-      }
-      return Response.json({ ok: true, provider: 'gemini', model, raw_text: raw, warning: warningMsg });
     }
 
     // Try Workers AI
