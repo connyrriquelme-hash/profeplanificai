@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
-import { WandSparkles, Layers3, NotebookPen, ClipboardCheck, BookOpenCheck, HeartHandshake, Users, ArrowRight, Target, GraduationCap, Layout, BookText, GitBranch, ClipboardList, Sun, FlaskConical, Calculator, FileText, Palette, Moon, Sparkles, Loader2, Search, X, Check, ArrowLeft, BrainCircuit, DoorOpen, TrendingDown, Accessibility } from 'lucide-react';
+import { WandSparkles, Layers3, NotebookPen, ClipboardCheck, BookOpenCheck, HeartHandshake, Users, ArrowRight, Target, GraduationCap, Layout, BookText, GitBranch, ClipboardList, Sun, FlaskConical, Calculator, FileText, Palette, Moon, Sparkles, Loader2, Search, X, Check, ArrowLeft, BrainCircuit, DoorOpen, TrendingDown, Accessibility, ImagePlus, Download, RefreshCw } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
-import { getLevels, getSubjectsByLevel, getObjectives, type LearningObjective } from '../data/libraryMockData';
-import { generateResource, type GenerateResourceRequest } from '../services/libraryGenerationService';
+import { useCurriculum } from '../contexts/CurriculumContext';
+import type { LearningObjective } from '../data/libraryMockData';
+import { generateResource, generateSlideLesson, type GenerateResourceRequest } from '../services/libraryGenerationService';
+import type { SlideLesson } from '../types/slideLesson';
 import { GeneratedResourcePanel } from './GeneratedResourcePanel';
 import { IconBadge } from './ui/IconBadge';
 import { Badge } from './ui/Badge';
@@ -70,6 +72,7 @@ interface LibraryViewProps {
 
 export function LibraryView({ onNavigate }: LibraryViewProps) {
   const { newProject, addToLibrary, updateProjectField } = useProject();
+  const { levels, getSubjects, getObjectives: getCurriculumObjectives, searchObjectives: searchCurriculumObjectives, isLoading: curriculumLoading } = useCurriculum();
   const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [step, setStep] = useState<LibraryStep>('hub');
   const [creationType, setCreationType] = useState('');
@@ -89,18 +92,20 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   });
   const [designStyle, setDesignStyle] = useState('claro');
   const [resultText, setResultText] = useState('');
+  const [slideResult, setSlideResult] = useState<SlideLesson | undefined>(undefined);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [creativeImage, setCreativeImage] = useState<string | null>(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
-  const levels = useMemo(() => getLevels(), []);
-  const subjects = useMemo(() => level ? getSubjectsByLevel(level) : [], [level]);
+  const subjects = useMemo(() => level ? getSubjects(level) : [], [level, getSubjects]);
   const objectives = useMemo(() => {
     if (!level || !subject) return [];
-    const items = getObjectives(level, subject);
+    const items = getCurriculumObjectives(level, subject);
     if (!oaSearch) return items;
     const q = oaSearch.toLowerCase();
     return items.filter(o => o.code.toLowerCase().includes(q) || o.text.toLowerCase().includes(q));
-  }, [level, subject, oaSearch]);
+  }, [level, subject, oaSearch, getCurriculumObjectives]);
 
   const typeLabel = creationType === 'Clase' ? 'Lección individual' : creationType === 'Unidad' ? 'Serie de lecciones' : creationType === 'Ficha' ? 'Fichas de actividades' : creationType === 'Evaluacion' ? 'Evaluación formativa' : creationType === 'Simce' ? 'Evaluación tipo SIMCE' : 'Recurso inclusivo DUA';
 
@@ -111,7 +116,33 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     addToLibrary();
     setStep('hub');
     setCreationType('');
+    setSlideResult(undefined);
+    setCreativeImage(null);
   };
+
+  const handleGenerateCreativeImage = useCallback(async () => {
+    if (!topic.trim() || !selectedOA) return;
+    setGeneratingImage(true);
+    try {
+      const { generateCreativeImage } = await import('../services/creativeImageService');
+      const result = await generateCreativeImage({
+        tema: topic,
+        curso: level,
+        asignatura: subject,
+        oa: `${selectedOA.code} - ${selectedOA.text}`,
+        estilo: 'ilustración infantil',
+      });
+      if (result.ok && result.url) {
+        setCreativeImage(result.url);
+      } else {
+        setError(result.error || 'No se pudo generar la imagen');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error generando imagen');
+    } finally {
+      setGeneratingImage(false);
+    }
+  }, [topic, level, subject, selectedOA]);
 
   const handleSelectOA = useCallback((oa: LearningObjective) => {
     setSelectedOA(oa);
@@ -149,17 +180,29 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       },
     };
 
-    const res = await generateResource(req);
-    if (res.ok && res.text) {
-      setResultText(res.text);
-      setStep('result');
+    if (creationType === 'Clase') {
+      const res = await generateSlideLesson(req);
+      if (res.slides) {
+        setSlideResult(res.slides);
+        setResultText(res.text || '');
+        setStep('result');
+      } else {
+        setError(res.error || 'Error al generar presentacion');
+        setStep('design');
+      }
     } else {
-      setError(res.error || 'Error al generar');
-      if (res.text) {
+      const res = await generateResource(req);
+      if (res.ok && res.text) {
         setResultText(res.text);
         setStep('result');
       } else {
-        setStep('design');
+        setError(res.error || 'Error al generar');
+        if (res.text) {
+          setResultText(res.text);
+          setStep('result');
+        } else {
+          setStep('design');
+        }
       }
     }
     setGenerating(false);
@@ -438,6 +481,42 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
           <p className="text-xs text-gray-400 text-center">Próximamente podrás adjuntar recursos directamente.</p>
         </Card>
 
+        {topic.trim() && selectedOA && (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="md"
+              iconLeft={ImagePlus}
+              onClick={handleGenerateCreativeImage}
+              disabled={generatingImage}
+              className="flex-1"
+            >
+              {generatingImage ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} /> Generando imagen IA...
+                </>
+              ) : (
+                'Generar imagen IA'
+              )}
+            </Button>
+            {creativeImage && (
+              <Button
+                variant="ghost"
+                size="md"
+                iconLeft={Download}
+                onClick={() => {
+                  const a = document.createElement('a');
+                  a.href = creativeImage;
+                  a.download = `imagen-${topic.slice(0, 30)}.png`;
+                  a.click();
+                }}
+              >
+                Descargar
+              </Button>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           <Button variant="secondary" iconLeft={ArrowLeft} onClick={() => setStep('curriculum')}>Atrás</Button>
           <Button variant="primary" size="lg" iconRight={ArrowRight} onClick={() => setStep('refine')} disabled={!topic.trim()}>
@@ -555,10 +634,12 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     return (
       <GeneratedResourcePanel
         resultText={resultText}
+        slideLesson={slideResult}
         error={error}
         onBack={() => setStep('design')}
         onSave={() => handleSaveGenerated(resultText)}
         onRegenerate={handleGenerate}
+        creativeImage={creativeImage}
       />
     );
   };
