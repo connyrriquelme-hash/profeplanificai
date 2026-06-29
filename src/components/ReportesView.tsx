@@ -11,6 +11,7 @@ import {
   SUBJECTS, COURSES, getIndicatorsForSubjectCourse, getMaxScore
 } from '../data/oaDatabase';
 import { exportStudentReportPDF, exportClassSummaryPDF } from '../utils/exportReportPdf';
+import { ParentReportPanel } from './ParentReportPanel';
 import type { ReportConfig, ReportIndicator, StudentData, StudentScore, NivelLogro, StudentReportResult } from '../types';
 
 const DEFAULT_STUDENTS: StudentData[] = [
@@ -89,7 +90,7 @@ export function ReportesView() {
   const [scores, setScores] = useState<StudentScore[]>(() =>
     DEFAULT_STUDENTS.map(s => ({ studentId: s.id, indicatorScores: {} }))
   );
-  const [activeTab, setActiveTab] = useState<'config' | 'grades' | 'summary' | 'individual'>('grades');
+  const [activeTab, setActiveTab] = useState<'config' | 'grades' | 'summary' | 'individual' | 'apoderados'>('grades');
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const [newStudentName, setNewStudentName] = useState('');
   const [exportingPdf, setExportingPdf] = useState<string | null>(null);
@@ -188,6 +189,7 @@ export function ReportesView() {
     { id: 'grades' as const, label: 'Calificaciones', icon: Edit3 },
     { id: 'summary' as const, label: 'Resumen', icon: BarChart2 },
     { id: 'individual' as const, label: 'Informes Individuales', icon: FileText },
+    { id: 'apoderados' as const, label: 'Apoderados', icon: Users },
   ];
 
   return (
@@ -569,6 +571,15 @@ export function ReportesView() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {activeTab === 'apoderados' && (
+        <div className="mt-4">
+          <SectionHeader icon={Users} iconColor="#7c3aed" title="Informes para Apoderados" description="Importa una planilla Excel y genera retroalimentación personalizada para las familias." />
+          <div className="mt-4">
+            <ParentReportPanel />
+          </div>
         </div>
       )}
     </div>
