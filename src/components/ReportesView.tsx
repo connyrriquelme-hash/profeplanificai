@@ -90,7 +90,7 @@ export function ReportesView() {
   const [scores, setScores] = useState<StudentScore[]>(() =>
     DEFAULT_STUDENTS.map(s => ({ studentId: s.id, indicatorScores: {} }))
   );
-  const [activeTab, setActiveTab] = useState<'config' | 'grades' | 'summary' | 'individual' | 'apoderados'>('grades');
+  const [activeTab, setActiveTab] = useState<'config' | 'grades' | 'summary' | 'individual'>('grades');
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const [newStudentName, setNewStudentName] = useState('');
   const [exportingPdf, setExportingPdf] = useState<string | null>(null);
@@ -189,7 +189,6 @@ export function ReportesView() {
     { id: 'grades' as const, label: 'Calificaciones', icon: Edit3 },
     { id: 'summary' as const, label: 'Resumen', icon: BarChart2 },
     { id: 'individual' as const, label: 'Informes Individuales', icon: FileText },
-    { id: 'apoderados' as const, label: 'Apoderados', icon: Users },
   ];
 
   return (
@@ -571,17 +570,17 @@ export function ReportesView() {
               </Card>
             );
           })}
-        </div>
-      )}
 
-      {activeTab === 'apoderados' && (
-        <div className="mt-4">
-          <SectionHeader icon={Users} iconColor="#7c3aed" title="Informes para Apoderados" description="Importa una planilla Excel y genera retroalimentación personalizada para las familias." />
-          <div className="mt-4">
-            <ParentReportPanel />
+          {/* Parent Report Module */}
+          <div className="mt-8">
+            <SectionHeader icon={Users} iconColor="#7c3aed" title="Informe Final Formativo para Apoderados" description="Genera informes individuales para estudiantes y apoderados, con observaciones automáticas según objetivos, indicadores y nivel de logro." />
+            <div className="mt-4">
+              <ParentReportPanel />
+            </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

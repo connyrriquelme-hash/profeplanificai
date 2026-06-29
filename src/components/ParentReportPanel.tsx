@@ -12,6 +12,63 @@ function generateId(prefix = 'rpt'): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
 }
 
+function generateFallbackIndicators(oaText: string, subject: string): any[] {
+  const lowerSubject = subject.toLowerCase();
+  const templates: Record<string, string[]> = {
+    default: [
+      'Identifica información clave relacionada con el objetivo.',
+      'Aplica el aprendizaje en una actividad guiada.',
+      'Comunica o explica su respuesta usando vocabulario de la asignatura.',
+      'Demuestra avance en el objetivo evaluado según evidencia observable.',
+    ],
+    ciencias: [
+      'Observa y describe características del fenómeno o seres vivos estudiados.',
+      'Explica el proceso o concepto usando vocabulario científico básico.',
+      'Compara, clasifica o registra evidencia de la investigación.',
+      'Diferencia entre hipótesis y resultados en una actividad de laboratorio.',
+    ],
+    matematica: [
+      'Resuelve problemas aplicando el procedimiento matemático aprendido.',
+      'Representa situaciones mediante números, fórmulas o gráficos.',
+      'Calcula resultados verificando la coherencia de la respuesta.',
+      'Justifica el procedimiento usado para llegar a la solución.',
+    ],
+    historia: [
+      'Identifica y ubica hechos históricos en contexto temporal y geográfico.',
+      'Explica causas y consecuencias de un proceso histórico.',
+      'Compara distintas fuentes o interpretaciones sobre un mismo tema.',
+      'Argumenta su opinión sobre un hecho histórico usando evidencia.',
+    ],
+    lenguaje: [
+      'Lee y comprende el texto identificando la idea principal y detalles.',
+      'Infiere significados a partir de contexto y pistas del texto.',
+      'Escribe con coherencia, usando vocabulario preciso y conectores.',
+      'Comunica sus ideas de forma clara y organizada en una exposición oral.',
+    ],
+    ingles: [
+      'Lee y comprende textos simples identificando vocabulario clave.',
+      'Participa en interacciones orales usando frases y estructuras básicas.',
+      'Escribe textos breves aplicando vocabulario y gramática aprendida.',
+      'Demuestra comprensión auditiva en situaciones cotidianas.',
+    ],
+  };
+
+  let selectedTemplates = templates.default;
+  if (lowerSubject.includes('ciencia')) selectedTemplates = templates.ciencias;
+  else if (lowerSubject.includes('matem')) selectedTemplates = templates.matematica;
+  else if (lowerSubject.includes('historia') || lowerSubject.includes('geografía') || lowerSubject.includes('sociales')) selectedTemplates = templates.historia;
+  else if (lowerSubject.includes('lenguaje') || lowerSubject.includes('comunicación') || lowerSubject.includes('comunicacion') || lowerSubject.includes('literatura')) selectedTemplates = templates.lenguaje;
+  else if (lowerSubject.includes('ingl')) selectedTemplates = templates.ingles;
+
+  return selectedTemplates.map((text) => ({
+    id: `fb-${generateId('ind')}`,
+    oa_code: 'FALLBACK',
+    indicator_text: `${oaText ? oaText.substring(0, 60) + '... — ' : ''}${text}`,
+    source: 'auto_from_objective',
+    _editable: true,
+  }));
+}
+
 interface SelectedObjective {
   id: string;
   code: string;
@@ -107,17 +164,29 @@ export function ParentReportPanel() {
     })();
   }, [selectedCourseId, selectedSubjectId]);
 
-  // Load indicators when objective selected
+  // Load indicators for ALL selected objectives
+  const [indicatorsByObjective, setIndicatorsByObjective] = useState<Record<string, any[]>>({});
+
   useEffect(() => {
-    if (selectedObjectives.length === 0) { setD1Indicators([]); return; }
-    const code = selectedObjectives[0]?.code;
-    if (!code) return;
+    if (selectedObjectives.length === 0) { setIndicatorsByObjective({}); setD1Indicators([]); return; }
     (async () => {
-      try {
-        const res = await fetch(`/api/curriculum/indicators?oa_code=${encodeURIComponent(code)}&limit=50`);
-        const data = await res.json();
-        setD1Indicators(data.indicators || []);
-      } catch {}
+      const map: Record<string, any[]> = {};
+      for (const obj of selectedObjectives) {
+        if (!obj.code || obj.code === 'MANUAL') {
+          map[obj.id] = generateFallbackIndicators(obj.text, obj.subject || subject);
+          continue;
+        }
+        try {
+          const res = await fetch(`/api/curriculum/indicators?oa_code=${encodeURIComponent(obj.code)}&limit=50`);
+          const data = await res.json();
+          const inds = data.indicators || [];
+          map[obj.id] = inds.length > 0 ? inds : generateFallbackIndicators(obj.text, obj.subject || subject);
+        } catch {
+          map[obj.id] = generateFallbackIndicators(obj.text, obj.subject || subject);
+        }
+      }
+      setIndicatorsByObjective(map);
+      setD1Indicators(Object.values(map).flat());
     })();
   }, [selectedObjectives]);
 
@@ -353,19 +422,42 @@ export function ParentReportPanel() {
               </div>
             </div>
           )}
-          {d1Indicators.length > 0 && (
-            <div>
-              <label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Indicadores disponibles ({d1Indicators.length})</label>
-              <div className="max-h-32 overflow-y-auto border rounded mt-1 space-y-1 p-2" style={{ borderColor: 'var(--line)' }}>
-                {d1Indicators.map(ind => (
-                  <label key={ind.id} className="flex items-start gap-2 cursor-pointer text-[11px]" style={{ color: 'var(--ink2)' }}>
-                    <input type="checkbox" checked={selectedIndicators.some(s => s.id === ind.id)} onChange={() => {
-                      setSelectedIndicators(prev => prev.some(s => s.id === ind.id) ? prev.filter(s => s.id !== ind.id) : [...prev, { id: ind.id, oaCode: ind.oa_code, text: ind.indicator_text, source: 'D1' }]);
-                    }} className="mt-0.5" />
-                    <span>{ind.indicator_text?.slice(0, 80)}...</span>
-                  </label>
-                ))}
+          {selectedObjectives.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>
+                  Indicadores por objetivo ({selectedIndicators.length} seleccionados)
+                </label>
+                <div className="flex gap-1">
+                  <button onClick={() => {
+                    const all = Object.values(indicatorsByObjective).flat();
+                    setSelectedIndicators(all.map(i => ({ id: i.id, oaCode: i.oa_code, text: i.indicator_text, source: i.source || 'D1' })));
+                  }} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Todos</button>
+                  <button onClick={() => setSelectedIndicators([])} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Ninguno</button>
+                </div>
               </div>
+              {selectedObjectives.map(obj => {
+                const inds = indicatorsByObjective[obj.id] || [];
+                return (
+                  <div key={obj.id} className="rounded border p-2" style={{ borderColor: 'var(--line)' }}>
+                    <p className="text-[10px] font-semibold mb-1" style={{ color: 'var(--ink)' }}>{obj.code} — {obj.text?.substring(0, 60)}...</p>
+                    {inds.length > 0 ? (
+                      <div className="space-y-0.5">
+                        {inds.map(ind => (
+                          <label key={ind.id} className="flex items-start gap-2 cursor-pointer text-[10px]" style={{ color: 'var(--ink2)' }}>
+                            <input type="checkbox" checked={selectedIndicators.some(s => s.id === ind.id)} onChange={() => {
+                              setSelectedIndicators(prev => prev.some(s => s.id === ind.id) ? prev.filter(s => s.id !== ind.id) : [...prev, { id: ind.id, oaCode: ind.oa_code, text: ind.indicator_text, source: ind.source || 'D1' }]);
+                            }} className="mt-0.5" />
+                            <span>{ind.indicator_text?.slice(0, 80)}{ind.source === 'auto_from_objective' && <span className="text-[8px] ml-1 px-1 rounded bg-amber-100 text-amber-700">auto</span>}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] italic" style={{ color: 'var(--muted2)' }}>Sin indicadores disponibles</p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
           <div>
