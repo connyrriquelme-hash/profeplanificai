@@ -41,7 +41,7 @@ function renderMarkdownLine(line: string): React.ReactNode {
   const sanitized = sanitizeHtml(line);
   const html = sanitized
     .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em class="text-slate-600">$1</em>');
+    .replace(/\*(.+?)\*/g, '<em class="text-gray-700 italic">$1</em>');
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -159,12 +159,20 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
     if (!slideLesson) return;
     try {
       showToast('Generando PPTX...');
-      await downloadPPTX(slideLesson, {});
+      const imagesRecord: Record<string, string> = {};
+      if (deck?.slides) {
+        deck.slides.forEach((slide, index) => {
+          if (slide.visual?.imageUrl) {
+            imagesRecord[String(index)] = slide.visual.imageUrl;
+          }
+        });
+      }
+      await downloadPPTX(slideLesson, imagesRecord);
       showToast('PPTX descargado');
     } catch {
       showToast('Error al generar PPTX');
     }
-  }, [slideLesson]);
+  }, [slideLesson, deck]);
 
   const handleShare = useCallback(async () => {
     if (!slideLesson) {
@@ -382,14 +390,14 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
                       elements.push(<h3 key={i} className="text-base font-semibold text-gray-900 mt-6 mb-3">{line.replace(/^### /, '')}</h3>);
                     } else if (line.startsWith('- ')) {
                       elements.push(
-                        <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
+                        <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-gray-900 leading-relaxed mb-1">
                           <li>{line.replace(/^- /, '')}</li>
                         </ul>
                       );
                     } else if (/^\d+\.\s/.test(line)) {
                       const content = line.replace(/^\d+\.\s/, '');
                       elements.push(
-                        <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
+                        <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-gray-900 leading-relaxed mb-1">
                           <li>{content}</li>
                         </ol>
                       );
@@ -398,7 +406,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
                     } else if (line.trim() === '') {
                       elements.push(<div key={i} className="h-3 sm:h-4" />);
                     } else {
-                      elements.push(<p key={i} className="text-sm sm:text-base text-slate-700 leading-relaxed mb-2">{renderMarkdownLine(line)}</p>);
+                      elements.push(<p key={i} className="text-sm sm:text-base text-gray-900 leading-relaxed mb-2">{renderMarkdownLine(line)}</p>);
                     }
                     i++;
                   }
