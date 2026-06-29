@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Share2, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Share2, Menu, X, Sparkles } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -8,6 +8,7 @@ interface SidebarProps {
 
 const menuItems = [
   { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
+  { id: 'generador', label: 'Generador Rapido', icon: Sparkles },
   { id: 'workspace', label: 'Espacio de Trabajo', icon: FolderKanban },
   { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
   { id: 'panel-compartido', label: 'Panel Compartido', icon: Share2 },

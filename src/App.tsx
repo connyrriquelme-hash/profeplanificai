@@ -15,6 +15,7 @@ import { BancoRecursosView } from './components/BancoRecursosView';
 import { EvaluacionesView } from './components/EvaluacionesView';
 import { SharedPanelView } from './components/SharedPanelView';
 import { SharedDocumentPublicView } from './components/SharedDocumentPublicView';
+import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -50,6 +51,8 @@ function AppContent() {
         return <DashboardView onNavigate={handleViewChange} />;
       case 'workspace':
         return <WorkspaceView onNavigate={handleViewChange} />;
+      case 'generador':
+        return <DocumentGeneratorFlow />;
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':

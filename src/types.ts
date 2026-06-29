@@ -56,6 +56,7 @@ export interface RecursoData {
   oa: string;
   contenido: string;
   texto: string;
+  tema?: string;
   timestamp: number;
 }
 
@@ -113,6 +114,7 @@ export interface MaterialSaved {
   oa: string;
   fecha: string;
   etiquetas: string[];
+  tema?: string;
 }
 
 export interface BankEntry {
@@ -254,13 +256,62 @@ export interface EstudianteData {
 export type ViewType =
   | 'dashboard'
   | 'workspace'
+  | 'generador'
   | 'evaluaciones'
   | 'banco'
   | 'banco-recursos'
   | 'agente'
   | 'biblioteca-creativa'
+  | 'panel-compartido'
   | 'admin'
   | 'print';
+
+export type SharedDocumentPermission = 'view' | 'comment' | 'edit';
+export type SharedDocumentRole = 'owner' | 'editor' | 'viewer' | 'commenter';
+export type SharedDocumentVisibility = 'private' | 'shared' | 'public';
+
+export interface SharedDocumentCollaborator {
+  id: string;
+  documentId: string;
+  email: string;
+  role: SharedDocumentRole;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+}
+
+export interface SharedDocumentComment {
+  id: string;
+  documentId: string;
+  userId: string;
+  authorName: string;
+  comment: string;
+  createdAt: string;
+}
+
+export interface SharedDocumentVersion {
+  id: string;
+  documentId: string;
+  content: string;
+  editedBy: string;
+  createdAt: string;
+}
+
+export interface SharedDocument {
+  id: string;
+  ownerUserId: string;
+  ownerName: string;
+  title: string;
+  content: string;
+  sourceType: string;
+  sourceId: string;
+  shareToken: string;
+  visibility: SharedDocumentVisibility;
+  permission: SharedDocumentPermission;
+  collaborators: SharedDocumentCollaborator[];
+  comments: SharedDocumentComment[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 export const NIVELES = [
   'Prekinder', 'Kinder',
