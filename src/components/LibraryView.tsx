@@ -180,32 +180,38 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       },
     };
 
-    if (creationType === 'Clase') {
-      const res = await generateSlideLesson(req);
-      if (res.slides) {
-        setSlideResult(res.slides);
-        setResultText(res.text || '');
-        setStep('result');
+    try {
+      if (creationType === 'Clase') {
+        const res = await generateSlideLesson(req);
+        if (res.slides) {
+          setSlideResult(res.slides);
+          setResultText(res.text || '');
+          setStep('result');
+        } else {
+          setError(res.error || 'Error al generar presentacion');
+          setStep('design');
+        }
       } else {
-        setError(res.error || 'Error al generar presentacion');
-        setStep('design');
-      }
-    } else {
-      const res = await generateResource(req);
-      if (res.ok && res.text) {
-        setResultText(res.text);
-        setStep('result');
-      } else {
-        setError(res.error || 'Error al generar');
-        if (res.text) {
+        const res = await generateResource(req);
+        if (res.ok && res.text) {
           setResultText(res.text);
           setStep('result');
         } else {
-          setStep('design');
+          setError(res.error || 'Error al generar');
+          if (res.text) {
+            setResultText(res.text);
+            setStep('result');
+          } else {
+            setStep('design');
+          }
         }
       }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado al generar');
+      setStep('design');
+    } finally {
+      setGenerating(false);
     }
-    setGenerating(false);
   }, [creationType, level, subject, selectedOA, selectedIndicator, selectedSkill, topic, additionalContext, designStyle, refineOptions]);
 
   const handleHubSelect = (tipo: string) => {
@@ -504,11 +510,21 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                 variant="ghost"
                 size="md"
                 iconLeft={Download}
-                onClick={() => {
-                  const a = document.createElement('a');
-                  a.href = creativeImage;
-                  a.download = `imagen-${topic.slice(0, 30)}.png`;
-                  a.click();
+                onClick={async () => {
+                  try {
+                    const response = await fetch(creativeImage);
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `imagen-${topic.slice(0, 30) || 'ia'}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } catch {
+                    window.open(creativeImage, '_blank');
+                  }
                 }}
               >
                 Descargar

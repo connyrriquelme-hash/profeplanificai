@@ -89,7 +89,15 @@ function addBullets(slide: PptxGenJS.Slide, bullets: string[], opts: PptxGenJS.T
 function addImage(slide: PptxGenJS.Slide, imageUrl: string, opts: PptxGenJS.ImageProps) {
   if (!imageUrl) return;
   try {
-    slide.addImage({ path: imageUrl, ...opts });
+    // For external URLs (not data: or same-origin), PptxGenJS may fail due to CORS
+    // Data URLs and same-origin URLs work reliably
+    if (imageUrl.startsWith('data:') || imageUrl.startsWith(window.location.origin)) {
+      slide.addImage({ path: imageUrl, ...opts });
+    } else {
+      // External images may fail in PPTX export due to CORS restrictions
+      // The image will be silently skipped
+      console.warn('[pptxExportService] Skipping external image (CORS restriction):', imageUrl.slice(0, 80));
+    }
   } catch {
     // Silently ignore broken images
   }
@@ -274,7 +282,9 @@ export async function exportLessonToPPTX(
     });
   });
 
-  return await pptx.write({ outputType: 'blob' }) as Blob;
+  const result = await pptx.write({ outputType: 'blob' });
+  if (result instanceof Blob) return result;
+  throw new Error('Unexpected return type from pptx.write');
 }
 
 export async function downloadPPTX(lesson: SlideLesson, imagesRecord: Record<string, string>, filename?: string) {

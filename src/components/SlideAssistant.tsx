@@ -32,9 +32,19 @@ export function SlideAssistant({
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -52,10 +62,18 @@ export function SlideAssistant({
     const trimmed = input.trim();
     if (!trimmed || isLoading || isProcessing) return;
 
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     const userMessage: ChatMessage = { role: 'user', text: trimmed };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const response = await fetch('/api/ai/mutate-json', {
@@ -65,6 +83,7 @@ export function SlideAssistant({
           presentation: currentPresentation,
           instruction: trimmed,
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) throw new Error('Error en la solicitud');
@@ -89,7 +108,8 @@ export function SlideAssistant({
           },
         ]);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setMessages((prev) => [
         ...prev,
         {

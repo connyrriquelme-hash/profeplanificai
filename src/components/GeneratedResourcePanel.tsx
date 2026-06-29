@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { FileDown, Save, Presentation, ClipboardPlus, Undo2, CheckCircle2, AlertTriangle, Sparkles, FileText, Share2, Download, ImagePlus, FileSpreadsheet, PanelRightOpen } from 'lucide-react';
 import { IconBadge } from './ui/IconBadge';
 import { Badge } from './ui/Badge';
@@ -28,12 +28,39 @@ function extractTitle(text: string): string | null {
   return firstLine ? firstLine.replace(/^# /, '').trim() : null;
 }
 
+function sanitizeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function renderMarkdownLine(line: string): React.ReactNode {
+  const sanitized = sanitizeHtml(line);
+  const html = sanitized
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em class="text-slate-600">$1</em>');
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRegenerate, slideLesson, creativeImage }: GeneratedResourcePanelProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [deck, setDeck] = useState<VisualLessonDeck | null>(null);
   const slideContainerRef = useRef<HTMLDivElement>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
 
   // Convert SlideLesson to VisualLessonDeck when slideLesson changes
   useEffect(() => {
@@ -42,10 +69,11 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
     }
   }, [slideLesson]);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+  }, []);
 
   const handleCreateEvaluation = () => {
     showToast('Próximamente podrás convertir este recurso en evaluación.');
@@ -121,7 +149,8 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
     try {
       await navigator.clipboard.writeText(resultText);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       showToast('No se pudo copiar el contenido.');
     }
@@ -310,10 +339,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
                 if (line.trim() === '') {
                   return <div key={i} className="h-3 sm:h-4" />;
                 }
-                const html = line
-                  .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
-                  .replace(/\*(.+?)\*/g, '<em class="text-slate-600">$1</em>');
-                return <p key={i} className="text-sm sm:text-base text-slate-700 leading-relaxed mb-2" dangerouslySetInnerHTML={{ __html: html }} />;
+                return <p key={i} className="text-sm sm:text-base text-slate-700 leading-relaxed mb-2">{renderMarkdownLine(line)}</p>;
               })}
             </div>
           </div>

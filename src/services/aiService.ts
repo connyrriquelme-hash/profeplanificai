@@ -1,5 +1,28 @@
 import type { AIConfig } from '../types';
 
+interface GenerateParams {
+  tipo?: string;
+  nivel?: string;
+  asignatura?: string;
+  oa?: string;
+  tema?: string;
+  duracion?: string;
+  estudiantes?: string | number;
+  necesidades?: string;
+  dificultad?: string;
+  cantEjercicios?: number;
+  incluirRespuestas?: string;
+  incluirAlternativas?: string;
+  incluirDesarrollo?: string;
+  incluirPauta?: string;
+  incluirRetroalimentacion?: string;
+  incluirTabla?: string;
+  incluirDUA?: string;
+  habilidad?: string;
+  contexto?: string;
+  estilo?: string;
+}
+
 // Production uses the Pages Function proxy by default, so provider keys never
 // need to be exposed to the browser. Set VITE_USE_SERVER_AI=false only for the
 // explicitly portable/offline build.
@@ -120,9 +143,9 @@ function _titulo(tipo: string): string {
   return map[tipo] || 'Material pedagógico';
 }
 
-function _genLocalCentral(p: any): string {
-  const pv = _pA(p.nivel);
-  const ctx = buildOAContext(p.nivel, p.asignatura, p.oa);
+function _genLocalCentral(p: GenerateParams): string {
+  const pv = _pA(p.nivel || '');
+  const ctx = buildOAContext(p.nivel || '', p.asignatura || '', p.oa || '');
   const hdr = ctx ? ctx + '\n\n---\n\n' : '';
   const tipo = p.tipo;
   const niv = p.nivel;
@@ -135,7 +158,7 @@ function _genLocalCentral(p: any): string {
 
   if (pv) {
     return hdr + [
-      `# ${_titulo(tipo)} - Educación Parvularia`,
+      `# ${_titulo(tipo || '')} - Educación Parvularia`,
       `**Nivel:** ${niv} | **Ámbito:** ${asig} | **Duración:** ${dur} | **Estudiantes:** ${est}`,
       `**OA:** ${oa}`,
       '',
@@ -343,8 +366,8 @@ export async function generarConIA(opts: GenAIOpts): Promise<{ ok: boolean; text
   }
 }
 
-function _buildPromptCentral(p: any): string {
-  const ctx = buildOAContext(p.nivel, p.asignatura, p.oa);
+function _buildPromptCentral(p: GenerateParams): string {
+  const ctx = buildOAContext(p.nivel || '', p.asignatura || '', p.oa || '');
   const extra: string[] = [];
   if (p.cantEjercicios) extra.push(`Cantidad de preguntas/ejercicios: ${p.cantEjercicios}`);
   if (p.incluirRespuestas) extra.push(`Incluir respuestas: ${p.incluirRespuestas === 'si' ? 'Sí' : 'No'}`);

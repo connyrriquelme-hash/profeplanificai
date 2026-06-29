@@ -8,6 +8,7 @@ export interface ProjectData {
   oat: string;
   indicadores: string;
   nivel: string;
+  curso: string;
   asignatura: string;
   oa_id: string;
   habilidad: string;
@@ -17,6 +18,9 @@ export interface ProjectData {
   cierre: string;
   recursos: string;
   evaluacion: string;
+  numberOfLessons: number;
+  complexity: string;
+  lessonTheme?: string;
 }
 
 interface ProjectContextType {
@@ -45,6 +49,7 @@ function emptyProject(): ProjectData {
     oat: '',
     indicadores: '',
     nivel: '',
+    curso: '',
     asignatura: '',
     oa_id: '',
     habilidad: '',
@@ -54,6 +59,9 @@ function emptyProject(): ProjectData {
     cierre: '',
     recursos: '',
     evaluacion: '',
+    numberOfLessons: 1,
+    complexity: '',
+    lessonTheme: '',
   };
 }
 
@@ -81,7 +89,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const entry = { ...prev, fecha: now };
       setLibrary(existing => {
         const updated = [entry, ...existing.filter(e => e.id !== entry.id)];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         return updated;
       });
       return prev;
@@ -91,7 +98,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const removeFromLibrary = useCallback((id: string) => {
     setLibrary(prev => {
       const updated = prev.filter(e => e.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
