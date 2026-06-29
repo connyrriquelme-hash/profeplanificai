@@ -1,8 +1,12 @@
-﻿node_modules
+node_modules
 dist
-build
 .env
-.env.local
-.wrangler
 .dev.vars
+*.local
 .DS_Store
+.tmp-*.sql
+.wrangler/
+.wrangler-local-check/
+local-dev-smoke.*
+tsconfig.tsbuildinfo
+backup-cambios-no-commiteados.patch
