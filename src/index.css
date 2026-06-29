@@ -5,7 +5,7 @@
   --color-theme-beige: #F8FAFC;
   --color-theme-gray: #E2E8F0;
   --color-theme-primary: #4F46E5;
-  --color-theme-text: #1E293B;
+  --color-theme-text: #000000;
   --color-theme-secondary: #7C3AED;
   --color-theme-accent: #0EA5E9;
 
@@ -15,7 +15,7 @@
   --color-bg: #F8FAFC;
   --color-bg2: #E2E8F0;
   --color-card: #FFFFFF;
-  --color-ink: #1E293B;
+  --color-ink: #000000;
   --color-muted: #64748B;
   --color-line: #E2E8F0;
   --font-sans: 'Segoe UI', Roboto, Arial, sans-serif;
@@ -33,7 +33,7 @@
   --card3: #F1F5F9;
   --elevated: #FFFFFF;
   --surface: #F8FAFC;
-  --ink: #1E293B;
+  --ink: #000000;
   --ink2: #4F46E5;
   --muted: #64748B;
   --muted2: #7C3AED;

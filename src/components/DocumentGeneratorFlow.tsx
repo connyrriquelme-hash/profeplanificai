@@ -440,30 +440,30 @@ function WorkspaceStep({ state, onReset }: { state: WizardState; onReset: () => 
           {/* Document preview */}
           <Card variant="elevated" className="p-6 sm:p-8">
             <div className="bg-white rounded-xl border border-theme-gray/30 shadow-sm p-6 sm:p-8">
-              <div className="max-w-none text-theme-text leading-relaxed space-y-4">
+              <div style={{color:'#000000'}} className="max-w-none leading-relaxed space-y-4">
                 {state.resultText.split('\n').map((line, i) => {
                   if (line.startsWith('# ')) {
-                    return <h1 key={i} className="text-2xl font-bold text-theme-text mb-4 pb-3 border-b border-theme-gray/30">{line.replace(/^# /, '')}</h1>;
+                    return <h1 key={i} className="text-2xl font-bold mb-4 pb-3 border-b border-theme-gray/30" style={{color:'#000000'}}>{line.replace(/^# /, '')}</h1>;
                   }
                   if (line.startsWith('## ')) {
-                    return <h2 key={i} className="text-xl font-bold text-theme-text mt-6 mb-3 pb-2 border-b border-theme-gray/30">{line.replace(/^## /, '')}</h2>;
+                    return <h2 key={i} className="text-xl font-bold mt-6 mb-3 pb-2 border-b border-theme-gray/30" style={{color:'#000000'}}>{line.replace(/^## /, '')}</h2>;
                   }
                   if (line.startsWith('### ')) {
-                    return <h3 key={i} className="text-base font-semibold text-theme-text mt-5 mb-2">{line.replace(/^### /, '')}</h3>;
+                    return <h3 key={i} className="text-base font-semibold mt-5 mb-2" style={{color:'#000000'}}>{line.replace(/^### /, '')}</h3>;
                   }
                   if (line.startsWith('| ')) {
                     return null;
                   }
                   if (line.startsWith('- ')) {
                     return (
-                      <ul key={i} className="list-disc ml-6 text-sm text-theme-text leading-relaxed mb-1">
+                      <ul key={i} className="list-disc ml-6 text-sm leading-relaxed mb-1" style={{color:'#000000'}}>
                         <li>{line.replace(/^- /, '')}</li>
                       </ul>
                     );
                   }
                   if (/^\d+\.\s/.test(line)) {
                     return (
-                      <ol key={i} className="list-decimal ml-6 text-sm text-theme-text leading-relaxed mb-1">
+                      <ol key={i} className="list-decimal ml-6 text-sm leading-relaxed mb-1" style={{color:'#000000'}}>
                         <li>{line.replace(/^\d+\.\s/, '')}</li>
                       </ol>
                     );
@@ -475,9 +475,9 @@ function WorkspaceStep({ state, onReset }: { state: WizardState; onReset: () => 
                     return <div key={i} className="h-2" />;
                   }
                   const html = line
-                    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-theme-text font-semibold">$1</strong>')
-                    .replace(/\*(.+?)\*/g, '<em class="text-theme-text italic opacity-80">$1</em>');
-                  return <p key={i} className="text-sm text-theme-text leading-relaxed mb-2" dangerouslySetInnerHTML={{ __html: html }} />;
+                    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#000000" class="font-semibold">$1</strong>')
+                    .replace(/\*(.+?)\*/g, '<em style="color:#000000" class="italic opacity-80">$1</em>');
+                  return <p key={i} className="text-sm leading-relaxed mb-2" dangerouslySetInnerHTML={{ __html: html }} style={{color:'#000000'}} />;
                 })}
               </div>
             </div>
