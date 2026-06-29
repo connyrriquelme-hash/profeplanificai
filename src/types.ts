@@ -263,6 +263,8 @@ export type ViewType =
   | 'agente'
   | 'biblioteca-creativa'
   | 'panel-compartido'
+  | 'unidades-didacticas'
+  | 'reportes'
   | 'admin'
   | 'print';
 
@@ -498,4 +500,44 @@ export interface AutoSuggestion {
   criteriosLogro: string[];
   recursosSugeridos: string[];
   adecuacionesDUA: string[];
+}
+
+export interface ReportConfig {
+  schoolName: string;
+  subject: string;
+  teacher: string;
+  course: string;
+  reportDate: string;
+  maxScore: number;
+  minGrade: number;
+  requiredPercentage: number;
+}
+
+export interface ReportIndicator {
+  id: string;
+  oaCode: string;
+  description: string;
+  maxPoints: number;
+}
+
+export interface StudentScore {
+  studentId: string;
+  indicatorScores: Record<string, number>;
+}
+
+export interface StudentData {
+  id: string;
+  name: string;
+  run: string;
+  observations: string;
+}
+
+export type NivelLogro = 'Adecuado' | 'Elemental' | 'Insuficiente' | 'No evaluado';
+
+export interface StudentReportResult {
+  studentId: string;
+  totalScore: number;
+  percentage: number;
+  grade: number;
+  nivelLogro: NivelLogro;
 }

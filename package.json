@@ -6,10 +6,12 @@
   "description": "Plataforma docente chilena para crear planificaciones, guías, evaluaciones, rúbricas y recursos DUA alineados al Currículum Nacional MINEDUC.",
   "scripts": {
     "dev": "vite",
+    "local:setup": "wrangler d1 migrations apply planificaia-db --local",
+    "local:dev": "npm run build && wrangler pages dev dist --port 8788",
+    "local:check": "npm test && npm run build && wrangler pages functions build --outdir .wrangler-local-check",
     "build": "tsc -b && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
-    "start": "tsx server.ts",
     "server": "tsx server.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "test": "vitest run",
@@ -29,6 +31,7 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^1.21.0",
     "motion": "^12.41.0",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwindcss": "^4.3.1"

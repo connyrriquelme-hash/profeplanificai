@@ -5,7 +5,18 @@ export function esc(s: string): string {
 }
 
 export function md(t: string): string {
-  let s = esc(t);
+  const images: string[] = [];
+  const withImageTokens = (t || '').replace(/!\[([^\]]{0,180})\]\(([^)\s]+)\)/g, (_m, altRaw: string, urlRaw: string) => {
+    const url = String(urlRaw || '').trim();
+    const safe = /^(https:\/\/|data:image\/svg\+xml;base64,|data:image\/png;base64,|data:image\/jpeg;base64,)/i.test(url);
+    if (!safe) return '';
+    const alt = esc(String(altRaw || 'Imagen educativa').replace(/\s+/g, ' ').trim());
+    const html = `<figure class="edu-image-figure"><img src="${esc(url)}" alt="${alt}" crossorigin="anonymous" loading="lazy" referrerpolicy="no-referrer" /><figcaption>${alt}</figcaption></figure>`;
+    const token = `@@EDU_IMAGE_${images.length}@@`;
+    images.push(html);
+    return token;
+  });
+  let s = esc(withImageTokens);
   s = s
     .replace(/^###\s+(.*)$/gm, '<h3>$1</h3>')
     .replace(/^##\s+(.*)$/gm, '<h2>$1</h2>')
@@ -13,7 +24,11 @@ export function md(t: string): string {
     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
     .replace(/^- (.*)$/gm, '<li>$1</li>');
   s = s.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-  return s.replace(/\n/g, '<br>');
+  s = s.replace(/\n/g, '<br>');
+  images.forEach((html, index) => {
+    s = s.replace(`@@EDU_IMAGE_${index}@@`, html);
+  });
+  return s;
 }
 
 export function mdToHtml(t: string): string {

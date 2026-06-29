@@ -1,22 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { MaterialSaved } from '../types';
-import { NIVELES, ASIGNATURAS, EVAL_TIPOS, DIFICULTADES, HABILIDADES } from '../types';
-import { generarConIA } from '../services/aiService';
+import { EVAL_TIPOS, DIFICULTADES, HABILIDADES } from '../types';
 import { getMaterials, saveMaterial, deleteMaterial, saveDriveItem, generateId } from '../services/storageService';
-import { getSelectedCurriculumItem, setSelectedCurriculumItem } from '../services/curriculumService';
-import { generateEvalAvanzado } from '../services/localGenerator';
-import type { CurriculumItem } from '../types';
-import { buildCurriculumHeaderFromItem } from '../utils/curriculum';
+import type { CurriculumItem } from '../data/curriculumData';
+import { fetchObjectives, fetchCourses, fetchSubjects, type CourseRow, type SubjectRow } from '../services/objectiveService';
+import { getCurricularContext, generateIndicators, type CurricularContext } from '../services/curricularPlanningService';
+import { niveles, getOAs } from '../data/curriculumData';
+import { extractShortObjectiveCode, resolveObjectiveRealPayload, resolveObjectiveRealCode, type RichCurriculumItem } from '../services/curriculumMappingService';
+import { buildEvaluationPrompt, cleanEvaluationText, generateEvaluation } from '../services/evaluationGeneratorService';
+import { saveRecurso } from '../services/storageService';
+import { shareFromWorkspace } from '../services/sharedDocumentService';
+import { api } from '../services/apiClient';
 import { StatusBar } from './shared/StatusBar';
 import { MaterialList } from './shared/MaterialList';
 import { Stepper } from './shared/Stepper';
-import { ClipboardCheck, Sparkles, Send, Printer, Download, Copy, Check, CopyPlus, Edit3, FileText, ClipboardEdit, ArrowRight, ArrowLeft, BookOpen, GraduationCap, FileCheck2, ClipboardList, ListChecks, BarChart3, Eye, Plus } from 'lucide-react';
+import { ClipboardCheck, Sparkles, Send, Printer, Download, Copy, Check, CopyPlus, Edit3, FileText, ClipboardEdit, ArrowRight, ArrowLeft, BookOpen, GraduationCap, FileCheck2, Search, Loader, Eye, ClipboardList, Plus, Share2, Link, X } from 'lucide-react';
 import { AdaptarPanel } from './AdaptarPanel';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { IconBadge } from './ui/IconBadge';
-import { EmptyState } from './ui/EmptyState';
 import { SectionHeader } from './ui/SectionHeader';
 
 interface EvaluacionesViewProps {
@@ -25,36 +28,59 @@ interface EvaluacionesViewProps {
 
 const STEPS = ['Configuración', 'Contenido', 'Personalización'];
 
-const QUICK_ACTIONS = [
-  { icon: FileCheck2, label: 'Crear prueba', tipo: 'Prueba', desc: 'Diseña una prueba escrita con preguntas de desarrollo y selección múltiple.', color: '#7c3aed' },
-  { icon: ClipboardCheck, label: 'Crear rúbrica', tipo: 'Rúbrica', desc: 'Define criterios, niveles de logro y descriptores para evaluar.', color: '#0d9488' },
-  { icon: ClipboardList, label: 'Ticket de salida', tipo: 'Ticket de salida', desc: 'Preguntas breves para cerrar la clase y verificar aprendizajes.', color: '#2563eb' },
-  { icon: ListChecks, label: 'Evaluación formativa', tipo: 'Evaluación formativa', desc: 'Instrumento continuo para monitorear el progreso estudiantil.', color: '#ea580c' },
-  { icon: BarChart3, label: 'Evaluación tipo SIMCE', tipo: 'Evaluación tipo SIMCE', desc: 'Preguntas con alternativas, tabla de especificaciones y pauta.', color: '#d97706' },
-  { icon: FileText, label: 'Lista de cotejo', tipo: 'Lista de cotejo', desc: 'Indicadores de logro con cumplimiento sí/no y observaciones.', color: '#16a34a' },
-];
+const selectClass =
+  'w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer';
 
 export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
   const [step, setStep] = useState(1);
-  const [selectedItem, setSelectedItem] = useState<CurriculumItem | null>(null);
-  const [tipo, setTipo] = useState('Evaluación formativa');
-  const [nivel, setNivel] = useState('2° básico');
-  const [asignatura, setAsignatura] = useState('Lenguaje y Comunicación');
-  const [oa, setOa] = useState('');
+  const [tipo, setTipo] = useState('formativa');
+  const [selectedNivel, setSelectedNivel] = useState('');
+  const [selectedCurso, setSelectedCurso] = useState<CourseRow | null>(null);
+  const [courses, setCourses] = useState<CourseRow[]>([]);
+  const [subjects, setSubjects] = useState<SubjectRow[]>([]);
+  const [selectedAsignatura, setSelectedAsignatura] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [selectedOA, setSelectedOA] = useState<CurriculumItem | null>(null);
   const [habilidad, setHabilidad] = useState('Inferir');
-  const [indicadores, setIndicadores] = useState<string[]>([]);
-  const [selectedInds, setSelectedInds] = useState<Set<number>>(new Set());
   const [dificultad, setDificultad] = useState('Progresiva');
   const [texto, setTexto] = useState('');
-
   const [nPreguntas, setNPreguntas] = useState(5);
   const [output, setOutput] = useState('');
-  const [status, setStatus] = useState('Selecciona un OA desde el Banco Curricular, elige indicadores y genera.');
+  const [status, setStatus] = useState('Selecciona un OA desde el paso 2, elige indicadores y genera.');
   const [statusType, setStatusType] = useState('');
   const [savedMaterials, setSavedMaterials] = useState<MaterialSaved[]>([]);
   const [showSaved, setShowSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [editando, setEditando] = useState(false);
+
+  const [fetchedOAs, setFetchedOAs] = useState<CurriculumItem[]>([]);
+  const [loadingOAs, setLoadingOAs] = useState(false);
+  const [oaError, setOaError] = useState('');
+  const [oaSearch, setOaSearch] = useState('');
+  const [curricularContext, setCurricularContext] = useState<CurricularContext | null>(null);
+  const [loadingContext, setLoadingContext] = useState(false);
+  const [selectedInds, setSelectedInds] = useState<Set<number>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingInds, setIsGeneratingInds] = useState(false);
+  const [shareResult, setShareResult] = useState<{ shareUrl: string; copied: boolean } | null>(null);
+
+  const [extSources, setExtSources] = useState<any[]>([]);
+  const [extLinks, setExtLinks] = useState<any[]>([]);
+  const [loadingExt, setLoadingExt] = useState(false);
+  const [showExtPanel, setShowExtPanel] = useState(false);
+  const [showAddLink, setShowAddLink] = useState(false);
+  const [newLink, setNewLink] = useState({ sourceId: '', title: '', url: '', description: '', tags: '' });
+  const [extError, setExtError] = useState('');
+
+  const lessonTitle = useMemo(() => {
+    const parts = [
+      selectedCurso?.name || selectedNivel,
+      selectedAsignatura,
+      selectedOA?.oa_id,
+      EVAL_TIPOS.find(t => t.v === tipo)?.l || tipo,
+    ].filter(Boolean);
+    return parts.join(' - ') || 'Evaluacion';
+  }, [selectedCurso, selectedNivel, selectedAsignatura, selectedOA, tipo]);
 
   useEffect(() => {
     setSavedMaterials(
@@ -65,22 +91,132 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
   }, []);
 
   useEffect(() => {
-    const item = getSelectedCurriculumItem();
-    if (item) {
-      applyCurriculumItem(item);
-    }
+    fetchCourses().then(setCourses);
   }, []);
 
-  const applyCurriculumItem = (item: CurriculumItem) => {
-    setSelectedItem(item);
-    setNivel(item.curso);
-    setAsignatura(item.asignatura);
-    setOa(item.oa);
-    setHabilidad(item.habilidad);
-    setIndicadores(item.indicadores);
-    setSelectedInds(new Set(item.indicadores.map((_, i) => i)));
-    setStatus(`OA cargado: ${item.id} — ${item.asignatura} — ${item.curso}`);
-    setStatusType('ok');
+  useEffect(() => {
+    if (!selectedCurso) { setSubjects([]); return; }
+    fetchSubjects(selectedCurso.code).then(setSubjects);
+  }, [selectedCurso]);
+
+  useEffect(() => {
+    if (!selectedCurso || !selectedSubjectId) {
+      setFetchedOAs([]);
+      setOaError('');
+      return;
+    }
+    let cancelled = false;
+    setLoadingOAs(true);
+    setOaError('');
+    (async () => {
+      const results = await fetchObjectives({ course: selectedCurso.code, subject: selectedSubjectId });
+      if (cancelled) return;
+      if (results.length === 0) {
+        setOaError('No hay objetivos cargados para esta combinación en la base curricular.');
+      }
+      setFetchedOAs(results);
+      setLoadingOAs(false);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedCurso, selectedSubjectId]);
+
+  useEffect(() => {
+    if (!selectedOA || !selectedNivel || !selectedAsignatura) {
+      setCurricularContext(null);
+      setSelectedInds(new Set());
+      return;
+    }
+    let cancelled = false;
+    setLoadingContext(true);
+    (async () => {
+      try {
+        const realCode = resolveObjectiveRealCode(selectedOA);
+        const realId = resolveObjectiveRealPayload(selectedOA).objectiveId;
+        const ctx = await getCurricularContext(selectedNivel, selectedAsignatura, realCode, realId || undefined);
+        if (cancelled) return;
+        setCurricularContext(ctx);
+        if (ctx?.indicators?.length) {
+          setSelectedInds(new Set(ctx.indicators.map((_, i) => i)));
+        } else {
+          setSelectedInds(new Set());
+        }
+      } catch {
+        if (cancelled) return;
+        setCurricularContext(null);
+        setSelectedInds(new Set());
+      } finally {
+        if (!cancelled) setLoadingContext(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedOA, selectedNivel, selectedAsignatura]);
+
+  useEffect(() => {
+    api.get('/api/evaluation-resources/sources').then((res: any) => {
+      if (res?.data) setExtSources(res.data);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCurso && !selectedAsignatura) return;
+    setLoadingExt(true);
+    setExtError('');
+    const params = new URLSearchParams();
+    if (selectedCurso?.code) params.set('course', selectedCurso.code);
+    if (selectedAsignatura) params.set('subject', selectedAsignatura);
+    const realCode = resolveObjectiveRealCode(selectedOA);
+    if (realCode) params.set('objectiveCode', realCode);
+    api.get(`/api/evaluation-resources/search?${params.toString()}`).then((res: any) => {
+      if (res?.data) setExtLinks(res.data);
+      setLoadingExt(false);
+    }).catch(() => {
+      setExtLinks([]);
+      setLoadingExt(false);
+      setExtError('No se pudieron cargar recursos sugeridos.');
+    });
+  }, [selectedCurso, selectedAsignatura, selectedOA]);
+
+  const indicadores: string[] = useMemo(() => {
+    if (curricularContext?.indicators?.length) {
+      return curricularContext.indicators.map(i => i.text);
+    }
+    if (selectedOA?.indicadores?.length) {
+      return selectedOA.indicadores;
+    }
+    return [];
+  }, [curricularContext, selectedOA]);
+
+  const handleNivelChange = (value: string) => {
+    setSelectedNivel(value);
+    setSelectedCurso(null);
+    setSelectedAsignatura('');
+    setSelectedSubjectId('');
+    setSelectedOA(null);
+    setOaSearch('');
+    setFetchedOAs([]);
+    setCurricularContext(null);
+    setSelectedInds(new Set());
+  };
+
+  const handleCursoChange = (courseId: string) => {
+    const course = courses.find(c => c.id === courseId) || null;
+    setSelectedCurso(course);
+    setSelectedAsignatura('');
+    setSelectedSubjectId('');
+    setSelectedOA(null);
+    setOaSearch('');
+    setCurricularContext(null);
+    setSelectedInds(new Set());
+  };
+
+  const handleAsignaturaChange = (value: string) => {
+    setSelectedAsignatura(value);
+    const sub = subjects.find(s => s.name === value);
+    setSelectedSubjectId(sub?.id || value);
+    setSelectedOA(null);
+    setOaSearch('');
+    setCurricularContext(null);
+    setSelectedInds(new Set());
   };
 
   const toggleIndicador = (idx: number) => {
@@ -100,10 +236,6 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
     setSelectedInds(new Set());
   };
 
-  const handleBuscarOA = () => {
-    onNavigate('banco');
-  };
-
   const handleQuickAction = (actionTipo: string) => {
     setTipo(actionTipo);
     setStep(1);
@@ -112,52 +244,35 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
   const buildPrompt = () => {
     const selectedIndsArray = Array.from(selectedInds).sort().map((i) => indicadores[i]);
-    const isSIMCE = tipo.toLowerCase().includes('simce');
-    return [
-      `Eres un/una docente chileno/a experto/a en evaluación educativa. Genera ${isSIMCE ? 'una evaluación tipo SIMCE completa' : `un/una ${tipo.toLowerCase()}`} para el currículum chileno.`,
-      '',
-      `Nivel: ${nivel}`,
-      `Asignatura: ${asignatura}`,
-      `OA evaluado: ${oa}`,
-      `Habilidad principal: ${habilidad}`,
-      ...(selectedIndsArray.length ? [`Indicadores a evaluar:`, ...selectedIndsArray.map((ind) => `- ${ind}`)] : []),
-      `Dificultad: ${dificultad}`,
-      ...(isSIMCE ? [`Número de preguntas: ${nPreguntas}`, `Texto base: ${texto || 'No especificado'}`] : []),
-      '',
-      ...(isSIMCE ? [
-        'Formato SIMCE estricto:',
-        '- Cada pregunta con 4 alternativas (A, B, C, D)',
-        '- Distractores plausibles y una respuesta correcta',
-        '- Cada pregunta debe indicar: indicador evaluado, habilidad medida, dificultad',
-        '- Incluir tabla de especificaciones al final',
-        '- Incluir pauta de corrección con respuestas correctas y explicación',
-        '- Incluir análisis por habilidad',
-        '- Incluir retroalimentación para cada alternativa',
-      ] : [
-        'La evaluación debe incluir:',
-        '- Cada pregunta/criterio debe mostrar: indicador evaluado, habilidad evaluada, nivel de dificultad, respuesta esperada, puntaje sugerido, retroalimentación',
-        '- Instrucciones claras para el/la estudiante',
-        '- Pauta de corrección o rúbrica',
-        '- Retroalimentación por nivel de logro',
-      ]),
-      '',
-      'Formato Markdown con secciones ## y **negritas**. Lenguaje claro y aplicable al aula chilena.',
-    ].filter(Boolean).join('\n');
+    return buildEvaluationPrompt({
+      evaluationType: tipo,
+      course: selectedCurso?.name || selectedNivel,
+      subject: selectedAsignatura,
+      objectiveCode: resolveObjectiveRealCode(selectedOA),
+      objectiveText: selectedOA?.oa_texto || '',
+      selectedIndicators: selectedIndsArray,
+      skill: habilidad,
+      difficulty: dificultad,
+      numberOfQuestions: isSIMCE ? nPreguntas : undefined,
+      baseText: isSIMCE ? texto : undefined,
+    });
   };
 
   const withHeader = (texto: string): string => {
-    if (!selectedItem) return texto;
-    return buildCurriculumHeaderFromItem(selectedItem) + '\n' + texto;
+    if (!selectedOA) return texto;
+    const header = [
+      `Nivel: ${selectedNivel}`,
+      `Curso: ${selectedCurso?.name || ''}`,
+      `Asignatura: ${selectedAsignatura}`,
+      `OA: ${extractShortObjectiveCode(selectedOA.oa_id)} — ${selectedOA.oa_texto}`,
+      '',
+    ].join('\n');
+    return header + texto;
   };
 
   const handleGenerar = async () => {
-    if (!oa.trim()) {
-      setStatus('Primero selecciona un OA o completa el campo manualmente.');
-      setStatusType('bad');
-      return;
-    }
-    if (selectedInds.size === 0) {
-      setStatus('Selecciona al menos un indicador de evaluación.');
+    if (!selectedOA) {
+      setStatus('Primero selecciona un OA en el paso 2.');
       setStatusType('bad');
       return;
     }
@@ -168,64 +283,103 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
     const selectedIndsArray = Array.from(selectedInds).sort().map((i) => indicadores[i]);
 
-    try {
-      const result = await generarConIA({
-        tipo: tipo.toLowerCase().includes('simce') ? 'simce' : 'evaluacion',
-        nivel,
-        asignatura,
-        oa,
-        promptExt: buildPrompt(),
-        onStatus: (msg, type) => { setStatus(msg); setStatusType(type || ''); },
-      });
+    const raw = await generateEvaluation({
+      evaluationType: tipo,
+      course: selectedCurso?.name || selectedNivel,
+      subject: selectedAsignatura,
+      objectiveCode: resolveObjectiveRealCode(selectedOA),
+      objectiveText: selectedOA.oa_texto,
+      selectedIndicators: selectedIndsArray,
+      skill: habilidad,
+      difficulty: dificultad,
+      numberOfQuestions: isSIMCE ? nPreguntas : undefined,
+      baseText: isSIMCE ? texto : undefined,
+      onStatus: (msg, type) => { setStatus(msg); setStatusType(type || ''); },
+    });
 
-      if (result.ok && result.texto) {
-        setOutput(withHeader(result.texto));
-        setStatus('Evaluación generada con IA.');
+    const cleaned = cleanEvaluationText(raw);
+    setOutput(withHeader(cleaned));
+    setStatus('Evaluacion generada.');
+    setStatusType('ok');
+  };
+
+  const handleGenerateIndicators = async () => {
+    if (!selectedOA) return;
+    setIsGeneratingInds(true);
+    try {
+      const payload = resolveObjectiveRealPayload(selectedOA);
+      const newIndicators = await generateIndicators({
+        objectiveId: payload.objectiveId,
+        objectiveCode: payload.objectiveCode,
+        objectiveText: payload.objectiveText,
+        course: selectedCurso?.name || selectedNivel,
+        subject: selectedAsignatura,
+        skill: habilidad,
+      });
+      if (newIndicators.length > 0) {
+        setCurricularContext(prev => {
+          if (prev) {
+            return { ...prev, indicators: newIndicators };
+          }
+          return {
+            objective: {
+              code: selectedOA.oa_id,
+              text: selectedOA.oa_texto,
+              normalizedText: '',
+              bloomLevel: '',
+              courseCode: '',
+              courseName: selectedCurso?.name || '',
+              subjectName: selectedAsignatura,
+              axisName: '',
+              sourceUrl: '',
+            },
+            indicators: newIndicators,
+            skills: [],
+            attitudes: [],
+            textbookReferences: [],
+            teacherGuideReferences: [],
+            resourceLinks: [],
+            recommendedLessons: null,
+            complexity: null,
+            rationale: null,
+            dataStatus: {
+              hasIndicators: true,
+              hasTextbookReferences: false,
+              hasTeacherGuideReferences: false,
+              hasResourceLinks: false,
+              hasSequenceRecommendation: false,
+            },
+          };
+        });
+        setSelectedInds(new Set(newIndicators.map((_, i) => i)));
+        setStatus('Indicadores sugeridos generados y asociados al OA.');
         setStatusType('ok');
       } else {
-        setOutput(withHeader(generateEvalAvanzado({
-          tipo,
-          nivel,
-          asignatura,
-          oa,
-          habilidad,
-          indicadores: selectedIndsArray,
-          dificultad,
-          texto,
-        })));
-        setStatus('Generado en modo local.');
-        setStatusType('ok');
+        setStatus('No se pudieron generar indicadores. Intenta nuevamente.');
+        setStatusType('bad');
       }
     } catch {
-      setOutput(withHeader(generateEvalAvanzado({
-        tipo,
-        nivel,
-        asignatura,
-        oa,
-        habilidad,
-        indicadores: selectedIndsArray,
-        dificultad,
-        texto,
-      })));
-      setStatus('Generado en modo local (fallback).');
-      setStatusType('ok');
+      setStatus('Error al generar indicadores.');
+      setStatusType('bad');
+    } finally {
+      setIsGeneratingInds(false);
     }
   };
 
   const handleGuardar = () => {
     if (!output) return;
-    const tipoKey = tipo.toLowerCase().includes('simce') ? 'simce'
-      : tipo.toLowerCase().includes('rubrica') ? 'rubrica'
-      : tipo.toLowerCase().includes('ticket') ? 'ticket'
+    const tipoKey = tipo === 'simce' || tipo === 'simce_breve' ? 'simce'
+      : tipo === 'rubrica' || tipo === 'holistica' ? 'rubrica'
+      : tipo === 'ticket' ? 'ticket'
       : 'evaluacion';
     const material: MaterialSaved = {
       id: generateId(),
       tipo: tipoKey as MaterialSaved['tipo'],
-      titulo: `${tipo} - ${nivel} ${asignatura}`,
+      titulo: `${EVAL_TIPOS.find(t => t.v === tipo)?.l || tipo} - ${selectedCurso?.name || selectedNivel} ${selectedAsignatura}`,
       contenido: output,
-      nivel,
-      asignatura,
-      oa,
+      nivel: selectedNivel,
+      asignatura: selectedAsignatura,
+      oa: selectedOA?.oa_id || '',
       fecha: new Date().toISOString(),
       etiquetas: [dificultad, habilidad],
     };
@@ -241,12 +395,12 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
     if (!output) return;
     saveDriveItem({
       id: generateId(),
-      nombre: `${tipo} - ${nivel} ${asignatura}`,
+      nombre: `${EVAL_TIPOS.find(t => t.v === tipo)?.l || tipo} - ${selectedCurso?.name || selectedNivel} ${selectedAsignatura}`,
       contenido: output,
       tipo: 'texto',
-      nivel,
-      asignatura,
-      oa,
+      nivel: selectedNivel,
+      asignatura: selectedAsignatura,
+      oa: selectedOA?.oa_id || '',
       fecha: new Date().toISOString(),
     });
     setStatus('Evaluación enviada a Drive personal.');
@@ -268,7 +422,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `evaluacion-${nivel}-${asignatura}-${new Date().toISOString().slice(0, 10)}.md`;
+    a.download = `evaluacion-${selectedCurso?.name || selectedNivel}-${selectedAsignatura}-${new Date().toISOString().slice(0, 10)}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -284,18 +438,18 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
   const handleDuplicar = () => {
     if (!output) return;
-    const dupKey = tipo.toLowerCase().includes('simce') ? 'simce'
-      : tipo.toLowerCase().includes('rubrica') ? 'rubrica'
-      : tipo.toLowerCase().includes('ticket') ? 'ticket'
+    const dupKey = tipo === 'simce' || tipo === 'simce_breve' ? 'simce'
+      : tipo === 'rubrica' || tipo === 'holistica' ? 'rubrica'
+      : tipo === 'ticket' ? 'ticket'
       : 'evaluacion';
     const material: MaterialSaved = {
       id: generateId(),
       tipo: dupKey as MaterialSaved['tipo'],
-      titulo: `${tipo} (copia) - ${nivel} ${asignatura}`,
+      titulo: `${EVAL_TIPOS.find(t => t.v === tipo)?.l || tipo} (copia) - ${selectedCurso?.name || selectedNivel} ${selectedAsignatura}`,
       contenido: output,
-      nivel,
-      asignatura,
-      oa,
+      nivel: selectedNivel,
+      asignatura: selectedAsignatura,
+      oa: selectedOA?.oa_id || '',
       fecha: new Date().toISOString(),
       etiquetas: [dificultad, habilidad],
     };
@@ -311,6 +465,114 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
     setEditando(!editando);
   };
 
+  const handleSaveToBancoRecursos = async () => {
+    if (!output || !selectedOA) return;
+    setIsSaving(true);
+    const cleaned = cleanEvaluationText(output);
+    const selectedIndsArray = Array.from(selectedInds).sort().map((i) => indicadores[i]);
+    try {
+      saveRecurso({
+        id: generateId(),
+        tipoRecurso: 'evaluacion',
+        titulo: lessonTitle,
+        nivel: selectedNivel,
+        asignatura: selectedAsignatura,
+        oa: `${selectedOA.oa_id} — ${selectedOA.oa_texto}`,
+        contenido: cleaned,
+        texto: cleaned,
+        timestamp: Date.now(),
+      });
+      await api.post('/api/resources', {
+        title: lessonTitle,
+        type: 'evaluacion',
+        source: 'evaluaciones',
+        content: cleaned,
+        level: selectedNivel,
+        subject: selectedAsignatura,
+        objectiveCode: resolveObjectiveRealCode(selectedOA),
+        objectiveText: selectedOA.oa_texto,
+        skill: habilidad,
+        metadata: {
+          evaluationType: tipo,
+          selectedIndicators: selectedIndsArray,
+          difficulty: dificultad,
+          course: selectedCurso?.name || '',
+          createdAt: new Date().toISOString(),
+        },
+      });
+      setStatus('Evaluacion guardada en Banco de Recursos.');
+      setStatusType('ok');
+    } catch {
+      setStatus('No se pudo guardar la evaluacion. Intenta nuevamente.');
+      setStatusType('bad');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleShareEvaluacion = async () => {
+    if (!output) return;
+    const cleaned = cleanEvaluationText(output);
+    const { doc, shareUrl } = shareFromWorkspace({
+      title: lessonTitle,
+      content: cleaned,
+      nivel: selectedNivel,
+      asignatura: selectedAsignatura,
+      oa: selectedOA?.oa_texto,
+      habilidad,
+    });
+    try {
+      await api.post('/api/data/shared-documents', {
+        id: doc.id,
+        shareToken: doc.shareToken,
+        ownerName: 'Docente',
+        title: doc.title,
+        content: doc.content,
+        sourceType: doc.sourceType,
+        sourceId: doc.sourceId,
+        visibility: 'shared',
+        permission: doc.permission,
+      });
+    } catch {
+      // Cloud sync failed
+    }
+    setShareResult({ shareUrl, copied: false });
+  };
+
+  const handleCopyShareUrl = async () => {
+    if (!shareResult) return;
+    try {
+      await navigator.clipboard.writeText(shareResult.shareUrl);
+      setShareResult({ ...shareResult, copied: true });
+      setTimeout(() => setShareResult({ ...shareResult, copied: false }), 2000);
+    } catch { /* silent */ }
+  };
+
+  const handleAddLink = async () => {
+    if (!newLink.sourceId || !newLink.title) return;
+    try {
+      await api.post('/api/evaluation-resources/link', {
+        sourceId: newLink.sourceId,
+        title: newLink.title,
+        url: newLink.url,
+        description: newLink.description,
+        tags: newLink.tags.split(',').map(t => t.trim()).filter(Boolean),
+        subject: selectedAsignatura,
+        course: selectedCurso?.code || '',
+        objectiveCode: resolveObjectiveRealCode(selectedOA),
+        evaluationType: tipo,
+        skill: habilidad,
+      });
+      setNewLink({ sourceId: '', title: '', url: '', description: '', tags: '' });
+      setShowAddLink(false);
+      setStatus('Enlace guardado. Pendiente de validacion.');
+      setStatusType('ok');
+    } catch {
+      setStatus('No se pudo guardar el enlace.');
+      setStatusType('bad');
+    }
+  };
+
   const handleEliminar = (id: string) => {
     if (!confirm('¿Eliminar este instrumento?')) return;
     deleteMaterial(id);
@@ -321,13 +583,12 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
   const cargarMaterial = (m: MaterialSaved) => {
     setOutput(m.contenido);
-    setNivel(m.nivel);
-    setAsignatura(m.asignatura);
-    setOa(m.oa || '');
+    setSelectedNivel(m.nivel);
+    setSelectedAsignatura(m.asignatura);
     setShowSaved(false);
   };
 
-  const isSIMCE = tipo.toLowerCase().includes('simce');
+  const isSIMCE = tipo === 'simce' || tipo === 'simce_breve';
 
   return (
     <div className="view" id="evaluaciones">
@@ -352,52 +613,6 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             {savedMaterials.length > 0 && (
               <Badge color="violet" size="sm">{savedMaterials.length}</Badge>
             )}
-          </div>
-        </div>
-      </Card>
-
-      <SectionHeader
-        icon={Sparkles}
-        iconColor="#7c3aed"
-        title="Acciones rápidas"
-        description="Selecciona el tipo de instrumento evaluativo que deseas crear."
-        className="mb-4"
-      />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-        {QUICK_ACTIONS.map(action => (
-          <Card
-            key={action.tipo}
-            variant="interactive"
-            className="p-4"
-            onClick={() => handleQuickAction(action.tipo)}
-          >
-            <div className="flex items-start gap-3">
-              <IconBadge icon={action.icon} size="md" color={action.color} variant="soft" />
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-gray-900">{action.label}</h3>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{action.desc}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50/50 border-amber-100/80">
-        <div className="flex items-start gap-4">
-          <IconBadge icon={BarChart3} size="lg" color="#d97706" variant="gradient" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge color="amber" size="sm">SIMCE</Badge>
-            </div>
-            <h3 className="text-base font-semibold text-gray-900">Preparación tipo SIMCE</h3>
-            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              Diseña preguntas de selección múltiple, comprensión lectora, resolución de problemas y análisis de habilidades con tabla de especificaciones y pauta de corrección.
-            </p>
-            <div className="flex items-center gap-2 mt-3">
-              <Button variant="primary" size="sm" iconLeft={Plus} onClick={() => handleQuickAction('Evaluación tipo SIMCE')}>
-                Crear evaluación tipo SIMCE
-              </Button>
-            </div>
           </div>
         </div>
       </Card>
@@ -427,17 +642,47 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 <FileCheck2 size={13} className="text-violet-600" strokeWidth={2.25} />
                 Tipo de evaluación
               </label>
-              <select value={tipo} onChange={(e) => setTipo(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer">
-                {EVAL_TIPOS.map((t) => <option key={t.v}>{t.l}</option>)}
+              <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={selectClass}>
+                {EVAL_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
               </select>
             </div>
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
                 <GraduationCap size={13} className="text-violet-600" strokeWidth={2.25} />
-                Nivel
+                Nivel educativo
               </label>
-              <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer">
-                {NIVELES.map((n) => <option key={n}>{n}</option>)}
+              <select
+                value={selectedNivel}
+                onChange={e => handleNivelChange(e.target.value)}
+                className={selectClass}
+              >
+                <option value="">Seleccionar nivel</option>
+                {niveles.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+                <GraduationCap size={13} className="text-violet-600" strokeWidth={2.25} />
+                Curso
+              </label>
+              <select
+                value={selectedCurso?.id || ''}
+                onChange={e => handleCursoChange(e.target.value)}
+                className={selectClass}
+                disabled={!selectedNivel}
+              >
+                <option value="">{selectedNivel ? 'Seleccionar curso' : 'Primero elige nivel'}</option>
+                {selectedNivel && courses
+                  .filter(c => {
+                    if (c.id === 'course-otro') return false;
+                    if (selectedNivel === 'Prebásica') return c.cycle === 'Educación Parvularia';
+                    if (selectedNivel === 'Básica') return c.cycle === 'Educación Básica';
+                    if (selectedNivel === 'Media') return c.cycle === 'Educación Media' && !c.code.endsWith('-TP') && !c.code.endsWith('-FG') && !c.code.endsWith('-HC');
+                    if (selectedNivel === 'Técnico Profesional') return c.code.endsWith('-TP');
+                    return false;
+                  })
+                  .sort((a, b) => a.sort_order - b.sort_order)
+                  .map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
@@ -445,8 +690,16 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 <BookOpen size={13} className="text-violet-600" strokeWidth={2.25} />
                 Asignatura
               </label>
-              <select value={asignatura} onChange={(e) => setAsignatura(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer">
-                {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
+              <select
+                value={selectedAsignatura}
+                onChange={e => handleAsignaturaChange(e.target.value)}
+                className={selectClass}
+                disabled={!selectedCurso}
+              >
+                <option value="">{selectedCurso ? 'Seleccionar asignatura' : 'Primero elige curso'}</option>
+                {subjects
+                  .sort((a, b) => a.sort_order - b.sort_order)
+                  .map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
             </div>
             <div>
@@ -454,7 +707,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 <ClipboardCheck size={13} className="text-violet-600" strokeWidth={2.25} />
                 Habilidad principal
               </label>
-              <select value={habilidad} onChange={(e) => setHabilidad(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer">
+              <select value={habilidad} onChange={(e) => setHabilidad(e.target.value)} className={selectClass}>
                 {HABILIDADES.map((h) => <option key={h}>{h}</option>)}
               </select>
             </div>
@@ -468,23 +721,70 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
       {step === 2 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
           <Card>
-            <SectionHeader icon={BookOpen} iconColor="#7c3aed" title="Paso 2: Contenido (OA e Indicadores)" description="Selecciona un OA desde el Banco Curricular o completa el campo manualmente." className="mb-4" />
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-gray-600">OA / habilidad</label>
-              <button onClick={handleBuscarOA} className="text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-1">
-                <BookOpen size={11} strokeWidth={2.25} /> Buscar en banco OA
-              </button>
-            </div>
-            <textarea
-              value={oa}
-              onChange={(e) => setOa(e.target.value)}
-              placeholder="Pega el OA aquí o selecciona desde el Banco OA..."
-              className="w-full min-h-[50px] px-3 py-2 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm resize-y"
-            />
-            {selectedItem && (
-              <div className="mt-2 px-3 py-2 rounded-xl bg-violet-50 border border-violet-100 text-xs text-gray-600">
-                <code className="font-bold text-violet-700">{selectedItem.id}</code>
-                <span className="text-gray-400 ml-2">{selectedItem.curso} · {selectedItem.eje}</span>
+            <SectionHeader icon={BookOpen} iconColor="#7c3aed" title="Paso 2: Contenido (OA)" description="Selecciona un OA cargado desde la base curricular D1." className="mb-4" />
+            {selectedAsignatura ? (
+              <>
+                <div style={{ position: 'relative', marginBottom: 6 }}>
+                  <Search size={13} style={{ position: 'absolute', left: 10, top: 9, color: 'var(--muted2)', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    value={oaSearch}
+                    onChange={e => setOaSearch(e.target.value)}
+                    placeholder="Buscar OA por código o texto…"
+                    style={{
+                      width: '100%', padding: '8px 10px 8px 30px', border: '1px solid var(--line)',
+                      borderRadius: 'var(--radius)', background: 'var(--card)', color: 'var(--ink)',
+                      fontSize: 12, fontFamily: 'Inter, system-ui, sans-serif', outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <select
+                  value={selectedOA?.oa_id || ''}
+                  onChange={e => {
+                    const localOAs = getOAs(selectedNivel, selectedAsignatura);
+                    const merged = [...localOAs, ...fetchedOAs];
+                    const seen = new Set<string>();
+                    const unique = merged.filter(o => { if (seen.has(o.oa_id)) return false; seen.add(o.oa_id); return true; });
+                    setSelectedOA(unique.find(o => o.oa_id === e.target.value) || null);
+                  }}
+                  className={selectClass}
+                  disabled={loadingOAs}
+                >
+                  <option value="">
+                    {loadingOAs ? 'Cargando objetivos…' : 'Seleccionar OA'}
+                  </option>
+                    {(() => {
+                      const localOAs = getOAs(selectedNivel, selectedAsignatura);
+                      const merged = [...localOAs, ...fetchedOAs];
+                      const seen = new Set<string>();
+                      return merged.filter(o => {
+                        if (seen.has(o.oa_id)) return false;
+                        seen.add(o.oa_id);
+                        return !oaSearch || o.oa_id.toLowerCase().includes(oaSearch.toLowerCase()) || o.oa_texto.toLowerCase().includes(oaSearch.toLowerCase());
+                      }).map(o => (
+                        <option key={o.oa_id} value={o.oa_id}>{extractShortObjectiveCode(o.oa_id)} — {o.oa_texto.slice(0, 60)}…</option>
+                      ));
+                    })()}
+                </select>
+              </>
+            ) : (
+              <p className="text-xs text-gray-400 italic py-6 text-center">
+                Primero selecciona nivel, curso y asignatura en el paso 1.
+              </p>
+            )}
+            {loadingOAs && <div className="text-xs flex items-center gap-1 mt-1" style={{ color: 'var(--muted2)' }}><Loader size={10} className="spin" /> Cargando objetivos desde la base curricular…</div>}
+            {fetchedOAs.length > 0 && !loadingOAs && (
+              <div className="text-xs mt-1" style={{ color: 'var(--muted2)' }}>Objetivos encontrados: {fetchedOAs.length}</div>
+            )}
+            {oaError && !loadingOAs && <div className="text-xs mt-1" style={{ color: 'var(--muted2)' }}>{oaError}</div>}
+            {selectedOA && (
+              <div className="mt-3 px-3 py-2 rounded-xl bg-violet-50 border border-violet-100 text-xs text-gray-600">
+                <code className="font-bold text-violet-700">{extractShortObjectiveCode(selectedOA.oa_id)}</code>
+                {resolveObjectiveRealCode(selectedOA) !== extractShortObjectiveCode(selectedOA.oa_id) && (
+                  <span className="ml-2 text-gray-400">({resolveObjectiveRealCode(selectedOA)})</span>
+                )}
+                <p className="mt-1 text-gray-500">{selectedOA.oa_texto}</p>
               </div>
             )}
             <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
@@ -492,19 +792,35 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               <Button variant="primary" iconRight={ArrowRight} onClick={() => setStep(3)}>Siguiente</Button>
             </div>
           </Card>
+
           <Card>
             <SectionHeader icon={ClipboardList} iconColor="#7c3aed" title="Indicadores de evaluación" className="mb-3" />
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-gray-500">{selectedInds.size} de {indicadores.length} seleccionados</span>
-              <div className="flex items-center gap-1.5">
-                <button onClick={selectAllInds} className="text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-2 py-1 rounded-lg hover:bg-violet-50">Todo</button>
-                <button onClick={deselectAllInds} className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100">Ninguno</button>
-              </div>
+              {indicadores.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <button onClick={selectAllInds} className="text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-2 py-1 rounded-lg hover:bg-violet-50">Todo</button>
+                  <button onClick={deselectAllInds} className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100">Ninguno</button>
+                </div>
+              )}
             </div>
-            {indicadores.length === 0 ? (
-              <p className="text-xs text-gray-400 italic py-6 text-center">
-                Selecciona un OA desde el Banco OA para ver sus indicadores.
-              </p>
+            {loadingContext ? (
+              <div className="text-xs flex items-center gap-1 py-6 justify-center" style={{ color: 'var(--muted2)' }}>
+                <Loader size={10} className="spin" /> Cargando indicadores…
+              </div>
+            ) : indicadores.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-xs text-gray-400 italic mb-3">
+                  {selectedOA
+                    ? 'Este OA aún no tiene indicadores cargados. Puedes generar indicadores pedagógicos sugeridos.'
+                    : 'Selecciona un OA para ver sus indicadores.'}
+                </p>
+                {selectedOA && (
+                  <Button variant="secondary" size="sm" iconLeft={Sparkles} onClick={handleGenerateIndicators} disabled={isGeneratingInds}>
+                    {isGeneratingInds ? 'Generando...' : 'Generar indicadores sugeridos'}
+                  </Button>
+                )}
+              </div>
             ) : (
               <div className="space-y-1 max-h-[400px] overflow-y-auto">
                 {indicadores.map((ind, i) => (
@@ -523,6 +839,9 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                     <span className={`text-xs leading-relaxed ${selectedInds.has(i) ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
                       {ind}
                     </span>
+                    {curricularContext?.indicators?.[i]?.sourceType === 'derived' && (
+                      <Badge color="amber" size="sm">Derivado por IA</Badge>
+                    )}
                   </label>
                 ))}
               </div>
@@ -540,7 +859,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 <FileText size={13} className="text-violet-600" strokeWidth={2.25} />
                 Dificultad
               </label>
-              <select value={dificultad} onChange={(e) => setDificultad(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer">
+              <select value={dificultad} onChange={(e) => setDificultad(e.target.value)} className={selectClass}>
                 {DIFICULTADES.map((d) => <option key={d}>{d}</option>)}
               </select>
             </div>
@@ -573,10 +892,15 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 </div>
               </>
             )}
+            {selectedOA && selectedInds.size > 0 && (
+              <div className="text-xs text-gray-500">
+                <span className="font-semibold">Resumen:</span> {EVAL_TIPOS.find(t => t.v === tipo)?.l || tipo} · {selectedCurso?.name || selectedNivel} · {selectedAsignatura} · {extractShortObjectiveCode(selectedOA.oa_id)} · {selectedInds.size} indicador(es)
+              </div>
+            )}
           </div>
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
             <Button variant="ghost" iconLeft={ArrowLeft} onClick={() => setStep(2)}>Atrás</Button>
-            <Button variant="premium" iconLeft={Sparkles} onClick={handleGenerar}>
+            <Button variant="premium" iconLeft={Sparkles} onClick={handleGenerar} disabled={!selectedOA}>
               Generar {isSIMCE ? 'SIMCE' : 'evaluación'}
             </Button>
           </div>
@@ -589,8 +913,11 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           {output && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <Button variant="secondary" size="sm" iconLeft={Sparkles} onClick={handleGuardar}>Guardar</Button>
+              <Button variant="secondary" size="sm" iconLeft={Plus} onClick={handleSaveToBancoRecursos} disabled={isSaving}>
+                {isSaving ? 'Guardando...' : 'Banco de Recursos'}
+              </Button>
+              <Button variant="ghost" size="sm" iconLeft={Share2} onClick={handleShareEvaluacion}>Compartir</Button>
               <Button variant="ghost" size="sm" iconLeft={Send} onClick={handleEnviarDrive}>Drive</Button>
-              <Button variant="ghost" size="sm" iconLeft={ClipboardEdit} onClick={() => onNavigate('planificador')}>Planificar</Button>
               <Button variant="ghost" size="sm" iconLeft={Printer} onClick={handleImprimir}>Imprimir</Button>
               <Button variant="ghost" size="sm" iconLeft={Download} onClick={handleExportar}>Exportar</Button>
               <Button variant="ghost" size="sm" iconLeft={CopyPlus} onClick={handleDuplicar}>Duplicar</Button>
@@ -609,17 +936,223 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             className="w-full min-h-[400px] font-mono text-sm p-3 rounded-xl bg-white border border-gray-200/80 text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm resize-y mt-3"
           />
         ) : (
-          <div className="mt-3 bg-gray-50 rounded-xl p-4 max-h-[500px] overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap text-gray-700 font-sans">
+          <div className="mt-3 bg-gray-50 rounded-xl p-4 max-h-[500px] overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{color:'#000000'}}>
             {output || <p className="text-gray-400 italic">La evaluación generada aparecerá aquí...</p>}
           </div>
         )}
       </Card>
 
+      {shareResult && (
+        <div className="fixed inset-0 bg-black/25 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShareResult(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                  <Share2 size={18} className="text-violet-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Evaluacion compartida</h3>
+                  <p className="text-xs text-gray-400">Copia el enlace para compartir</p>
+                </div>
+              </div>
+              <button onClick={() => setShareResult(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100 mb-4">
+              <Link size={14} className="text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                value={shareResult.shareUrl}
+                readOnly
+                className="flex-1 bg-transparent text-xs text-gray-600 outline-none border-none p-0"
+              />
+              <button
+                onClick={handleCopyShareUrl}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${shareResult.copied ? 'bg-green-100 text-green-700' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'}`}
+              >
+                {shareResult.copied ? <><Check size={12} className="inline mr-1" />Copiado</> : 'Copiar'}
+              </button>
+            </div>
+            <button onClick={() => setShareResult(null)} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       <AdaptarPanel
-        item={selectedItem}
+        item={selectedOA ? {
+          id: selectedOA.oa_id,
+          fuente: 'oficial',
+          nivel: selectedNivel as any,
+          curso: selectedCurso?.name || selectedNivel,
+          asignatura: selectedAsignatura,
+          eje: '',
+          oa: selectedOA.oa_texto,
+          habilidad: habilidad,
+          indicadores: indicadores,
+          conocimientos: [],
+          actitudes: [],
+          palabrasClave: [],
+          actividadesSugeridas: [],
+          evaluacionesSugeridas: [],
+          recursos: [],
+        } : null}
         contenidoOriginal={output}
         onStatus={(msg, type) => { setStatus(msg); setStatusType(type || ''); }}
       />
+
+      {selectedAsignatura && selectedOA && extSources.length > 0 && (
+        <Card className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <SectionHeader icon={BookOpen} iconColor="#7c3aed" title="Recursos sugeridos" description="Fuentes externas relacionadas con evaluacion" />
+            <button onClick={() => setShowExtPanel(!showExtPanel)} className="text-xs font-medium text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition-all">
+              {showExtPanel ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+
+          {showExtPanel && (
+            <>
+              {extError && <p className="text-xs text-red-500 mb-3">{extError}</p>}
+
+              {loadingExt ? (
+                <div className="text-xs flex items-center gap-1 py-4 justify-center text-gray-400">
+                  <Loader size={10} className="spin" /> Cargando recursos...
+                </div>
+              ) : (
+                <>
+                  {extLinks.filter(l => l.access_type === 'open' || l.access_type === 'login_required').length === 0 && !showAddLink && (
+                    <p className="text-xs text-gray-400 italic py-3 text-center">
+                      No hay recursos sugeridos para esta combinacion. Puedes agregar enlaces manualmente.
+                    </p>
+                  )}
+
+                  {extLinks.filter(l => l.access_type === 'open').length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                        <Badge color="violet" size="sm">Oficiales / Publicos</Badge>
+                      </p>
+                      <div className="space-y-2">
+                        {extLinks.filter(l => l.access_type === 'open').map(link => (
+                          <div key={link.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                <span className="text-xs font-semibold text-gray-800">{link.title}</span>
+                                {link.source_source_type === 'official' && <Badge color="violet" size="sm">Oficial</Badge>}
+                                {link.validation_status === 'validated' && <Badge color="green" size="sm">Validado</Badge>}
+                              </div>
+                              {link.description && <p className="text-xs text-gray-500 mb-1">{link.description}</p>}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {link.url && (
+                                  <a href={link.url} target="_blank" rel="noopener noreferrer"
+                                     className="text-xs font-medium text-violet-600 hover:text-violet-700 hover:underline">
+                                    {link.source_name || 'Visitar sitio'}
+                                  </a>
+                                )}
+                                <span className="text-[10px] text-gray-400">{link.source_name}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {extLinks.filter(l => l.access_type === 'login_required').length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                        <Badge color="amber" size="sm">Requiere inicio de sesion</Badge>
+                      </p>
+                      <div className="space-y-2">
+                        {extLinks.filter(l => l.access_type === 'login_required').map(link => (
+                          <div key={link.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-amber-50 border border-amber-100">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                <span className="text-xs font-semibold text-gray-800">{link.title}</span>
+                                <Badge color="amber" size="sm">Cuenta privada</Badge>
+                              </div>
+                              {link.description && <p className="text-xs text-gray-500 mb-1">{link.description}</p>}
+                              {link.url && (
+                                <a href={link.url} target="_blank" rel="noopener noreferrer"
+                                   className="text-xs font-medium text-amber-600 hover:text-amber-700 hover:underline">
+                                  {link.source_name || 'Visitar sitio'}
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {extLinks.filter(l => l.access_type === 'paid' || l.access_type === 'manual_upload').length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                        <Badge color="slate" size="sm">Pago / Carga manual</Badge>
+                      </p>
+                      <div className="space-y-2">
+                        {extLinks.filter(l => l.access_type === 'paid' || l.access_type === 'manual_upload').map(link => (
+                          <div key={link.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                <span className="text-xs font-semibold text-gray-800">{link.title}</span>
+                                <Badge color="slate" size="sm">{link.access_type === 'paid' ? 'Pago' : 'Manual'}</Badge>
+                              </div>
+                              {link.description && <p className="text-xs text-gray-500 mb-1">{link.description}</p>}
+                              <p className="text-[10px] text-gray-400">{link.license_note}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="border-t border-gray-100 pt-3 mt-3">
+                    <button onClick={() => setShowAddLink(!showAddLink)} className="text-xs font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1">
+                      {showAddLink ? 'Cancelar' : 'Agregar enlace manual'}
+                    </button>
+
+                    {showAddLink && (
+                      <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2.5">
+                        <p className="text-xs font-semibold text-gray-700 mb-1">Guardar enlace de recurso externo</p>
+                        <select value={newLink.sourceId} onChange={e => setNewLink(p => ({ ...p, sourceId: e.target.value }))}
+                                className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700">
+                          <option value="">Seleccionar fuente</option>
+                          {extSources.filter(s => s.source_type === 'user_saved' || s.source_type === 'private_account').map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                        <input type="text" placeholder="Titulo del recurso" value={newLink.title}
+                               onChange={e => setNewLink(p => ({ ...p, title: e.target.value }))}
+                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700" />
+                        <input type="url" placeholder="URL (opcional)" value={newLink.url}
+                               onChange={e => setNewLink(p => ({ ...p, url: e.target.value }))}
+                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700" />
+                        <textarea placeholder="Descripcion o nota personal" value={newLink.description}
+                                  onChange={e => setNewLink(p => ({ ...p, description: e.target.value }))}
+                                  className="w-full min-h-[50px] px-2.5 py-2 rounded-lg bg-white border border-gray-200 text-xs text-gray-700 resize-y" />
+                        <input type="text" placeholder="Tags separados por coma (inspiracion, OA, material)" value={newLink.tags}
+                               onChange={e => setNewLink(p => ({ ...p, tags: e.target.value }))}
+                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700" />
+                        <div className="flex items-center gap-2 pt-1">
+                          <Button variant="secondary" size="sm" onClick={handleAddLink} disabled={!newLink.sourceId || !newLink.title}>Guardar enlace</Button>
+                          <span className="text-[10px] text-gray-400">No se descarga contenido automaticamente</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </Card>
+      )}
+
+      <style>{`
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { AIConfig, BankEntry, CollaborationPost, DriveItem, DriveFolder, Comentario, PlanData, RecursoData, EvalData, CursoData, EstudianteData } from '../types';
+import type { AIConfig, BankEntry, CollaborationPost, DriveItem, DriveFolder, Comentario, PlanData, RecursoData, EvalData, CursoData, EstudianteData, SharedDocument } from '../types';
 
 const KEYS = {
   CONFIG: 'planificaia_cfg',
@@ -15,6 +15,7 @@ const KEYS = {
   FAV_COLAB: 'planificaia_fav_colab',
   COMPACT: 'planificaia_compact',
   MATERIALS: 'planificaia_materials',
+  SHARED_DOCS: 'planificaia_shared_docs',
 };
 
 function getItem<T>(key: string, fallback: T): T {
@@ -223,6 +224,30 @@ export function toggleFavOA(id: string): string[] {
   f = f.includes(id) ? f.filter((x) => x !== id) : [...f, id];
   setItem(KEYS.FAV_OA, f);
   return f;
+}
+
+// Shared documents
+export function getSharedDocuments(): SharedDocument[] {
+  return getItem<SharedDocument[]>(KEYS.SHARED_DOCS, []);
+}
+
+export function saveSharedDocument(d: SharedDocument): SharedDocument[] {
+  const arr = getSharedDocuments();
+  const i = arr.findIndex((x) => x.id === d.id);
+  if (i >= 0) arr[i] = d;
+  else arr.unshift(d);
+  setItem(KEYS.SHARED_DOCS, arr);
+  return arr;
+}
+
+export function deleteSharedDocument(id: string): SharedDocument[] {
+  const arr = getSharedDocuments().filter((x) => x.id !== id);
+  setItem(KEYS.SHARED_DOCS, arr);
+  return arr;
+}
+
+export function getSharedDocumentByToken(token: string): SharedDocument | undefined {
+  return getSharedDocuments().find((x) => x.shareToken === token);
 }
 
 export function generateId(): string {

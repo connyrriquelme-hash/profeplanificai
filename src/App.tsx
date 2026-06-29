@@ -7,6 +7,7 @@ import type { ViewType } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { AppShell } from './components/ui/AppShell';
+import { MobileBottomNav } from './components/ui/MobileBottomNav';
 import { DashboardView } from './components/DashboardView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { CurriculumCloudView } from './components/CurriculumCloudView';
@@ -16,6 +17,8 @@ import { EvaluacionesView } from './components/EvaluacionesView';
 import { SharedPanelView } from './components/SharedPanelView';
 import { SharedDocumentPublicView } from './components/SharedDocumentPublicView';
 import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
+import { UnidadesDidacticasView } from './components/UnidadesDidacticasView';
+import { ReportesView } from './components/ReportesView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -64,6 +67,10 @@ function AppContent() {
         return <BancoRecursosView initialTab={viewState?.tab as any} onNavigate={handleViewChange} />;
       case 'panel-compartido':
         return <SharedPanelView onNavigate={handleViewChange} />;
+      case 'unidades-didacticas':
+        return <UnidadesDidacticasView />;
+      case 'reportes':
+        return <ReportesView />;
       case 'admin':
         return <AdminView />;
       default:
@@ -89,6 +96,7 @@ function AppContent() {
     <AppShell
       sidebar={<Sidebar activeView={activeView} onViewChange={handleViewChange} />}
       topbar={<Topbar onNavigate={handleViewChange} />}
+      bottomNav={<MobileBottomNav activeView={activeView} onViewChange={handleViewChange} />}
     >
       <ErrorBoundary>
         <AnimatePresence mode="wait">

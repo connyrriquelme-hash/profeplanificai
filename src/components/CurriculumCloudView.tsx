@@ -264,7 +264,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
               )}
 
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <p className="text-base leading-relaxed text-gray-800">
+                <p className="text-base leading-relaxed" style={{color:'#000000'}}>
                   {selected.official_text}
                 </p>
               </div>

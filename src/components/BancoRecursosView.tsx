@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Archive, Search, Plus, BookOpen, Clock, Trash2, FileText, ClipboardCheck, Copy, FileDown, X, AlertCircle, Loader2, Sparkles, FolderOpen, BookMarked, GraduationCap, Presentation, FileSpreadsheet, Eye, Check } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
-import { useResources } from '../hooks/useResources';
+import { useResources, type Resource } from '../hooks/useResources';
 import { exportToPDF } from '../utils/exportPdf';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
@@ -10,22 +10,15 @@ import { IconBadge } from './ui/IconBadge';
 import { SearchInput } from './ui/SearchInput';
 import { EmptyState } from './ui/EmptyState';
 import { SectionHeader } from './ui/SectionHeader';
+import { SlideLessonPreview } from './SlideLessonPreview';
+import { deserializeSlidesFromSave, getLocalSlideDecks } from '../services/slideSaveService';
+import type { SlideLesson } from '../types/slideLesson';
 
 type Tab = 'planificaciones' | 'recursos' | 'evaluaciones';
 
 interface BancoRecursosViewProps {
   initialTab?: Tab;
   onNavigate?: (view: string) => void;
-}
-
-interface Resource {
-  id: string;
-  user_id: string;
-  title: string;
-  subject: string;
-  level: string;
-  content: string;
-  created_at: string;
 }
 
 const QUICK_CATEGORIES = [
@@ -60,24 +53,68 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   }, [initialTab]);
 
   useEffect(() => {
-    if (activeTab === 'recursos') fetchResources();
+    if (activeTab === 'recursos' || activeTab === 'planificaciones') fetchResources();
   }, [activeTab, fetchResources]);
+
+  const allPlans = useMemo(() => {
+    const cloudPlans = resources
+      .filter(r => r.type === 'planificacion' || (r.type === '' && r.content))
+      .map(r => ({
+        id: r.id,
+        titulo: r.title || 'Planificación sin título',
+        fecha: r.created_at,
+        objetivos: r.objective_text || r.objective_code || '',
+        nivel: r.level || '',
+        inicio: r.content || '',
+        desarrollo: '',
+        cierre: '',
+        source: 'cloud' as const,
+      }));
+    const localPlans = library.map(p => ({ ...p, source: 'local' as const }));
+    return [...localPlans, ...cloudPlans].sort((a, b) =>
+      new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+    );
+  }, [library, resources]);
+
+  const filteredPlans = query
+    ? allPlans.filter(i =>
+        i.titulo.toLowerCase().includes(query.toLowerCase()) ||
+        (i.objetivos || '').toLowerCase().includes(query.toLowerCase())
+      )
+    : allPlans;
+
+  const mergedResources: Resource[] = useMemo(() => {
+    const localDecks = getLocalSlideDecks().map(d => ({
+      id: d.id,
+      user_id: '',
+      title: d.title,
+      type: d.type,
+      source: d.source,
+      content: d.content,
+      level: d.level,
+      subject: d.subject,
+      objective_code: d.objective_code,
+      objective_text: '',
+      skill: '',
+      metadata_json: '',
+      created_at: d.created_at,
+      updated_at: d.created_at,
+    }));
+    const existingIds = new Set(resources.map(r => r.id));
+    return [...resources, ...localDecks.filter(ld => !existingIds.has(ld.id))];
+  }, [resources]);
 
   const uniqueSubjects = useMemo(() => {
     if (activeTab !== 'recursos') return [];
-    return [...new Set(resources.map(r => r.subject).filter(Boolean))].sort();
-  }, [resources, activeTab]);
+    return [...new Set(mergedResources.map(r => r.subject).filter(Boolean))].sort();
+  }, [mergedResources, activeTab]);
 
   const uniqueLevels = useMemo(() => {
     if (activeTab !== 'recursos') return [];
-    return [...new Set(resources.map(r => r.level).filter(Boolean))].sort();
-  }, [resources, activeTab]);
+    return [...new Set(mergedResources.map(r => r.level).filter(Boolean))].sort();
+  }, [mergedResources, activeTab]);
 
-  const filteredPlans = query
-    ? library.filter(i => i.titulo.toLowerCase().includes(query.toLowerCase()) || i.objetivos.toLowerCase().includes(query.toLowerCase()))
-    : library;
-
-  const filteredResources = resources.filter(r => {
+  const filteredResources = mergedResources.filter(r => {
     const matchesQuery = !query || 
       r.title?.toLowerCase().includes(query.toLowerCase()) ||
       r.subject?.toLowerCase().includes(query.toLowerCase()) ||
@@ -244,24 +281,31 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPlans.map(item => {
+                const isCloud = (item as any).source === 'cloud';
                 const hasContent = item.inicio || item.desarrollo || item.cierre;
                 return (
                   <Card key={item.id} className="p-5 flex flex-col">
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{item.titulo}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{item.titulo}</h3>
+                          <Badge color="teal" size="sm">Planificación</Badge>
+                          {isCloud && <Badge color="indigo" size="sm">Nube</Badge>}
+                        </div>
                         <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400">
                           <Clock size={11} strokeWidth={2.25} />
                           {formatDate(item.fecha)}
                         </div>
                       </div>
-                      <button
-                        onClick={() => removeFromLibrary(item.id)}
-                        className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
-                        aria-label="Eliminar planificación"
-                      >
-                        <Trash2 size={14} strokeWidth={2.25} />
-                      </button>
+                      {!isCloud && (
+                        <button
+                          onClick={() => removeFromLibrary(item.id)}
+                          className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
+                          aria-label="Eliminar planificación"
+                        >
+                          <Trash2 size={14} strokeWidth={2.25} />
+                        </button>
+                      )}
                     </div>
                     <div className="flex gap-1.5 flex-wrap mb-3">
                       {item.objetivos && <Badge color="indigo" size="sm">OA</Badge>}
@@ -273,6 +317,26 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 flex-1">
                       {hasContent ? item.objetivos || item.inicio || 'Sin contenido' : 'Sin contenido'}
                     </p>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1 rounded-lg hover:bg-indigo-50 transition-all"
+                      >
+                        Ver
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onNavigate?.('panel-compartido'); }}
+                        className="text-xs font-semibold text-teal-600 hover:text-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-50 transition-all"
+                      >
+                        Compartir
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onNavigate?.('biblioteca-creativa'); }}
+                        className="text-xs font-semibold text-amber-600 hover:text-amber-800 px-2.5 py-1 rounded-lg hover:bg-amber-50 transition-all ml-auto"
+                      >
+                        Crear versión con IA
+                      </button>
+                    </div>
                   </Card>
                 );
               })}
@@ -349,13 +413,24 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 >
                   <h3 className="text-sm font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
                   <div className="flex gap-1.5 flex-wrap mb-3">
+                    {r.type === 'presentacion_clase_visual' && <Badge color="orange" size="sm">Presentación</Badge>}
+                    {r.type === 'planificacion' && <Badge color="teal" size="sm">Planificación</Badge>}
                     {r.subject && <Badge color="teal" size="sm">{r.subject}</Badge>}
                     {r.level && <Badge color="indigo" size="sm">{r.level}</Badge>}
+                    {r.objective_code && <Badge color="amber" size="sm">{r.objective_code}</Badge>}
                   </div>
                   <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content}</p>
-                  <div className="flex items-center text-xs text-gray-400">
-                    <Clock size={11} strokeWidth={2.25} className="mr-1" />
-                    {formatDate(r.created_at)}
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                    <div className="flex items-center text-xs text-gray-400">
+                      <Clock size={11} strokeWidth={2.25} className="mr-1" />
+                      {formatDate(r.created_at)}
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-all"
+                    >
+                      Ver
+                    </button>
                   </div>
                 </Card>
               ))}
@@ -376,7 +451,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
 
       {detail && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-8 overflow-y-auto" onClick={() => setDetail(null)}>
-          <div className="max-w-2xl w-full animate-fade-in" onClick={e => e.stopPropagation()}>
+          <div className={detail.type === 'presentacion_clase_visual' ? 'max-w-5xl w-full animate-fade-in' : 'max-w-2xl w-full animate-fade-in'} onClick={e => e.stopPropagation()}>
           <Card
             variant="elevated"
             className="p-0 overflow-hidden"
@@ -385,20 +460,23 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-bold text-gray-900 leading-snug">{detail.title}</h2>
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  {detail.type === 'presentacion_clase_visual' && <Badge color="orange" size="sm">Presentación</Badge>}
                   {detail.subject && <Badge color="teal" size="sm">{detail.subject}</Badge>}
                   {detail.level && <Badge color="indigo" size="sm">{detail.level}</Badge>}
                   <span className="text-xs text-gray-400">{formatDate(detail.created_at)}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  iconLeft={copiedId === detail.id ? Check : Copy}
-                  onClick={() => handleCopy(detail.content, detail.id)}
-                >
-                  {copiedId === detail.id ? '¡Copiado!' : 'Copiar'}
-                </Button>
+                {detail.type !== 'presentacion_clase_visual' && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    iconLeft={copiedId === detail.id ? Check : Copy}
+                    onClick={() => handleCopy(detail.content, detail.id)}
+                  >
+                    {copiedId === detail.id ? '¡Copiado!' : 'Copiar'}
+                  </Button>
+                )}
                 <Button
                   variant="primary"
                   size="sm"
@@ -417,9 +495,22 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
               </div>
             </div>
             <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">
-              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {detail.content}
-              </div>
+              {detail.type === 'presentacion_clase_visual' ? (() => {
+                const slides = deserializeSlidesFromSave(detail.content);
+                if (!slides) {
+                  return <p className="text-sm text-gray-500">No se pudieron cargar las diapositivas.</p>;
+                }
+                return (
+                  <SlideLessonPreview
+                    lesson={slides}
+                    onExportPDF={() => exportToPDF(detail.title, detail.content)}
+                  />
+                );
+              })() : (
+                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{color:'#000000'}}>
+                  {detail.content}
+                </div>
+              )}
             </div>
           </Card>
           </div>

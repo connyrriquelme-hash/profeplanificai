@@ -924,3 +924,65 @@ button {
 .check-row input { width: auto; }
 .activity-json-editor { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 1.55; min-height: 420px; }
 @media (max-width: 1100px) { .curriculum-layout { grid-template-columns: 1fr; } .curriculum-results { max-height: 420px; } .curriculum-detail { position: static; max-height: none; } }
+
+/* Mobile-first responsive utilities */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Ensure minimum touch target size (44px WCAG) */
+@media (pointer: coarse) {
+  button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Mobile card grid stacking */
+@media (max-width: 640px) {
+  .grid-cols-2 { grid-template-columns: 1fr; }
+  .grid-cols-3 { grid-template-columns: 1fr; }
+  .grid-cols-4 { grid-template-columns: 1fr; }
+  .grid-cols-5 { grid-template-columns: 1fr 1fr; }
+  .lg\:grid-cols-3 { grid-template-columns: 1fr; }
+  .lg\:grid-cols-2 { grid-template-columns: 1fr; }
+  .xl\:grid-cols-4 { grid-template-columns: 1fr; }
+  .xl\:grid-cols-3 { grid-template-columns: 1fr; }
+  .gap-6 { gap: 12px; }
+  .gap-4 { gap: 10px; }
+}
+
+/* Mobile responsive table wrapper */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  table {
+    font-size: 12px;
+  }
+  table th, table td {
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+}
+
+/* Mobile text size improvements */
+@media (max-width: 640px) {
+  h1 { font-size: 1.25rem !important; }
+  h2 { font-size: 1.125rem !important; }
+  .text-xs { font-size: 11px; }
+}
+
+/* Mobile padding adjustments */
+@media (max-width: 640px) {
+  .p-6, .p-8 { padding: 16px; }
+  .px-6, .px-8 { padding-left: 16px; padding-right: 16px; }
+  .py-6, .py-8 { padding-top: 16px; padding-bottom: 16px; }
+}
+
+/* No-print for mobile nav */
+@media print {
+  .no-print { display: none !important; }
+}
+

@@ -10,18 +10,27 @@ import { buildCurriculumHeaderFromItem } from '../utils/curriculum';
 import { StatusBar } from './shared/StatusBar';
 import { ResultActions } from './shared/ResultActions';
 import { MaterialList } from './shared/MaterialList';
-import { Stepper } from './shared/Stepper';
-import { BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download, Copy, Check, BarChart3, ArrowRight, ArrowLeft } from 'lucide-react';
+import { BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download, Copy, Check } from 'lucide-react';
 import { AdaptarPanel } from './AdaptarPanel';
+import { EducationalImagesPanel } from './EducationalImagesPanel';
+import { md } from '../utils/htmlUtils';
 
 interface RecursosViewProps {
   onNavigate: (view: string) => void;
 }
 
-const STEPS = ['Contexto', 'Contenido (OA)', 'Personalización y DUA'];
+const MODOS = [
+  { id: 'oa_seleccionado', label: 'OA seleccionado', icon: '📘' },
+  { id: 'indicadores', label: 'Indicadores seleccionados', icon: '📋' },
+  { id: 'habilidad', label: 'Habilidad específica', icon: '🎯' },
+  { id: 'rezago', label: 'Estudiantes con rezago', icon: '🆘' },
+  { id: 'simce', label: 'Evaluación tipo SIMCE', icon: '📝' },
+  { id: 'dua', label: 'Actividad DUA', icon: '♿' },
+  { id: 'reforzamiento', label: 'Reforzamiento', icon: '🔄' },
+  { id: 'ampliacion', label: 'Ampliación para estudiantes avanzados', icon: '🚀' },
+];
 
 export function RecursosView({ onNavigate }: RecursosViewProps) {
-  const [step, setStep] = useState(1);
   const [selectedItem, setSelectedItem] = useState<CurriculumItem | null>(null);
   const [modo, setModo] = useState('oa_seleccionado');
   const [tipoRecurso, setTipoRecurso] = useState('Guía imprimible');
@@ -45,6 +54,7 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
     if (!selectedItem) return null;
     return getAutoSuggestions(selectedItem);
   }, [selectedItem]);
+  const renderedOutput = useMemo(() => md(output), [output]);
 
   useEffect(() => {
     setSavedMaterials(getMaterials().filter((m) => m.tipo === 'recurso'));
@@ -266,17 +276,6 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
     setShowSaved(false);
   };
 
-  const MODOS = [
-    { id: 'oa_seleccionado', label: 'OA seleccionado', icon: '📘' },
-    { id: 'indicadores', label: 'Indicadores seleccionados', icon: '📋' },
-    { id: 'habilidad', label: 'Habilidad específica', icon: '🎯' },
-    { id: 'rezago', label: 'Estudiantes con rezago', icon: '🆘' },
-    { id: 'simce', label: 'Evaluación tipo SIMCE', icon: '📝' },
-    { id: 'dua', label: 'Actividad DUA', icon: '♿' },
-    { id: 'reforzamiento', label: 'Reforzamiento', icon: '🔄' },
-    { id: 'ampliacion', label: 'Ampliación para estudiantes avanzados', icon: '🚀' },
-  ];
-
   return (
     <div className="view" id="recursos">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -295,13 +294,29 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
         </div>
       )}
 
-      <Stepper steps={STEPS} current={step} />
-
-      {step === 1 && (
+      <div className="two-col">
         <div className="card">
-          <h3>Paso 1: Contexto</h3>
-          <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Define el nivel, asignatura y tipo de recurso.</p>
-          <div className="grid">
+          <h3 style={{ marginBottom: 8 }}>Crear recurso a partir de</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
+            {MODOS.map((m) => (
+              <button
+                key={m.id}
+                className={`small ${modo === m.id ? 'primary' : 'ghost'}`}
+                onClick={() => setModo(m.id)}
+                style={{ fontSize: 12 }}
+              >
+                {m.icon} {m.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+            <div>
+              <label>Tipo de recurso</label>
+              <select value={tipoRecurso} onChange={(e) => setTipoRecurso(e.target.value)}>
+                {RECURSOS_TIPOS.map((t) => <option key={t.v}>{t.l}</option>)}
+              </select>
+            </div>
             <div>
               <label>Nivel</label>
               <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
@@ -315,10 +330,8 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
               </select>
             </div>
             <div>
-              <label>Tipo de recurso</label>
-              <select value={tipoRecurso} onChange={(e) => setTipoRecurso(e.target.value)}>
-                {RECURSOS_TIPOS.map((t) => <option key={t.v}>{t.l}</option>)}
-              </select>
+              <label>Eje</label>
+              <input value={eje} onChange={(e) => setEje(e.target.value)} placeholder="Ej.: Lectura" />
             </div>
             <div>
               <label>Dificultad</label>
@@ -327,125 +340,79 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
               </select>
             </div>
           </div>
-          <div className="btnrow" style={{ justifyContent: 'flex-end' }}>
-            <button className="primary" onClick={() => setStep(2)}>
-              Siguiente <ArrowRight size={14} />
+
+          <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            OA / contenido
+            <button className="small ghost" onClick={handleBuscarOA} style={{ fontSize: 11 }}>
+              <BookOpen size={10} /> Buscar en banco OA
+            </button>
+          </label>
+          <textarea
+            value={oa}
+            onChange={(e) => setOa(e.target.value)}
+            placeholder="Pega aquí el OA o descríbelo..."
+            style={{ minHeight: 50, fontSize: 13 }}
+          />
+
+          <label>Habilidad</label>
+          <input value={habilidad} onChange={(e) => setHabilidad(e.target.value)} placeholder="Ej.: Inferir, analizar, resolver..." />
+
+          <label>Indicadores de evaluación (uno por línea)</label>
+          <textarea
+            value={indicadores}
+            onChange={(e) => setIndicadores(e.target.value)}
+            placeholder="Escribe cada indicador en una línea..."
+            style={{ minHeight: 60, fontSize: 13 }}
+          />
+
+          <label>Necesidad pedagógica</label>
+          <textarea
+            value={necesidad}
+            onChange={(e) => setNecesidad(e.target.value)}
+            placeholder="Ej.: estudiantes con rezago lector, diversidad funcional, curso heterogéneo..."
+            style={{ minHeight: 50, fontSize: 13 }}
+          />
+
+          <div className="btnrow">
+            <button className="primary" onClick={handleGenerar}>
+              <Sparkles size={14} /> Generar recurso
             </button>
           </div>
         </div>
-      )}
 
-      {step === 2 && (
-        <div className="two-col">
-          <div className="card">
-            <h3>Paso 2: Contenido (OA)</h3>
-            <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Pega el OA ministerial o selecciona uno sugerido.</p>
-            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              OA / contenido
-              <button className="small ghost" onClick={handleBuscarOA} style={{ fontSize: 11 }}>
-                <BookOpen size={10} /> Buscar en banco OA
-              </button>
-            </label>
-            <textarea
-              value={oa}
-              onChange={(e) => setOa(e.target.value)}
-              placeholder="Pega el OA aquí o selecciona desde el Banco OA..."
-              style={{ minHeight: 50, fontSize: 13 }}
-            />
+        {suggestions && (
+          <div className="card" style={{ fontSize: 13 }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+              <Sparkles size={14} /> Sugerencias desde OA
+            </h3>
             {selectedItem && (
-              <div style={{ marginTop: 8, padding: 8, background: 'var(--surface)', borderRadius: 6, fontSize: 12 }}>
-                <code>{selectedItem.id}</code>
-                <span style={{ color: 'var(--muted)', marginLeft: 8 }}>{selectedItem.curso} · {selectedItem.eje}</span>
+              <div style={{ marginBottom: 6 }}>
+                <code style={{ fontSize: 11, color: 'var(--muted)' }}>{selectedItem.id}</code>
+                <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>{selectedItem.curso}</span>
               </div>
             )}
-            <div className="btnrow" style={{ justifyContent: 'space-between' }}>
-              <button className="ghost" onClick={() => setStep(1)}>
-                <ArrowLeft size={14} /> Atrás
-              </button>
-              <button className="primary" onClick={() => setStep(3)}>
-                Siguiente <ArrowRight size={14} />
-              </button>
+            <div style={{ marginBottom: 6 }}>
+              <label style={{ fontWeight: 600 }}>Propósito:</label>
+              <p style={{ color: 'var(--ink)' }}>{suggestions.proposito}</p>
             </div>
-          </div>
-          <div className="card no-print">
-            <h3>Modo / Habilidad / Indicadores</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
-              {MODOS.map((m) => (
-                <button
-                  key={m.id}
-                  className={`small ${modo === m.id ? 'primary' : 'ghost'}`}
-                  onClick={() => setModo(m.id)}
-                  style={{ fontSize: 12 }}
-                >
-                  {m.icon} {m.label}
-                </button>
-              ))}
+            <div style={{ marginBottom: 6 }}>
+              <label style={{ fontWeight: 600 }}>Recursos sugeridos:</label>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                {suggestions.recursosSugeridos.map((r, i) => <li key={i}>{r}</li>)}
+              </ul>
             </div>
-            <label>Habilidad</label>
-            <input value={habilidad} onChange={(e) => setHabilidad(e.target.value)} placeholder="Ej.: Inferir, analizar, resolver..." />
-            <label>Indicadores de evaluación (uno por línea)</label>
-            <textarea
-              value={indicadores}
-              onChange={(e) => setIndicadores(e.target.value)}
-              placeholder="Escribe cada indicador en una línea..."
-              style={{ minHeight: 60, fontSize: 13 }}
-            />
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="two-col">
-          <div className="card">
-            <h3>Paso 3: Personalización y DUA</h3>
-            <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>Agrega necesidad pedagógica y genera el recurso.</p>
-            <label>Necesidad pedagógica</label>
-            <textarea
-              value={necesidad}
-              onChange={(e) => setNecesidad(e.target.value)}
-              placeholder="Ej.: estudiantes con rezago lector, diversidad funcional, curso heterogéneo..."
-              style={{ minHeight: 50, fontSize: 13 }}
-            />
-            {suggestions && (
-              <div className="card" style={{ fontSize: 13, marginTop: 14 }}>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-                  <Sparkles size={14} /> Sugerencias desde OA
-                </h4>
-                {selectedItem && (
-                  <div style={{ marginBottom: 6 }}>
-                    <code style={{ fontSize: 11, color: 'var(--muted)' }}>{selectedItem.id}</code>
-                    <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>{selectedItem.curso} · {selectedItem.eje}</span>
-                  </div>
-                )}
-                <div style={{ marginBottom: 6 }}>
-                  <label style={{ fontWeight: 600 }}>Propósito:</label>
-                  <p style={{ color: 'var(--ink)' }}>{suggestions.proposito}</p>
-                </div>
-                <div style={{ marginBottom: 6 }}>
-                  <label style={{ fontWeight: 600 }}>Recursos sugeridos:</label>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
-                    {suggestions.recursosSugeridos.map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                </div>
-                <div style={{ marginBottom: 6 }}>
-                  <label style={{ fontWeight: 600 }}>DUA:</label>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
-                    {suggestions.adecuacionesDUA.map((d, i) => <li key={i}>{d}</li>)}
-                  </ul>
-                </div>
-              </div>
-            )}
-            <div className="btnrow" style={{ justifyContent: 'space-between', marginTop: 16 }}>
-              <button className="ghost" onClick={() => setStep(2)}>
-                <ArrowLeft size={14} /> Atrás
-              </button>
-              <button className="primary" onClick={handleGenerar} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} /> Generar recurso
-              </button>
+            <div style={{ marginBottom: 6 }}>
+              <label style={{ fontWeight: 600 }}>DUA:</label>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                {suggestions.adecuacionesDUA.map((d, i) => <li key={i}>{d}</li>)}
+              </ul>
             </div>
+            <button className="small secondary" onClick={handleBuscarOA}>
+              <BookOpen size={12} /> Cambiar OA
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -478,12 +445,23 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
           )}
         </div>
         <StatusBar message={status} type={statusType} />
+        <EducationalImagesPanel
+          content={output}
+          grade={nivel}
+          subject={asignatura}
+          oa={oa}
+          resourceTitle={tipoRecurso}
+          onContentChange={setOutput}
+          onStatus={(msg, type) => { setStatus(msg); setStatusType(type || ''); }}
+        />
         <div style={{
           background: 'var(--surface)', borderRadius: 8, padding: 14,
           maxHeight: 500, overflowY: 'auto', fontSize: 13, lineHeight: 1.6,
-          whiteSpace: 'pre-wrap', fontFamily: 'system-ui, sans-serif',
+          fontFamily: 'system-ui, sans-serif',
         }}>
-          {output || <p className="muted" style={{ fontStyle: 'italic' }}>El recurso generado aparecerá aquí...</p>}
+          {output
+            ? <div className="output" dangerouslySetInnerHTML={{ __html: renderedOutput }} />
+            : <p className="muted" style={{ fontStyle: 'italic' }}>El recurso generado aparecerá aquí...</p>}
         </div>
         <ResultActions
           contenido={output}

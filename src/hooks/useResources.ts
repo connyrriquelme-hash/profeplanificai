@@ -1,21 +1,34 @@
 import { useState, useCallback } from 'react';
+import { api } from '../services/apiClient';
 
-interface Resource {
+export interface Resource {
   id: string;
   user_id: string;
   title: string;
-  subject: string;
-  level: string;
+  type: string;
+  source: string;
   content: string;
+  level: string;
+  subject: string;
+  objective_code: string;
+  objective_text: string;
+  skill: string;
+  metadata_json: string;
   created_at: string;
+  updated_at: string;
 }
 
-interface ResourceInput {
+export interface ResourceInput {
   title: string;
-  subject: string;
-  level: string;
+  type?: string;
+  source?: string;
   content: string;
-  user_id: string;
+  level?: string;
+  subject?: string;
+  objectiveCode?: string;
+  objectiveText?: string;
+  skill?: string;
+  metadata?: Record<string, string>;
 }
 
 const API_URL = '/api/resources';
@@ -29,9 +42,7 @@ export function useResources() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error('Error al obtener recursos');
-      const data = await response.json();
+      const data = await api.get<{ data: Resource[] }>(API_URL);
       setResources(data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -40,17 +51,11 @@ export function useResources() {
     }
   }, []);
 
-  const saveResource = useCallback(async (data: ResourceInput) => {
+  const saveResource = useCallback(async (input: ResourceInput): Promise<Resource | undefined> => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Error al guardar recurso');
-      const result = await response.json();
+      const result = await api.post<{ data: Resource }>(API_URL, input);
       if (result.data) {
         setResources((prev) => [result.data, ...prev]);
       }
