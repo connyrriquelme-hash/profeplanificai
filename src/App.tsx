@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
+import { CurriculumProvider } from './contexts/CurriculumContext';
 import type { ViewType } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -12,6 +13,8 @@ import { CurriculumCloudView } from './components/CurriculumCloudView';
 import { LibraryView } from './components/LibraryView';
 import { BancoRecursosView } from './components/BancoRecursosView';
 import { EvaluacionesView } from './components/EvaluacionesView';
+import { SharedPanelView } from './components/SharedPanelView';
+import { SharedDocumentPublicView } from './components/SharedDocumentPublicView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -30,6 +33,11 @@ function AppContent() {
   const { user, loading, isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [viewState, setViewState] = useState<ViewState | null>(null);
+  const sharedToken = new URLSearchParams(window.location.search).get('shared');
+
+  if (sharedToken) {
+    return <SharedDocumentPublicView token={sharedToken} />;
+  }
 
   const handleViewChange = useCallback((view: string, state?: ViewState) => {
     setActiveView(view as ViewType);
@@ -51,6 +59,8 @@ function AppContent() {
         return <EvaluacionesView onNavigate={handleViewChange} />;
       case 'banco-recursos':
         return <BancoRecursosView initialTab={viewState?.tab as any} onNavigate={handleViewChange} />;
+      case 'panel-compartido':
+        return <SharedPanelView onNavigate={handleViewChange} />;
       case 'admin':
         return <AdminView />;
       default:
@@ -97,7 +107,9 @@ function AppContent() {
 export default function App() {
   return (
     <ProjectProvider>
-      <AppContent />
+      <CurriculumProvider>
+        <AppContent />
+      </CurriculumProvider>
     </ProjectProvider>
   );
 }
