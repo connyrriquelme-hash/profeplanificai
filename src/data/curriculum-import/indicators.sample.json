@@ -1,0 +1,12 @@
+[
+  {
+    "objectiveCode": "LE02 OA 05",
+    "indicators": [
+      { "text": "Localiza información explícita en un texto narrativo (personajes, lugar, tiempo).", "orderIndex": 1 },
+      { "text": "Infiere información simple a partir de pistas del texto.", "orderIndex": 2 },
+      { "text": "Responde preguntas literales e inferenciales sobre el texto leído.", "orderIndex": 3 },
+      { "text": "Opina sobre el comportamiento de personajes con fundamento.", "orderIndex": 4 },
+      { "text": "Identifica la secuencia narrativa (inicio, desarrollo, final).", "orderIndex": 5 }
+    ]
+  }
+]

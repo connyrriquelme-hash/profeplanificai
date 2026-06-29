@@ -1,0 +1,34 @@
+[
+  {
+    "level": "Educación Parvularia",
+    "grade": "Sala Cuna",
+    "track": "parvularia",
+    "subject": "Desarrollo Personal y Social",
+    "axis": "Ámbito de Autonomía",
+    "oa_code": "SC-OAT-01",
+    "skill": "Identifica gradualmente sus necesidades e intereses.",
+    "indicator_text": "Manifiesta sus necesidades e intereses a través de gestos, balbuceos o palabras según su etapa de desarrollo.",
+    "observable_action": "El/laEducador(a) observa y registra cuando el/la niña/o manifiesta una necesidad (hambre, sueño, juego) usando gestos o palabras.",
+    "evaluation_type": "formativa",
+    "evidence_type": "observacion",
+    "difficulty_level": "basico",
+    "source": "BASE NACIONAL PARA LA EDUCACIÓN PARVULARIA — MINEDUC Chile",
+    "status": "validado"
+  },
+  {
+    "level": "Educación Parvularia",
+    "grade": "Nivel Medio",
+    "track": "parvularia",
+    "subject": "Comunicación y Lenguaje",
+    "axis": "Ámbito de Comunicación",
+    "oa_code": "NM-OAT-03",
+    "skill": "Expresa oralmente sus ideas, necesidades y emociones.",
+    "indicator_text": "Utiliza palabras y frases simples para comunicar sus necesidades, deseos y emociones en conversaciones cotidianas.",
+    "observable_action": "El/laEducador(a) registra cuándo el/la niño/a usa palabras o frases para comunicar algo específico en el contexto del hogar o sala.",
+    "evaluation_type": "formativa",
+    "evidence_type": "observacion",
+    "difficulty_level": "basico",
+    "source": "BASE NACIONAL PARA LA EDUCACIÓN PARVULARIA — MINEDUC Chile",
+    "status": "validado"
+  }
+]

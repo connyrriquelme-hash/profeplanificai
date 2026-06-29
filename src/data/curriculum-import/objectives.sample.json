@@ -1,0 +1,14 @@
+[
+  {
+    "code": "LE02 OA 05",
+    "type": "OA",
+    "courseCode": "2B",
+    "subjectName": "Lenguaje y Comunicación",
+    "officialText": "Leer y comprender textos narrativos adecuados al nivel, localizando información explícita e infiriendo información simple.",
+    "normalizedText": "Leer y comprender textos narrativos adecuados al nivel, localizando información explícita e infiriendo información simple.",
+    "bloomLevel": "comprender",
+    "skillTags": ["Localizar información", "Inferir"],
+    "attitudeTags": ["Perseverancia en la lectura", "Valoración de la lectura"],
+    "sourceUrl": "https://www.curriculumnacional.cl/614/w3-propertyvalue-187786.html"
+  }
+]

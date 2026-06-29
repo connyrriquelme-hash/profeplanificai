@@ -1,0 +1,34 @@
+[
+  {
+    "level": "Educación Media",
+    "grade": "3° Medio",
+    "track": "tecnico_profesional",
+    "subject": "Programación y Desarrollo de Software",
+    "axis": "Módulo: Desarrollo de Aplicaciones Web",
+    "oa_code": "TP-PROG-3M-OAT-01",
+    "skill": "Diseña y desarrolla interfaces de usuario para aplicaciones web.",
+    "indicator_text": "Diseña y desarrolla interfaces de usuario responsivas usando HTML, CSS y JavaScript, aplicando principios de accesibilidad y experiencia de usuario.",
+    "observable_action": "El/La profesor(a) asigna el desarrollo de una página web responsiva y el/la estudiante entrega el código fuente funcionando con validación de accesibilidad.",
+    "evaluation_type": "sumativa",
+    "evidence_type": "desempeno",
+    "difficulty_level": "intermedio",
+    "source": "Currículum Nacional — MINEDUC Chile (Técnico Profesional)",
+    "status": "validado"
+  },
+  {
+    "level": "Educación Media",
+    "grade": "3° Medio",
+    "track": "tecnico_profesional",
+    "subject": "Programación y Desarrollo de Software",
+    "axis": "Módulo: Desarrollo de Aplicaciones Web",
+    "oa_code": "TP-PROG-3M-OAT-02",
+    "skill": "Implementa lógica de programación en aplicaciones.",
+    "indicator_text": "Implementa lógica de programación en aplicaciones web usando estructuras de control, funciones y manejo de eventos para resolver problemas específicos.",
+    "observable_action": "El/La profesor(a) plantea un problema funcional (formulario con validación) y el/la estudiante implementa la solución con código funcional documentado.",
+    "evaluation_type": "sumativa",
+    "evidence_type": "practica",
+    "difficulty_level": "intermedio",
+    "source": "Currículum Nacional — MINEDUC Chile (Técnico Profesional)",
+    "status": "validado"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "level": "Educación Media",
+    "grade": "2° Medio",
+    "track": "humanista_cientifico",
+    "subject": "Lengua y Literatura",
+    "axis": "Eje de Comprensión e Interpretación",
+    "oa_code": "LE-2M-HC OA 01",
+    "skill": "Analiza e interpreta textos literarios.",
+    "indicator_text": "Analiza la construcción del sentido en textos literarios chilenos e hispanoamericanos, identificando recursos estilísticos y la visión de mundo del autor.",
+    "observable_action": "El/La profesor(a) entrega un texto literario y el/la estudiante elabora un análisis escrito identificando recursos estilísticos y la intención del autor.",
+    "evaluation_type": "sumativa",
+    "evidence_type": "escrita",
+    "difficulty_level": "avanzado",
+    "source": "Currículum Nacional — MINEDUC Chile",
+    "status": "validado"
+  },
+  {
+    "level": "Educación Media",
+    "grade": "2° Medio",
+    "track": "humanista_cientifico",
+    "subject": "Historia, Geografía y Cs. Sociales",
+    "axis": "Eje de Tiempo y Cambio Histórico",
+    "oa_code": "HI-2M-HC OA 02",
+    "skill": "Análisis de procesos históricos.",
+    "indicator_text": "Analiza el proceso de formación del Estado Nacional chileno, identificando hitos fundamentales, causas, consecuencias y el rol de los actores sociales.",
+    "observable_action": "El/La profesor(a) propone una investigación sobre un hito histórico y el/la estudiante elabora un ensayo argumentativo con fuentes primarias y secundarias.",
+    "evaluation_type": "sumativa",
+    "evidence_type": "escrita",
+    "difficulty_level": "avanzado",
+    "source": "Currículum Nacional — MINEDUC Chile",
+    "status": "validado"
+  }
+]

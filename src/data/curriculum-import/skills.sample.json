@@ -1,0 +1,10 @@
+[
+  {
+    "objectiveCode": "LE02 OA 05",
+    "skills": [
+      { "text": "Localizar información explícita", "category": "comprensión", "orderIndex": 1 },
+      { "text": "Inferir información implícita", "category": "comprensión", "orderIndex": 2 },
+      { "text": "Opinar con fundamento", "category": "evaluación", "orderIndex": 3 }
+    ]
+  }
+]
