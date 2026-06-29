@@ -24,7 +24,7 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
   }, [onNavigate]);
 
   return (
-    <header className="sticky top-0 z-20 glass border-b border-theme-gray/30 px-3 sm:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 bg-theme-beige/80 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-slate-200/80 px-3 sm:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 bg-white/90 backdrop-blur-xl">
       {title && (
         <h1 className="text-base sm:text-lg font-semibold text-theme-text lg:hidden">{title}</h1>
       )}

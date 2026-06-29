@@ -4,17 +4,17 @@ import type { LucideIcon } from 'lucide-react';
 
 const variantStyles: Record<string, string> = {
   primary:
-    'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200/40',
+    'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 shadow-md shadow-violet-200/50 hover:shadow-lg hover:shadow-violet-200/60 active:scale-[0.98]',
   secondary:
-    'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900',
+    'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
   ghost:
-    'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+    'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900',
   outline:
-    'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300',
+    'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
   premium:
-    'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-200/50 hover:shadow-lg hover:shadow-indigo-200/60 hover:from-indigo-700 hover:to-violet-700',
+    'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-200/50 hover:shadow-xl hover:shadow-violet-200/60 hover:from-violet-600 hover:to-fuchsia-600 active:scale-[0.98]',
   danger:
-    'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:border-red-300',
+    'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 hover:border-red-200',
 };
 
 const sizeStyles: Record<string, string> = {
@@ -53,7 +53,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type="button"
         disabled={isDisabled}
-        className={`inline-flex items-center justify-center font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo500/40 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`inline-flex items-center justify-center font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {loading ? (
