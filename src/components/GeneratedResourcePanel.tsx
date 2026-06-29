@@ -40,8 +40,8 @@ function sanitizeHtml(str: string): string {
 function renderMarkdownLine(line: string): React.ReactNode {
   const sanitized = sanitizeHtml(line);
   const html = sanitized
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#081849] font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em class="text-[#081849] italic opacity-80">$1</em>');
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-theme-text font-semibold">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em class="text-theme-text italic opacity-80">$1</em>');
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -77,7 +77,7 @@ function MarkdownTable({ lines }: { lines: string[] }) {
         <thead>
           <tr className="bg-theme-primary/5 border-b border-theme-gray/30">
             {headers.map((h, i) => (
-              <th key={i} className="px-4 py-3 font-semibold text-[#081849] whitespace-nowrap">
+              <th key={i} className="px-4 py-3 font-semibold text-theme-primary whitespace-nowrap">
                 {renderMarkdownLine(h)}
               </th>
             ))}
@@ -87,7 +87,7 @@ function MarkdownTable({ lines }: { lines: string[] }) {
           {rows.map((row, ri) => (
             <tr key={ri} className="border-b border-theme-gray/20 last:border-0 hover:bg-theme-beige/50 transition-colors">
               {row.map((cell, ci) => (
-                <td key={ci} className="px-4 py-3 text-[#081849] whitespace-nowrap">
+                <td key={ci} className="px-4 py-3 text-theme-text whitespace-nowrap">
                   {renderMarkdownLine(cell)}
                 </td>
               ))}
@@ -365,8 +365,8 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
         </Card>
       ) : (
         <Card variant="elevated" className="p-4 sm:p-6 lg:p-8 xl:p-10">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8 lg:p-10 xl:p-12">
-            <div className="max-w-none text-[#081849] leading-relaxed space-y-1">
+          <div className="bg-white rounded-xl border border-theme-gray/30 shadow-sm p-6 sm:p-8 lg:p-10 xl:p-12">
+            <div className="max-w-none text-theme-text leading-relaxed space-y-1">
               {(() => {
                 const elements: React.ReactNode[] = [];
                 let i = 0;
@@ -383,30 +383,30 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
                     elements.push(<MarkdownTable key={`table-${elements.length}`} lines={tableLines} />);
                   } else {
                     if (line.startsWith('# ')) {
-                      elements.push(<h1 key={i} className="text-2xl sm:text-3xl font-bold text-[#081849] mb-6 pb-4 border-b border-gray-100 tracking-tight">{line.replace(/^# /, '')}</h1>);
+                      elements.push(<h1 key={i} className="text-2xl sm:text-3xl font-bold text-theme-text mb-6 pb-4 border-b border-theme-gray/30 tracking-tight">{line.replace(/^# /, '')}</h1>);
                     } else if (line.startsWith('## ')) {
-                      elements.push(<h2 key={i} className="text-xl font-bold text-[#081849] mt-8 mb-4 pb-2 border-b border-gray-100 tracking-tight">{line.replace(/^## /, '')}</h2>);
+                      elements.push(<h2 key={i} className="text-xl font-bold text-theme-text mt-8 mb-4 pb-2 border-b border-theme-gray/30 tracking-tight">{line.replace(/^## /, '')}</h2>);
                     } else if (line.startsWith('### ')) {
-                      elements.push(<h3 key={i} className="text-base font-semibold text-[#081849] mt-6 mb-3">{line.replace(/^### /, '')}</h3>);
+                      elements.push(<h3 key={i} className="text-base font-semibold text-theme-text mt-6 mb-3">{line.replace(/^### /, '')}</h3>);
                     } else if (line.startsWith('- ')) {
                       elements.push(
-                        <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-[#081849] leading-relaxed mb-1">
+                        <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-theme-text leading-relaxed mb-1">
                           <li>{line.replace(/^- /, '')}</li>
                         </ul>
                       );
                     } else if (/^\d+\.\s/.test(line)) {
                       const content = line.replace(/^\d+\.\s/, '');
                       elements.push(
-                        <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-[#081849] leading-relaxed mb-1">
+                        <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-theme-text leading-relaxed mb-1">
                           <li>{content}</li>
                         </ol>
                       );
                     } else if (line.trim() === '---' || line.trim() === '***') {
-                      elements.push(<hr key={i} className="my-8 border-gray-200" />);
+                      elements.push(<hr key={i} className="my-8 border-theme-gray/30" />);
                     } else if (line.trim() === '') {
                       elements.push(<div key={i} className="h-3 sm:h-4" />);
                     } else {
-                      elements.push(<p key={i} className="text-sm sm:text-base text-[#081849] leading-relaxed mb-2">{renderMarkdownLine(line)}</p>);
+                      elements.push(<p key={i} className="text-sm sm:text-base text-theme-text leading-relaxed mb-2">{renderMarkdownLine(line)}</p>);
                     }
                     i++;
                   }
