@@ -6,7 +6,8 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
   const grade = url.searchParams.get('grade') || '';
   const subject = url.searchParams.get('subject') || '';
   const oaCode = url.searchParams.get('oa_code') || '';
-  const skill = url.searchParams.get('skill') || '';
+  const objectiveId = url.searchParams.get('objective_id') || '';
+  const skillId = url.searchParams.get('skill_id') || '';
   const track = url.searchParams.get('track') || '';
   const status = url.searchParams.get('status') || '';
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), 500);
@@ -19,9 +20,10 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
   if (grade) { conditions.push('ci.grade = ?'); params.push(grade); }
   if (subject) { conditions.push('ci.subject = ?'); params.push(subject); }
   if (oaCode) { conditions.push('ci.oa_code = ?'); params.push(oaCode); }
+  if (objectiveId) { conditions.push('ci.objective_id = ?'); params.push(objectiveId); }
+  if (skillId) { conditions.push('ci.skill_id = ?'); params.push(skillId); }
   if (track) { conditions.push('ci.track = ?'); params.push(track); }
   if (status) { conditions.push('ci.status = ?'); params.push(status); }
-  if (skill) { conditions.push('ci.skill_id = ?'); params.push(skill); }
 
   const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
@@ -31,8 +33,8 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     `).bind(...params).first<{ total: number }>();
 
     const results = await context.env.DB.prepare(`
-      SELECT ci.*, 
-        o.official_text as oa_text, 
+      SELECT ci.*,
+        o.official_text as oa_text,
         o.code as objective_code,
         s.official_text as skill_text,
         s.code as skill_code,

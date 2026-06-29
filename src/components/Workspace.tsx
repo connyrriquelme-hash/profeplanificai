@@ -52,6 +52,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
   const [selectedAsignatura, setSelectedAsignatura] = useState('');
   const [selectedOA, setSelectedOA] = useState<CurriculumItem | null>(null);
   const [selectedHabilidad, setSelectedHabilidad] = useState('');
+  const [selectedInds, setSelectedInds] = useState<Set<number>>(new Set());
   const [oaSearch, setOaSearch] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [shareResult, setShareResult] = useState<{ shareUrl: string; copied: boolean } | null>(null);
@@ -136,6 +137,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
     setIndicadores(selectedOA.indicadores.map(i => `• ${i}`).join('\n'));
     updateProjectField('indicadores', selectedOA.indicadores.map(i => `• ${i}`).join('\n'));
     setSelectedHabilidad(selectedOA.habilidades[0] || '');
+    setSelectedInds(new Set(selectedOA.indicadores.map((_, i) => i)));
     updateProjectField('oa_id', resolveObjectiveRealCode(selectedOA));
     updateProjectField('indicadores_raw', JSON.stringify(selectedOA.indicadores));
     updateProjectField('nivel', selectedNivel);
@@ -291,7 +293,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         subject: selectedAsignatura,
         objectiveCode: resolveObjectiveRealCode(selectedOA),
         objectiveText: selectedOA.oa_texto,
-        indicators: selectedOA.indicadores || [],
+        indicators: selectedOA.indicadores.filter((_, i) => selectedInds.has(i)),
         skills: curricularContext?.skills?.map(s => s.text) || [selectedHabilidad || selectedOA.habilidades[0] || ''],
         attitudes: curricularContext?.attitudes?.map(a => a.text) || [],
         textbookRefs: (curricularContext?.textbookReferences || []).map(ref => ({
@@ -670,11 +672,24 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                 <div>
                   <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--muted2)' }}>
                     Indicadores
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700">Derivado por IA</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700">{selectedInds.size}/{selectedOA.indicadores.length}</span>
                   </div>
-                  <ul className="list-disc pl-4 space-y-0.5">
-                    {selectedOA.indicadores.map((ind, i) => <li key={i}>{ind}</li>)}
-                  </ul>
+                  <div className="flex gap-1 mb-1">
+                    <button onClick={() => setSelectedInds(new Set(selectedOA.indicadores.map((_, i) => i)))} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Todo</button>
+                    <button onClick={() => setSelectedInds(new Set())} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Ninguno</button>
+                  </div>
+                  <div className="space-y-0.5 max-h-32 overflow-y-auto">
+                    {selectedOA.indicadores.map((ind, i) => (
+                      <label key={i} className="flex items-start gap-1.5 cursor-pointer text-[11px]" style={{ color: 'var(--ink2)' }}>
+                        <input type="checkbox" checked={selectedInds.has(i)} onChange={() => {
+                          const next = new Set(selectedInds);
+                          next.has(i) ? next.delete(i) : next.add(i);
+                          setSelectedInds(next);
+                        }} className="mt-0.5" />
+                        <span>{ind}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="text-[11px] italic" style={{ color: 'var(--muted2)' }}>Indicadores aún no cargados para este OA</div>
