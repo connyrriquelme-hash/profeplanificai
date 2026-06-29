@@ -1,5 +1,5 @@
 import PptxGenJS from 'pptxgenjs';
-import type { SlideLesson, Slide, SlideType } from '../types/slideLesson';
+import type { SlideLesson, Slide, SlideType, SlideDiagram, SlideTable } from '../types/slideLesson';
 
 const SLIDE_WIDTH = 13.333;
 const SLIDE_HEIGHT = 7.5;
@@ -100,6 +100,173 @@ function addImage(slide: PptxGenJS.Slide, imageUrl: string, opts: PptxGenJS.Imag
     }
   } catch {
     // Silently ignore broken images
+  }
+}
+
+const DIAGRAM_COLORS = ['213885', '5F3475', '893172', '3B82F6', '10B981', 'F59E0B'];
+
+function addProcessDiagram(slide: PptxGenJS.Slide, diagram: SlideDiagram) {
+  const nodeW = 1.8;
+  const nodeH = 0.8;
+  const gap = 0.4;
+  const arrowW = 0.5;
+  const totalW = diagram.nodes.length * nodeW + (diagram.nodes.length - 1) * (gap + arrowW);
+  const startX = (SLIDE_WIDTH - totalW) / 2;
+  const y = (SLIDE_HEIGHT - nodeH) / 2;
+
+  diagram.nodes.forEach((node, i) => {
+    const x = startX + i * (nodeW + gap + arrowW);
+    const color = DIAGRAM_COLORS[i % DIAGRAM_COLORS.length];
+
+    slide.addShape('roundRect', {
+      x, y, w: nodeW, h: nodeH,
+      fill: { color },
+      rectRadius: 0.1,
+      shadow: { type: 'outer', blur: 4, offset: 2, color: '000000', opacity: 0.3 },
+    });
+
+    slide.addText(node.label, {
+      x, y, w: nodeW, h: nodeH,
+      fontSize: 11, color: 'FFFFFF', bold: true,
+      align: 'center', valign: 'middle', fontFace: 'Arial',
+    });
+
+    if (i < diagram.nodes.length - 1) {
+      const arrowX = x + nodeW;
+      slide.addShape('rightArrow', {
+        x: arrowX, y: y + nodeH / 2 - 0.15, w: arrowW, h: 0.3,
+        fill: { color: 'CCCACC' },
+      });
+    }
+  });
+}
+
+function addCycleDiagram(slide: PptxGenJS.Slide, diagram: SlideDiagram) {
+  const cx = SLIDE_WIDTH / 2;
+  const cy = SLIDE_HEIGHT / 2;
+  const radius = 2.2;
+  const nodeR = 0.7;
+
+  diagram.nodes.forEach((node, i) => {
+    const angle = (2 * Math.PI * i) / diagram.nodes.length - Math.PI / 2;
+    const x = cx + radius * Math.cos(angle) - nodeR / 2;
+    const y = cy + radius * Math.sin(angle) - nodeR / 2;
+    const color = DIAGRAM_COLORS[i % DIAGRAM_COLORS.length];
+
+    slide.addShape('ellipse', {
+      x, y, w: nodeR, h: nodeR,
+      fill: { color },
+      shadow: { type: 'outer', blur: 4, offset: 2, color: '000000', opacity: 0.3 },
+    });
+
+    slide.addText(node.label, {
+      x: x - 0.3, y: y - 0.2, w: nodeR + 0.6, h: nodeR + 0.4,
+      fontSize: 9, color: 'FFFFFF', bold: true,
+      align: 'center', valign: 'middle', fontFace: 'Arial',
+    });
+  });
+}
+
+function addHierarchyDiagram(slide: PptxGenJS.Slide, diagram: SlideDiagram) {
+  const nodeW = 1.5;
+  const nodeH = 0.6;
+  const levelH = 1.0;
+
+  diagram.nodes.forEach((node, i) => {
+    const level = i === 0 ? 0 : Math.floor(Math.log2(i + 1));
+    const nodesInLevel = diagram.nodes.filter((_, idx) => {
+      if (idx === 0) return level === 0;
+      return Math.floor(Math.log2(idx + 1)) === level;
+    });
+    const posInLevel = nodesInLevel.indexOf(node);
+    const totalInLevel = nodesInLevel.length;
+
+    const x = (SLIDE_WIDTH - totalInLevel * (nodeW + 0.3)) / 2 + posInLevel * (nodeW + 0.3);
+    const y = 1.0 + level * levelH;
+    const color = DIAGRAM_COLORS[i % DIAGRAM_COLORS.length];
+
+    slide.addShape('roundRect', {
+      x, y, w: nodeW, h: nodeH,
+      fill: { color },
+      rectRadius: 0.08,
+      shadow: { type: 'outer', blur: 3, offset: 1, color: '000000', opacity: 0.25 },
+    });
+
+    slide.addText(node.label, {
+      x, y, w: nodeW, h: nodeH,
+      fontSize: 10, color: 'FFFFFF', bold: true,
+      align: 'center', valign: 'middle', fontFace: 'Arial',
+    });
+
+    if (i > 0) {
+      const parentIdx = Math.floor((i - 1) / 2);
+      const parentNode = diagram.nodes[parentIdx];
+      if (parentNode) {
+        const pLevel = parentIdx === 0 ? 0 : Math.floor(Math.log2(parentIdx + 1));
+        const pNodesInLevel = diagram.nodes.filter((_, idx) => {
+          if (idx === 0) return pLevel === 0;
+          return Math.floor(Math.log2(idx + 1)) === pLevel;
+        });
+        const pPosInLevel = pNodesInLevel.indexOf(parentNode);
+        const pTotalInLevel = pNodesInLevel.length;
+        const px = (SLIDE_WIDTH - pTotalInLevel * (nodeW + 0.3)) / 2 + pPosInLevel * (nodeW + 0.3) + nodeW / 2;
+        const py = 1.0 + pLevel * levelH + nodeH;
+
+        slide.addShape('line', {
+          x: px, y: py, w: 0, h: levelH - nodeH,
+          line: { color: 'CCCACC', width: 1.5 },
+        });
+      }
+    }
+  });
+}
+
+function addTableToSlide(slide: PptxGenJS.Slide, table: SlideTable) {
+  const startX = 1.0;
+  const startY = 1.5;
+  const colW = Math.min(2.5, (SLIDE_WIDTH - 2.0) / table.headers.length);
+
+  const headerRow = table.headers.map(h => ({
+    text: h,
+    options: { fontSize: 11, bold: true, color: 'FFFFFF', fontFace: 'Arial', align: 'center' as const, valign: 'middle' as const },
+  }));
+
+  const dataRows = table.rows.map(row =>
+    row.map(cell => ({
+      text: cell,
+      options: { fontSize: 10, color: '1A1A2E', fontFace: 'Arial', align: 'left' as const, valign: 'middle' as const },
+    }))
+  );
+
+  slide.addTable([headerRow, ...dataRows], {
+    x: startX, y: startY,
+    w: colW * table.headers.length,
+    colW: Array(table.headers.length).fill(colW),
+    border: { type: 'solid', pt: 0.5, color: 'CCCACC' },
+    rowH: [0.5, ...Array(table.rows.length).fill(0.4)],
+    autoPage: false,
+  });
+}
+
+function addDiagramOrTable(slide: PptxGenJS.Slide, slideData: Slide) {
+  if (slideData.diagram) {
+    const diagram = slideData.diagram;
+    switch (diagram.type) {
+      case 'process':
+        addProcessDiagram(slide, diagram);
+        break;
+      case 'cycle':
+        addCycleDiagram(slide, diagram);
+        break;
+      case 'hierarchy':
+        addHierarchyDiagram(slide, diagram);
+        break;
+      case 'comparison':
+        addProcessDiagram(slide, diagram);
+        break;
+    }
+  } else if (slideData.table) {
+    addTableToSlide(slide, slideData.table);
   }
 }
 
@@ -262,6 +429,9 @@ export async function exportLessonToPPTX(
         // Silently ignore broken images
       }
     }
+
+    // Diagram or Table
+    addDiagramOrTable(slide, slideData);
 
     // Speaker Notes
     if (slideData.speakerNotes) {

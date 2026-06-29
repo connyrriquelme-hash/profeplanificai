@@ -45,6 +45,60 @@ function renderMarkdownLine(line: string): React.ReactNode {
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+interface ParsedTable {
+  headers: string[];
+  rows: string[][];
+}
+
+function parseMarkdownTable(lines: string[]): ParsedTable {
+  const headers: string[] = [];
+  const rows: string[][] = [];
+
+  lines.forEach((line, idx) => {
+    const cells = line.split('|').map(c => c.trim()).filter(c => c !== '');
+    if (idx === 0) {
+      headers.push(...cells);
+    } else if (cells.every(c => /^[-:]+$/.test(c))) {
+      return;
+    } else {
+      rows.push(cells);
+    }
+  });
+
+  return { headers, rows };
+}
+
+function MarkdownTable({ lines }: { lines: string[] }) {
+  const { headers, rows } = parseMarkdownTable(lines);
+
+  return (
+    <div className="overflow-x-auto my-4 rounded-xl border border-theme-gray/30 shadow-sm">
+      <table className="w-full text-sm text-left">
+        <thead>
+          <tr className="bg-theme-primary/5 border-b border-theme-gray/30">
+            {headers.map((h, i) => (
+              <th key={i} className="px-4 py-3 font-semibold text-theme-primary whitespace-nowrap">
+                {renderMarkdownLine(h)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} className="border-b border-theme-gray/20 last:border-0 hover:bg-theme-beige/50 transition-colors">
+              {row.map((cell, ci) => (
+                <td key={ci} className="px-4 py-3 text-theme-text whitespace-nowrap">
+                  {renderMarkdownLine(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRegenerate, slideLesson, creativeImage }: GeneratedResourcePanelProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -305,42 +359,53 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
         <Card variant="elevated" className="p-4 sm:p-6 lg:p-8 xl:p-10">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8 lg:p-10 xl:p-12">
             <div className="max-w-none text-slate-800 leading-relaxed space-y-1">
-              {bodyLines.map((line, i) => {
-                if (line.startsWith('# ')) {
-                  return <h1 key={i} className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100 tracking-tight">{line.replace(/^# /, '')}</h1>;
+              {(() => {
+                const elements: React.ReactNode[] = [];
+                let i = 0;
+
+                while (i < bodyLines.length) {
+                  const line = bodyLines[i];
+
+                  if (line.startsWith('| ')) {
+                    const tableLines: string[] = [];
+                    while (i < bodyLines.length && bodyLines[i].startsWith('| ')) {
+                      tableLines.push(bodyLines[i]);
+                      i++;
+                    }
+                    elements.push(<MarkdownTable key={`table-${elements.length}`} lines={tableLines} />);
+                  } else {
+                    if (line.startsWith('# ')) {
+                      elements.push(<h1 key={i} className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100 tracking-tight">{line.replace(/^# /, '')}</h1>);
+                    } else if (line.startsWith('## ')) {
+                      elements.push(<h2 key={i} className="text-xl font-bold text-gray-900 mt-8 mb-4 pb-2 border-b border-gray-100 tracking-tight">{line.replace(/^## /, '')}</h2>);
+                    } else if (line.startsWith('### ')) {
+                      elements.push(<h3 key={i} className="text-base font-semibold text-gray-900 mt-6 mb-3">{line.replace(/^### /, '')}</h3>);
+                    } else if (line.startsWith('- ')) {
+                      elements.push(
+                        <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
+                          <li>{line.replace(/^- /, '')}</li>
+                        </ul>
+                      );
+                    } else if (/^\d+\.\s/.test(line)) {
+                      const content = line.replace(/^\d+\.\s/, '');
+                      elements.push(
+                        <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
+                          <li>{content}</li>
+                        </ol>
+                      );
+                    } else if (line.trim() === '---' || line.trim() === '***') {
+                      elements.push(<hr key={i} className="my-8 border-gray-200" />);
+                    } else if (line.trim() === '') {
+                      elements.push(<div key={i} className="h-3 sm:h-4" />);
+                    } else {
+                      elements.push(<p key={i} className="text-sm sm:text-base text-slate-700 leading-relaxed mb-2">{renderMarkdownLine(line)}</p>);
+                    }
+                    i++;
+                  }
                 }
-                if (line.startsWith('## ')) {
-                  return <h2 key={i} className="text-xl font-bold text-gray-900 mt-8 mb-4 pb-2 border-b border-gray-100 tracking-tight">{line.replace(/^## /, '')}</h2>;
-                }
-                if (line.startsWith('### ')) {
-                  return <h3 key={i} className="text-base font-semibold text-gray-900 mt-6 mb-3">{line.replace(/^### /, '')}</h3>;
-                }
-                if (line.startsWith('- ')) {
-                  return (
-                    <ul key={i} className="list-disc ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
-                      <li>{line.replace(/^- /, '')}</li>
-                    </ul>
-                  );
-                }
-                if (/^\d+\.\s/.test(line)) {
-                  const content = line.replace(/^\d+\.\s/, '');
-                  return (
-                    <ol key={i} className="list-decimal ml-6 text-sm sm:text-base text-slate-700 leading-relaxed mb-1">
-                      <li>{content}</li>
-                    </ol>
-                  );
-                }
-                if (line.startsWith('| ')) {
-                  return null;
-                }
-                if (line.trim() === '---' || line.trim() === '***') {
-                  return <hr key={i} className="my-8 border-gray-200" />;
-                }
-                if (line.trim() === '') {
-                  return <div key={i} className="h-3 sm:h-4" />;
-                }
-                return <p key={i} className="text-sm sm:text-base text-slate-700 leading-relaxed mb-2">{renderMarkdownLine(line)}</p>;
-              })}
+
+                return elements;
+              })()}
             </div>
           </div>
         </Card>

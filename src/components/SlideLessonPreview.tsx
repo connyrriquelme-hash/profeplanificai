@@ -4,7 +4,7 @@ import {
   BookOpen, BrainCircuit, Lightbulb, Users, Edit3,
   ClipboardCheck, Flag, Target, CheckCircle2, HelpCircle,
   Heart, Star, Sparkles, ImagePlus, ChevronDown, ChevronUp, Loader2,
-  AlertTriangle, CheckCircle,
+  AlertTriangle, CheckCircle, LayoutGrid,
 } from 'lucide-react';
 import type { SlideLesson } from '../types/slideLesson';
 import type { VisualLessonDeck, LessonSlide, SlideLayout, SlidePalette, SlideVisual } from '../types/presentation';
@@ -13,6 +13,7 @@ import { generateImagesForDeck, replaceSlideImage } from '../services/slideImage
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { SmartArt } from './ui/SmartArt';
 
 interface SlideLessonPreviewProps {
   lesson: SlideLesson;
@@ -404,6 +405,74 @@ function renderReflection(slide: LessonSlide, deck: VisualLessonDeck) {
 
 // ── Layout dispatch ─────────────────────────────────────────────────────────
 
+function renderDiagramProcess(slide: LessonSlide, _deck: VisualLessonDeck): React.ReactNode {
+  if (!slide.diagram) return null;
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8">
+      <SmartArt type="process" nodes={slide.diagram.nodes} edges={slide.diagram.edges} />
+    </div>
+  );
+}
+
+function renderDiagramCycle(slide: LessonSlide, _deck: VisualLessonDeck): React.ReactNode {
+  if (!slide.diagram) return null;
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8">
+      <SmartArt type="cycle" nodes={slide.diagram.nodes} />
+    </div>
+  );
+}
+
+function renderDiagramHierarchy(slide: LessonSlide, _deck: VisualLessonDeck): React.ReactNode {
+  if (!slide.diagram) return null;
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8">
+      <SmartArt type="hierarchy" nodes={slide.diagram.nodes} />
+    </div>
+  );
+}
+
+function renderComparison(slide: LessonSlide, _deck: VisualLessonDeck): React.ReactNode {
+  if (!slide.diagram) return null;
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8">
+      <SmartArt type="comparison" nodes={slide.diagram.nodes} />
+    </div>
+  );
+}
+
+function renderTableView(slide: LessonSlide, _deck: VisualLessonDeck): React.ReactNode {
+  if (!slide.table) return null;
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8">
+      <div className="w-full max-w-3xl overflow-x-auto rounded-xl border border-white/10 shadow-lg">
+        <table className="w-full text-sm text-left">
+          <thead>
+            <tr className="bg-white/10 backdrop-blur-sm border-b border-white/10">
+              {slide.table.headers.map((h, i) => (
+                <th key={i} className="px-4 py-3 font-semibold text-white/90 whitespace-nowrap">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {slide.table.rows.map((row, ri) => (
+              <tr key={ri} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-4 py-3 text-white/80 whitespace-nowrap">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 const LAYOUT_RENDERERS: Record<SlideLayout, (slide: LessonSlide, deck: VisualLessonDeck) => React.ReactNode> = {
   'cover-hero': renderCoverHero,
   'split-image-right': renderSplitImageRight,
@@ -415,6 +484,11 @@ const LAYOUT_RENDERERS: Record<SlideLayout, (slide: LessonSlide, deck: VisualLes
   quote: renderChecklist,
   checklist: renderChecklist,
   reflection: renderReflection,
+  'diagram-process': renderDiagramProcess,
+  'diagram-cycle': renderDiagramCycle,
+  'diagram-hierarchy': renderDiagramHierarchy,
+  comparison: renderComparison,
+  'table-view': renderTableView,
 };
 
 function renderSlide(layout: SlideLayout, slide: LessonSlide, deck: VisualLessonDeck): React.ReactNode {
