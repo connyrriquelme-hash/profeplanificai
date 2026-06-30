@@ -10,6 +10,7 @@ import {
   generateId,
 } from '../services/storageService';
 import { NIVELES, ASIGNATURAS } from '../types';
+import { getCourses, getSubjects } from '../services/curriculumD1Service';
 import { mdToHtml } from '../utils/htmlUtils';
 
 const TIPOS_PUBLICACION = [
@@ -29,9 +30,13 @@ export function ColaboracionView() {
     asignatura: '',
   });
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
+  const [d1Courses, setD1Courses] = useState<any[]>([]);
+  const [d1Subjects, setD1Subjects] = useState<any[]>([]);
 
   useEffect(() => {
     setPosts(getCollabPosts());
+    getCourses().then(setD1Courses).catch(() => {});
+    getSubjects().then(subs => setD1Subjects(subs.filter((s: any) => (s.objective_count || 0) > 0))).catch(() => {});
   }, []);
 
   const handlePublish = () => {
@@ -124,7 +129,8 @@ export function ColaboracionView() {
                 onChange={(e) => setNewPost((p) => ({ ...p, nivel: e.target.value }))}
               >
                 <option value="">Seleccionar</option>
-                {NIVELES.map((n) => <option key={n}>{n}</option>)}
+                {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.name}>{c.name} ({c.objective_count} OA)</option>)}
+                {NIVELES.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div>
@@ -134,6 +140,7 @@ export function ColaboracionView() {
                 onChange={(e) => setNewPost((p) => ({ ...p, asignatura: e.target.value }))}
               >
                 <option value="">Seleccionar</option>
+                {d1Subjects.map((s: any) => <option key={s.id} value={s.name}>{s.name} ({s.objective_count})</option>)}
                 {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
