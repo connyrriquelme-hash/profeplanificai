@@ -58,6 +58,8 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
   const [d1Objectives, setD1Objectives] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState('');
+  const [selectedD1Objective, setSelectedD1Objective] = useState<any | null>(null);
   const [loadingD1, setLoadingD1] = useState(false);
 
   // Load D1 courses on mount
@@ -398,13 +400,19 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
             <div>
               <label>Objetivos D1 ({d1Objectives.length} disponibles)</label>
               <select
-                value=""
+                value={selectedObjectiveId}
                 onChange={(e) => {
-                  const obj = d1Objectives.find((o: any) => o.id === e.target.value);
+                  const objId = e.target.value;
+                  setSelectedObjectiveId(objId);
+                  const obj = d1Objectives.find((o: any) => String(o.id) === String(objId));
                   if (obj) {
-                    const fullText = `${obj.code} — ${obj.official_text || ''}`.trim();
-                    setOa(fullText);
+                    setSelectedD1Objective(obj);
+                    const code = obj.code || '';
+                    const text = obj.official_text || '';
+                    setOa(`${code} — ${text}`.trim());
                     setSelectedItem(null);
+                  } else {
+                    setSelectedD1Objective(null);
                   }
                 }}
               >
