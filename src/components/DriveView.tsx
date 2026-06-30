@@ -9,6 +9,7 @@ import {
   generateId,
 } from '../services/storageService';
 import { NIVELES, ASIGNATURAS } from '../types';
+import { getCourses, getSubjects } from '../services/curriculumD1Service';
 
 export function DriveView() {
   const [items, setItems] = useState<DriveItem[]>([]);
@@ -18,9 +19,13 @@ export function DriveView() {
   const [uploadContent, setUploadContent] = useState('');
   const [uploadNivel, setUploadNivel] = useState('');
   const [uploadAsig, setUploadAsig] = useState('');
+  const [d1Courses, setD1Courses] = useState<any[]>([]);
+  const [d1Subjects, setD1Subjects] = useState<any[]>([]);
 
   useEffect(() => {
     setItems(getDriveItems());
+    getCourses().then(setD1Courses).catch(() => {});
+    getSubjects().then(subs => setD1Subjects(subs.filter((s: any) => (s.objective_count || 0) > 0))).catch(() => {});
   }, []);
 
   const handleUpload = () => {
@@ -127,13 +132,15 @@ export function DriveView() {
               <label>Nivel</label>
               <select value={uploadNivel} onChange={(e) => setUploadNivel(e.target.value)}>
                 <option value="">Seleccionar</option>
-                {NIVELES.map((n) => <option key={n}>{n}</option>)}
+                {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.name}>{c.name} ({c.objective_count} OA)</option>)}
+                {NIVELES.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div>
               <label>Asignatura</label>
               <select value={uploadAsig} onChange={(e) => setUploadAsig(e.target.value)}>
                 <option value="">Seleccionar</option>
+                {d1Subjects.map((s: any) => <option key={s.id} value={s.name}>{s.name} ({s.objective_count})</option>)}
                 {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
