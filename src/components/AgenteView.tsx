@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Bot, Copy, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bot, Copy, Sparkles, Loader2 } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { md } from '../utils/htmlUtils';
 import { NIVELES, ASIGNATURAS } from '../types';
+import { getCourses, getSubjects, getObjectives } from '../services/curriculumD1Service';
 
 type Mode = 'chat' | 'secuencia' | 'unidad' | 'diferenciacion' | 'evaluacion';
 type Message = { role: 'user' | 'assistant'; content: string };
@@ -24,6 +25,32 @@ export function AgenteView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // D1 data
+  const [d1Courses, setD1Courses] = useState<any[]>([]);
+  const [d1Subjects, setD1Subjects] = useState<any[]>([]);
+  const [d1Objectives, setD1Objectives] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [loadingD1, setLoadingD1] = useState(false);
+
+  useEffect(() => {
+    getCourses().then(setD1Courses).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourseId) { setD1Subjects([]); return; }
+    getSubjects().then(subs => setD1Subjects(subs.filter((s: any) => (s.objective_count || 0) > 0))).catch(() => {});
+  }, [selectedCourseId]);
+
+  useEffect(() => {
+    if (!selectedCourseId || !selectedSubjectId) { setD1Objectives([]); return; }
+    setLoadingD1(true);
+    getObjectives(selectedCourseId, selectedSubjectId)
+      .then(setD1Objectives)
+      .catch(() => setD1Objectives([]))
+      .finally(() => setLoadingD1(false));
+  }, [selectedCourseId, selectedSubjectId]);
 
   const send = async (suggestion?: string) => {
     const message = (suggestion || input).trim();
@@ -49,10 +76,41 @@ export function AgenteView() {
       <div className="card">
         <div className="grid3">
           <div><label>Proceso</label><select value={mode} onChange={e => setMode(e.target.value as Mode)}>{MODES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}</select></div>
-          <div><label>Nivel</label><select value={nivel} onChange={e => setNivel(e.target.value)}>{NIVELES.map(x => <option key={x}>{x}</option>)}</select></div>
-          <div><label>Asignatura</label><select value={asignatura} onChange={e => setAsignatura(e.target.value)}>{ASIGNATURAS.map(x => <option key={x}>{x}</option>)}</select></div>
+          <div><label>Nivel/Curso</label>
+            <select value={selectedCourseId} onChange={e => { setSelectedCourseId(e.target.value); const c = d1Courses.find((c: any) => c.id === e.target.value); if (c) setNivel(c.name); }}>
+              <option value="">D1: Seleccionar curso</option>
+              {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count})</option>)}
+            </select>
+            <select value={nivel} onChange={e => setNivel(e.target.value)} style={{ marginTop: 4 }}>
+              <option value="">Fallback local</option>
+              {NIVELES.map(x => <option key={x}>{x}</option>)}
+            </select>
+          </div>
+          <div><label>Asignatura</label>
+            <select value={selectedSubjectId} onChange={e => { setSelectedSubjectId(e.target.value); const s = d1Subjects.find((s: any) => s.id === e.target.value); if (s) setAsignatura(s.name); }}>
+              <option value="">D1: Seleccionar asignatura</option>
+              {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
+            </select>
+            <select value={asignatura} onChange={e => setAsignatura(e.target.value)} style={{ marginTop: 4 }}>
+              <option value="">Fallback local</option>
+              {ASIGNATURAS.map(x => <option key={x}>{x}</option>)}
+            </select>
+          </div>
         </div>
         <label>OA exacto (recomendado)</label><textarea value={oa} onChange={e => setOa(e.target.value)} placeholder="Pega aquí el Objetivo de Aprendizaje ministerial..." rows={2} />
+        {d1Objectives.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            <label>Seleccionar OA desde D1 ({d1Objectives.length} disponibles)</label>
+            <select onChange={e => { const obj = d1Objectives.find((o: any) => o.id === e.target.value); if (obj) setOa(`${obj.code} — ${obj.official_text}`); }}>
+              <option value="">Seleccionar OA desde D1</option>
+              {d1Objectives.map((o: any) => <option key={o.id} value={o.id}>{o.code} — {o.official_text?.substring(0, 60)}...</option>)}
+            </select>
+          </div>
+        )}
+        {loadingD1 && <p style={{ fontSize: 12, color: 'var(--muted2)' }}><Loader2 size={12} className="spin inline" /> Cargando objetivos...</p>}
+        {selectedCourseId && selectedSubjectId && d1Objectives.length === 0 && !loadingD1 && (
+          <p style={{ fontSize: 12, color: 'var(--muted2)' }}>No hay objetivos cargados para esta combinación curso/asignatura.</p>
+        )}
       </div>
       <div className="card agent-chat">
         {messages.length === 0 && <div className="agent-empty"><Sparkles size={30} /><h3>¿Qué quieres preparar?</h3><div className="btnrow"><button className="secondary" onClick={() => send('Diseña una clase de 90 minutos con actividades, DUA y ticket de salida.')}>Crear clase</button><button className="secondary" onClick={() => send('Crea una guía diferenciada en versiones apoyo, estándar y desafío.')}>Diferenciar guía</button><button className="secondary" onClick={() => send('Diseña una evaluación completa con pauta y rúbrica.')}>Crear evaluación</button></div></div>}
