@@ -62,6 +62,15 @@ function getNivelIcon(nivel: NivelLogro) {
 export function ReportesView() {
   const [subject, setSubject] = useState('Lenguaje y Comunicacion');
   const [course, setCourse] = useState('2° Basico');
+
+  // D1 dynamic data
+  const [d1Courses, setD1Courses] = useState<any[]>([]);
+  const [d1Subjects, setD1Subjects] = useState<any[]>([]);
+  const [d1Objectives, setD1Objectives] = useState<any[]>([]);
+  const [d1Indicators, setD1Indicators] = useState<any[]>([]);
+  const [selectedD1Course, setSelectedD1Course] = useState('');
+  const [selectedD1Subject, setSelectedD1Subject] = useState('');
+  const [loadingD1, setLoadingD1] = useState(false);
   const [config, setConfig] = useState<Omit<ReportConfig, 'subject' | 'course'>>({
     schoolName: 'LICEO NACIONAL DE LLOLLEO',
     teacher: 'Conny Rubio Riquelme',
@@ -85,6 +94,26 @@ export function ReportesView() {
   useEffect(() => {
     setConfig(prev => ({ ...prev, maxScore: computedMaxScore }));
   }, [computedMaxScore]);
+
+  // Load D1 courses on mount
+  useEffect(() => {
+    fetch('/api/courses').then(r => r.json()).then(d => setD1Courses(d.data || [])).catch(() => {});
+  }, []);
+
+  // Load D1 subjects when course changes
+  useEffect(() => {
+    if (!selectedD1Course) { setD1Subjects([]); return; }
+    fetch(`/api/subjects?course=${selectedD1Course}`).then(r => r.json()).then(d => setD1Subjects(d.data || [])).catch(() => {});
+  }, [selectedD1Course]);
+
+  // Load D1 objectives when course+subject change
+  useEffect(() => {
+    if (!selectedD1Course || !selectedD1Subject) { setD1Objectives([]); setD1Indicators([]); return; }
+    setLoadingD1(true);
+    fetch(`/api/objectives?course=${selectedD1Course}&subject=${selectedD1Subject}&limit=100`)
+      .then(r => r.json()).then(d => setD1Objectives(d.data || [])).catch(() => {})
+      .finally(() => setLoadingD1(false));
+  }, [selectedD1Course, selectedD1Subject]);
 
   const [students, setStudents] = useState<StudentData[]>(DEFAULT_STUDENTS);
   const [scores, setScores] = useState<StudentScore[]>(() =>
@@ -206,26 +235,34 @@ export function ReportesView() {
           <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Asignatura</label>
           <select
             value={subject}
-            onChange={e => setSubject(e.target.value)}
+            onChange={e => { setSubject(e.target.value); setSelectedD1Subject(''); }}
             className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
           >
             {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+            {d1Subjects.length > 0 && <option disabled>─── Asignaturas D1 ───</option>}
+            {d1Subjects.filter(s => s.objective_count > 0).map(s => (
+              <option key={s.id} value={s.name}>[D1] {s.name} ({s.objective_count} OA)</option>
+            ))}
           </select>
         </div>
         <div className="flex-1">
           <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Curso</label>
           <select
             value={course}
-            onChange={e => setCourse(e.target.value)}
+            onChange={e => { setCourse(e.target.value); setSelectedD1Course(''); }}
             className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
           >
             {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
+            {d1Courses.length > 0 && <option disabled>─── Cursos D1 ───</option>}
+            {d1Courses.filter(c => c.objective_count > 0).map(c => (
+              <option key={c.id} value={c.name}>[D1] {c.name} ({c.objective_count} OA)</option>
+            ))}
           </select>
         </div>
         <div className="flex items-end">
           <div className="px-4 py-2 bg-indigo-50 border border-indigo-200/60 rounded-xl text-center">
             <p className="text-[10px] font-bold text-indigo-500 uppercase">Indicadores</p>
-            <p className="text-lg font-bold text-indigo-700">{indicators.length}</p>
+            <p className="text-lg font-bold text-indigo-700">{indicators.length + d1Indicators.length}</p>
           </div>
         </div>
       </div>

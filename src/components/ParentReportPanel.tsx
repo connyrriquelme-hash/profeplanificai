@@ -12,61 +12,408 @@ function generateId(prefix = 'rpt'): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
 }
 
-function generateFallbackIndicators(oaText: string, subject: string): any[] {
+const CHILEAN_CURRICULAR_VERBS = [
+  'leer', 'comprender', 'identificar', 'reconocer', 'describir', 'explicar',
+  'comparar', 'clasificar', 'analizar', 'interpretar', 'inferir', 'argumentar',
+  'resolver', 'representar', 'calcular', 'modelar', 'comunicar', 'escribir',
+  'crear', 'observar', 'registrar', 'experimentar', 'aplicar', 'evaluar',
+  'ubicar', 'relacionar', 'participar', 'expresar', 'formular', 'plantear',
+  'seleccionar', 'proponer', 'valorar', 'apreciar', 'diseñar', 'usar',
+];
+
+function normalizeText(text: string): string {
+  return (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function extractVerbsFromOA(oaText: string): string[] {
+  if (!oaText) return [];
+  const lower = normalizeText(oaText);
+  const found: string[] = [];
+  for (const verb of CHILEAN_CURRICULAR_VERBS) {
+    if (lower.includes(normalizeText(verb))) found.push(verb);
+  }
+  return [...new Set(found)];
+}
+
+function getSubjectTemplateKey(subject: string): string {
+  const n = normalizeText(subject);
+  if (n.includes('ciencia')) return 'ciencias';
+  if (n.includes('matem')) return 'matematica';
+  if (n.includes('historia') || n.includes('geografia') || n.includes('sociales')) return 'historia';
+  if (n.includes('lenguaje') || n.includes('comunicacion') || n.includes('literatura')) return 'lenguaje';
+  if (n.includes('ingl')) return 'ingles';
+  if (n.includes('musica') || n.includes('creacion musical')) return 'musica';
+  if (n.includes('educacion fisica') || n.includes('deporte') || n.includes('salud')) return 'edufisica';
+  if (n.includes('tecnologia') || n.includes('programacion')) return 'tecnologia';
+  if (n.includes('orientacion')) return 'orientacion';
+  if (n.includes('arte') || n.includes('danza') || n.includes('teatro')) return 'artes';
+  return 'default';
+}
+
+function isSuggestedSource(source?: string): boolean {
+  return source === 'curriculum_chileno_sugerido' || source === 'auto_from_objective';
+}
+
+function generateChileanCurriculumIndicators(params: { course: string; subject: string; objectiveCode: string; objectiveText: string; axis?: string; level?: string }): any[] {
+  const { course, subject, objectiveCode, objectiveText } = params;
+  const verbs = extractVerbsFromOA(objectiveText);
   const lowerSubject = subject.toLowerCase();
-  const templates: Record<string, string[]> = {
-    default: [
-      'Identifica información clave relacionada con el objetivo.',
-      'Aplica el aprendizaje en una actividad guiada.',
-      'Comunica o explica su respuesta usando vocabulario de la asignatura.',
-      'Demuestra avance en el objetivo evaluado según evidencia observable.',
-    ],
-    ciencias: [
-      'Observa y describe características del fenómeno o seres vivos estudiados.',
-      'Explica el proceso o concepto usando vocabulario científico básico.',
-      'Compara, clasifica o registra evidencia de la investigación.',
-      'Diferencia entre hipótesis y resultados en una actividad de laboratorio.',
-    ],
-    matematica: [
-      'Resuelve problemas aplicando el procedimiento matemático aprendido.',
-      'Representa situaciones mediante números, fórmulas o gráficos.',
-      'Calcula resultados verificando la coherencia de la respuesta.',
-      'Justifica el procedimiento usado para llegar a la solución.',
-    ],
-    historia: [
-      'Identifica y ubica hechos históricos en contexto temporal y geográfico.',
-      'Explica causas y consecuencias de un proceso histórico.',
-      'Compara distintas fuentes o interpretaciones sobre un mismo tema.',
-      'Argumenta su opinión sobre un hecho histórico usando evidencia.',
-    ],
-    lenguaje: [
-      'Lee y comprende el texto identificando la idea principal y detalles.',
-      'Infiere significados a partir de contexto y pistas del texto.',
-      'Escribe con coherencia, usando vocabulario preciso y conectores.',
-      'Comunica sus ideas de forma clara y organizada en una exposición oral.',
-    ],
-    ingles: [
-      'Lee y comprende textos simples identificando vocabulario clave.',
-      'Participa en interacciones orales usando frases y estructuras básicas.',
-      'Escribe textos breves aplicando vocabulario y gramática aprendida.',
-      'Demuestra comprensión auditiva en situaciones cotidianas.',
-    ],
+
+  const indicatorTemplates: Record<string, (verbs: string[], oaText: string) => string[]> = {
+    'lenguaje': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('leer') || v.includes('comprender') || oa.toLowerCase().includes('leer'))
+        base.push('Lee textos adecuados al nivel con propósito definido, identificando la idea principal.');
+      if (v.includes('inferir') || v.includes('interpretar') || oa.toLowerCase().includes('comprender'))
+        base.push('Infiere información a partir de pistas o contexto presente en el texto.');
+      if (v.includes('escribir') || v.includes('comunicar') || oa.toLowerCase().includes('escri'))
+        base.push('Escribe respuestas o textos breves manteniendo coherencia con la tarea planteada.');
+      if (v.includes('comunicar') || v.includes('expresar') || oa.toLowerCase().includes('oral'))
+        base.push('Comunica oralmente ideas relacionadas con el OA usando vocabulario adecuado al nivel.');
+      if (base.length < 3) base.push('Demuestra comprensión del contenido del OA mediante evidencia observable.');
+      if (base.length < 4) base.push('Participa en actividades de lectura, escritura u oralidad según corresponda al OA.');
+      return base;
+    },
+    'matematica': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('resolver') || v.includes('plantear') || oa.toLowerCase().includes('problema'))
+        base.push('Resuelve problemas aplicando estrategias adecuadas al contenido del OA.');
+      if (v.includes('representar') || v.includes('modelar') || oa.toLowerCase().includes('numero'))
+        base.push('Representa la información usando números, esquemas, dibujos o material concreto.');
+      if (v.includes('calcular') || v.includes('operar'))
+        base.push('Calcula resultados verificando la coherencia de la respuesta con la situación planteada.');
+      if (v.includes('comunicar') || v.includes('argumentar') || v.includes('explicar'))
+        base.push('Explica el procedimiento utilizado para llegar a la respuesta.');
+      if (base.length < 3) base.push('Aplica el aprendizaje del OA en una actividad guiada o contextualizada.');
+      if (base.length < 4) base.push('Verifica si el resultado es coherente con la situación del problema.');
+      return base;
+    },
+    'ciencias': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('observar') || v.includes('describir'))
+        base.push('Observa características o fenómenos relacionados con el OA y los describe con vocabulario científico.');
+      if (v.includes('clasificar') || v.includes('comparar'))
+        base.push('Clasifica o compara elementos según criterios trabajados en el OA.');
+      if (v.includes('explicar') || v.includes('reconocer'))
+        base.push('Explica relaciones o procesos usando evidencia de la investigación.');
+      if (v.includes('registrar') || v.includes('experimentar'))
+        base.push('Registra evidencia mediante dibujos, tablas simples o explicaciones breves.');
+      if (base.length < 3) base.push('Participa en actividades de exploración y observación guiada.');
+      if (base.length < 4) base.push('Comunica conclusiones simples a partir de evidencia recolectada.');
+      return base;
+    },
+    'historia': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('identificar') || v.includes('reconocer'))
+        base.push('Identifica información relevante sobre el proceso, lugar o tema trabajado.');
+      if (v.includes('ubicar') || v.includes('relacionar'))
+        base.push('Ubica acontecimientos o elementos en una secuencia temporal o espacial.');
+      if (v.includes('comparar') || v.includes('analizar'))
+        base.push('Compara características de sociedades, paisajes o procesos históricos.');
+      if (v.includes('explicar') || v.includes('argumentar'))
+        base.push('Explica cambios y continuidades con apoyo de fuentes o ejemplos.');
+      if (base.length < 3) base.push('Utiliza fuentes simples para obtener información sobre el tema.');
+      if (base.length < 4) base.push('Comunica sus hallazgos de forma oral o escrita.');
+      return base;
+    },
+    'musica': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('escuchar') || v.includes('reconocer') || v.includes('identificar'))
+        base.push('Reconoce elementos musicales presentes en una audición o interpretación.');
+      if (v.includes('interpretar') || v.includes('participar'))
+        base.push('Participa en actividades musicales respetando instrucciones y turnos.');
+      if (v.includes('crear') || v.includes('expresar'))
+        base.push('Crea patrones rítmicos o melódicos acordes al nivel.');
+      if (v.includes('apreciar') || v.includes('valorar'))
+        base.push('Expresa apreciaciones sobre obras o sonidos escuchados.');
+      if (base.length < 3) base.push('Interpreta canciones o repertorio trabajado en clase.');
+      if (base.length < 4) base.push('Experimenta con instrumentos o la voz de manera guiada.');
+      return base;
+    },
+    'artes': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('crear') || v.includes('expresar'))
+        base.push('Crea una producción visual relacionada con el propósito del OA.');
+      if (v.includes('observar') || v.includes('describir'))
+        base.push('Describe elementos visuales presentes en obras o producciones.');
+      if (v.includes('experimentar') || v.includes('usar'))
+        base.push('Experimenta con materiales, herramientas o técnicas trabajadas.');
+      if (v.includes('apreciar') || v.includes('valorar'))
+        base.push('Expresa ideas o emociones mediante recursos visuales.');
+      if (base.length < 3) base.push('Participa en actividades de creación visual siguiendo indicaciones.');
+      if (base.length < 4) base.push('Reconoce elementos artísticos en su entorno o en obras observadas.');
+      return base;
+    },
+    'edufisica': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('ejecutar') || v.includes('realizar') || v.includes('participar'))
+        base.push('Ejecuta habilidades motrices según las indicaciones de la actividad.');
+      if (v.includes('aplicar') || v.includes('seguir'))
+        base.push('Participa activamente respetando normas de seguridad y convivencia.');
+      if (v.includes('reconocer') || v.includes('identificar'))
+        base.push('Reconoce acciones que favorecen el autocuidado y la vida activa.');
+      if (v.includes('colaborar') || v.includes('cooperar'))
+        base.push('Coopera con sus pares durante juegos o actividades físicas.');
+      if (base.length < 3) base.push('Demuestra coordinación y control corporal en actividades guiadas.');
+      if (base.length < 4) base.push('Sigue instrucciones durante la actividad física de forma autónoma.');
+      return base;
+    },
+    'tecnologia': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('diseñar') || v.includes('proponer'))
+        base.push('Propone soluciones tecnológicas simples frente a una necesidad.');
+      if (v.includes('usar') || v.includes('aplicar'))
+        base.push('Usa herramientas o materiales de manera segura y pertinente.');
+      if (v.includes('seguir') || v.includes('realizar'))
+        base.push('Sigue etapas básicas de diseño, construcción o mejora.');
+      if (v.includes('evaluar') || v.includes('analizar'))
+        base.push('Evalúa el resultado de su trabajo según criterios acordados.');
+      if (base.length < 3) base.push('Participa en proyectos tecnológicos siguiendo instrucciones.');
+      if (base.length < 4) base.push('Comunica el proceso y resultado de su trabajo tecnológico.');
+      return base;
+    },
+    'orientacion': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('reconocer') || v.includes('identificar'))
+        base.push('Reconoce emociones, necesidades o situaciones de convivencia.');
+      if (v.includes('proponer') || v.includes('participar'))
+        base.push('Propone acciones para favorecer el respeto y el buen trato.');
+      if (v.includes('participar') || v.includes('comunicar'))
+        base.push('Participa en actividades de reflexión personal o grupal.');
+      if (v.includes('decidir') || v.includes('valorar'))
+        base.push('Identifica decisiones responsables en contextos escolares o familiares.');
+      if (base.length < 3) base.push('Expresa sus ideas y emociones de manera respetuosa.');
+      if (base.length < 4) base.push('Colabora en actividades grupales respetando acuerdos.');
+      return base;
+    },
+    'ingles': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('comprender') || v.includes('escuchar') || v.includes('leer'))
+        base.push('Comprende palabras, frases o instrucciones simples relacionadas con el OA.');
+      if (v.includes('usar') || v.includes('aplicar') || v.includes('comunicar'))
+        base.push('Usa vocabulario trabajado en situaciones comunicativas breves.');
+      if (v.includes('responder') || v.includes('participar'))
+        base.push('Responde preguntas simples con apoyo visual o contextual.');
+      if (v.includes('escribir') || v.includes('producir'))
+        base.push('Produce frases breves siguiendo modelos dados.');
+      if (base.length < 3) base.push('Participa en actividades orales o escritas sencillas.');
+      if (base.length < 4) base.push('Identifica vocabulario clave en textos o audios adecuados al nivel.');
+      return base;
+    },
   };
 
-  let selectedTemplates = templates.default;
-  if (lowerSubject.includes('ciencia')) selectedTemplates = templates.ciencias;
-  else if (lowerSubject.includes('matem')) selectedTemplates = templates.matematica;
-  else if (lowerSubject.includes('historia') || lowerSubject.includes('geografía') || lowerSubject.includes('sociales')) selectedTemplates = templates.historia;
-  else if (lowerSubject.includes('lenguaje') || lowerSubject.includes('comunicación') || lowerSubject.includes('comunicacion') || lowerSubject.includes('literatura')) selectedTemplates = templates.lenguaje;
-  else if (lowerSubject.includes('ingl')) selectedTemplates = templates.ingles;
+  // Match subject to template key
+  let templateKey = 'default';
+  if (lowerSubject.includes('ciencia')) templateKey = 'ciencias';
+  else if (lowerSubject.includes('matem')) templateKey = 'matematica';
+  else if (lowerSubject.includes('historia') || lowerSubject.includes('geografía') || lowerSubject.includes('sociales')) templateKey = 'historia';
+  else if (lowerSubject.includes('lenguaje') || lowerSubject.includes('comunicación') || lowerSubject.includes('comunicacion') || lowerSubject.includes('literatura')) templateKey = 'lenguaje';
+  else if (lowerSubject.includes('ingl')) templateKey = 'ingles';
+  else if (lowerSubject.includes('música') || lowerSubject.includes('musica') || lowerSubject.includes('creación musical')) templateKey = 'musica';
+  else if (lowerSubject.includes('educación física') || lowerSubject.includes('deporte') || lowerSubject.includes('salud')) templateKey = 'edufisica';
+  else if (lowerSubject.includes('tecnología') || lowerSubject.includes('tecnologia') || lowerSubject.includes('programación')) templateKey = 'tecnologia';
+  else if (lowerSubject.includes('orientación') || lowerSubject.includes('orientacion')) templateKey = 'orientacion';
+  else if (lowerSubject.includes('arte') || lowerSubject.includes('danza') || lowerSubject.includes('teatro')) templateKey = 'artes';
 
-  return selectedTemplates.map((text) => ({
-    id: `fb-${generateId('ind')}`,
-    oa_code: 'FALLBACK',
-    indicator_text: `${oaText ? oaText.substring(0, 60) + '... — ' : ''}${text}`,
-    source: 'auto_from_objective',
+  const generator = indicatorTemplates[templateKey];
+  const texts = generator ? generator(verbs, objectiveText) : [
+    `Demuestra comprensión del contenido del OA mediante evidencia observable.`,
+    `Aplica el aprendizaje del OA en una actividad guiada.`,
+    `Comunica sus ideas relacionadas con el OA de forma oral o escrita.`,
+    `Participa en actividades alineadas al objetivo evaluado.`,
+  ];
+
+  return texts.map((text, i) => ({
+    id: `curriculum-suggested-${objectiveCode?.replace(/\s+/g, '-') || 'oa'}-${i + 1}`,
+    oa_code: objectiveCode || 'SUGERIDO',
+    indicator_text: text,
+    source: 'curriculum_chileno_sugerido',
+    label: 'Sugerido desde OA MINEDUC',
     _editable: true,
   }));
+}
+
+function generateFallbackIndicators(oaText: string, subject: string): any[] {
+  return generateChileanCurriculumIndicators({
+    course: '', subject, objectiveCode: 'SUGERIDO', objectiveText: oaText || '',
+  });
+}
+
+function generateChileanCurriculumSkills(params: { course: string; subject: string; objectiveCode: string; objectiveText: string }): string[] {
+  const { subject, objectiveText } = params;
+  const verbs = extractVerbsFromOA(objectiveText);
+  const lowerSubject = subject.toLowerCase();
+
+  const skillTemplates: Record<string, (verbs: string[], oa: string) => string[]> = {
+    'lenguaje': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('leer') || oa.toLowerCase().includes('leer'))
+        base.push('Leer textos adecuados al nivel con propósito definido.');
+      if (v.includes('comprender') || v.includes('inferir') || oa.toLowerCase().includes('comprender'))
+        base.push('Comprender información explícita e implícita del texto.');
+      if (v.includes('escribir') || oa.toLowerCase().includes('escri'))
+        base.push('Producir textos breves manteniendo coherencia y claridad.');
+      if (v.includes('comunicar') || v.includes('expresar') || oa.toLowerCase().includes('oral'))
+        base.push('Comunicar ideas oralmente con claridad y vocabulario adecuado.');
+      if (base.length < 3) base.push('Utilizar estrategias de comprensión lectora según el propósito.');
+      if (base.length < 4) base.push('Participar en interacciones comunicativas en el aula.');
+      return base;
+    },
+    'matematica': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('resolver') || oa.toLowerCase().includes('problema'))
+        base.push('Resolver problemas aplicando estrategias adecuadas.');
+      if (v.includes('representar') || v.includes('modelar'))
+        base.push('Representar información con números, esquemas o material concreto.');
+      if (v.includes('calcular') || v.includes('operar'))
+        base.push('Calcular y verificar resultados de operaciones.');
+      if (v.includes('argumentar') || v.includes('explicar') || v.includes('comunicar'))
+        base.push('Argumentar y comunicar procedimientos y resultados.');
+      if (base.length < 3) base.push('Aplicar el aprendizaje del OA en situaciones nuevas.');
+      if (base.length < 4) base.push('Utilizar vocabulario matemático adecuado al nivel.');
+      return base;
+    },
+    'ciencias': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('observar') || v.includes('describir'))
+        base.push('Observar y describir características o fenómenos.');
+      if (v.includes('clasificar') || v.includes('comparar'))
+        base.push('Comparar y clasificar información o elementos.');
+      if (v.includes('explicar') || v.includes('reconocer'))
+        base.push('Explicar relaciones causa-efecto con apoyo de evidencia.');
+      if (v.includes('registrar') || v.includes('experimentar'))
+        base.push('Registrar evidencia mediante dibujos, tablas o explicaciones.');
+      if (base.length < 3) base.push('Formular preguntas y predicciones sobre el entorno.');
+      if (base.length < 4) base.push('Comunicar conclusiones simples a partir de evidencia.');
+      return base;
+    },
+    'historia': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('identificar') || v.includes('reconocer'))
+        base.push('Identificar procesos y acontecimientos relevantes.');
+      if (v.includes('ubicar') || v.includes('relacionar'))
+        base.push('Ubicar información temporal y espacialmente.');
+      if (v.includes('comparar') || v.includes('analizar'))
+        base.push('Comparar fuentes o situaciones históricas.');
+      if (v.includes('explicar') || v.includes('argumentar'))
+        base.push('Explicar cambios y continuidades con ejemplos.');
+      if (base.length < 3) base.push('Obtener información de fuentes simples.');
+      if (base.length < 4) base.push('Comunicar hallazgos de forma oral o escrita.');
+      return base;
+    },
+    'musica': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('escuchar') || v.includes('reconocer'))
+        base.push('Escuchar y reconocer elementos musicales.');
+      if (v.includes('interpretar') || v.includes('participar'))
+        base.push('Interpretar repertorio o patrones musicales.');
+      if (v.includes('crear') || v.includes('expresar'))
+        base.push('Crear patrones o secuencias sonoras.');
+      if (v.includes('apreciar') || v.includes('valorar'))
+        base.push('Apreciar manifestaciones musicales de diverso origen.');
+      if (base.length < 3) base.push('Participar en actividades musicales de forma colaborativa.');
+      if (base.length < 4) base.push('Expresar ideas y emociones a través de la música.');
+      return base;
+    },
+    'artes': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('crear') || v.includes('expresar'))
+        base.push('Crear producciones expresivas con intención comunicativa.');
+      if (v.includes('observar') || v.includes('describir'))
+        base.push('Observar y describir elementos visuales en obras o producciones.');
+      if (v.includes('experimentar') || v.includes('usar'))
+        base.push('Experimentar con materiales y técnicas artísticas.');
+      if (v.includes('apreciar') || v.includes('valorar'))
+        base.push('Apreciar manifestaciones artísticas de diverso origen.');
+      if (base.length < 3) base.push('Expresar ideas o emociones mediante recursos visuales.');
+      if (base.length < 4) base.push('Participar en actividades de creación visual.');
+      return base;
+    },
+    'edufisica': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('ejecutar') || v.includes('realizar'))
+        base.push('Ejecutar habilidades motrices en diversas actividades.');
+      if (v.includes('participar') || v.includes('colaborar'))
+        base.push('Participar activamente en actividades físicas y deportivas.');
+      if (v.includes('reconocer') || v.includes('identificar'))
+        base.push('Reconocer acciones que favorecen el autocuidado.');
+      if (v.includes('seguir') || v.includes('aplicar'))
+        base.push('Aplicar normas de seguridad y convivencia en el juego.');
+      if (base.length < 3) base.push('Cooperar con pares durante actividades físicas.');
+      if (base.length < 4) base.push('Demostrar coordinación y control corporal.');
+      return base;
+    },
+    'tecnologia': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('diseñar') || v.includes('proponer'))
+        base.push('Diseñar soluciones tecnológicas simples.');
+      if (v.includes('usar') || v.includes('aplicar'))
+        base.push('Usar herramientas y materiales de manera segura.');
+      if (v.includes('evaluar') || v.includes('analizar'))
+        base.push('Evaluar procesos y productos tecnológicos.');
+      if (v.includes('seguir') || v.includes('realizar'))
+        base.push('Seguir etapas de diseño y construcción.');
+      if (base.length < 3) base.push('Proponer mejoras a partir del análisis del trabajo realizado.');
+      if (base.length < 4) base.push('Comunicar el proceso y resultado de su trabajo.');
+      return base;
+    },
+    'orientacion': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('reconocer') || v.includes('identificar'))
+        base.push('Reconocer emociones y situaciones de convivencia.');
+      if (v.includes('participar') || v.includes('proponer'))
+        base.push('Participar respetuosamente en actividades grupales.');
+      if (v.includes('decidir') || v.includes('valorar'))
+        base.push('Tomar decisiones responsables en contextos escolares.');
+      if (v.includes('comunicar') || v.includes('expresar'))
+        base.push('Expresar ideas y necesidades de manera respetuosa.');
+      if (base.length < 3) base.push('Colaborar en la construcción de un clima positivo de aula.');
+      if (base.length < 4) base.push('Identificar acciones que favorecen el bienestar propio y colectivo.');
+      return base;
+    },
+    'ingles': (v, oa) => {
+      const base: string[] = [];
+      if (v.includes('comprender') || v.includes('escuchar') || v.includes('leer'))
+        base.push('Comprender mensajes orales y escritos simples.');
+      if (v.includes('usar') || v.includes('aplicar'))
+        base.push('Usar vocabulario contextual en situaciones comunicativas.');
+      if (v.includes('interactuar') || v.includes('responder'))
+        base.push('Interactuar en situaciones simples usando frases aprendidas.');
+      if (v.includes('escribir') || v.includes('producir'))
+        base.push('Producir frases breves siguiendo modelos dados.');
+      if (base.length < 3) base.push('Participar en actividades de comprensión auditiva.');
+      if (base.length < 4) base.push('Identificar vocabulario clave en textos o audios.');
+      return base;
+    },
+  };
+
+  let templateKey = 'default';
+  if (lowerSubject.includes('ciencia')) templateKey = 'ciencias';
+  else if (lowerSubject.includes('matem')) templateKey = 'matematica';
+  else if (lowerSubject.includes('historia') || lowerSubject.includes('geografía') || lowerSubject.includes('sociales')) templateKey = 'historia';
+  else if (lowerSubject.includes('lenguaje') || lowerSubject.includes('comunicación') || lowerSubject.includes('comunicacion') || lowerSubject.includes('literatura')) templateKey = 'lenguaje';
+  else if (lowerSubject.includes('ingl')) templateKey = 'ingles';
+  else if (lowerSubject.includes('música') || lowerSubject.includes('musica') || lowerSubject.includes('creación musical')) templateKey = 'musica';
+  else if (lowerSubject.includes('educación física') || lowerSubject.includes('deporte') || lowerSubject.includes('salud')) templateKey = 'edufisica';
+  else if (lowerSubject.includes('tecnología') || lowerSubject.includes('tecnologia') || lowerSubject.includes('programación')) templateKey = 'tecnologia';
+  else if (lowerSubject.includes('orientación') || lowerSubject.includes('orientacion')) templateKey = 'orientacion';
+  else if (lowerSubject.includes('arte') || lowerSubject.includes('danza') || lowerSubject.includes('teatro')) templateKey = 'artes';
+
+  const generator = skillTemplates[templateKey];
+  if (generator) return generator(verbs, objectiveText);
+
+  return [
+    'Comprender información explícita e implícita.',
+    'Aplicar el aprendizaje en situaciones nuevas.',
+    'Comunicar ideas con claridad.',
+    'Demostrar avance en el objetivo evaluado.',
+  ];
+}
+
+function generateFallbackSkills(oaText: string, subject: string): string[] {
+  return generateChileanCurriculumSkills({
+    course: '', subject, objectiveCode: 'SUGERIDO', objectiveText: oaText || '',
+  });
 }
 
 interface SelectedObjective {
@@ -115,6 +462,9 @@ export function ParentReportPanel() {
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedObjectives, setSelectedObjectives] = useState<SelectedObjective[]>([]);
   const [selectedIndicators, setSelectedIndicators] = useState<SelectedIndicator[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<{ id: string; text: string; source: string }[]>([]);
+  const [d1Skills, setD1Skills] = useState<any[]>([]);
+  const [fallbackSkills, setFallbackSkills] = useState<string[]>([]);
   const [loadingD1, setLoadingD1] = useState(false);
   const [manualObjective, setManualObjective] = useState('');
 
@@ -187,6 +537,25 @@ export function ParentReportPanel() {
       }
       setIndicatorsByObjective(map);
       setD1Indicators(Object.values(map).flat());
+
+      // Load skills for each objective
+      const allSkills: any[] = [];
+      const fbSkills: string[] = [];
+      for (const obj of selectedObjectives) {
+        try {
+          const res = await fetch(`/api/curriculum/skills?objective_id=${obj.id}`);
+          const data = await res.json();
+          if (data.ok && data.data && data.data.length > 0) {
+            allSkills.push(...data.data.map((s: any) => ({ id: s.id, text: s.official_text, source: 'D1' })));
+          } else {
+            fbSkills.push(...generateFallbackSkills(obj.text, obj.subject || subject));
+          }
+        } catch {
+          fbSkills.push(...generateFallbackSkills(obj.text, obj.subject || subject));
+        }
+      }
+      setD1Skills(allSkills);
+      setFallbackSkills(fbSkills);
     })();
   }, [selectedObjectives]);
 
@@ -259,8 +628,12 @@ export function ParentReportPanel() {
           achievementPercent: student.achievementPercent, grade: student.grade,
           achievementLevel: student.achievementLevel,
           objectives: selectedObjectives.map(o => o.text),
+          selectedIndicators: selectedIndicators.map(i => ({ text: i.text, source: i.source })),
+          selectedSkills: selectedSkills.map(s => ({ text: s.text, source: s.source })),
           achievedIndicators: student.achievedIndicators,
           needsSupportIndicators: student.needsSupportIndicators,
+          audience: 'apoderados',
+          country: 'Chile',
         }),
       });
       const data = await resp.json();
@@ -272,7 +645,7 @@ export function ParentReportPanel() {
       };
       return { status: 'error' };
     } catch { return { status: 'error' }; }
-  }, [course, subject, evaluationName, selectedObjectives]);
+  }, [course, subject, evaluationName, selectedObjectives, selectedIndicators, selectedSkills]);
 
   const handleGenerateAll = useCallback(async () => {
     setGenerating(true); setPaused(false);
@@ -448,7 +821,7 @@ export function ParentReportPanel() {
                             <input type="checkbox" checked={selectedIndicators.some(s => s.id === ind.id)} onChange={() => {
                               setSelectedIndicators(prev => prev.some(s => s.id === ind.id) ? prev.filter(s => s.id !== ind.id) : [...prev, { id: ind.id, oaCode: ind.oa_code, text: ind.indicator_text, source: ind.source || 'D1' }]);
                             }} className="mt-0.5" />
-                            <span>{ind.indicator_text?.slice(0, 80)}{ind.source === 'auto_from_objective' && <span className="text-[8px] ml-1 px-1 rounded bg-amber-100 text-amber-700">auto</span>}</span>
+                            <span>{ind.indicator_text?.slice(0, 80)}{isSuggestedSource(ind.source) && <span className="text-[8px] ml-1 px-1 rounded bg-amber-100 text-amber-700">Sugerido desde OA</span>}</span>
                           </label>
                         ))}
                       </div>
@@ -460,6 +833,56 @@ export function ParentReportPanel() {
               })}
             </div>
           )}
+          {/* Skills section */}
+          {(d1Skills.length > 0 || fallbackSkills.length > 0) && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>
+                  Habilidades ({selectedSkills.length} seleccionadas)
+                </label>
+                <div className="flex gap-1">
+                  <button onClick={() => {
+                    const all = [...d1Skills.map(s => ({ ...s, source: 'D1' })), ...fallbackSkills.map((t, i) => ({ id: `fb-skill-${i}`, text: t, source: 'curriculum_chileno_sugerido' }))];
+                    setSelectedSkills(all);
+                  }} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Todas</button>
+                  <button onClick={() => setSelectedSkills([])} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Ninguna</button>
+                </div>
+              </div>
+              {d1Skills.length > 0 && (
+                <div className="rounded border p-2" style={{ borderColor: 'var(--line)' }}>
+                  <p className="text-[10px] font-semibold mb-1" style={{ color: 'var(--ink)' }}>Habilidades oficiales D1</p>
+                  <div className="space-y-0.5">
+                    {d1Skills.map(sk => (
+                      <label key={sk.id} className="flex items-start gap-2 cursor-pointer text-[10px]" style={{ color: 'var(--ink2)' }}>
+                        <input type="checkbox" checked={selectedSkills.some(s => s.id === sk.id)} onChange={() => {
+                          setSelectedSkills(prev => prev.some(s => s.id === sk.id) ? prev.filter(s => s.id !== sk.id) : [...prev, sk]);
+                        }} className="mt-0.5" />
+                        <span>{sk.text}</span>
+                        <span className="text-[8px] px-1 rounded bg-blue-100 text-blue-700">D1</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {fallbackSkills.length > 0 && (
+                <div className="rounded border p-2" style={{ borderColor: 'var(--line)' }}>
+                  <p className="text-[10px] font-semibold mb-1" style={{ color: 'var(--ink)' }}>Habilidades sugeridas</p>
+                  <div className="space-y-0.5">
+                    {fallbackSkills.map((text, i) => (
+                      <label key={i} className="flex items-start gap-2 cursor-pointer text-[10px]" style={{ color: 'var(--ink2)' }}>
+                        <input type="checkbox" checked={selectedSkills.some(s => s.text === text)} onChange={() => {
+                          setSelectedSkills(prev => prev.some(s => s.text === text) ? prev.filter(s => s.text !== text) : [...prev, { id: `fb-skill-${i}`, text, source: 'curriculum_chileno_sugerido' }]);
+                        }} className="mt-0.5" />
+                        <span>{text}</span>
+                        <span className="text-[8px] px-1 rounded bg-amber-100 text-amber-700">Sugerido desde OA</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Agregar objetivo manual</label>
             <div className="flex gap-2 mt-1">

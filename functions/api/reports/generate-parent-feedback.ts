@@ -11,8 +11,12 @@ interface FeedbackRequest {
   grade: number;
   achievementLevel: string;
   objectives: string[];
+  selectedIndicators?: { text: string; source: string }[];
+  selectedSkills?: { text: string; source: string }[];
   achievedIndicators: string[];
   needsSupportIndicators: string[];
+  audience?: string;
+  country?: string;
 }
 
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
@@ -26,6 +30,12 @@ function buildFeedbackPrompt(req: FeedbackRequest): string {
   const objectivesText = req.objectives.length > 0 ? req.objectives.join('\n- ') : 'No especificados';
   const achievedText = req.achievedIndicators.length > 0 ? req.achievedIndicators.join('\n- ') : 'Ninguno identificado';
   const needsText = req.needsSupportIndicators.length > 0 ? req.needsSupportIndicators.join('\n- ') : 'Ninguno identificado';
+  const indicatorsText = (req.selectedIndicators && req.selectedIndicators.length > 0)
+    ? req.selectedIndicators.map(i => `${i.text}${i.source === 'curriculum_chileno_sugerido' ? ' (sugerido desde OA)' : ''}`).join('\n- ')
+    : 'No especificados';
+  const skillsText = (req.selectedSkills && req.selectedSkills.length > 0)
+    ? req.selectedSkills.map(s => `${s.text}${s.source === 'curriculum_chileno_sugerido' ? ' (sugerido desde OA)' : ''}`).join('\n- ')
+    : 'No especificadas';
 
   return `Eres un docente chileno que escribe informes de aprendizaje para apoderados. Genera una retroalimentación clara, profesional, positiva y comprensible.
 
@@ -42,11 +52,22 @@ DATOS DEL ESTUDIANTE:
 OBJETIVOS EVALUADOS:
 - ${objectivesText}
 
+INDICADORES SELECCIONADOS:
+- ${indicatorsText}
+
+HABILIDADES SELECCIONADAS:
+- ${skillsText}
+
 INDICADORES LOGRADOS:
 - ${achievedText}
 
 INDICADORES POR REFORZAR:
 - ${needsText}
+
+INSTRUCCIONES ESPECIALES:
+- Usa como base el Currículum Nacional chileno, el OA seleccionado, sus indicadores y habilidades.
+- Si los indicadores o habilidades tienen source "curriculum_chileno_sugerido", trátalos como sugerencias docentes derivadas del OA, no como indicadores oficiales.
+- Contexto: ${req.country || 'Chile'}, audiencia: ${req.audience || 'apoderados'}.
 
 REGLAS DE REDACCIÓN:
 1. Máximo 120 palabras.
