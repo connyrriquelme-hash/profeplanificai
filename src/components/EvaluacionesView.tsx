@@ -708,7 +708,10 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 Habilidad principal
               </label>
               <select value={habilidad} onChange={(e) => setHabilidad(e.target.value)} className={selectClass}>
-                {HABILIDADES.map((h) => <option key={h}>{h}</option>)}
+                {curricularContext?.skills && curricularContext.skills.length > 0
+                  ? curricularContext.skills.map((s: any) => <option key={s.code || s.text} value={s.text}>{s.text}</option>)
+                  : HABILIDADES.map((h) => <option key={h}>{h}</option>)
+                }
               </select>
             </div>
           </div>
