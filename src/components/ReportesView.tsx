@@ -60,7 +60,7 @@ function getNivelIcon(nivel: NivelLogro) {
 }
 
 export function ReportesView() {
-  const [subject, setSubject] = useState('Lenguaje y Comunicacion');
+  const [subject, setSubject] = useState('');
   const [course, setCourse] = useState('2° Basico');
 
   // D1 dynamic data
@@ -95,15 +95,33 @@ export function ReportesView() {
     setConfig(prev => ({ ...prev, maxScore: computedMaxScore }));
   }, [computedMaxScore]);
 
-  // Load D1 courses on mount
+  // Load D1 courses on mount and select default subject
   useEffect(() => {
     fetch('/api/courses').then(r => r.json()).then(d => setD1Courses(d.data || [])).catch(() => {});
+    // Load all subjects to select default
+    fetch('/api/subjects').then(r => r.json()).then(d => {
+      const subs = (d.data || []).filter((s: any) => Number(s.objective_count || 0) > 0);
+      if (subs.length > 0 && !subject) {
+        const preferred = subs.find((s: any) => s.name === 'Lenguaje y Comunicación')
+          || subs[0];
+        if (preferred) setSubject(preferred.name);
+      }
+    }).catch(() => {});
   }, []);
 
   // Load D1 subjects when course changes
   useEffect(() => {
     if (!selectedD1Course) { setD1Subjects([]); return; }
-    fetch(`/api/subjects?course=${selectedD1Course}`).then(r => r.json()).then(d => setD1Subjects(d.data || [])).catch(() => {});
+    fetch(`/api/subjects?course=${selectedD1Course}`).then(r => r.json()).then(d => {
+      const subs = d.data || [];
+      setD1Subjects(subs);
+      // Auto-select default subject if empty
+      if (!subject && subs.length > 0) {
+        const preferred = subs.find((s: any) => s.name === 'Lenguaje y Comunicación')
+          || subs.find((s: any) => Number(s.objective_count || 0) > 0);
+        if (preferred) setSubject(preferred.name);
+      }
+    }).catch(() => {});
   }, [selectedD1Course]);
 
   // Load D1 objectives when course+subject change
