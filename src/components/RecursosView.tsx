@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { WandSparkles, Copy, Check, Loader2, ChevronDown, Plus, Trash2, Save, FolderOpen, BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download } from 'lucide-react';
 import type { MaterialSaved } from '../types';
 import { NIVELES, ASIGNATURAS, RECURSOS_TIPOS } from '../types';
 import { generarConIA } from '../services/aiService';
@@ -8,9 +9,10 @@ import { generateRecursoAvanzado, generatePrompts } from '../services/localGener
 import type { CurriculumItem } from '../types';
 import { buildCurriculumHeaderFromItem } from '../utils/curriculum';
 import { StatusBar } from './shared/StatusBar';
+import { getCourses, getSubjects, getObjectives } from '../services/curriculumD1Service';
+import { generateChileanCurriculumIndicators, generateChileanCurriculumSkills } from '../utils/chileanCurriculumFallback';
 import { ResultActions } from './shared/ResultActions';
 import { MaterialList } from './shared/MaterialList';
-import { BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download, Copy, Check } from 'lucide-react';
 import { AdaptarPanel } from './AdaptarPanel';
 import { EducationalImagesPanel } from './EducationalImagesPanel';
 import { md } from '../utils/htmlUtils';
@@ -49,6 +51,38 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
   const [savedMaterials, setSavedMaterials] = useState<MaterialSaved[]>([]);
   const [showSaved, setShowSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // D1 data
+  const [d1Courses, setD1Courses] = useState<any[]>([]);
+  const [d1Subjects, setD1Subjects] = useState<any[]>([]);
+  const [d1Objectives, setD1Objectives] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [loadingD1, setLoadingD1] = useState(false);
+
+  // Load D1 courses on mount
+  useEffect(() => {
+    getCourses().then(setD1Courses).catch(() => {});
+  }, []);
+
+  // Load D1 subjects when course changes
+  useEffect(() => {
+    if (!selectedCourseId) { setD1Subjects([]); return; }
+    getSubjects().then(subs => {
+      const filtered = subs.filter((s: any) => (s.objective_count || 0) > 0);
+      setD1Subjects(filtered);
+    }).catch(() => {});
+  }, [selectedCourseId]);
+
+  // Load D1 objectives when course+subject change
+  useEffect(() => {
+    if (!selectedCourseId || !selectedSubjectId) { setD1Objectives([]); return; }
+    setLoadingD1(true);
+    getObjectives(selectedCourseId, selectedSubjectId)
+      .then(setD1Objectives)
+      .catch(() => setD1Objectives([]))
+      .finally(() => setLoadingD1(false));
+  }, [selectedCourseId, selectedSubjectId]);
 
   const suggestions = useMemo(() => {
     if (!selectedItem) return null;
@@ -318,14 +352,32 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
               </select>
             </div>
             <div>
-              <label>Nivel</label>
-              <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
+              <label>Nivel/Curso</label>
+              <select value={selectedCourseId} onChange={(e) => {
+                setSelectedCourseId(e.target.value);
+                const c = d1Courses.find((c: any) => c.id === e.target.value);
+                if (c) setNivel(c.name);
+              }}>
+                <option value="">Seleccionar curso D1</option>
+                {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
+              </select>
+              <select value={nivel} onChange={(e) => setNivel(e.target.value)} style={{ marginTop: 4 }}>
+                <option value="">Fallback local</option>
                 {NIVELES.map((n) => <option key={n}>{n}</option>)}
               </select>
             </div>
             <div>
               <label>Asignatura</label>
-              <select value={asignatura} onChange={(e) => setAsignatura(e.target.value)}>
+              <select value={selectedSubjectId} onChange={(e) => {
+                setSelectedSubjectId(e.target.value);
+                const s = d1Subjects.find((s: any) => s.id === e.target.value);
+                if (s) setAsignatura(s.name);
+              }}>
+                <option value="">Seleccionar asignatura D1</option>
+                {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
+              </select>
+              <select value={asignatura} onChange={(e) => setAsignatura(e.target.value)} style={{ marginTop: 4 }}>
+                <option value="">Fallback local</option>
                 {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
@@ -340,6 +392,27 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
               </select>
             </div>
           </div>
+
+          {/* D1 Objectives selector */}
+          {d1Objectives.length > 0 && (
+            <div>
+              <label>Objetivos D1 ({d1Objectives.length} disponibles)</label>
+              <select onChange={(e) => {
+                const obj = d1Objectives.find((o: any) => o.id === e.target.value);
+                if (obj) {
+                  setOa(`${obj.code} — ${obj.official_text}`);
+                  setSelectedItem(null);
+                }
+              }}>
+                <option value="">Seleccionar OA desde D1</option>
+                {d1Objectives.map((o: any) => <option key={o.id} value={o.id}>{o.code} — {o.official_text?.substring(0, 60)}...</option>)}
+              </select>
+            </div>
+          )}
+          {loadingD1 && <p className="text-xs" style={{ color: 'var(--muted2)' }}><Loader2 size={12} className="spin inline" /> Cargando objetivos...</p>}
+          {selectedCourseId && selectedSubjectId && d1Objectives.length === 0 && !loadingD1 && (
+            <p className="text-xs" style={{ color: 'var(--muted2)' }}>No hay objetivos cargados para esta combinación curso/asignatura.</p>
+          )}
 
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             OA / contenido
