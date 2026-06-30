@@ -367,13 +367,20 @@ Solo escribe tu solicitud y generaré una versión mejorada para ti.`;
             {d1Objectives.length > 0 && (
               <div style={{ marginTop: 8 }}>
                 <label>Seleccionar OA desde D1 ({d1Objectives.length} disponibles)</label>
-                <select onChange={(e) => {
-                  const obj = d1Objectives.find((o: any) => o.id === e.target.value);
-                  if (obj) updateField('oa', `${obj.code} — ${obj.official_text}`);
-                }}>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const obj = d1Objectives.find((o: any) => o.id === e.target.value);
+                    if (obj) {
+                      const fullText = `${obj.code} — ${obj.official_text || ''}`.trim();
+                      updateField('oa', fullText);
+                    }
+                  }}
+                >
                   <option value="">Seleccionar OA desde D1</option>
-                  {d1Objectives.map((o: any) => <option key={o.id} value={o.id}>{o.code} — {o.official_text?.substring(0, 60)}...</option>)}
+                  {d1Objectives.map((o: any) => <option key={o.id} value={o.id}>{o.code} — {(o.official_text || '').substring(0, 60)}...</option>)}
                 </select>
+                {form.oa && <p style={{ fontSize: 11, color: 'var(--muted2)', marginTop: 4 }}>OA seleccionado: {form.oa.substring(0, 80)}...</p>}
               </div>
             )}
             {loadingD1 && <p className="muted" style={{ fontSize: 12 }}><Loader2 size={12} className="spin inline" /> Cargando objetivos...</p>}

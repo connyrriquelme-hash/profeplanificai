@@ -397,16 +397,21 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
           {d1Objectives.length > 0 && (
             <div>
               <label>Objetivos D1 ({d1Objectives.length} disponibles)</label>
-              <select onChange={(e) => {
-                const obj = d1Objectives.find((o: any) => o.id === e.target.value);
-                if (obj) {
-                  setOa(`${obj.code} — ${obj.official_text}`);
-                  setSelectedItem(null);
-                }
-              }}>
+              <select
+                value=""
+                onChange={(e) => {
+                  const obj = d1Objectives.find((o: any) => o.id === e.target.value);
+                  if (obj) {
+                    const fullText = `${obj.code} — ${obj.official_text || ''}`.trim();
+                    setOa(fullText);
+                    setSelectedItem(null);
+                  }
+                }}
+              >
                 <option value="">Seleccionar OA desde D1</option>
-                {d1Objectives.map((o: any) => <option key={o.id} value={o.id}>{o.code} — {o.official_text?.substring(0, 60)}...</option>)}
+                {d1Objectives.map((o: any) => <option key={o.id} value={o.id}>{o.code} — {(o.official_text || '').substring(0, 60)}...</option>)}
               </select>
+              {oa && <p style={{ fontSize: 11, color: 'var(--muted2)', marginTop: 4 }}>OA seleccionado: {oa.substring(0, 80)}...</p>}
             </div>
           )}
           {loadingD1 && <p className="text-xs" style={{ color: 'var(--muted2)' }}><Loader2 size={12} className="spin inline" /> Cargando objetivos...</p>}
