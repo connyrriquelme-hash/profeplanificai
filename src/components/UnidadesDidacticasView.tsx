@@ -41,7 +41,6 @@ interface FaseClase {
 }
 
 const NIVELES: NivelEducativo[] = ['2 basico', '5 basico', '8 basico', '1 medio', '2 medio'];
-const ASIGNATURAS: Asignatura[] = ['Lenguaje y Comunicacion', 'Matematica', 'Ciencias Naturales', 'Historia, Geografia y Cs. Sociales'];
 const METODOLOGIAS: { v: MetodologiaActiva; l: string }[] = [
   { v: 'Tradicional', l: 'Tradicional' },
   { v: 'ABP', l: 'Aprendizaje Basado en Proyectos (ABP)' },
@@ -49,6 +48,8 @@ const METODOLOGIAS: { v: MetodologiaActiva; l: string }[] = [
   { v: 'Aula Invertida', l: 'Aula Invertida (Flipped Classroom)' },
   { v: 'Design Thinking', l: 'Design Thinking' },
 ];
+
+const FALLBACK_ASIGNATURAS = ['Lenguaje y Comunicacion', 'Matematica', 'Ciencias Naturales', 'Historia, Geografia y Cs. Sociales'];
 
 export function UnidadesDidacticasView() {
   const [unitName, setUnitName] = useState('');
@@ -64,9 +65,28 @@ export function UnidadesDidacticasView() {
   const [unidad, setUnidad] = useState<UnidadGenerada | null>(null);
   const [unidadesGuardadas, setUnidadesGuardadas] = useState<UnidadGenerada[]>([]);
   const [vistaActiva, setVistaActiva] = useState<'generador' | 'organizador'>('generador');
-  const [filtroAsignatura, setFiltroAsignatura] = useState<Asignatura>('Matematica');
+  const [filtroAsignatura, setFiltroAsignatura] = useState('Matematica');
+  const [d1Subjects, setD1Subjects] = useState<{name: string; objective_count: number}[]>([]);
+  const [d1Courses, setD1Courses] = useState<{id: string; name: string; code: string}[]>([]);
+  const [loadingD1, setLoadingD1] = useState(false);
+  const [d1Error, setD1Error] = useState('');
 
-  useEffect(() => {}, []);
+  // Load D1 courses and subjects on mount
+  useEffect(() => {
+    setLoadingD1(true);
+    Promise.all([
+      fetch('/api/courses').then(r => r.json()).then(d => setD1Courses(d.data || [])).catch(() => {}),
+      fetch('/api/subjects').then(r => r.json()).then(d => {
+        const withObj = (d.data || []).filter((s: any) => s.objective_count > 0);
+        setD1Subjects(withObj);
+      }).catch(() => setD1Error('No se pudieron cargar asignaturas desde D1. Se usará lista local de emergencia.')),
+    ]).finally(() => setLoadingD1(false));
+  }, []);
+
+  // Available subjects: D1 if available, fallback if empty
+  const availableSubjects = d1Subjects.length > 0
+    ? d1Subjects.map(s => s.name)
+    : FALLBACK_ASIGNATURAS;
 
   const addOa = () => {
     setOas([...oas, { subject: 'Lenguaje y Comunicacion', objective: '' }]);
@@ -227,9 +247,11 @@ export function UnidadesDidacticasView() {
                       onChange={e => updateOa(index, 'subject', e.target.value)}
                       className="w-full p-1.5 bg-white border border-gray-200/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
                     >
-                      {ASIGNATURAS.map(a => (
+                      {availableSubjects.map(a => (
                         <option key={a} value={a}>{a}</option>
                       ))}
+                      {loadingD1 && <option disabled>Cargando asignaturas...</option>}
+                      {d1Error && <option disabled>{d1Error}</option>}
                     </select>
                   </div>
                   <div>
@@ -330,12 +352,13 @@ export function UnidadesDidacticasView() {
                       <span className="text-xs font-medium text-gray-500">Asignatura:</span>
                       <select
                         value={filtroAsignatura}
-                        onChange={e => setFiltroAsignatura(e.target.value as Asignatura)}
+                        onChange={e => setFiltroAsignatura(e.target.value)}
                         className="p-1.5 bg-white border border-gray-200/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
                       >
-                        {ASIGNATURAS.map(a => (
+                        {availableSubjects.map(a => (
                           <option key={a} value={a}>{a}</option>
                         ))}
+                        {loadingD1 && <option disabled>Cargando...</option>}
                       </select>
                     </div>
                   </div>
