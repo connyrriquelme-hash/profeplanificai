@@ -6,29 +6,42 @@ async function loadJsPDF() {
 }
 
 function drawHeader(doc: any, batch: ParentReportBatch, pageW: number) {
-  doc.setFillColor(79, 70, 229);
-  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setFillColor(139, 92, 246);
+  doc.rect(0, 0, pageW, 32, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('Informe de Resultados de Aprendizaje', 15, 12);
-  doc.setFontSize(9);
+  doc.text('Informe de Resultados de Aprendizaje', 15, 13);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${batch.subject} — ${batch.course}`, 15, 19);
-  doc.text(`${batch.evaluationName || 'Evaluación'} — ${batch.reportDate || new Date().toLocaleDateString('es-CL')}`, 15, 25);
+  doc.text(`${batch.subject} — ${batch.course}`, 15, 21);
+  doc.text(`${batch.evaluationName || 'Evaluación'} — ${batch.reportDate || new Date().toLocaleDateString('es-CL')}`, 15, 27);
+  doc.setFontSize(8);
+  doc.text(`${batch.school || ''} · ${batch.teacher || ''}`, 15, 31);
 }
 
 function drawStudentReport(doc: any, student: ParentStudentReport, batch: ParentReportBatch, yStart: number, pageW: number, pageH: number): number {
   let y = yStart;
 
-  // Student name
+  // Student name with achievement level badge
+  const levelColors: Record<string, [number, number, number]> = {
+    'Adecuado': [16, 185, 129], 'Elemental': [245, 158, 11], 'Insuficiente': [239, 68, 68], 'No evaluado': [148, 163, 184],
+  };
+  const lvlColor = levelColors[student.achievementLevel] || [148, 163, 184];
   doc.setFillColor(241, 245, 249);
-  doc.rect(10, y, pageW - 20, 8, 'F');
-  doc.setTextColor(30, 30, 30);
-  doc.setFontSize(11);
+  doc.roundedRect(10, y, pageW - 20, 10, 2, 2, 'F');
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(student.studentName, 15, y + 5.5);
-  y += 12;
+  doc.text(student.studentName, 15, y + 7);
+  // Level badge
+  doc.setFillColor(...lvlColor);
+  doc.roundedRect(pageW - 60, y + 1, 48, 8, 2, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.text(student.achievementLevel.toUpperCase(), pageW - 56, y + 7);
+  y += 14;
 
   // Info grid
   doc.setFontSize(8);
@@ -62,10 +75,10 @@ function drawStudentReport(doc: any, student: ParentStudentReport, batch: Parent
   // Achieved indicators
   if (student.achievedIndicators.length > 0 && student.achievedIndicators[0]) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(22, 163, 74);
+    doc.setFontSize(9);
+    doc.setTextColor(16, 185, 129);
     doc.text('Indicadores logrados:', col1, y);
-    y += 4;
+    y += 5;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(30, 30, 30);
     for (const ind of student.achievedIndicators.slice(0, 4)) {
@@ -79,10 +92,10 @@ function drawStudentReport(doc: any, student: ParentStudentReport, batch: Parent
   // Needs support
   if (student.needsSupportIndicators.length > 0 && student.needsSupportIndicators[0]) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(220, 38, 38);
+    doc.setFontSize(9);
+    doc.setTextColor(245, 158, 11);
     doc.text('Indicadores por reforzar:', col1, y);
-    y += 4;
+    y += 5;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(30, 30, 30);
     for (const ind of student.needsSupportIndicators.slice(0, 4)) {
@@ -97,37 +110,38 @@ function drawStudentReport(doc: any, student: ParentStudentReport, batch: Parent
   const feedback = student.finalParentReport || student.aiFeedbackForParents || student.teacherObservation || '';
   if (feedback) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(79, 70, 229);
+    doc.setFontSize(9);
+    doc.setTextColor(139, 92, 246);
     doc.text('Retroalimentación para la familia:', col1, y);
-    y += 4;
+    y += 5;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(30, 30, 30);
     doc.setFontSize(8);
     const lines = doc.splitTextToSize(feedback, pageW - 30);
     for (const line of lines) {
-      if (y > pageH - 20) break;
+      if (y > pageH - 25) break;
       doc.text(line, col1, y);
       y += 3.5;
     }
-    y += 2;
+    y += 3;
   }
 
   // Family suggestions
   if (student.familySuggestions.length > 0 && student.familySuggestions[0]) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(79, 70, 229);
+    doc.setFontSize(9);
+    doc.setTextColor(139, 92, 246);
     doc.text('Sugerencias para apoyar en casa:', col1, y);
-    y += 4;
+    y += 5;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(30, 30, 30);
+    doc.setFontSize(8);
     for (const sug of student.familySuggestions.slice(0, 4)) {
-      if (y > pageH - 20) break;
+      if (y > pageH - 25) break;
       doc.text(`  • ${String(sug).substring(0, 80)}`, col1, y);
       y += 3.5;
     }
-    y += 4;
+    y += 5;
   }
 
   // Signature
@@ -142,7 +156,7 @@ function drawStudentReport(doc: any, student: ParentStudentReport, batch: Parent
 
   // Footer
   doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
+  doc.setTextColor(148, 163, 184);
   doc.text(`Generado por PlanificaIA Chile — ${new Date().toLocaleDateString('es-CL')}`, 15, pageH - 8);
 
   return y;
@@ -168,26 +182,28 @@ export async function exportParentReportMassivePDF(batch: ParentReportBatch): Pr
   const pageH = doc.internal.pageSize.getHeight();
 
   // Cover page
-  doc.setFillColor(79, 70, 229);
+  doc.setFillColor(139, 92, 246);
   doc.rect(0, 0, pageW, pageH, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
-  doc.text('Informes de Aprendizaje', pageW / 2, 60, { align: 'center' });
-  doc.setFontSize(14);
-  doc.text(`${batch.subject} — ${batch.course}`, pageW / 2, 72, { align: 'center' });
-  doc.setFontSize(11);
+  doc.text('Informes de Aprendizaje', pageW / 2, 55, { align: 'center' });
+  doc.setFontSize(16);
+  doc.text(`${batch.subject} — ${batch.course}`, pageW / 2, 68, { align: 'center' });
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${batch.evaluationName || 'Evaluación'}`, pageW / 2, 82, { align: 'center' });
-  doc.text(`Fecha: ${batch.reportDate || new Date().toLocaleDateString('es-CL')}`, pageW / 2, 90, { align: 'center' });
-  doc.text(`Docente: ${batch.teacher || '-'}`, pageW / 2, 98, { align: 'center' });
+  doc.text(`${batch.evaluationName || 'Evaluación'}`, pageW / 2, 80, { align: 'center' });
+  doc.text(`Fecha: ${batch.reportDate || new Date().toLocaleDateString('es-CL')}`, pageW / 2, 88, { align: 'center' });
+  doc.text(`Docente: ${batch.teacher || '-'}`, pageW / 2, 96, { align: 'center' });
 
   const totalStudents = batch.sheets.reduce((sum, s) => sum + s.students.length, 0);
+  doc.setFontSize(10);
   doc.text(`Total estudiantes: ${totalStudents}`, pageW / 2, 110, { align: 'center' });
   doc.setFontSize(9);
   doc.text(`Colegio: ${batch.school || '-'}`, pageW / 2, 120, { align: 'center' });
   doc.setFontSize(8);
-  doc.text('Generado por PlanificaIA Chile', pageW / 2, pageH - 15, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.text('Generado por PlanificaIA Chile — Currículum Nacional MINEDUC', pageW / 2, pageH - 15, { align: 'center' });
 
   // Student reports
   for (const sheet of batch.sheets) {
