@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Validate the actual D1 schema used by the current Cloudflare Pages Functions.
  *
@@ -151,11 +150,11 @@ export function parseWranglerTableOutput(output) {
   const names = new Set();
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
-    if (!trimmed || /wrangler|Resource location|Use --remote|Executing on|Database|🌀|🚣|─|┌|└|├|┤|name\s*$/i.test(trimmed)) {
+    if (!trimmed || /wrangler|Resource location|Use --remote|Executing on|Database|\u2500|\u250C|\u2514|\u251C|\u2524|name\s*$/i.test(trimmed)) {
       continue;
     }
 
-    const boxMatch = trimmed.match(/^[│|]\s*([A-Za-z_][A-Za-z0-9_]*)\s*[│|]$/u);
+    const boxMatch = trimmed.match(/^[\u2502|]\s*([A-Za-z_][A-Za-z0-9_]*)\s*[\u2502|]$/u);
     if (boxMatch && isLikelyTableName(boxMatch[1])) {
       names.add(boxMatch[1]);
       continue;
