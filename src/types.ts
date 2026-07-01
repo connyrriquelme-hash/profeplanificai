@@ -257,6 +257,7 @@ export type ViewType =
   | 'dashboard'
   | 'workspace'
   | 'generador'
+  | 'flujo-docente'
   | 'evaluaciones'
   | 'banco'
   | 'banco-recursos'

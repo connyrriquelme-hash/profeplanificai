@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Settings, Route } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ const menuSections = [
     label: 'HERRAMIENTAS IA',
     items: [
       { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
+      { id: 'flujo-docente', label: 'Flujo Docente', icon: Route },
       { id: 'generador', label: 'Generador Rapido', icon: Sparkles },
       { id: 'workspace', label: 'Espacio de Trabajo', icon: FolderKanban },
       { id: 'unidades-didacticas', label: 'Unidades Didacticas', icon: BookOpen },

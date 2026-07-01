@@ -18,6 +18,7 @@ import { SharedPanelView } from './components/SharedPanelView';
 import { SharedDocumentPublicView } from './components/SharedDocumentPublicView';
 import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
 import { UnidadesDidacticasView } from './components/UnidadesDidacticasView';
+import { FlujoDocenteView } from './components/FlujoDocenteView';
 import { ReportesView } from './components/ReportesView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
@@ -69,6 +70,8 @@ function AppContent() {
         return <SharedPanelView onNavigate={handleViewChange} />;
       case 'unidades-didacticas':
         return <UnidadesDidacticasView />;
+      case 'flujo-docente':
+        return <FlujoDocenteView />;
       case 'reportes':
         return <ReportesView />;
       case 'admin':
