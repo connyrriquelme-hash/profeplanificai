@@ -1,13 +1,50 @@
-interface Env { DB: D1Database }
+import type { Env } from '../_middleware';
+
+interface Level {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  cycle?: string;
+  sort_order?: number;
+}
+
+interface CurriculumSubject {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  curriculum_source?: string;
+  level_name?: string;
+}
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
-  try {
-    const { results } = await context.env.DB.prepare(
-      `SELECT id, code, name, cycle, sort_order FROM courses ORDER BY sort_order ASC, name ASC`
-    ).all();
+  const url = new URL(context.request.url);
+  const level = url.searchParams.get('level') || '';
+  const cycle = url.searchParams.get('cycle') || '';
+  const q = url.searchParams.get('q')?.trim() || '';
 
-    return Response.json({ data: results, attribution: 'Currículum Nacional — MINEDUC Chile' });
-  } catch (err: any) {
-    return Response.json({ error: 'Error al cargar niveles', details: err.message }, { status: 500 });
+  let query = '';
+  const params: unknown[] = [];
+
+  if (level) {
+    query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e WHERE e.code LIKE ? OR e.name LIKE ? ORDER BY e.sort_order, e.name`;
+    params.push(`%${level}%`, `%${level}%`);
+  } else if (cycle) {
+    query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e WHERE e.cycle LIKE ? ORDER BY e.sort_order, e.name`;
+    params.push(`%${cycle}%`);
+  } else if (q) {
+    query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e WHERE e.code LIKE ? OR e.name LIKE ? OR e.description LIKE ? ORDER BY e.sort_order, e.name`;
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+  } else {
+    query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e ORDER BY e.sort_order, e.name`;
   }
+
+  const { results } = await context.env.DB.prepare(query).bind(...params).all();
+
+  return Response.json({
+    data: results,
+    count: results.length,
+    attribution: 'Currículum Nacional — MINEDUC Chile (Niveles Educativos)',
+  });
 }

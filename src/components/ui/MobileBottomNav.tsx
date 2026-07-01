@@ -7,7 +7,7 @@ interface MobileBottomNavProps {
 
 const bottomNavItems = [
   { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
-  { id: 'generador', label: 'Generar', icon: Sparkles },
+  { id: 'mis-clases', label: 'Clases', icon: Sparkles },
   { id: 'unidades-didacticas', label: 'Unidades', icon: BookOpen },
   { id: 'evaluaciones', label: 'Evaluar', icon: ClipboardCheck },
   { id: 'reportes', label: 'Reportes', icon: BarChart2 },

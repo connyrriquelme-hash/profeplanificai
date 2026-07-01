@@ -19,6 +19,7 @@ import { SharedDocumentPublicView } from './components/SharedDocumentPublicView'
 import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
 import { UnidadesDidacticasView } from './components/UnidadesDidacticasView';
 import { FlujoDocenteView } from './components/FlujoDocenteView';
+import { MisClases } from './components/MisClases';
 import { ReportesView } from './components/ReportesView';
 import AdminView from './components/AdminView';
 import LoginView from './components/LoginView';
@@ -36,7 +37,12 @@ interface ViewState {
 
 function AppContent() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<ViewType>('dashboard');
+  const initialView = (() => {
+    const path = window.location.pathname.replace(/\/+$/, '');
+    if (path === '/mis-clases' || path === '/generador-rapido') return 'mis-clases';
+    return 'dashboard';
+  })() as ViewType;
+  const [activeView, setActiveView] = useState<ViewType>(initialView);
   const [viewState, setViewState] = useState<ViewState | null>(null);
   const sharedToken = new URLSearchParams(window.location.search).get('shared');
 
@@ -45,8 +51,12 @@ function AppContent() {
   }
 
   const handleViewChange = useCallback((view: string, state?: ViewState) => {
-    setActiveView(view as ViewType);
+    const nextView = view === 'generador' || view === 'generador-rapido' ? 'mis-clases' : view;
+    setActiveView(nextView as ViewType);
     setViewState(state ?? null);
+    if (nextView === 'mis-clases' && window.location.pathname !== '/mis-clases') {
+      window.history.pushState(null, '', '/mis-clases');
+    }
   }, []);
 
   const renderView = () => {
@@ -55,8 +65,10 @@ function AppContent() {
         return <DashboardView onNavigate={handleViewChange} />;
       case 'workspace':
         return <WorkspaceView onNavigate={handleViewChange} />;
+      case 'mis-clases':
+        return <MisClases />;
       case 'generador':
-        return <DocumentGeneratorFlow />;
+        return <MisClases />;
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':

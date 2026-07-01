@@ -9,7 +9,7 @@ interface DashboardViewProps {
 }
 
 const QUICK_ACTIONS = [
-  { view: 'workspace', icon: NotebookPen, color: '#213885', title: 'Crear clase', desc: 'Diseña una planificación completa con inicio, desarrollo y cierre.' },
+  { view: 'mis-clases', icon: NotebookPen, color: '#213885', title: 'Mis Clases', desc: 'Organiza tu semana, planifica por OA y guarda recursos automáticamente.' },
   { view: 'evaluaciones', icon: ClipboardCheck, color: '#893172', title: 'Crear evaluación', desc: 'Crea evaluaciones formativas, sumativas o tipo SIMCE.' },
   { view: 'banco', icon: LibraryBig, color: '#5F3475', title: 'Explorar OA', desc: 'Navega los Objetivos de Aprendizaje del Currículum Nacional.' },
   { view: 'biblioteca-creativa', icon: Sparkles, color: '#893172', title: 'Biblioteca Creativa', desc: 'Genera recursos educativos con IA alineados al currículo.' },

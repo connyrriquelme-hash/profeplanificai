@@ -20,7 +20,8 @@
     "import:curriculum:local": "node scripts/import-curriculum.mjs",
     "import:curriculum:remote": "node scripts/import-curriculum.mjs --remote",
     "seed:methodologies:local": "node scripts/seed-methodologies.mjs",
-    "seed:methodologies:remote": "node scripts/seed-methodologies.mjs --remote"
+    "seed:methodologies:remote": "node scripts/seed-methodologies.mjs --remote",
+    "validate:schema:local": "node scripts/validate-d1-schema.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.9.0",

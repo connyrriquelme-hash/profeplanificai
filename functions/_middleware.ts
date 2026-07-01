@@ -18,7 +18,7 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
   }
 
   const path = new URL(request.url).pathname;
-  const protectedRoute = /^\/api\/(data|agent(?:\/|$)|ai(?:\/|$)|images(?:\/|$)|generate-activity(?:\/|$))/.test(path)
+  const protectedRoute = /^\/api\/(data|agent(?:\/|$)|ai(?:\/|$)|images(?:\/|$)|generate-activity(?:\/|$)|my-classes(?:\/|$)|lessons(?:\/|$))/.test(path)
     || (/^\/api\/admin(?:\/|$)/.test(path) && !/^\/api\/admin\/import-/.test(path));
   if (protectedRoute) {
     const auth = request.headers.get('Authorization');
