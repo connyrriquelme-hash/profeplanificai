@@ -1,15 +1,13 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
 import {
-  BookOpen, BookOpenCheck, CalendarDays, CheckCircle, ChevronLeft, ChevronRight,
-  Clock, FileDown, GraduationCap, ListChecks, Loader2, Paperclip, Plus, Printer,
-  Save, Sparkles, Trash2,
+  BookOpen, BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight,
+  Clock, FileDown, GraduationCap, ListChecks, Loader2, Plus, Printer,
+  Save, Sparkles, Trash2, X,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { getCourses, getIndicatorsByObjective, getObjectives, getSkillsByObjective, getSubjectsByCourse } from '../services/curriculumD1Service';
 import {
   autosaveLesson, createLesson, createNonTeachingBlock, createSchedule, createTeacherClass,
-  deleteLesson, deleteNonTeachingBlock, deleteTeacherClass, generateLessonEvaluation,
+  deleteNonTeachingBlock, deleteTeacherClass, generateLessonEvaluation,
   generateLessonResource, getCalendar, getLesson, getNonTeachingBlocks, listTeacherClasses,
   updateLesson, updateNonTeachingBlock, type LessonBundle, type LessonInstance,
   type NonTeachingBlock, type TeacherClass,
@@ -37,11 +35,6 @@ const FIELD_BY_TAB: Partial<Record<DetailTab, keyof LessonBundle['plan']>> = {
 };
 
 const WEEKDAYS = [{ n: 1, label: 'Lunes' }, { n: 2, label: 'Martes' }, { n: 3, label: 'Miercoles' }, { n: 4, label: 'Jueves' }, { n: 5, label: 'Viernes' }];
-const STATUS_OPTIONS = [
-  { value: '', label: 'Todos los estados' }, { value: 'planificada', label: 'Planificada' },
-  { value: 'en_preparacion', label: 'En preparacion' }, { value: 'realizada', label: 'Realizada' },
-  { value: 'pendiente', label: 'Pendiente' },
-];
 const NON_TEACHING_TYPES = [
   { value: 'planificacion', label: 'Planificacion' }, { value: 'preparacion', label: 'Preparacion de material' },
   { value: 'evaluacion', label: 'Revision de evaluaciones' }, { value: 'reunion', label: 'Reunion de departamento' },
@@ -52,6 +45,19 @@ const NON_TEACHING_TYPES = [
   { value: 'reemplazo', label: 'Reemplazo / Coordinacion especial' }, { value: 'otro', label: 'Otro' },
 ];
 const PRIORITY_OPTIONS = [{ value: 'baja', label: 'Baja' }, { value: 'media', label: 'Media' }, { value: 'alta', label: 'Alta' }];
+const METHODOLOGY_OPTIONS = [
+  { value: '', label: 'Selecciona metodologia' },
+  { value: 'abp', label: 'Aprendizaje basado en proyectos' },
+  { value: 'cooperativo', label: 'Aprendizaje cooperativo' },
+  { value: 'indagacion', label: 'Indagacion' },
+  { value: 'explicita', label: 'Clase explicita' },
+  { value: 'aula_invertida', label: 'Aula invertida' },
+  { value: 'dua', label: 'Diseno universal para el aprendizaje' },
+  { value: 'formativa', label: 'Evaluacion formativa' },
+  { value: 'estaciones', label: 'Estaciones de aprendizaje' },
+  { value: 'semilleros', label: 'Semilleros de investigacion' },
+  { value: 'otro', label: 'Otra metodologia' },
+];
 const NTB_FORM_DEFAULT = {
   non_teaching_type: 'planificacion', title: '', description: '', block_date: todayDate(),
   start_time: '08:00', end_time: '09:00', location: '', priority: 'media',
@@ -82,12 +88,8 @@ export function MisClases() {
   const [schoolYear, setSchoolYear] = useState(String(new Date().getFullYear()));
   const [levelId, setLevelId] = useState('');
   const [subjectId, setSubjectId] = useState('');
-  const [status, setStatus] = useState('');
   const [week, setWeek] = useState(mondayOf());
   const [courses, setCourses] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [subjectsLoading, setSubjectsLoading] = useState(false);
-  const [subjectsError, setSubjectsError] = useState('');
   const [classes, setClasses] = useState<TeacherClass[]>([]);
   const [calendar, setCalendar] = useState<LessonInstance[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState('');
@@ -99,7 +101,7 @@ export function MisClases() {
   const [indicators, setIndicators] = useState<any[]>([]);
   const [skills, setSkills] = useState<any[]>([]);
   const [attitudes, setAttitudes] = useState<string[]>([]);
-  const [methodologyNotes, setMethodologyNotes] = useState('');
+  const [methodologyId, setMethodologyId] = useState('');
   const [lessonCurriculum, setLessonCurriculum] = useState<{
     levelId: string; subjectId: string; objectiveId: string;
     indicatorIds: string[]; skillIds: string[]; attitudeIds: string[]; methodologyId: string;
@@ -114,11 +116,8 @@ export function MisClases() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [savingState, setSavingState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [showClassForm, setShowClassForm] = useState(false);
-  const [showScheduleForm, setShowScheduleForm] = useState(false);
-  const [classForm, setClassForm] = useState({ course_name: '', class_name: '', color: '#2563eb' });
-  const [scheduleForm, setScheduleForm] = useState({ class_id: '', weekday: '1', start_time: '08:30', end_time: '10:00', room: '', starts_on: mondayOf(), ends_on: '', repeats_weekly: true });
   const [ntbBlocks, setNtbBlocks] = useState<NonTeachingBlock[]>([]);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showNtbForm, setShowNtbForm] = useState(false);
   const [ntbForm, setNtbForm] = useState(NTB_FORM_DEFAULT);
   const [editingNtb, setEditingNtb] = useState<NonTeachingBlock | null>(null);
@@ -126,6 +125,8 @@ export function MisClases() {
   const [instructions, setInstructions] = useState('');
   const [replacementDoc, setReplacementDoc] = useState('');
   const [replacementObs, setReplacementObs] = useState('');
+  const [draftLesson, setDraftLesson] = useState({ title: '', lesson_date: todayDate(), start_time: '08:00', end_time: '09:00', notes: '' });
+  const [scheduleForm, setScheduleForm] = useState({ class_id: '', weekday: '1', start_time: '08:30', end_time: '10:00', room: '', starts_on: mondayOf(), ends_on: '', repeats_weekly: true });
   const autosaveTimer = useRef<number | null>(null);
   const lastAutosave = useRef('');
 
@@ -133,27 +134,29 @@ export function MisClases() {
 
   const loadFilters = useCallback(async () => {
     const loadedCourses = await getCourses(); setCourses(loadedCourses);
-    const nextLevel = levelId || loadedCourses[0]?.id || '';
-    if (!levelId && nextLevel) setLevelId(nextLevel);
-  }, [levelId]);
+  }, []);
 
   const loadMain = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const params = { school_year: schoolYear, level_id: levelId, subject_id: subjectId, status };
+      const params = { school_year: schoolYear, level_id: levelId, subject_id: subjectId };
       const [classRes, calRes, ntbRes] = await Promise.all([listTeacherClasses(params), getCalendar(week), getNonTeachingBlocks(week).catch(() => ({ data: [] }))]);
       setClasses(classRes.data || []); setCalendar(calRes.data || []); setNtbBlocks(ntbRes.data || []);
       if (!scheduleForm.class_id && classRes.data?.[0]?.id) setScheduleForm((prev) => ({ ...prev, class_id: classRes.data[0].id }));
     } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo cargar Mis Clases.'); }
     finally { setLoading(false); }
-  }, [schoolYear, levelId, subjectId, status, week, scheduleForm.class_id]);
+  }, [schoolYear, levelId, subjectId, week]);
 
   useEffect(() => { void loadFilters(); }, [loadFilters]);
   useEffect(() => { void loadMain(); }, [loadMain]);
   useEffect(() => {
     if (!selectedLessonId) return;
-    getLesson(selectedLessonId).then((r) => { setSelectedBundle(r.data); setMethodologyNotes(''); })
-      .catch((e) => setError(e instanceof Error ? e.message : 'No se pudo abrir la clase.'));
+    getLesson(selectedLessonId).then((r) => {
+      setSelectedBundle(r.data);
+      const cur = r.data.curriculum || {};
+      const meth = String(cur.methodology_id || '');
+      setMethodologyId(METHODOLOGY_OPTIONS.some((m) => m.value === meth) ? meth : '');
+    }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo abrir la clase.'));
   }, [selectedLessonId]);
   useEffect(() => {
     if (!selectedBundle) return; const cur = selectedBundle.curriculum || {};
@@ -183,12 +186,6 @@ export function MisClases() {
     fetch(`/api/curriculum/context?objective_id=${encodeURIComponent(lessonCurriculum.objectiveId)}`).then((r) => r.json()).then((d) => setLcContext(d?.data || null)).catch(() => setLcContext(null)).finally(() => setLcContextLoading(false));
   }, [lessonCurriculum.objectiveId]);
   useEffect(() => {
-    if (!levelId) { setSubjects([]); setSubjectId(''); return; }
-    setSubjectsLoading(true); setSubjectsError('');
-    getSubjectsByCourse(levelId).then((items) => { setSubjects(items); setSubjectId((p) => items.some((s) => s.id === p) ? p : (items[0]?.id || '')); })
-      .catch(() => { setSubjects([]); setSubjectId(''); setSubjectsError('Error al cargar asignaturas'); }).finally(() => setSubjectsLoading(false));
-  }, [levelId]);
-  useEffect(() => {
     if (!selectedBundle?.lesson?.level_id || !selectedBundle?.lesson?.subject_id) return;
     getObjectives(String(selectedBundle.lesson.level_id), String(selectedBundle.lesson.subject_id)).then(setObjectives).catch(() => setObjectives([]));
   }, [selectedBundle?.lesson?.level_id, selectedBundle?.lesson?.subject_id]);
@@ -201,29 +198,91 @@ export function MisClases() {
     setSelectedLessonId(lesson.id); setRightTab('clase');
   };
 
-  const handleCreateClass = async () => {
-    if (!levelId || !subjectId || !classForm.course_name || !classForm.class_name) { setError('Completa nivel, asignatura, curso y nombre de clase.'); return; }
-    const created = await createTeacherClass({ school_year: Number(schoolYear), level_id: levelId, subject_id: subjectId, course_name: classForm.course_name, class_name: classForm.class_name, color: classForm.color });
-    setToast('Clase creada'); setClassForm({ course_name: '', class_name: '', color: '#2563eb' }); setShowClassForm(false);
-    setScheduleForm((prev) => ({ ...prev, class_id: created.data.id })); await loadMain();
+  const handleNewClass = () => {
+    setSelectedLessonId(''); setSelectedBundle(null); setSelectedObjective(null);
+    setLessonCurriculum({ levelId: '', subjectId: '', objectiveId: '', indicatorIds: [], skillIds: [], attitudeIds: [], methodologyId: '' });
+    setMethodologyId(''); setInstructions(''); setReplacementDoc(''); setReplacementObs('');
+    setBlockType('lectivo'); setDetailTab('oa');
+    setDraftLesson({ title: '', lesson_date: todayDate(), start_time: '08:00', end_time: '09:00', notes: '' });
+  };
+
+  const handleSaveClass = async () => {
+    if (blockType === 'no_lectivo') {
+      if (!ntbForm.title.trim()) { setError('Ingresa un titulo para el bloque no lectivo.'); return; }
+      setSavingState('saving'); setError('');
+      try {
+        await createNonTeachingBlock(ntbForm);
+        setToast('Bloque no lectivo creado y agregado al calendario.');
+        setSavingState('saved'); setNtbForm(NTB_FORM_DEFAULT); await loadMain();
+        setTimeout(() => setToast(''), 3000);
+      } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo guardar el bloque.'); setSavingState('error'); }
+      return;
+    }
+    const title = selectedBundle?.plan?.title || selectedBundle?.lesson?.title || draftLesson.title;
+    const lessonDate = selectedBundle?.lesson?.lesson_date || draftLesson.lesson_date;
+    const startTime = selectedBundle?.lesson?.start_time || draftLesson.start_time;
+    const endTime = selectedBundle?.lesson?.end_time || draftLesson.end_time;
+    if (!title.trim()) { setError('Ingresa un nombre para la clase.'); return; }
+    if (blockType === 'lectivo' && (!lessonCurriculum.levelId || !lessonCurriculum.subjectId)) { setError('Selecciona nivel y asignatura para bloque lectivo.'); return; }
+    setSavingState('saving'); setError('');
+    try {
+      let classId = scheduleForm.class_id || selectedClass?.id || '';
+      if (!classId) {
+        const created = await createTeacherClass({
+          school_year: Number(schoolYear), level_id: lessonCurriculum.levelId || levelId || '',
+          subject_id: lessonCurriculum.subjectId || subjectId || '',
+          course_name: title, class_name: title, color: '#6d28d9',
+        });
+        classId = created.data.id;
+        setScheduleForm((prev) => ({ ...prev, class_id: classId }));
+      }
+      const notes = blockType === 'reemplazo' ? `Reemplazo: ${replacementDoc}. ${replacementObs}` : draftLesson.notes || instructions;
+      const created = await createLesson({
+        class_id: classId, lesson_date: lessonDate, start_time: startTime, end_time: endTime,
+        status: 'planificada', title, notes,
+      });
+      setSelectedLessonId(created.data.id);
+      setToast('Clase guardada y agregada al calendario semanal.');
+      setSavingState('saved'); setDraftLesson({ title: '', lesson_date: todayDate(), start_time: '08:00', end_time: '09:00', notes: '' });
+      await loadMain();
+      setTimeout(() => setToast(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar la clase.');
+      setSavingState('error');
+    }
   };
 
   const handleCreateSchedule = async () => {
-    const classId = scheduleForm.class_id || selectedClass?.id || '';
-    if (!classId) { setError('Crea o selecciona una clase antes de crear horario semanal.'); return; }
-    if (!scheduleForm.repeats_weekly) {
-      await createLesson({ class_id: classId, lesson_date: scheduleForm.starts_on, start_time: scheduleForm.start_time, end_time: scheduleForm.end_time, status: 'planificada', title: selectedClass?.class_name || 'Clase puntual', notes: scheduleForm.room ? `Sala: ${scheduleForm.room}` : '' });
-      setToast('Clase puntual creada');
-    } else { await createSchedule({ ...scheduleForm, class_id: classId, weekday: Number(scheduleForm.weekday) }); setToast('Horario semanal creado'); }
-    setShowScheduleForm(false); await loadMain();
+    setSavingState('saving'); setError('');
+    try {
+      let classId = scheduleForm.class_id || selectedClass?.id || '';
+      if (!classId) {
+        const title = lessonCurriculum.levelId ? `${courses.find((c) => c.id === lessonCurriculum.levelId)?.name || 'Curso'} - Clase recurrente` : 'Clase recurrente';
+        const created = await createTeacherClass({
+          school_year: Number(schoolYear), level_id: lessonCurriculum.levelId || '',
+          subject_id: lessonCurriculum.subjectId || '',
+          course_name: title, class_name: title, color: '#2563eb',
+        });
+        classId = created.data.id;
+        setScheduleForm((prev) => ({ ...prev, class_id: classId }));
+      }
+      await createSchedule({ ...scheduleForm, class_id: classId, weekday: Number(scheduleForm.weekday) });
+      setToast('Horario semanal creado y agregado al calendario.');
+      setSavingState('saved'); setShowScheduleForm(false); await loadMain();
+      setTimeout(() => setToast(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear el horario.');
+      setSavingState('error');
+    }
   };
 
   const handleCreateNtb = async () => {
     if (!ntbForm.title.trim()) { setError('El titulo es requerido.'); return; }
     try {
       if (editingNtb) { await updateNonTeachingBlock(editingNtb.id, ntbForm); setToast('Bloque no lectivo actualizado.'); }
-      else { await createNonTeachingBlock(ntbForm); setToast('Bloque no lectivo creado.'); }
+      else { await createNonTeachingBlock(ntbForm); setToast('Bloque no lectivo creado y agregado al calendario.'); }
       setShowNtbForm(false); setEditingNtb(null); setNtbForm(NTB_FORM_DEFAULT); await loadMain();
+      setTimeout(() => setToast(''), 3000);
     } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo guardar el bloque.'); }
   };
 
@@ -270,7 +329,7 @@ export function MisClases() {
     const loadedAttitudes = parseJsonList(objective.attitude_tags_json);
     setIndicators(loadedIndicators); setSkills(loadedSkills); setAttitudes(loadedAttitudes);
     setLessonCurriculum((prev) => { const next = { ...prev, objectiveId: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes }; if (!selectedLessonId) return next; saveFields({}, { curriculum: next }); return next; });
-    saveFields({ objective_text: objective.official_text || objective.normalized_text || objective.code }, { level_id: selectedBundle.lesson.level_id || levelId, subject_id: selectedBundle.lesson.subject_id || subjectId, axis_id: objective.axis_id, objective_id: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes });
+    saveFields({ objective_text: objective.official_text || objective.normalized_text || objective.code }, { level_id: selectedBundle.lesson.level_id || lessonCurriculum.levelId, subject_id: selectedBundle.lesson.subject_id || lessonCurriculum.subjectId, axis_id: objective.axis_id, objective_id: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes });
     setToast('OA conectado a la clase');
   };
 
@@ -293,73 +352,43 @@ export function MisClases() {
   const fieldForTab = FIELD_BY_TAB[detailTab];
 
   return (<div className="max-w-[1440px] mx-auto animate-fade-in pb-10">
-    <SectionHeader icon={BookOpen} iconColor="#5F3475" title="Mis Clases" description="Organiza tu horario docente, planifica clases y conecta recursos al curriculo chileno."
-      action={<div className="flex gap-2">
-        <button onClick={() => setShowClassForm(true)} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-2.5 text-sm font-bold shadow-md shadow-violet-900/10 hover:shadow-lg transition-all"><Plus size={16} /> Nueva clase</button>
-        <button onClick={() => setShowScheduleForm(true)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all"><CalendarDays size={16} /> Horario semanal</button>
-        <button onClick={() => { setEditingNtb(null); setNtbForm(NTB_FORM_DEFAULT); setShowNtbForm(true); }} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all"><Clock size={16} /> Bloque no lectivo</button>
-      </div>} />
+    <SectionHeader icon={BookOpen} iconColor="#5F3475" title="Mis Clases" description="Organiza tu horario docente, planifica clases y conecta recursos al curriculo chileno." />
 
-    {(toast || error || savingState !== 'idle') && (<div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-      {error || toast || (savingState === 'saving' ? 'Guardando...' : savingState === 'saved' ? 'Guardado automaticamente' : savingState === 'error' ? 'No se pudo guardar; se reintentara al editar.' : '')}
+    {(toast || error || savingState !== 'idle') && (<div className={`mb-4 rounded-2xl border px-4 py-3 text-sm flex items-center justify-between ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+      <span>{error || toast || (savingState === 'saving' ? 'Guardando...' : savingState === 'saved' ? 'Guardado automaticamente' : savingState === 'error' ? 'No se pudo guardar; se reintentara al editar.' : '')}</span>
+      <button onClick={() => { setError(''); setToast(''); }} className="ml-2 p-1 rounded-lg hover:bg-white/50"><X size={14} /></button>
     </div>)}
 
-    {(showClassForm || showScheduleForm) && (<div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {showClassForm && (<Card><h3 className="font-black text-slate-900">Nueva clase</h3><div className="mt-4 grid gap-3">
-        <input value={classForm.course_name} onChange={(e) => setClassForm((p) => ({ ...p, course_name: e.target.value }))} placeholder="Curso, por ejemplo 4 Basico A" className={IC} />
-        <input value={classForm.class_name} onChange={(e) => setClassForm((p) => ({ ...p, class_name: e.target.value }))} placeholder="Nombre, por ejemplo Lenguaje 4A" className={IC} />
-        <input type="color" value={classForm.color} onChange={(e) => setClassForm((p) => ({ ...p, color: e.target.value }))} className="h-10 w-20 rounded-xl" />
-        <button onClick={handleCreateClass} className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-white font-bold text-sm">Guardar clase</button>
-      </div></Card>)}
-      {showScheduleForm && (<Card><h3 className="font-black text-slate-900">Crear horario semanal</h3><div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <select value={scheduleForm.class_id || selectedClass?.id || ''} onChange={(e) => setScheduleForm((p) => ({ ...p, class_id: e.target.value }))} className={`${IC} md:col-span-2`}>{classes.map((c) => <option key={c.id} value={c.id}>{c.class_name} - {c.course_name}</option>)}</select>
-        <select value={scheduleForm.weekday} onChange={(e) => setScheduleForm((p) => ({ ...p, weekday: e.target.value }))} className={IC}>{WEEKDAYS.map((d) => <option key={d.n} value={d.n}>{d.label}</option>)}</select>
-        <input value={scheduleForm.room} onChange={(e) => setScheduleForm((p) => ({ ...p, room: e.target.value }))} placeholder="Sala opcional" className={IC} />
-        <input type="time" value={scheduleForm.start_time} onChange={(e) => setScheduleForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} />
-        <input type="time" value={scheduleForm.end_time} onChange={(e) => setScheduleForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} />
-        <input type="date" value={scheduleForm.starts_on} onChange={(e) => setScheduleForm((p) => ({ ...p, starts_on: e.target.value }))} className={IC} />
-        <input type="date" value={scheduleForm.ends_on} onChange={(e) => setScheduleForm((p) => ({ ...p, ends_on: e.target.value }))} className={IC} />
-        <label className="md:col-span-2 flex items-center gap-2 text-sm font-bold text-slate-600"><input type="checkbox" checked={scheduleForm.repeats_weekly} onChange={(e) => setScheduleForm((p) => ({ ...p, repeats_weekly: e.target.checked }))} /> Repetir semanalmente</label>
-        <button onClick={handleCreateSchedule} className="md:col-span-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-white font-bold text-sm">Guardar horario</button>
-      </div></Card>)}
-    </div>)}
-
-    {showNtbForm && (<div className="mt-4"><Card className="border-amber-200 bg-amber-50/50">
-      <h3 className="font-black text-slate-900">{editingNtb ? 'Editar bloque no lectivo' : 'Nuevo bloque no lectivo'}</h3>
-      <p className="text-xs text-slate-500 mt-1">Actividades del trabajo docente que no son clases lectivas.</p>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{NON_TEACHING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
-        <label className={LC}>Titulo<input value={ntbForm.title} onChange={(e) => setNtbForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Reunion de departamento" className={IC} /></label>
-        <label className={LC}>Lugar<input value={ntbForm.location} onChange={(e) => setNtbForm((p) => ({ ...p, location: e.target.value }))} placeholder="Sala, online, etc." className={IC} /></label>
-        <label className={LC}>Descripcion<textarea value={ntbForm.description} onChange={(e) => setNtbForm((p) => ({ ...p, description: e.target.value }))} rows={2} className={IC} /></label>
-        <label className={LC}>Fecha<input type="date" value={ntbForm.block_date} onChange={(e) => setNtbForm((p) => ({ ...p, block_date: e.target.value }))} className={IC} /></label>
-        <div className="grid grid-cols-2 gap-2"><label className={LC}>Inicio<input type="time" value={ntbForm.start_time} onChange={(e) => setNtbForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label><label className={LC}>Termino<input type="time" value={ntbForm.end_time} onChange={(e) => setNtbForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label></div>
-        <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{PRIORITY_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
-        <label className="flex items-center gap-2 text-sm font-bold text-slate-600 mt-5"><input type="checkbox" checked={ntbForm.reminder_enabled} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_enabled: e.target.checked }))} /> Activar recordatorio</label>
-        {ntbForm.reminder_enabled && (<><label className={LC}>Minutos antes<input type="number" min={5} max={1440} value={ntbForm.reminder_minutes_before} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_minutes_before: Number(e.target.value) }))} className={IC} /></label><label className={LC}>Correo destinatario<input type="email" value={ntbForm.reminder_email} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_email: e.target.value }))} placeholder="profesor@correo.cl" className={IC} /></label></>)}
-        <label className={`${LC} md:col-span-3`}>Notas de seguimiento<textarea value={ntbForm.follow_up_notes} onChange={(e) => setNtbForm((p) => ({ ...p, follow_up_notes: e.target.value }))} rows={2} className={IC} /></label>
-      </div>
-      <p className="mt-2 text-[11px] text-amber-700 italic">Los recordatorios por correo quedan preparados para una proxima fase.</p>
-      <div className="mt-4 flex gap-3"><button onClick={handleCreateNtb} className="rounded-2xl bg-amber-600 px-4 py-2 text-white font-bold text-sm">{editingNtb ? 'Actualizar' : 'Crear bloque'}</button><button onClick={() => { setShowNtbForm(false); setEditingNtb(null); }} className="rounded-2xl border px-4 py-2 font-bold text-sm">Cancelar</button></div>
-    </Card></div>)}
-
-    <div className="mt-5 flex flex-col xl:flex-row gap-5">
-      <aside className="w-full xl:w-[380px] shrink-0">
-        <Card className="space-y-5 xl:sticky xl:top-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Sparkles size={16} className="text-violet-600" /> Configurar Clase</div>
-          <div><label className={LC}>Tipo de bloque</label><div className="flex gap-2">{(['lectivo', 'no_lectivo', 'reemplazo'] as const).map((t) => (<button key={t} onClick={() => setBlockType(t)} className={`flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition-all ${blockType === t ? 'bg-violet-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{t === 'lectivo' ? 'Lectivo' : t === 'no_lectivo' ? 'No lectivo' : 'Reemplazo'}</button>))}</div></div>
-          <div className="space-y-3">
-            <label className={LC}>Nombre de la clase<input value={selectedBundle?.plan?.title || selectedBundle?.lesson?.title || ''} onChange={(e) => updatePlanField('title', e.target.value)} placeholder="Ej: Lenguaje 4A - Taller de lectura" className={IC} /></label>
-            <div className="grid grid-cols-2 gap-3"><label className={LC}>Fecha<input type="date" value={selectedBundle?.lesson?.lesson_date || todayDate()} onChange={(e) => updateLessonField({ lesson_date: e.target.value })} className={IC} /></label>
-            <div className="grid grid-cols-2 gap-2"><label className={LC}>Inicio<input type="time" value={selectedBundle?.lesson?.start_time || '08:00'} onChange={(e) => updateLessonField({ start_time: e.target.value })} className={IC} /></label><label className={LC}>Termino<input type="time" value={selectedBundle?.lesson?.end_time || '09:00'} onChange={(e) => updateLessonField({ end_time: e.target.value })} className={IC} /></label></div></div>
+    <div className="flex flex-col xl:flex-row gap-5">
+      <aside className="w-full xl:w-[380px] xl:min-w-[380px] shrink-0">
+        <Card className="space-y-4 xl:sticky xl:top-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Sparkles size={16} className="text-violet-600" /> Configurar Clase</div>
+            <button onClick={handleNewClass} className="inline-flex items-center gap-1 rounded-xl bg-violet-100 text-violet-700 px-3 py-1.5 text-xs font-bold hover:bg-violet-200 transition-all"><Plus size={12} /> Nueva</button>
           </div>
+
+          <div><label className={LC}>Tipo de bloque</label><div className="flex gap-2">{(['lectivo', 'no_lectivo', 'reemplazo'] as const).map((t) => (<button key={t} onClick={() => setBlockType(t)} className={`flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition-all ${blockType === t ? 'bg-violet-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{t === 'lectivo' ? 'Lectivo' : t === 'no_lectivo' ? 'No lectivo' : 'Reemplazo'}</button>))}</div></div>
+
+          <div className="space-y-3">
+            <label className={LC}>Nombre de la clase<input value={selectedBundle?.plan?.title || selectedBundle?.lesson?.title || draftLesson.title} onChange={(e) => { if (selectedBundle) updatePlanField('title', e.target.value); else setDraftLesson((p) => ({ ...p, title: e.target.value })); }} placeholder="Ej: Lenguaje 4A - Taller de lectura" className={IC} /></label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className={LC}>Fecha<input type="date" value={selectedBundle?.lesson?.lesson_date || draftLesson.lesson_date} onChange={(e) => { if (selectedBundle) updateLessonField({ lesson_date: e.target.value }); else setDraftLesson((p) => ({ ...p, lesson_date: e.target.value })); }} className={IC} /></label>
+              <div />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label className={LC}>Inicio<input type="time" value={selectedBundle?.lesson?.start_time || draftLesson.start_time} onChange={(e) => { if (selectedBundle) updateLessonField({ start_time: e.target.value }); else setDraftLesson((p) => ({ ...p, start_time: e.target.value })); }} className={IC} /></label>
+              <label className={LC}>Termino<input type="time" value={selectedBundle?.lesson?.end_time || draftLesson.end_time} onChange={(e) => { if (selectedBundle) updateLessonField({ end_time: e.target.value }); else setDraftLesson((p) => ({ ...p, end_time: e.target.value })); }} className={IC} /></label>
+            </div>
+          </div>
+
           <div className="border-t border-slate-100 pt-4 space-y-3">
             <p className="text-[11px] font-black tracking-wide uppercase text-violet-600">Curriculo</p>
             <label className={LC}>Nivel educativo<select value={lessonCurriculum.levelId} onChange={(e) => updateLessonCurriculum({ levelId: e.target.value })} className={IC}><option value="">Selecciona nivel</option>{courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
             <label className={LC}>Asignatura<select value={lessonCurriculum.subjectId} onChange={(e) => updateLessonCurriculum({ subjectId: e.target.value })} disabled={!lessonCurriculum.levelId || lcSubjectsLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcSubjectsLoading ? 'Cargando...' : 'Selecciona asignatura'}</option>{lcSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
             <label className={LC}>Objetivo Curricular OA<select value={lessonCurriculum.objectiveId} onChange={(e) => updateLessonCurriculum({ objectiveId: e.target.value })} disabled={!lessonCurriculum.subjectId || lcObjectivesLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcObjectivesLoading ? 'Cargando...' : 'Selecciona OA'}</option>{lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}</select></label>
-            <label className={LC}>Metodologia<input value={methodologyNotes} onChange={(e) => { setMethodologyNotes(e.target.value); updatePlanField('teacher_observations', e.target.value); }} placeholder="ABP, trabajo colaborativo, estaciones..." className={IC} /></label>
+            <label className={LC}>Metodologia<select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></label>
           </div>
+
           {blockType === 'no_lectivo' && (<div className="border-t border-slate-100 pt-4 space-y-3">
             <p className="text-[11px] font-black tracking-wide uppercase text-amber-600">Bloque no lectivo</p>
             <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{NON_TEACHING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
@@ -369,15 +398,22 @@ export function MisClases() {
             <label className={LC}>Notas<textarea value={ntbForm.follow_up_notes} onChange={(e) => setNtbForm((p) => ({ ...p, follow_up_notes: e.target.value }))} rows={2} className={IC} /></label>
             <p className="text-[11px] text-amber-600 italic">Los recordatorios por correo quedan preparados para una proxima fase.</p>
           </div>)}
+
           {blockType === 'reemplazo' && (<div className="border-t border-slate-100 pt-4 space-y-3">
             <p className="text-[11px] font-black tracking-wide uppercase text-blue-600">Reemplazo</p>
             <label className={LC}>Docente reemplazado<input value={replacementDoc} onChange={(e) => setReplacementDoc(e.target.value)} placeholder="Nombre del docente" className={IC} /></label>
             <label className={LC}>Observacion<textarea value={replacementObs} onChange={(e) => setReplacementObs(e.target.value)} rows={2} placeholder="Indicaciones para el reemplazo" className={IC} /></label>
           </div>)}
-          <div className="border-t border-slate-100 pt-4"><label className={LC}>Instrucciones adicionales<textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={3} placeholder="Ej: Enfatizar problemas cotidianos, trabajo colaborativo, evaluacion formativa..." className={IC} /></label></div>
+
+          <div className="border-t border-slate-100 pt-4">
+            <label className={LC}>Instrucciones adicionales<textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={3} placeholder="Ej: Enfatizar problemas cotidianos, trabajo colaborativo, evaluacion formativa..." className={IC} /></label>
+          </div>
+
           <div className="space-y-2 pt-2">
-            <button onClick={() => { if (blockType === 'no_lectivo') { handleCreateNtb(); } else { handleCreateSchedule(); } }} className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 text-white font-bold shadow-md shadow-violet-900/10 hover:shadow-lg transition-all text-sm">{selectedLessonId ? 'Actualizar clase' : 'Guardar clase'}</button>
-            <button onClick={() => setShowClassForm(true)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">Crear clase extraordinaria</button>
+            <button onClick={handleSaveClass} disabled={savingState === 'saving'} className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 text-white font-bold shadow-md shadow-violet-900/10 hover:shadow-lg transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+              {savingState === 'saving' ? <><Loader2 size={14} className="animate-spin" /> Guardando...</> : <><Save size={14} /> {selectedLessonId ? 'Actualizar clase' : 'Guardar clase'}</>}
+            </button>
+            <button onClick={() => setShowScheduleForm(true)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"><CalendarDays size={14} /> Horario semanal</button>
           </div>
         </Card>
       </aside>
@@ -387,6 +423,7 @@ export function MisClases() {
           <div className="flex gap-1 overflow-x-auto pb-1">{RIGHT_TABS.map((tab) => (<button key={tab.id} onClick={() => setRightTab(tab.id)} className={`whitespace-nowrap rounded-2xl px-4 py-2 text-xs font-bold transition-all ${rightTab === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>{tab.label}</button>))}</div>
           <div className="flex gap-2"><button onClick={() => window.print()} className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1"><Printer size={12} /> Imprimir</button><button className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1"><FileDown size={12} /> Exportar</button></div>
         </div>
+
         {/* TAB: Semana */}
         {rightTab === 'semana' && (<div>
           <div className="flex items-center justify-between mb-4">
@@ -396,11 +433,18 @@ export function MisClases() {
           <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-2 mb-4 text-xs font-bold text-slate-600">
             {fmtH(totalTeachingMin + totalNonTeachingMin)} totales &middot; {fmtH(totalTeachingMin)} lectivas &middot; {fmtH(totalNonTeachingMin)} no lectivas &middot; {teachPct}% lectivo
           </div>
+          {calendar.length === 0 && ntbBlocks.length === 0 && !loading && (
+            <div className="rounded-2xl bg-violet-50 border border-violet-100 p-8 text-center mb-4">
+              <CalendarDays size={32} className="mx-auto text-violet-400 mb-3" />
+              <h3 className="font-black text-slate-900">Sin bloques programados</h3>
+              <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">Crea una clase, horario semanal o bloque no lectivo desde el panel izquierdo para comenzar.</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             {lessonsByDay.map((day) => (<div key={day.date} className="min-h-[220px] rounded-2xl bg-slate-50 border border-slate-100 p-3">
               <p className="font-black text-slate-800">{day.label}</p><p className="text-xs text-slate-400 mb-3">{day.date}</p>
               <div className="space-y-2">
-                {day.lessons.map((lesson) => (<button key={lesson.id} onClick={() => void openLesson(lesson)} className="w-full text-left rounded-2xl p-3 text-white shadow-sm" style={{ backgroundColor: lesson.color || '#2563eb' }}>
+                {day.lessons.map((lesson) => (<button key={lesson.id} onClick={() => void openLesson(lesson)} className="w-full text-left rounded-2xl p-3 text-white shadow-sm hover:opacity-90 transition-opacity" style={{ backgroundColor: lesson.color || '#2563eb' }}>
                   <p className="text-xs font-bold flex items-center gap-1"><Clock size={12} /> {lesson.start_time}-{lesson.end_time}</p>
                   <p className="mt-1 font-black text-sm">{lesson.class_name || lesson.title}</p>
                   <p className="text-xs opacity-85">{lesson.course_name} &middot; {lesson.status}</p>
@@ -418,7 +462,7 @@ export function MisClases() {
                   <p className="text-[11px] text-slate-500">{NON_TEACHING_TYPES.find((t) => t.value === block.non_teaching_type)?.label || block.non_teaching_type}{block.location ? ` - ${block.location}` : ''}</p>
                   {block.reminder_enabled === 1 && <p className="text-[10px] text-amber-600 mt-0.5">Recordatorio preparado</p>}
                 </div>))}
-                {day.lessons.length === 0 && day.nteaching.length === 0 && <p className="text-xs text-slate-400">Sin bloques programados.</p>}
+                {day.lessons.length === 0 && day.nteaching.length === 0 && <p className="text-xs text-slate-400">Sin bloques.</p>}
               </div>
             </div>))}
           </div>
@@ -449,8 +493,10 @@ export function MisClases() {
                   <textarea value={selectedBundle.plan?.objective_text || ''} onChange={(e) => updatePlanField('objective_text', e.target.value)} placeholder="Objetivo especifico de la clase" className="w-full min-h-[110px] rounded-2xl border border-slate-200 p-3 text-sm" />
                   <textarea value={selectedBundle.plan?.purpose_text || ''} onChange={(e) => updatePlanField('purpose_text', e.target.value)} placeholder="Proposito de la clase" className="w-full min-h-[90px] rounded-2xl border border-slate-200 p-3 text-sm" />
                 </div>)}
-                {detailTab === 'metodologia' && (<div className="space-y-3"><h3 className="font-black text-slate-900">Metodologia sugerida</h3><textarea value={methodologyNotes} onChange={(e) => { setMethodologyNotes(e.target.value); updatePlanField('teacher_observations', e.target.value); }} className="w-full min-h-[180px] rounded-2xl border border-slate-200 p-3 text-sm" placeholder="ABP, trabajo colaborativo, estaciones, aprendizaje basado en problemas..." /></div>)}
-                {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100" placeholder={`Escribe o genera contenido para ${RIGHT_TABS.find((t) => t.id === rightTab)?.label || detailTab}`} />)}
+                {detailTab === 'metodologia' && (<div className="space-y-3"><h3 className="font-black text-slate-900">Metodologia sugerida</h3>
+                  <select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select>
+                  <p className="text-xs text-slate-500">Selecciona una metodologia del curriculo chileno.</p></div>)}
+                {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100" placeholder={`Escribe o genera contenido para ${detailTab}`} />)}
               </div>
               <aside className="rounded-2xl border border-violet-100 p-4 bg-violet-50/50">
                 <h3 className="font-black text-slate-900 flex items-center gap-2"><Sparkles size={18} /> IA integrada</h3>
@@ -472,11 +518,11 @@ export function MisClases() {
         {rightTab === 'curriculum' && (<div>
           {!hasOA ? (<div className="flex flex-col items-center justify-center min-h-[400px] text-center text-slate-500">
             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-violet-600"><GraduationCap size={24} /></div>
-            <h3 className="font-black text-slate-900">Selecciona un OA en el panel izquierdo para habilitar recursos con IA.</h3>
+            <h3 className="font-black text-slate-900">Selecciona un OA en el panel izquierdo para ver el contexto curricular.</h3>
           </div>) : (<div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Clase conectada al curriculo</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[['Nivel', lessonCurriculum.levelId ? courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId : '-'], ['Asignatura', lessonCurriculum.subjectId ? lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId : '-'], ['OA', lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.official_text || lessonCurriculum.objectiveId : '-'], ['Metodologia', methodologyNotes || '-']].map(([label, value]) => (<div key={label} className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">{label}</p><p className="text-sm font-semibold text-slate-700 mt-1">{value}</p></div>))}
+              {[['Nivel', lessonCurriculum.levelId ? courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId : '-'], ['Asignatura', lessonCurriculum.subjectId ? lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId : '-'], ['OA', lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.official_text || lessonCurriculum.objectiveId : '-'], ['Metodologia', METHODOLOGY_OPTIONS.find((m) => m.value === methodologyId)?.label || '-']].map(([label, value]) => (<div key={label} className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">{label}</p><p className="text-sm font-semibold text-slate-700 mt-1">{value}</p></div>))}
             </div>
             {lcContext && (<div className="space-y-3">
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">Eje</p><p className="text-sm text-slate-700 mt-1">{lcContext.axis_name || '-'}</p></div>
@@ -529,6 +575,7 @@ export function MisClases() {
           {ntbBlocks.length === 0 ? (<div className="flex flex-col items-center justify-center min-h-[300px] text-center text-slate-500">
             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-amber-500"><Clock size={24} /></div>
             <h3 className="font-black text-slate-900">No hay bloques no lectivos esta semana.</h3>
+            <p className="text-sm text-slate-500 mt-1">Crea uno desde el panel izquierdo o este boton.</p>
           </div>) : (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {ntbBlocks.map((block) => (<div key={block.id} className={`rounded-2xl border p-4 ${block.status === 'realizado' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
               <div className="flex items-center justify-between mb-2">
@@ -549,6 +596,56 @@ export function MisClases() {
         </div>)}
       </Card></div>
     </div>
+
+    {/* MODAL: Horario semanal */}
+    {showScheduleForm && (<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm">
+      <Card className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-black text-slate-900 text-lg">Crear horario semanal</h3>
+          <button onClick={() => setShowScheduleForm(false)} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"><X size={18} /></button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className={LC}>Dia de la semana<select value={scheduleForm.weekday} onChange={(e) => setScheduleForm((p) => ({ ...p, weekday: e.target.value }))} className={IC}>{WEEKDAYS.map((d) => <option key={d.n} value={d.n}>{d.label}</option>)}</select></label>
+          <label className={LC}>Sala / Lugar<input value={scheduleForm.room} onChange={(e) => setScheduleForm((p) => ({ ...p, room: e.target.value }))} placeholder="Sala opcional" className={IC} /></label>
+          <label className={LC}>Hora inicio<input type="time" value={scheduleForm.start_time} onChange={(e) => setScheduleForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label>
+          <label className={LC}>Hora termino<input type="time" value={scheduleForm.end_time} onChange={(e) => setScheduleForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label>
+          <label className={LC}>Desde<input type="date" value={scheduleForm.starts_on} onChange={(e) => setScheduleForm((p) => ({ ...p, starts_on: e.target.value }))} className={IC} /></label>
+          <label className={LC}>Hasta (opcional)<input type="date" value={scheduleForm.ends_on} onChange={(e) => setScheduleForm((p) => ({ ...p, ends_on: e.target.value }))} className={IC} /></label>
+          <label className="sm:col-span-2 flex items-center gap-2 text-sm font-bold text-slate-600"><input type="checkbox" checked={scheduleForm.repeats_weekly} onChange={(e) => setScheduleForm((p) => ({ ...p, repeats_weekly: e.target.checked }))} /> Repetir semanalmente</label>
+        </div>
+        <div className="flex gap-3 mt-4">
+          <button onClick={() => void handleCreateSchedule()} className="flex-1 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-white font-bold text-sm">Guardar horario</button>
+          <button onClick={() => setShowScheduleForm(false)} className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Cancelar</button>
+        </div>
+      </Card>
+    </div>)}
+
+    {/* MODAL: Bloque no lectivo */}
+    {showNtbForm && (<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm">
+      <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto border-amber-200 bg-amber-50/50">
+        <div className="flex items-center justify-between mb-4">
+          <div><h3 className="font-black text-slate-900 text-lg">{editingNtb ? 'Editar bloque no lectivo' : 'Nuevo bloque no lectivo'}</h3><p className="text-xs text-slate-500 mt-0.5">Actividades del trabajo docente que no son clases lectivas.</p></div>
+          <button onClick={() => { setShowNtbForm(false); setEditingNtb(null); }} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"><X size={18} /></button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{NON_TEACHING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
+          <label className={LC}>Titulo<input value={ntbForm.title} onChange={(e) => setNtbForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Reunion de departamento" className={IC} /></label>
+          <label className={LC}>Lugar<input value={ntbForm.location} onChange={(e) => setNtbForm((p) => ({ ...p, location: e.target.value }))} placeholder="Sala, online, etc." className={IC} /></label>
+          <label className={`${LC} sm:col-span-2 lg:col-span-3`}>Descripcion<textarea value={ntbForm.description} onChange={(e) => setNtbForm((p) => ({ ...p, description: e.target.value }))} rows={2} className={IC} /></label>
+          <label className={LC}>Fecha<input type="date" value={ntbForm.block_date} onChange={(e) => setNtbForm((p) => ({ ...p, block_date: e.target.value }))} className={IC} /></label>
+          <div className="grid grid-cols-2 gap-2"><label className={LC}>Inicio<input type="time" value={ntbForm.start_time} onChange={(e) => setNtbForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label><label className={LC}>Termino<input type="time" value={ntbForm.end_time} onChange={(e) => setNtbForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label></div>
+          <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{PRIORITY_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
+          <label className="flex items-center gap-2 text-sm font-bold text-slate-600 mt-5"><input type="checkbox" checked={ntbForm.reminder_enabled} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_enabled: e.target.checked }))} /> Activar recordatorio</label>
+          {ntbForm.reminder_enabled && (<><label className={LC}>Minutos antes<input type="number" min={5} max={1440} value={ntbForm.reminder_minutes_before} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_minutes_before: Number(e.target.value) }))} className={IC} /></label><label className={LC}>Correo destinatario<input type="email" value={ntbForm.reminder_email} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_email: e.target.value }))} placeholder="profesor@correo.cl" className={IC} /></label></>)}
+          <label className={`${LC} sm:col-span-2 lg:col-span-3`}>Notas de seguimiento<textarea value={ntbForm.follow_up_notes} onChange={(e) => setNtbForm((p) => ({ ...p, follow_up_notes: e.target.value }))} rows={2} className={IC} /></label>
+        </div>
+        <p className="mt-2 text-[11px] text-amber-700 italic">Los recordatorios por correo quedan preparados para una proxima fase.</p>
+        <div className="mt-4 flex gap-3">
+          <button onClick={handleCreateNtb} className="rounded-2xl bg-amber-600 px-5 py-2.5 text-white font-bold text-sm">{editingNtb ? 'Actualizar' : 'Crear bloque'}</button>
+          <button onClick={() => { setShowNtbForm(false); setEditingNtb(null); }} className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-bold text-sm text-slate-700">Cancelar</button>
+        </div>
+      </Card>
+    </div>)}
 
     {classes.length > 0 && (<div className="mt-5"><Card><h3 className="font-black text-slate-900">Cursos</h3><div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">{classes.map((item) => (<div key={item.id} className="rounded-2xl border border-slate-100 p-4"><span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} /><h4 className="mt-2 font-black text-slate-900">{item.class_name}</h4><p className="text-sm text-slate-500">{item.course_name}</p><button onClick={() => void deleteTeacherClass(item.id).then(loadMain)} className="mt-3 text-xs font-bold text-red-600 inline-flex gap-1 items-center"><Trash2 size={12} /> Quitar</button></div>))}</div></Card></div>)}
   </div>);
