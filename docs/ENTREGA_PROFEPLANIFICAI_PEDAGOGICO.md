@@ -1,9 +1,9 @@
-# ENTREGA PROFEPLANIFICAI — FASES 1-3
+# ENTREGA PROFEPLANIFICAI — FASES 1-6
 
 > Fecha: 2026-07-01
-> Commit: f963e03
+> Último commit: f44a06d
 > Producción: https://profeplanificai.cl
-> Preview: https://3befbd3f.planificaia-chile.pages.dev
+> Preview: https://26230efe.planificaia-chile.pages.dev
 
 ---
 
@@ -56,11 +56,22 @@
 
 ## ENDPOINTS NUEVOS
 
+### FASE 3
 | Endpoint | Método | Función |
 |----------|--------|---------|
 | `/api/curriculum/levels` | GET | Lista todos los niveles educativos |
 | `/api/curriculum/search` | GET | Búsqueda curricular con filtros |
 | `/api/methodologies` | GET | Lista metodologías pedagógicas |
+
+### FASE 4-6
+| Endpoint | Método | Función |
+|----------|--------|---------|
+| `/api/materials/guide?type=guia_estudiante` | POST | Genera guía de estudiante |
+| `/api/materials/guide?type=guia_docente` | POST | Genera guía docente |
+| `/api/materials/evaluation` | POST | Genera evaluación |
+| `/api/materials/rubric` | POST | Genera rúbrica |
+| `/api/materials/presentation` | POST | Genera presentación con metadatos D1 |
+| `/api/materials/generate?type=X` | POST | Generador genérico de materiales |
 
 ## COMANDOS NUEVOS
 
@@ -83,10 +94,6 @@
 
 ## PENDIENTES
 
-### FASE 4 — Motor de búsqueda (parcial)
-- [ ] Endpoint de búsqueda con ranking completo
-- [ ] Integración con frontend
-
 ### FASE 5 — Agentes IA
 - [ ] Arquitectura de agentes pedagógicos
 - [ ] Agente CurriculumChile
@@ -99,23 +106,16 @@
 - [ ] Agente Simce
 - [ ] Agente ReflectionReport
 
-### FASE 6 — Generador de materiales
-- [ ] Guía estudiante
-- [ ] Guía docente
-- [ ] Planificación clase a clase
-- [ ] Rúbrica
-- [ ] Ticket de salida
-- [ ] Actividad DUA
-- [ ] PPTX con metadatos D1
-
 ### FASE 7 — UI Flujo Docente
 - [ ] Vista unificada paso a paso
 - [ ] Sugerencia de metodologías
 - [ ] Selector de producto
+- [ ] Integración con nuevos endpoints de materiales
 
 ### FASE 8 — Validación completa
 - [ ] wrangler pages functions build
 - [ ] Validación manual de todos los casos
+- [ ] Integración UI completa
 
 ## CÓMO DESPLEGAR
 
@@ -129,3 +129,12 @@ npm run local:dev          # Dev server
 git push origin main       # Push a main
 npx wrangler pages deploy dist --project-name planificaia-chile --branch main
 ```
+
+## COMMITS
+
+| Commit | Descripción |
+|--------|-------------|
+| `f44a06d` | FASE 4-6: Motor búsqueda curricular + generador materiales |
+| `6fbea15` | Agrega documento de entrega FASES 1-3 |
+| `f963e03` | FASE 1-3: Migración pedagógica, semillas metodologías, API curricular y búsqueda |
+| `792844a` | Mejora presentaciones con estructura visual premium y contexto D1 |
