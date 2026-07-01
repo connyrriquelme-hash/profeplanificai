@@ -8,13 +8,14 @@ interface SidebarProps {
 }
 
 const COLLAPSED_WIDTH = 80;
+const SIDEBAR_KEY = 'sidebarCollapsed:v2';
 
 function getInitialCollapsed(): boolean {
   try {
-    const stored = localStorage.getItem('sidebarCollapsed');
+    const stored = localStorage.getItem(SIDEBAR_KEY);
     if (stored !== null) return stored === 'true';
   } catch { /* noop */ }
-  return false;
+  return true;
 }
 
 const menuSections = [
@@ -47,7 +48,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const { user, logout } = useAuth();
 
   useEffect(() => {
-    try { localStorage.setItem('sidebarCollapsed', String(isCollapsed)); } catch { /* noop */ }
+    try { localStorage.setItem(SIDEBAR_KEY, String(isCollapsed)); } catch { /* noop */ }
   }, [isCollapsed]);
 
   const toggleCollapse = useCallback(() => setIsCollapsed((prev) => !prev), []);
