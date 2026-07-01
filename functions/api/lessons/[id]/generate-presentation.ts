@@ -1,7 +1,7 @@
 import { buildLocalGeneration, getCurriculumContext, getLessonBundle, getTeacherId, json, randomId, readJson, type Env } from '../../../_lib/my-classes';
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const lessonId = String(context.params.id || '');

@@ -213,36 +213,72 @@ export function MisClases() {
       } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo guardar el bloque.'); setSavingState('error'); }
       return;
     }
+
     const title = selectedBundle?.plan?.title || selectedBundle?.lesson?.title || draftLesson.title;
     const lessonDate = selectedBundle?.lesson?.lesson_date || draftLesson.lesson_date;
     const startTime = selectedBundle?.lesson?.start_time || draftLesson.start_time;
     const endTime = selectedBundle?.lesson?.end_time || draftLesson.end_time;
+
+    console.log('[handleSaveClass] draftLesson:', draftLesson);
+    console.log('[handleSaveClass] selectedBundle:', selectedBundle);
+    console.log('[handleSaveClass] blockType:', blockType);
+    console.log('[handleSaveClass] lessonCurriculum:', lessonCurriculum);
+    console.log('[handleSaveClass] resolved values:', { title, lessonDate, startTime, endTime });
+
     if (!title.trim()) { setError('Ingresa un nombre para la clase.'); return; }
+    if (!lessonDate) { setError('Selecciona fecha.'); return; }
+    if (!startTime || !endTime) { setError('Selecciona hora de inicio y termino.'); return; }
     if (blockType === 'lectivo' && (!lessonCurriculum.levelId || !lessonCurriculum.subjectId)) { setError('Selecciona nivel y asignatura para bloque lectivo.'); return; }
+
     setSavingState('saving'); setError('');
     try {
       let classId = scheduleForm.class_id || selectedClass?.id || '';
+      console.log('[handleSaveClass] existing classId:', classId);
+
       if (!classId) {
-        const created = await createTeacherClass({
+        const teacherClassPayload = {
           school_year: Number(schoolYear), level_id: lessonCurriculum.levelId || levelId || '',
           subject_id: lessonCurriculum.subjectId || subjectId || '',
           course_name: title, class_name: title, color: '#6d28d9',
-        });
-        classId = created.data.id;
+        };
+        console.log('[handleSaveClass] createTeacherClass payload:', teacherClassPayload);
+        const createdClass = await createTeacherClass(teacherClassPayload);
+        console.log('[handleSaveClass] createTeacherClass response:', createdClass);
+        classId = createdClass.data?.id || (createdClass as any).id;
+        if (!classId) throw new Error('No se recibio id de teacher_class');
         setScheduleForm((prev) => ({ ...prev, class_id: classId }));
       }
+
       const notes = blockType === 'reemplazo' ? `Reemplazo: ${replacementDoc}. ${replacementObs}` : draftLesson.notes || instructions;
-      const created = await createLesson({
+      const lessonPayload = {
         class_id: classId, lesson_date: lessonDate, start_time: startTime, end_time: endTime,
-        status: 'planificada', title, notes,
-      });
-      setSelectedLessonId(created.data.id);
+        title, status: 'planificada', notes,
+      };
+      console.log('[handleSaveClass] createLesson payload:', lessonPayload);
+      const createdLesson = await createLesson(lessonPayload);
+      console.log('[handleSaveClass] createLesson response:', createdLesson);
+      const lessonId = createdLesson.data?.id || (createdLesson as any).id;
+      if (!lessonId) throw new Error('No se recibio id de lesson');
+
+      if (lessonCurriculum.objectiveId) {
+        try {
+          await autosaveLesson(lessonId, { curriculum: { levelId: lessonCurriculum.levelId, subjectId: lessonCurriculum.subjectId, objectiveId: lessonCurriculum.objectiveId, indicatorIds: lessonCurriculum.indicatorIds, skillIds: lessonCurriculum.skillIds, attitudeIds: lessonCurriculum.attitudeIds, methodologyId: lessonCurriculum.methodologyId } });
+          console.log('[handleSaveClass] curriculum saved via autosave');
+        } catch (curErr) { console.error('[handleSaveClass] curriculum save failed:', curErr); }
+      }
+
+      const loaded = await getLesson(lessonId);
+      setSelectedLessonId(lessonId);
+      setSelectedBundle(loaded.data);
       setRightTab('clase');
+      setWeek(mondayOf(lessonDate));
       setToast('Clase guardada y agregada al calendario semanal.');
-      setSavingState('saved'); setDraftLesson({ title: '', lesson_date: todayDate(), start_time: '08:00', end_time: '09:00', notes: '' });
+      setSavingState('saved');
+      setDraftLesson({ title: '', lesson_date: todayDate(), start_time: '08:00', end_time: '09:00', notes: '' });
       await loadMain();
       setTimeout(() => setToast(''), 3000);
     } catch (err) {
+      console.error('[handleSaveClass] ERROR:', err);
       setError(err instanceof Error ? err.message : 'No se pudo guardar la clase.');
       setSavingState('error');
     }

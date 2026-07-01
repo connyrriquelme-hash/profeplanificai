@@ -33,15 +33,21 @@ async function request<T = unknown>(endpoint: string, opts: ApiOptions = {}): Pr
     headers: h,
     body: body ? JSON.stringify(body) : undefined,
     signal,
+    credentials: 'include',
   });
 
-  const data = await r.json().catch(() => null);
+  const rawText = await r.text();
+  let data: any = null;
+  try { data = rawText ? JSON.parse(rawText) : null; } catch { data = rawText; }
 
   if (!r.ok) {
-    const msg = data?.error || `Error ${r.status}: ${r.statusText}`;
+    const msg = (data && typeof data === 'object' ? data.error || data.message : null) || rawText || `Error ${r.status}: ${r.statusText}`;
     if (r.status === 401) {
       localStorage.removeItem('planificaia_token');
       localStorage.removeItem('planificaia_user');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth:invalid-session'));
+      }
     }
     const error = new Error(msg) as Error & { status?: number };
     error.status = r.status;

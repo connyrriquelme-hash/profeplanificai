@@ -3,7 +3,8 @@ interface Env {
   JWT_SECRET: string;
 }
 
-import { createToken, verifyPassword } from '../../_lib/auth';
+import { verifyPassword } from '../../_lib/auth';
+import { createSession, serializeSessionCookie, type SessionEnv } from '../../_lib/session';
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
@@ -26,11 +27,19 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       return Response.json({ error: 'Contraseña incorrecta' }, { status: 401 });
     }
 
-    const token = await createToken(user.id, user.email, context.env.JWT_SECRET);
+    const env: SessionEnv = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const { token, sessionId } = await createSession({ id: user.id, email: user.email }, context.request, env);
 
-    return Response.json({
+    const expiresAt = new Date(Date.now() + 86400 * 30 * 1000);
+    const cookie = serializeSessionCookie(sessionId, expiresAt);
+
+    return new Response(JSON.stringify({
       user: { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol },
       token,
+      session: { id: sessionId, createdAt: new Date().toISOString(), expiresAt: expiresAt.toISOString() },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Set-Cookie': cookie },
     });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });

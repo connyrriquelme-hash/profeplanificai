@@ -1,7 +1,7 @@
 import { ensureLessonPlan, getLessonBundle, getTeacherId, json, normalizeStatus, nowIso, readJson, text, type Env } from '../../_lib/my-classes';
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const id = String(context.params.id || '');
@@ -11,7 +11,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 }
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const id = String(context.params.id || '');
@@ -54,7 +54,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
 }
 
 export async function onRequestDelete(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const id = String(context.params.id || '');

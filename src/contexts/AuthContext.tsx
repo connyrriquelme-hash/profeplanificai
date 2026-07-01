@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { loginAPI, registerAPI, verifySession, logoutAPI } from '../services/authService';
+import { loginAPI, registerAPI, verifySession, logoutAPI, getSessions, revokeSessionAPI, revokeOtherSessionsAPI, type SessionInfo } from '../services/authService';
 
 export interface User {
   id: string;
@@ -14,8 +14,12 @@ interface AuthContextType {
   online: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, nombre: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  sessions: SessionInfo[];
+  loadSessions: () => Promise<void>;
+  revokeSession: (sessionId: string) => Promise<void>;
+  revokeOtherSessions: () => Promise<number>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -24,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [online, setOnline] = useState(false);
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
 
   useEffect(() => {
     verifySession()
@@ -35,6 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setOnline(false);
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const handler = () => { setUser(null); setSessions([]); };
+    window.addEventListener('auth:invalid-session', handler);
+    return () => window.removeEventListener('auth:invalid-session', handler);
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -49,13 +60,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOnline(true);
   }, []);
 
-  const logout = useCallback(() => {
-    logoutAPI();
+  const logout = useCallback(async () => {
+    await logoutAPI();
     setUser(null);
+    setSessions([]);
   }, []);
 
+  const loadSessions = useCallback(async () => {
+    if (!user) return;
+    try {
+      const list = await getSessions();
+      setSessions(list);
+    } catch {
+      setSessions([]);
+    }
+  }, [user]);
+
+  const revokeSession = useCallback(async (sessionId: string) => {
+    await revokeSessionAPI(sessionId);
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
+  }, []);
+
+  const revokeOtherSessions = useCallback(async () => {
+    const count = await revokeOtherSessionsAPI();
+    await loadSessions();
+    return count;
+  }, [loadSessions]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, online, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, online, login, register, logout, isAuthenticated: !!user, sessions, loadSessions, revokeSession, revokeOtherSessions }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,8 @@
+import { verifyToken } from './auth';
+
 export interface Env {
   DB: D1Database;
+  JWT_SECRET?: string;
   GEMINI_API_KEY?: string;
   AI?: { run: (model: string, input: unknown) => Promise<unknown> };
 }
@@ -10,15 +13,13 @@ export function json(data: unknown, status = 200): Response {
   return Response.json(data, { status });
 }
 
-export function getTeacherId(context: EventContext<Env>): string | null {
+export async function getTeacherId(context: EventContext<Env>): Promise<string | null> {
   const auth = context.request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return 'local-teacher';
-  try {
-    const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-    return payload.sub || payload.id || 'local-teacher';
-  } catch {
-    return null;
-  }
+  if (!auth?.startsWith('Bearer ')) return null;
+  const secret = context.env.JWT_SECRET || '';
+  if (!secret) return null;
+  const payload = await verifyToken(auth.slice(7), secret);
+  return payload?.sub || null;
 }
 
 export async function readJson(request: Request): Promise<JsonRecord> {

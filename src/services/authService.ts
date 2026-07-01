@@ -12,6 +12,16 @@ function genId(): string {
 interface AuthResponse {
   user: User;
   token: string;
+  session?: { id: string; createdAt: string; expiresAt: string };
+}
+
+export interface SessionInfo {
+  id: string;
+  createdAt: string;
+  lastSeenAt: string | null;
+  expiresAt: string;
+  userAgent: string;
+  isCurrent: boolean;
 }
 
 export async function loginAPI(email: string, password: string): Promise<{ user: User; token: string }> {
@@ -23,7 +33,6 @@ export async function loginAPI(email: string, password: string): Promise<{ user:
   } catch (error) {
     const status = (error as Error & { status?: number })?.status;
     if (status && status < 500) throw error;
-    // Fallback offline
     await new Promise((r) => setTimeout(r, 300));
     const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
     const found = users.find((u) => u.email === email);
@@ -48,7 +57,6 @@ export async function registerAPI(
   } catch (error) {
     const status = (error as Error & { status?: number })?.status;
     if (status && status < 500) throw error;
-    // Fallback offline
     await new Promise((r) => setTimeout(r, 300));
     const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
     if (users.some((u) => u.email === email)) throw new Error('Este email ya está registrado.');
@@ -72,7 +80,7 @@ export async function verifySession(): Promise<User | null> {
   } catch (error) {
     const status = (error as Error & { status?: number })?.status;
     if (status && status < 500) {
-      logoutAPI();
+      await logoutAPI();
       return null;
     }
     const stored = localStorage.getItem(USER_KEY);
@@ -80,7 +88,26 @@ export async function verifySession(): Promise<User | null> {
   }
 }
 
-export function logoutAPI(): void {
+export async function logoutAPI(): Promise<void> {
+  try {
+    await api.post('/api/auth/logout', undefined);
+  } catch {
+    // Even if the API call fails, clear local state
+  }
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+}
+
+export async function getSessions(): Promise<SessionInfo[]> {
+  const data = await api.get<{ sessions: SessionInfo[] }>('/api/auth/sessions');
+  return data.sessions;
+}
+
+export async function revokeSessionAPI(sessionId: string): Promise<void> {
+  await api.del(`/api/auth/sessions/${sessionId}`);
+}
+
+export async function revokeOtherSessionsAPI(): Promise<number> {
+  const data = await api.post<{ revokedCount: number }>('/api/auth/sessions/revoke-others', undefined);
+  return data.revokedCount;
 }

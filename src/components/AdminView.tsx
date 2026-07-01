@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/apiClient';
 import { getPlans, getRecursosGuardados, getEvalsGuardadas, getCursos, getEstudiantes, getCollabPosts } from '../services/storageService';
-import { BarChart3, Users, Database, Wifi, WifiOff, UserCog, RefreshCw, Save } from 'lucide-react';
+import { BarChart3, Users, Database, Wifi, WifiOff, UserCog, RefreshCw, Save, Monitor, Trash2, ShieldOff } from 'lucide-react';
 
 interface DashboardStats {
   planes: number; recursos: number; evaluaciones: number;
@@ -15,8 +15,8 @@ interface Usuario {
 }
 
 export default function AdminView() {
-  const { user, online } = useAuth();
-  const [tab, setTab] = useState<'dashboard' | 'usuarios'>('dashboard');
+  const { user, online, sessions, loadSessions, revokeSession, revokeOtherSessions } = useAuth();
+  const [tab, setTab] = useState<'dashboard' | 'usuarios' | 'sesiones'>('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
@@ -35,6 +35,7 @@ export default function AdminView() {
 
   useEffect(() => {
     if (tab === 'usuarios') loadUsuarios();
+    if (tab === 'sesiones') loadSessions();
   }, [tab]);
 
   const loadStats = async () => {
@@ -124,6 +125,9 @@ export default function AdminView() {
         </button>
         <button className={`tab-btn${tab === 'usuarios' ? ' active' : ''}`} onClick={() => setTab('usuarios')}>
           <Users size={14} /> Usuarios
+        </button>
+        <button className={`tab-btn${tab === 'sesiones' ? ' active' : ''}`} onClick={() => setTab('sesiones')}>
+          <Monitor size={14} /> Sesiones
         </button>
       </div>
 
@@ -240,6 +244,61 @@ export default function AdminView() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'sesiones' && (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Monitor size={18} /> Sesiones Activas
+            </h3>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="secondary" onClick={loadSessions} style={{ padding: '4px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <RefreshCw size={12} /> Refrescar
+              </button>
+              {sessions.filter(s => !s.isCurrent).length > 0 && (
+                <button className="secondary" onClick={async () => { await revokeOtherSessions(); }} style={{ padding: '4px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--danger, #dc2626)' }}>
+                  <ShieldOff size={12} /> Cerrar otras
+                </button>
+              )}
+            </div>
+          </div>
+          {sessions.length === 0 ? (
+            <p className="muted">No hay sesiones activas.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {sessions.map(s => (
+                <div key={s.id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 12px', borderRadius: 8,
+                  border: `1px solid ${s.isCurrent ? 'var(--success, #22c55e)' : 'var(--border)'}`,
+                  background: s.isCurrent ? 'rgba(34,197,94,0.05)' : 'transparent',
+                }}>
+                  <div style={{ fontSize: 13 }}>
+                    <div style={{ fontWeight: 500 }}>
+                      {s.isCurrent ? 'Sesión actual' : 'Otra sesión'}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                      Creada: {new Date(s.createdAt).toLocaleString('es-CL')}
+                      {s.lastSeenAt && ` · Último uso: ${new Date(s.lastSeenAt).toLocaleString('es-CL')}`}
+                    </div>
+                    {s.userAgent && (
+                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
+                        {s.userAgent.slice(0, 80)}
+                      </div>
+                    )}
+                  </div>
+                  {!s.isCurrent && (
+                    <button className="secondary" onClick={async () => { await revokeSession(s.id); }}
+                      style={{ padding: '4px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--danger, #dc2626)' }}>
+                      <Trash2 size={11} /> Cerrar
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

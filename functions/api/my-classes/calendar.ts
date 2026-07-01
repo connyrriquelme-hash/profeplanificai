@@ -1,7 +1,7 @@
 import { addDays, getTeacherId, json, mondayOf, toDateOnly, type Env } from '../../_lib/my-classes';
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const url = new URL(context.request.url);

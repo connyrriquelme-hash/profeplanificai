@@ -18,7 +18,7 @@ const PLAN_FIELDS = new Set([
 ]);
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const lessonId = String(context.params.id || '');

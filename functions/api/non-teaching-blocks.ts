@@ -27,7 +27,7 @@ interface NTBRecord {
 }
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const url = new URL(context.request.url);
@@ -68,7 +68,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const body = await readJson(context.request);
@@ -121,7 +121,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 }
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const url = new URL(context.request.url);
@@ -165,7 +165,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
 }
 
 export async function onRequestDelete(context: EventContext<Env>): Promise<Response> {
-  const teacherId = getTeacherId(context);
+  const teacherId = await getTeacherId(context);
   if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
   const url = new URL(context.request.url);
