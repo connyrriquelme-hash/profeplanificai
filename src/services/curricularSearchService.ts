@@ -1,15 +1,12 @@
 /**
- * Curricular Search Service
- * Searches within educational data: OA, indicators, skills, attitudes,
- * methodologies, templates, and saved resources.
- *
- * Ranking priority:
- * 1. Exact OA code match
- * 2. Level/subject match
- * 3. Indicator match
- * 4. Skill match
- * 5. Attitude match
- * 6. Methodological match
+ * Curricular Search Service — Enhanced
+ * Searches within educational data with ranking priority:
+ * 1. Exact OA code match (100pts)
+ * 2. Level/subject match (60pts)
+ * 3. Indicator match (40pts)
+ * 4. Skill match (30pts)
+ * 5. Attitude match (20pts)
+ * 6. Methodological match (15pts)
  */
 
 export interface CurricularSearchResult {
@@ -20,6 +17,7 @@ export interface CurricularSearchResult {
   score: number;
   level?: string;
   subject?: string;
+  axis?: string;
   objectiveCode?: string;
   metadata?: Record<string, unknown>;
 }
@@ -30,6 +28,7 @@ export interface CurricularSearchFilters {
   axis?: string;
   resourceType?: string;
   methodology?: string;
+  track?: string;
 }
 
 function normalizeText(text: string): string {
@@ -72,13 +71,13 @@ function scoreKeywordMatch(text: string, query: string): number {
 }
 
 export function rankResults(
-  results: Array<{ id: string; type: string; title: string; content: string; level?: string; subject?: string; objectiveCode?: string }>,
+  results: Array<{ id: string; type: string; title: string; content: string; level?: string; subject?: string; axis?: string; objectiveCode?: string }>,
   query: string,
   filters: CurricularSearchFilters = {}
 ): CurricularSearchResult[] {
   return results
     .map(r => {
-      const combined = `${r.objectiveCode || ''} ${r.title} ${r.content} ${r.level || ''} ${r.subject || ''}`;
+      const combined = `${r.objectiveCode || ''} ${r.title} ${r.content} ${r.level || ''} ${r.subject || ''} ${r.axis || ''}`;
       let score = 0;
       score += scoreExactOACode(r.objectiveCode || r.title, query);
       score += scoreLevelSubject(combined, filters);
@@ -92,6 +91,7 @@ export function rankResults(
         score,
         level: r.level,
         subject: r.subject,
+        axis: r.axis,
         objectiveCode: r.objectiveCode,
       };
     })
@@ -99,9 +99,9 @@ export function rankResults(
     .sort((a, b) => b.score - a.score);
 }
 
-export function buildSearchQuery(query: string, filters: CurricularSearchFilters): string {
+export function buildSearchQuery(query: string, filters: CurricularSearchFilters): { sql: string; params: any[] } {
   const conditions: string[] = [];
-  const params: string[] = [];
+  const params: any[] = [];
 
   if (query) {
     conditions.push('(title LIKE ? OR content LIKE ? OR objective_code LIKE ?)');
@@ -129,5 +129,8 @@ export function buildSearchQuery(query: string, filters: CurricularSearchFilters
     params.push(filters.resourceType);
   }
 
-  return conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  return {
+    sql: conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '',
+    params,
+  };
 }
