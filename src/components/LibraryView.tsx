@@ -72,6 +72,15 @@ interface LibraryViewProps {
   onNavigate?: (view: string) => void;
 }
 
+function normalizeCurriculumTextList(items: any[]): string[] {
+  return (items || [])
+    .map((item: any) => {
+      if (typeof item === 'string') return item;
+      return item.indicator_text || item.official_text || item.text || item.description || item.name || '';
+    })
+    .filter((text: string) => Boolean(text && text.trim()));
+}
+
 export function LibraryView({ onNavigate }: LibraryViewProps) {
   const { newProject, addToLibrary, updateProjectField } = useProject();
   const { levels, getSubjects, getObjectives: getCurriculumObjectives, searchObjectives: searchCurriculumObjectives, isLoading: curriculumLoading } = useCurriculum();
@@ -110,6 +119,8 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [loadingD1, setLoadingD1] = useState(false);
+  const [fallbackIndicators, setFallbackIndicators] = useState<string[]>([]);
+  const [fallbackSkills, setFallbackSkills] = useState<string[]>([]);
 
   // Load D1 courses on mount
   useEffect(() => {
@@ -216,17 +227,31 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     setSelectedIndicator('');
     setSelectedSkill('');
     setOaSearch('');
-    // Find D1 objective if available
-    const d1Obj = d1Objectives.find((o: any) => String(o.id) === oa.id || o.code === oa.code);
+
+    const d1Obj = d1Objectives.find((o: any) => String(o.id) === String(oa.id) || o.code === oa.code);
     setSelectedD1Objective(d1Obj || null);
-    // Generate fallback indicators/skills for display if D1 returns empty
-    if (!d1Obj || d1Indicators.length === 0) {
-      generateChileanCurriculumIndicators({ course: level, subject, objectiveCode: oa.code, objectiveText: oa.text });
-    }
-    if (!d1Obj || d1Skills.length === 0) {
-      generateChileanCurriculumSkills({ course: level, subject, objectiveCode: oa.code, objectiveText: oa.text });
-    }
-  }, [d1Objectives, d1Indicators, d1Skills, level, subject]);
+
+    const generatedIndicators = normalizeCurriculumTextList(
+      generateChileanCurriculumIndicators({
+        course: level,
+        subject,
+        objectiveCode: oa.code,
+        objectiveText: oa.text,
+      }) as any[]
+    );
+
+    const generatedSkills = normalizeCurriculumTextList(
+      generateChileanCurriculumSkills({
+        course: level,
+        subject,
+        objectiveCode: oa.code,
+        objectiveText: oa.text,
+      }) as any[]
+    );
+
+    setFallbackIndicators(generatedIndicators);
+    setFallbackSkills(generatedSkills);
+  }, [d1Objectives, level, subject]);
 
   const handleGenerate = useCallback(async () => {
     if (!selectedOA) return;
@@ -290,6 +315,21 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       setGenerating(false);
     }
   }, [creationType, level, subject, selectedOA, selectedIndicator, selectedSkill, topic, additionalContext, designStyle, refineOptions]);
+
+  const displayedIndicators = d1Indicators.length > 0
+    ? normalizeCurriculumTextList(d1Indicators)
+    : selectedOA?.indicators?.length
+      ? selectedOA.indicators
+      : fallbackIndicators;
+
+  const displayedSkills = d1Skills.length > 0
+    ? normalizeCurriculumTextList(d1Skills)
+    : selectedOA?.skills?.length
+      ? selectedOA.skills
+      : fallbackSkills;
+
+  const indicatorsAreSuggested = d1Indicators.length === 0 && displayedIndicators.length > 0;
+  const skillsAreSuggested = d1Skills.length === 0 && displayedSkills.length > 0;
 
   const handleHubSelect = (tipo: string) => {
     setCreationType(tipo);
@@ -421,6 +461,10 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                   setSelectedSubjectId('');
                   setSelectedOA(null);
                   setSelectedD1Objective(null);
+                  setSelectedIndicator('');
+                  setSelectedSkill('');
+                  setFallbackIndicators([]);
+                  setFallbackSkills([]);
                 }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                   <option value="">Seleccionar nivel...</option>
                   {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
@@ -443,6 +487,10 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                     }
                     setSelectedOA(null);
                     setSelectedD1Objective(null);
+                    setSelectedIndicator('');
+                    setSelectedSkill('');
+                    setFallbackIndicators([]);
+                    setFallbackSkills([]);
                   }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                     <option value="">Seleccionar asignatura...</option>
                     {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
@@ -512,19 +560,29 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5">Indicador de evaluación</label>
                     <select value={selectedIndicator} onChange={e => setSelectedIndicator(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
                       <option value="">Seleccionar indicador...</option>
-                      {d1Indicators.length > 0 && d1Indicators.map((ind: any) => <option key={ind.id} value={ind.indicator_text || ind.text}>{ind.indicator_text || ind.text}</option>)}
-                      {d1Indicators.length === 0 && selectedOA.indicators.map((ind, i) => <option key={i} value={ind}>{ind} (sugerido)</option>)}
+                      {displayedIndicators.map((ind, i) => (
+                        <option key={i} value={ind}>
+                          {ind}{indicatorsAreSuggested ? ' (sugerido)' : ''}
+                        </option>
+                      ))}
                     </select>
-                    {d1Indicators.length === 0 && selectedOA.indicators.length > 0 && <span className="text-[10px] text-gray-400 mt-0.5">Sugerido desde OA</span>}
+                    {indicatorsAreSuggested && (
+                      <span className="text-[10px] text-gray-400 mt-0.5">Sugerido desde OA</span>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5">Habilidad</label>
                     <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
                       <option value="">Seleccionar habilidad...</option>
-                      {d1Skills.length > 0 && d1Skills.map((sk: any) => <option key={sk.id} value={sk.official_text || sk.text}>{sk.official_text || sk.text}</option>)}
-                      {d1Skills.length === 0 && selectedOA.skills.map((sk, i) => <option key={i} value={sk}>{sk} (sugerido)</option>)}
+                      {displayedSkills.map((sk, i) => (
+                        <option key={i} value={sk}>
+                          {sk}{skillsAreSuggested ? ' (sugerido)' : ''}
+                        </option>
+                      ))}
                     </select>
-                    {d1Skills.length === 0 && selectedOA.skills.length > 0 && <span className="text-[10px] text-gray-400 mt-0.5">Sugerido desde OA</span>}
+                    {skillsAreSuggested && (
+                      <span className="text-[10px] text-gray-400 mt-0.5">Sugerido desde OA</span>
+                    )}
                   </div>
                   <div className="pt-4 border-t border-gray-100">
                     <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Resumen curricular</h4>
