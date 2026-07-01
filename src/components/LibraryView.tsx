@@ -1,9 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { WandSparkles, Layers3, NotebookPen, ClipboardCheck, BookOpenCheck, HeartHandshake, Users, ArrowRight, Target, GraduationCap, Layout, BookText, GitBranch, ClipboardList, Sun, FlaskConical, Calculator, FileText, Palette, Moon, Sparkles, Loader2, Search, X, Check, ArrowLeft, BrainCircuit, DoorOpen, TrendingDown, Accessibility, ImagePlus, Download, RefreshCw } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useCurriculum } from '../contexts/CurriculumContext';
 import type { LearningObjective } from '../data/libraryMockData';
 import { generateResource, generateSlideLesson, type GenerateResourceRequest } from '../services/libraryGenerationService';
+import { getCourses, getSubjects as getD1Subjects, getObjectives, getIndicatorsByObjective, getSkillsByObjective } from '../services/curriculumD1Service';
+import { generateChileanCurriculumIndicators, generateChileanCurriculumSkills } from '../utils/chileanCurriculumFallback';
 import type { SlideLesson } from '../types/slideLesson';
 import { GeneratedResourcePanel } from './GeneratedResourcePanel';
 import { IconBadge } from './ui/IconBadge';
@@ -98,14 +100,79 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   const [creativeImage, setCreativeImage] = useState<string | null>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
 
-  const subjects = useMemo(() => level ? getSubjects(level) : [], [level, getSubjects]);
+  // D1 data
+  const [d1Courses, setD1Courses] = useState<any[]>([]);
+  const [d1Subjects, setD1Subjects] = useState<any[]>([]);
+  const [d1Objectives, setD1Objectives] = useState<any[]>([]);
+  const [d1Indicators, setD1Indicators] = useState<any[]>([]);
+  const [d1Skills, setD1Skills] = useState<any[]>([]);
+  const [selectedD1Objective, setSelectedD1Objective] = useState<any | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [loadingD1, setLoadingD1] = useState(false);
+
+  // Load D1 courses on mount
+  useEffect(() => {
+    getCourses().then(setD1Courses).catch(() => {});
+  }, []);
+
+  // Load D1 subjects when course changes
+  useEffect(() => {
+    if (!selectedCourseId) { setD1Subjects([]); return; }
+    getD1Subjects().then(subs => setD1Subjects(subs.filter((s: any) => (s.objective_count || 0) > 0))).catch(() => {});
+  }, [selectedCourseId]);
+
+  // Load D1 objectives when course+subject change
+  useEffect(() => {
+    if (!selectedCourseId || !selectedSubjectId) { setD1Objectives([]); return; }
+    setLoadingD1(true);
+    getObjectives(selectedCourseId, selectedSubjectId)
+      .then(setD1Objectives)
+      .catch(() => setD1Objectives([]))
+      .finally(() => setLoadingD1(false));
+  }, [selectedCourseId, selectedSubjectId]);
+
+  // Load D1 indicators and skills when OA is selected
+  useEffect(() => {
+    if (!selectedD1Objective) { setD1Indicators([]); setD1Skills([]); return; }
+    setLoadingD1(true);
+    Promise.all([
+      getIndicatorsByObjective(selectedD1Objective.code).catch(() => []),
+      getSkillsByObjective(selectedD1Objective.id).catch(() => []),
+    ]).then(([inds, sks]) => {
+      setD1Indicators(inds);
+      setD1Skills(sks);
+    }).finally(() => setLoadingD1(false));
+  }, [selectedD1Objective]);
+
+  // Use D1 data if available, fallback to mock
+  const subjects = useMemo(() => {
+    if (d1Subjects.length > 0) return d1Subjects.map((s: any) => s.name);
+    return level ? getSubjects(level) : [];
+  }, [level, getSubjects, d1Subjects]);
+
   const objectives = useMemo(() => {
+    if (d1Objectives.length > 0) {
+      const items = d1Objectives.map((o: any) => ({
+        id: String(o.id),
+        code: o.code,
+        level: o.course_name || level,
+        subject: o.subject_name || subject,
+        axis: o.axis_name || undefined,
+        text: o.official_text,
+        indicators: d1Indicators.map((i: any) => i.indicator_text || i.text),
+        skills: d1Skills.map((s: any) => s.official_text || s.text),
+      }));
+      if (!oaSearch) return items;
+      const q = oaSearch.toLowerCase();
+      return items.filter(o => o.code.toLowerCase().includes(q) || o.text.toLowerCase().includes(q));
+    }
     if (!level || !subject) return [];
     const items = getCurriculumObjectives(level, subject);
     if (!oaSearch) return items;
     const q = oaSearch.toLowerCase();
     return items.filter(o => o.code.toLowerCase().includes(q) || o.text.toLowerCase().includes(q));
-  }, [level, subject, oaSearch, getCurriculumObjectives]);
+  }, [level, subject, oaSearch, getCurriculumObjectives, d1Objectives, d1Indicators, d1Skills]);
 
   const typeLabel = creationType === 'Clase' ? 'Lección individual' : creationType === 'Unidad' ? 'Serie de lecciones' : creationType === 'Ficha' ? 'Fichas de actividades' : creationType === 'Evaluacion' ? 'Evaluación formativa' : creationType === 'Simce' ? 'Evaluación tipo SIMCE' : 'Recurso inclusivo DUA';
 
@@ -149,7 +216,17 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     setSelectedIndicator('');
     setSelectedSkill('');
     setOaSearch('');
-  }, []);
+    // Find D1 objective if available
+    const d1Obj = d1Objectives.find((o: any) => String(o.id) === oa.id || o.code === oa.code);
+    setSelectedD1Objective(d1Obj || null);
+    // Generate fallback indicators/skills for display if D1 returns empty
+    if (!d1Obj || d1Indicators.length === 0) {
+      generateChileanCurriculumIndicators({ course: level, subject, objectiveCode: oa.code, objectiveText: oa.text });
+    }
+    if (!d1Obj || d1Skills.length === 0) {
+      generateChileanCurriculumSkills({ course: level, subject, objectiveCode: oa.code, objectiveText: oa.text });
+    }
+  }, [d1Objectives, d1Indicators, d1Skills, level, subject]);
 
   const handleGenerate = useCallback(async () => {
     if (!selectedOA) return;
@@ -330,16 +407,46 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nivel</label>
-                <select value={level} onChange={e => { setLevel(e.target.value); setSubject(''); setSelectedOA(null); }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                <select value={selectedCourseId || level} onChange={e => {
+                  const val = e.target.value;
+                  const d1c = d1Courses.find((c: any) => c.id === val);
+                  if (d1c) {
+                    setSelectedCourseId(val);
+                    setLevel(d1c.name);
+                  } else {
+                    setSelectedCourseId('');
+                    setLevel(val);
+                  }
+                  setSubject('');
+                  setSelectedSubjectId('');
+                  setSelectedOA(null);
+                  setSelectedD1Objective(null);
+                }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                   <option value="">Seleccionar nivel...</option>
+                  {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
+                  <optgroup label="Fallback local" />
                   {levels.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
               </div>
               {level && (
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Asignatura</label>
-                  <select value={subject} onChange={e => { setSubject(e.target.value); setSelectedOA(null); }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                  <select value={selectedSubjectId || subject} onChange={e => {
+                    const val = e.target.value;
+                    const d1s = d1Subjects.find((s: any) => s.id === val);
+                    if (d1s) {
+                      setSelectedSubjectId(val);
+                      setSubject(d1s.name);
+                    } else {
+                      setSelectedSubjectId('');
+                      setSubject(val);
+                    }
+                    setSelectedOA(null);
+                    setSelectedD1Objective(null);
+                  }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                     <option value="">Seleccionar asignatura...</option>
+                    {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
+                    <optgroup label="Fallback local" />
                     {subjects.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -351,6 +458,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                 <SearchInput value={oaSearch} onChange={setOaSearch} placeholder="Buscar por código o texto..." />
               </div>
             )}
+            {loadingD1 && <p className="text-xs text-gray-400"><Loader2 size={12} className="animate-spin inline mr-1" /> Cargando datos curriculares...</p>}
           </Card>
 
           {level && subject && (
@@ -404,15 +512,19 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5">Indicador de evaluación</label>
                     <select value={selectedIndicator} onChange={e => setSelectedIndicator(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
                       <option value="">Seleccionar indicador...</option>
-                      {selectedOA.indicators.map((ind, i) => <option key={i} value={ind}>{ind}</option>)}
+                      {d1Indicators.length > 0 && d1Indicators.map((ind: any) => <option key={ind.id} value={ind.indicator_text || ind.text}>{ind.indicator_text || ind.text}</option>)}
+                      {d1Indicators.length === 0 && selectedOA.indicators.map((ind, i) => <option key={i} value={ind}>{ind} (sugerido)</option>)}
                     </select>
+                    {d1Indicators.length === 0 && selectedOA.indicators.length > 0 && <span className="text-[10px] text-gray-400 mt-0.5">Sugerido desde OA</span>}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5">Habilidad</label>
                     <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
                       <option value="">Seleccionar habilidad...</option>
-                      {selectedOA.skills.map((sk, i) => <option key={i} value={sk}>{sk}</option>)}
+                      {d1Skills.length > 0 && d1Skills.map((sk: any) => <option key={sk.id} value={sk.official_text || sk.text}>{sk.official_text || sk.text}</option>)}
+                      {d1Skills.length === 0 && selectedOA.skills.map((sk, i) => <option key={i} value={sk}>{sk} (sugerido)</option>)}
                     </select>
+                    {d1Skills.length === 0 && selectedOA.skills.length > 0 && <span className="text-[10px] text-gray-400 mt-0.5">Sugerido desde OA</span>}
                   </div>
                   <div className="pt-4 border-t border-gray-100">
                     <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Resumen curricular</h4>
