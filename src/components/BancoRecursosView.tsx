@@ -162,15 +162,6 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
               </p>
             </div>
           </div>
-          <Button
-            variant="premium"
-            size="sm"
-            iconLeft={Sparkles}
-            onClick={() => onNavigate?.('biblioteca-creativa')}
-            className="flex-shrink-0"
-          >
-            Crear recurso con IA
-          </Button>
         </div>
       </Card>
 
@@ -326,15 +317,9 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); onNavigate?.('panel-compartido'); }}
-                        className="text-xs font-semibold text-teal-600 hover:text-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-50 transition-all"
+                        className="text-xs font-semibold text-teal-600 hover:text-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-50 transition-all ml-auto"
                       >
                         Compartir
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onNavigate?.('biblioteca-creativa'); }}
-                        className="text-xs font-semibold text-amber-600 hover:text-amber-800 px-2.5 py-1 rounded-lg hover:bg-amber-50 transition-all ml-auto"
-                      >
-                        Crear versión con IA
                       </button>
                     </div>
                   </Card>
@@ -368,14 +353,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
             <EmptyState
               icon={FileText}
               title={query || filterSubject || filterLevel ? 'No hay recursos que coincidan con tu búsqueda' : 'Aún no hay recursos guardados'}
-              description={query || filterSubject || filterLevel ? 'Prueba con otros filtros o palabras clave.' : 'Crea recursos desde Biblioteca Creativa o guarda materiales para reutilizarlos aquí.'}
-              action={
-                query || filterSubject || filterLevel ? undefined : (
-                  <Button variant="premium" iconLeft={Sparkles} onClick={() => onNavigate?.('biblioteca-creativa')}>
-                    Crear recurso con IA
-                  </Button>
-                )
-              }
+              description={query || filterSubject || filterLevel ? 'Prueba con otros filtros o palabras clave.' : 'Guarda materiales generados para reutilizarlos aquí.'}
             />
           )}
 
@@ -392,9 +370,6 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   <div className="flex items-center gap-2 mt-3">
                     <Button variant="secondary" size="sm" iconLeft={Eye} onClick={() => setDetail(recommendedResource)}>
                       Ver recurso
-                    </Button>
-                    <Button variant="outline" size="sm" iconLeft={Sparkles} onClick={() => onNavigate?.('biblioteca-creativa')}>
-                      Crear versión con IA
                     </Button>
                   </div>
                 </div>

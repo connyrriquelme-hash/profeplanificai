@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -34,8 +34,6 @@ const menuSections = [
   {
     label: 'GESTION ESCOLAR',
     items: [
-      { id: 'biblioteca-creativa', label: 'Biblioteca Creativa', icon: WandSparkles },
-      { id: 'banco', label: 'Biblioteca', icon: LibraryBig },
       { id: 'banco-recursos', label: 'Banco de Recursos', icon: Boxes },
       { id: 'panel-compartido', label: 'Panel Compartido', icon: Share2 },
     ],
@@ -108,18 +106,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           <h2 className="text-[15px] font-bold text-slate-900 tracking-tight">PlanificaIA Chile</h2>
           <p className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase">Plataforma Docente</p>
         </div>}
-      </div>
-
-      {/* CTA Button */}
-      <div className={`${collapsed ? 'px-2' : 'px-3'} mb-4`}>
-        <button
-          onClick={() => handleNavigate('biblioteca-creativa')}
-          title={collapsed ? 'Nueva Planificacion' : undefined}
-          className={`w-full flex items-center justify-center gap-2 ${collapsed ? 'px-2' : 'px-4'} py-3 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-sm font-bold shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 hover:from-violet-600 hover:to-fuchsia-600 active:scale-[0.98] transition-all duration-200`}
-        >
-          <Sparkles size={16} strokeWidth={2.5} />
-          {!collapsed && 'Nueva Planificacion'}
-        </button>
       </div>
 
       {/* Navigation */}

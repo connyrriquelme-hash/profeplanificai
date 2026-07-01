@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react';
-import { Bell, HelpCircle, Sparkles, ChevronDown, Building2 } from 'lucide-react';
+import { useState } from 'react';
+import { Bell, HelpCircle, ChevronDown, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SearchInput } from './ui/SearchInput';
-import { Button } from './ui/Button';
 
 interface TopbarProps {
   title?: string;
@@ -16,12 +15,6 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
   const initials = user?.nombre
     ? user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'P';
-
-  const handleCreateResource = useCallback(() => {
-    if (onNavigate) {
-      onNavigate('biblioteca-creativa');
-    }
-  }, [onNavigate]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3 sm:gap-4 bg-white/95 backdrop-blur-xl" style={{ minHeight: '80px' }}>
@@ -60,16 +53,6 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
 
       {/* Right actions */}
       <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
-        <Button
-          variant="primary"
-          size="sm"
-          iconLeft={Sparkles}
-          onClick={handleCreateResource}
-          className="hidden md:inline-flex"
-        >
-          Crear recurso
-        </Button>
-
         <button className="p-2.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Ayuda">
           <HelpCircle size={18} strokeWidth={2} />
         </button>

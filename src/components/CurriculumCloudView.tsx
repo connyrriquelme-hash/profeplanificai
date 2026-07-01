@@ -296,17 +296,6 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
                     Ver fuente oficial
                   </Button>
                 )}
-                {onNavigate && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    iconLeft={Sparkles}
-                    className="ml-auto"
-                    onClick={() => onNavigate('biblioteca-creativa')}
-                  >
-                    Crear recurso con este OA
-                  </Button>
-                )}
               </div>
             </Card>
           )}

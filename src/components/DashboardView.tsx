@@ -1,4 +1,4 @@
-import { ClipboardCheck, LibraryBig, Sparkles, Boxes, BookOpenCheck, NotebookPen, ArrowRight, Target } from 'lucide-react';
+import { ClipboardCheck, LibraryBig, Boxes, NotebookPen, ArrowRight, Target } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { IconBadge } from './ui/IconBadge';
 import { Card } from './ui/Card';
@@ -12,9 +12,7 @@ const QUICK_ACTIONS = [
   { view: 'mis-clases', icon: NotebookPen, color: '#213885', title: 'Mis Clases', desc: 'Organiza tu semana, planifica por OA y guarda recursos automáticamente.' },
   { view: 'evaluaciones', icon: ClipboardCheck, color: '#893172', title: 'Crear evaluación', desc: 'Crea evaluaciones formativas, sumativas o tipo SIMCE.' },
   { view: 'banco', icon: LibraryBig, color: '#5F3475', title: 'Explorar OA', desc: 'Navega los Objetivos de Aprendizaje del Currículum Nacional.' },
-  { view: 'biblioteca-creativa', icon: Sparkles, color: '#893172', title: 'Biblioteca Creativa', desc: 'Genera recursos educativos con IA alineados al currículo.' },
   { view: 'banco-recursos', icon: Boxes, color: '#213885', title: 'Banco de Recursos', desc: 'Revisa y gestiona todos tus materiales generados.' },
-  { view: 'banco', icon: BookOpenCheck, color: '#5F3475', title: 'Ver biblioteca', desc: 'Accede a toda la base curricular chilena organizada.' },
 ];
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
