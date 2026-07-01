@@ -156,6 +156,17 @@ export function MisClases() {
   const [skills, setSkills] = useState<any[]>([]);
   const [attitudes, setAttitudes] = useState<string[]>([]);
   const [methodologyNotes, setMethodologyNotes] = useState('');
+  const [lessonCurriculum, setLessonCurriculum] = useState<{
+    levelId: string; subjectId: string; objectiveId: string;
+    indicatorIds: string[]; skillIds: string[]; attitudeIds: string[];
+    methodologyId: string;
+  }>({ levelId: '', subjectId: '', objectiveId: '', indicatorIds: [], skillIds: [], attitudeIds: [], methodologyId: '' });
+  const [lcSubjects, setLcSubjects] = useState<any[]>([]);
+  const [lcSubjectsLoading, setLcSubjectsLoading] = useState(false);
+  const [lcObjectives, setLcObjectives] = useState<any[]>([]);
+  const [lcObjectivesLoading, setLcObjectivesLoading] = useState(false);
+  const [lcContext, setLcContext] = useState<any>(null);
+  const [lcContextLoading, setLcContextLoading] = useState(false);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -211,6 +222,48 @@ export function MisClases() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'No se pudo abrir la clase.'));
   }, [selectedLessonId]);
+
+  useEffect(() => {
+    if (!selectedBundle) return;
+    const cur = selectedBundle.curriculum || {};
+    setLessonCurriculum({
+      levelId: String(cur.level_id || selectedBundle.lesson?.level_id || ''),
+      subjectId: String(cur.subject_id || selectedBundle.lesson?.subject_id || ''),
+      objectiveId: String(cur.objective_id || ''),
+      indicatorIds: parseJsonList(cur.indicator_ids_json || cur.indicatorIds),
+      skillIds: parseJsonList(cur.skill_ids_json || cur.skillIds),
+      attitudeIds: parseJsonList(cur.attitude_ids_json || cur.attitudeIds),
+      methodologyId: String(cur.methodology_id || ''),
+    });
+  }, [selectedLessonId]);
+
+  useEffect(() => {
+    if (!lessonCurriculum.levelId) { setLcSubjects([]); return; }
+    setLcSubjectsLoading(true);
+    getSubjectsByCourse(lessonCurriculum.levelId)
+      .then((items) => setLcSubjects(items))
+      .catch(() => setLcSubjects([]))
+      .finally(() => setLcSubjectsLoading(false));
+  }, [lessonCurriculum.levelId]);
+
+  useEffect(() => {
+    if (!lessonCurriculum.levelId || !lessonCurriculum.subjectId) { setLcObjectives([]); return; }
+    setLcObjectivesLoading(true);
+    getObjectives(lessonCurriculum.levelId, lessonCurriculum.subjectId)
+      .then((items) => setLcObjectives(items))
+      .catch(() => setLcObjectives([]))
+      .finally(() => setLcObjectivesLoading(false));
+  }, [lessonCurriculum.levelId, lessonCurriculum.subjectId]);
+
+  useEffect(() => {
+    if (!lessonCurriculum.objectiveId) { setLcContext(null); return; }
+    setLcContextLoading(true);
+    fetch(`/api/curriculum/context?objective_id=${encodeURIComponent(lessonCurriculum.objectiveId)}`)
+      .then((r) => r.json())
+      .then((d) => setLcContext(d?.data || null))
+      .catch(() => setLcContext(null))
+      .finally(() => setLcContextLoading(false));
+  }, [lessonCurriculum.objectiveId]);
 
   useEffect(() => {
     if (!levelId) {
@@ -323,6 +376,23 @@ export function MisClases() {
     saveFields({ [field]: value });
   };
 
+  const updateLessonCurriculum = (patch: Partial<typeof lessonCurriculum>) => {
+    setLessonCurriculum((prev) => {
+      const next = { ...prev, ...patch };
+      if (patch.levelId !== undefined && patch.levelId !== prev.levelId) {
+        next.subjectId = ''; next.objectiveId = '';
+        next.indicatorIds = []; next.skillIds = []; next.attitudeIds = [];
+      }
+      if (patch.subjectId !== undefined && patch.subjectId !== prev.subjectId) {
+        next.objectiveId = '';
+        next.indicatorIds = []; next.skillIds = []; next.attitudeIds = [];
+      }
+      if (!selectedLessonId) return next;
+      saveFields({}, { curriculum: next });
+      return next;
+    });
+  };
+
   const updateLessonField = (fields: Record<string, string>) => {
     setSelectedBundle((prev) => prev ? { ...prev, lesson: { ...prev.lesson, ...fields } } : prev);
     if (!selectedLessonId) return;
@@ -344,6 +414,12 @@ export function MisClases() {
     setIndicators(loadedIndicators);
     setSkills(loadedSkills);
     setAttitudes(loadedAttitudes);
+    setLessonCurriculum((prev) => {
+      const next = { ...prev, objectiveId: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes };
+      if (!selectedLessonId) return next;
+      saveFields({}, { curriculum: next });
+      return next;
+    });
     saveFields(
       { objective_text: objective.official_text || objective.normalized_text || objective.code },
       {
@@ -362,9 +438,9 @@ export function MisClases() {
   const generate = async (action: string, kind: 'resource' | 'evaluation' | 'presentation' = 'resource') => {
     const hasAiRequirements = Boolean(
       selectedLessonId
-      && (selectedBundle?.lesson?.level_id || levelId)
-      && (selectedBundle?.lesson?.subject_id || subjectId)
-      && selectedBundle?.curriculum?.objective_id,
+      && lessonCurriculum.levelId
+      && lessonCurriculum.subjectId
+      && lessonCurriculum.objectiveId,
     );
     if (!hasAiRequirements) {
       setError('Selecciona nivel, asignatura y OA antes de generar con IA');
@@ -587,6 +663,48 @@ export function MisClases() {
               <p className="text-xs font-bold text-slate-400">Asignatura</p>
               <p className="font-semibold text-slate-700">{subjects.find((s) => s.id === selectedBundle.lesson.subject_id)?.name || selectedBundle.lesson.subject_id || 'Sin asignatura'}</p>
             </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 p-4">
+            <h3 className="font-black text-slate-900 text-sm">Curriculum de la clase</h3>
+            <p className="text-xs text-slate-500 mb-3">Selecciona nivel, asignatura y OA. La IA usara este contexto obligatoriamente.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <label className="text-xs font-bold text-slate-500">Nivel / curso
+                <select value={lessonCurriculum.levelId} onChange={(e) => updateLessonCurriculum({ levelId: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white">
+                  <option value="">Selecciona nivel</option>
+                  {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-bold text-slate-500">Asignatura
+                <select value={lessonCurriculum.subjectId} onChange={(e) => updateLessonCurriculum({ subjectId: e.target.value })} disabled={!lessonCurriculum.levelId || lcSubjectsLoading} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white disabled:bg-slate-50">
+                  <option value="">{lcSubjectsLoading ? 'Cargando...' : 'Selecciona asignatura'}</option>
+                  {lcSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-bold text-slate-500">OA
+                <select value={lessonCurriculum.objectiveId} onChange={(e) => updateLessonCurriculum({ objectiveId: e.target.value })} disabled={!lessonCurriculum.subjectId || lcObjectivesLoading} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white disabled:bg-slate-50">
+                  <option value="">{lcObjectivesLoading ? 'Cargando...' : 'Selecciona OA'}</option>
+                  {lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} · {oa.official_text}</option>)}
+                </select>
+              </label>
+            </div>
+            {lcContext && (
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="rounded-xl bg-white border border-slate-100 p-3">
+                  <p className="font-bold text-slate-400">Eje</p>
+                  <p className="text-slate-700">{lcContext.axis_name || '—'}</p>
+                </div>
+                <div className="rounded-xl bg-white border border-slate-100 p-3">
+                  <p className="font-bold text-slate-400">Indicadores ({lcContext.indicators?.length || 0})</p>
+                  <p className="text-slate-700 line-clamp-2">{lcContext.indicators?.map((i: any) => i.description).join('; ') || '—'}</p>
+                </div>
+                <div className="rounded-xl bg-white border border-slate-100 p-3">
+                  <p className="font-bold text-slate-400">Habilidades ({lcContext.skills?.length || 0})</p>
+                  <p className="text-slate-700 line-clamp-2">{lcContext.skills?.map((s: any) => s.description).join('; ') || '—'}</p>
+                </div>
+              </div>
+            )}
+            {lcContextLoading && <p className="mt-2 text-xs text-indigo-500">Cargando contexto curricular...</p>}
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2 pb-2">

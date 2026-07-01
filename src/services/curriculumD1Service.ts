@@ -29,7 +29,10 @@ export async function getSubjects(): Promise<D1Subject[]> {
 
 export async function getSubjectsByCourse(courseId: string): Promise<D1Subject[]> {
   const data = await fetchJSON<any>(`/api/subjects?course=${encodeURIComponent(courseId)}`);
-  return unwrap(data).filter((s: any) => (s.objective_count || 0) > 0);
+  const items = unwrap(data).filter((s: any) => (s.objective_count || 0) > 0);
+  if (items.length > 0) return items;
+  const all = await fetchJSON<any>('/api/subjects');
+  return unwrap(all).filter((s: any) => (s.objective_count || 0) > 0);
 }
 
 export async function getObjectives(courseId: string, subjectId: string): Promise<D1Objective[]> {
