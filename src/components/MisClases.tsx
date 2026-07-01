@@ -22,18 +22,23 @@ import { getCourses, getIndicatorsByObjective, getObjectives, getSkillsByObjecti
 import {
   autosaveLesson,
   createLesson,
+  createNonTeachingBlock,
   createSchedule,
   createTeacherClass,
   deleteLesson,
+  deleteNonTeachingBlock,
   deleteTeacherClass,
   generateLessonEvaluation,
   generateLessonResource,
   getCalendar,
   getLesson,
+  getNonTeachingBlocks,
   listTeacherClasses,
   updateLesson,
+  updateNonTeachingBlock,
   type LessonBundle,
   type LessonInstance,
+  type NonTeachingBlock,
   type TeacherClass,
 } from '../services/misClasesService';
 
@@ -82,11 +87,20 @@ const STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente' },
 ];
 
-const SUMMARY_CARDS: { label: string; value: (classes: TeacherClass[], calendar: LessonInstance[], bundle: LessonBundle | null, week: string) => string | number; icon: LucideIcon }[] = [
+const SUMMARY_CARDS: { label: string; value: (classes: TeacherClass[], calendar: LessonInstance[], bundle: LessonBundle | null, week: string, ntb?: NonTeachingBlock[]) => string | number; icon: LucideIcon }[] = [
   { label: 'Cursos', value: (classes) => classes.length, icon: GraduationCap },
   { label: 'Calendario', value: (_classes, _calendar, _bundle, week) => `${week} / ${addDays(week, 4)}`, icon: CalendarDays },
-  { label: 'Mis Clases', value: (_classes, calendar) => calendar.length, icon: BookOpenCheck },
-  { label: 'Recursos generados', value: (_classes, _calendar, bundle) => (bundle?.resources?.length || 0) + (bundle?.evaluations?.length || 0), icon: Sparkles },
+  { label: 'Clases lectivas', value: (_classes, calendar) => calendar.length, icon: BookOpenCheck },
+  { label: 'Horas no lectivas', value: (_classes, _calendar, _bundle, _week, ntb) => {
+    const total = (ntb || []).reduce((sum, b) => {
+      const [sh, sm] = b.start_time.split(':').map(Number);
+      const [eh, em] = b.end_time.split(':').map(Number);
+      return sum + ((eh * 60 + em) - (sh * 60 + sm));
+    }, 0);
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return total > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}` : '0h';
+  }, icon: Clock },
 ];
 
 const FIELD_BY_TAB: Partial<Record<TabKey, keyof LessonBundle['plan']>> = {
@@ -98,6 +112,43 @@ const FIELD_BY_TAB: Partial<Record<TabKey, keyof LessonBundle['plan']>> = {
   recursos: 'resources_text',
   evaluacion: 'evaluation_text',
   comentarios: 'teacher_observations',
+};
+
+const NON_TEACHING_TYPES = [
+  { value: 'planificacion', label: 'Planificacion' },
+  { value: 'preparacion', label: 'Preparacion de material' },
+  { value: 'evaluacion', label: 'Revision de evaluaciones' },
+  { value: 'reunion', label: 'Reunion de departamento' },
+  { value: 'consejo', label: 'Consejo de profesores' },
+  { value: 'pie', label: 'Reunion PIE / Convivencia' },
+  { value: 'apoderados', label: 'Atencion de apoderados' },
+  { value: 'entrevista', label: 'Entrevista con estudiantes' },
+  { value: 'capacitacion', label: 'Capacitacion' },
+  { value: 'colaboracion', label: 'Trabajo colaborativo' },
+  { value: 'administrativo', label: 'Tareas administrativas' },
+  { value: 'reemplazo', label: 'Reemplazo / Coordinacion especial' },
+  { value: 'otro', label: 'Otro' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 'baja', label: 'Baja', color: 'bg-slate-100 text-slate-600' },
+  { value: 'media', label: 'Media', color: 'bg-amber-100 text-amber-700' },
+  { value: 'alta', label: 'Alta', color: 'bg-red-100 text-red-700' },
+];
+
+const NTB_FORM_DEFAULT = {
+  non_teaching_type: 'planificacion',
+  title: '',
+  description: '',
+  block_date: todayDate(),
+  start_time: '08:00',
+  end_time: '09:00',
+  location: '',
+  priority: 'media',
+  reminder_enabled: false,
+  reminder_minutes_before: 30,
+  reminder_email: '',
+  follow_up_notes: '',
 };
 
 function todayDate() {
@@ -175,6 +226,10 @@ export function MisClases() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [classForm, setClassForm] = useState({ course_name: '', class_name: '', color: '#2563eb' });
   const [scheduleForm, setScheduleForm] = useState({ class_id: '', weekday: '1', start_time: '08:30', end_time: '10:00', room: '', starts_on: mondayOf(), ends_on: '', repeats_weekly: true });
+  const [ntbBlocks, setNtbBlocks] = useState<NonTeachingBlock[]>([]);
+  const [showNtbForm, setShowNtbForm] = useState(false);
+  const [ntbForm, setNtbForm] = useState(NTB_FORM_DEFAULT);
+  const [editingNtb, setEditingNtb] = useState<NonTeachingBlock | null>(null);
   const autosaveTimer = useRef<number | null>(null);
   const lastAutosave = useRef('');
 
@@ -192,9 +247,10 @@ export function MisClases() {
     setError('');
     try {
       const params = { school_year: schoolYear, level_id: levelId, subject_id: subjectId, status };
-      const [classRes, calRes] = await Promise.all([listTeacherClasses(params), getCalendar(week)]);
+      const [classRes, calRes, ntbRes] = await Promise.all([listTeacherClasses(params), getCalendar(week), getNonTeachingBlocks(week).catch(() => ({ data: [] }))]);
       setClasses(classRes.data || []);
       setCalendar(calRes.data || []);
+      setNtbBlocks(ntbRes.data || []);
       if (!scheduleForm.class_id && classRes.data?.[0]?.id) {
         setScheduleForm((prev) => ({ ...prev, class_id: classRes.data[0].id }));
       }
@@ -354,6 +410,57 @@ export function MisClases() {
     await loadMain();
   };
 
+  const handleCreateNtb = async () => {
+    if (!ntbForm.title.trim()) { setError('El titulo es requerido.'); return; }
+    try {
+      if (editingNtb) {
+        await updateNonTeachingBlock(editingNtb.id, ntbForm);
+        setToast('Bloque no lectivo actualizado.');
+      } else {
+        await createNonTeachingBlock(ntbForm);
+        setToast('Bloque no lectivo creado.');
+      }
+      setShowNtbForm(false);
+      setEditingNtb(null);
+      setNtbForm(NTB_FORM_DEFAULT);
+      await loadMain();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el bloque.');
+    }
+  };
+
+  const handleEditNtb = (block: NonTeachingBlock) => {
+    setEditingNtb(block);
+    setNtbForm({
+      non_teaching_type: block.non_teaching_type || 'otro',
+      title: block.title,
+      description: block.description || '',
+      block_date: block.block_date,
+      start_time: block.start_time,
+      end_time: block.end_time,
+      location: block.location || '',
+      priority: block.priority || 'media',
+      reminder_enabled: !!block.reminder_enabled,
+      reminder_minutes_before: block.reminder_minutes_before || 30,
+      reminder_email: block.reminder_email || '',
+      follow_up_notes: block.follow_up_notes || '',
+    });
+    setShowNtbForm(true);
+  };
+
+  const handleDeleteNtb = async (id: string) => {
+    if (!confirm('Eliminar este bloque no lectivo?')) return;
+    await deleteNonTeachingBlock(id);
+    setToast('Bloque eliminado.');
+    await loadMain();
+  };
+
+  const handleToggleNtbDone = async (block: NonTeachingBlock) => {
+    const newStatus = block.status === 'realizado' ? 'pendiente' : 'realizado';
+    await updateNonTeachingBlock(block.id, { status: newStatus });
+    await loadMain();
+  };
+
   const saveFields = useCallback((fields: Record<string, unknown>, curriculum?: Record<string, unknown>) => {
     if (!selectedLessonId) return;
     const signature = JSON.stringify({ fields, curriculum });
@@ -464,11 +571,17 @@ export function MisClases() {
   const lessonsByDay = useMemo(() => {
     return WEEKDAYS.map((day, index) => {
       const date = addDays(week, index);
-      return { ...day, date, lessons: calendar.filter((lesson) => lesson.lesson_date === date) };
+      const lessons = calendar.filter((lesson) => lesson.lesson_date === date);
+      const nteaching = ntbBlocks.filter((b) => b.block_date === date);
+      return { ...day, date, lessons, nteaching };
     });
-  }, [calendar, week]);
+  }, [calendar, ntbBlocks, week]);
 
-  const upcoming = useMemo(() => calendar.slice().sort((a, b) => `${a.lesson_date} ${a.start_time}`.localeCompare(`${b.lesson_date} ${b.start_time}`)).slice(0, 8), [calendar]);
+  const upcoming = useMemo(() => {
+    const lessons = calendar.map((l) => ({ ...l, _type: 'lesson' as const }));
+    const ntb = ntbBlocks.map((b) => ({ ...b, lesson_date: b.block_date, _type: 'ntb' as const, title: b.title, class_name: '', course_name: NON_TEACHING_TYPES.find((t) => t.value === b.non_teaching_type)?.label || b.non_teaching_type }));
+    return [...lessons, ...ntb].sort((a, b) => `${a.lesson_date} ${a.start_time}`.localeCompare(`${b.lesson_date} ${b.start_time}`)).slice(0, 8);
+  }, [calendar, ntbBlocks]);
   const fieldForTab = FIELD_BY_TAB[activeTab];
 
   return (
@@ -487,6 +600,9 @@ export function MisClases() {
             <button onClick={() => setShowScheduleForm(true)} className="inline-flex items-center gap-2 rounded-2xl bg-white/15 border border-white/25 px-4 py-2.5 text-sm font-bold">
               <CalendarDays size={16} /> Crear horario semanal
             </button>
+            <button onClick={() => { setEditingNtb(null); setNtbForm(NTB_FORM_DEFAULT); setShowNtbForm(true); }} className="inline-flex items-center gap-2 rounded-2xl bg-white/15 border border-white/25 px-4 py-2.5 text-sm font-bold">
+              <Clock size={16} /> Bloque no lectivo
+            </button>
           </div>
         </div>
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -494,7 +610,7 @@ export function MisClases() {
             <div key={label} className="rounded-2xl bg-white/12 border border-white/15 p-4">
               <Icon className="mb-2 text-white/85" size={20} />
               <p className="text-xs text-white/70">{label}</p>
-              <p className="font-black text-lg">{String(value(classes, calendar, selectedBundle, week))}</p>
+              <p className="font-black text-lg">{String(value(classes, calendar, selectedBundle, week, ntbBlocks))}</p>
             </div>
           ))}
         </div>
@@ -573,6 +689,67 @@ export function MisClases() {
         </section>
       )}
 
+      {showNtbForm && (
+        <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <h2 className="font-black text-slate-900">{editingNtb ? 'Editar bloque no lectivo' : 'Nuevo bloque no lectivo'}</h2>
+          <p className="text-xs text-slate-500 mt-1">Actividades del trabajo docente que no son clases lectivas.</p>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <label className="text-xs font-bold text-slate-500">Tipo de actividad
+              <select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white">
+                {NON_TEACHING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </label>
+            <label className="text-xs font-bold text-slate-500">Titulo
+              <input value={ntbForm.title} onChange={(e) => setNtbForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Reunion de departamento" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </label>
+            <label className="text-xs font-bold text-slate-500">Lugar
+              <input value={ntbForm.location} onChange={(e) => setNtbForm((p) => ({ ...p, location: e.target.value }))} placeholder="Sala, online, etc." className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </label>
+            <label className="text-xs font-bold text-slate-500">Descripcion
+              <textarea value={ntbForm.description} onChange={(e) => setNtbForm((p) => ({ ...p, description: e.target.value }))} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </label>
+            <label className="text-xs font-bold text-slate-500">Fecha
+              <input type="date" value={ntbForm.block_date} onChange={(e) => setNtbForm((p) => ({ ...p, block_date: e.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs font-bold text-slate-500">Inicio
+                <input type="time" value={ntbForm.start_time} onChange={(e) => setNtbForm((p) => ({ ...p, start_time: e.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+              </label>
+              <label className="text-xs font-bold text-slate-500">Termino
+                <input type="time" value={ntbForm.end_time} onChange={(e) => setNtbForm((p) => ({ ...p, end_time: e.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+              </label>
+            </div>
+            <label className="text-xs font-bold text-slate-500">Prioridad
+              <select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white">
+                {PRIORITY_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-sm font-bold text-slate-500 mt-5">
+              <input type="checkbox" checked={ntbForm.reminder_enabled} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_enabled: e.target.checked }))} />
+              Activar recordatorio
+            </label>
+            {ntbForm.reminder_enabled && (
+              <>
+                <label className="text-xs font-bold text-slate-500">Minutos antes
+                  <input type="number" min={5} max={1440} value={ntbForm.reminder_minutes_before} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_minutes_before: Number(e.target.value) }))} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+                </label>
+                <label className="text-xs font-bold text-slate-500">Correo destinatario
+                  <input type="email" value={ntbForm.reminder_email} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_email: e.target.value }))} placeholder="profesor@correo.cl" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+                </label>
+              </>
+            )}
+            <label className="text-xs font-bold text-slate-500 md:col-span-3">Notas de seguimiento
+              <textarea value={ntbForm.follow_up_notes} onChange={(e) => setNtbForm((p) => ({ ...p, follow_up_notes: e.target.value }))} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            </label>
+          </div>
+          <p className="mt-2 text-[11px] text-amber-700 italic">Los recordatorios por correo quedaran preparados para una proxima fase.</p>
+          <div className="mt-4 flex gap-3">
+            <button onClick={handleCreateNtb} className="rounded-xl bg-amber-600 px-4 py-2 text-white font-bold">{editingNtb ? 'Actualizar' : 'Crear bloque'}</button>
+            <button onClick={() => { setShowNtbForm(false); setEditingNtb(null); }} className="rounded-xl border px-4 py-2 font-bold">Cancelar</button>
+          </div>
+        </section>
+      )}
+
       <section className="grid grid-cols-1 xl:grid-cols-[1.3fr_.7fr] gap-5">
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -596,10 +773,25 @@ export function MisClases() {
                     <button key={lesson.id} onClick={() => void openLesson(lesson)} className="w-full text-left rounded-2xl p-3 text-white shadow-sm" style={{ backgroundColor: lesson.color || '#2563eb' }}>
                       <p className="text-xs font-bold flex items-center gap-1"><Clock size={12} /> {lesson.start_time}-{lesson.end_time}</p>
                       <p className="mt-1 font-black text-sm">{lesson.class_name || lesson.title}</p>
-                      <p className="text-xs opacity-85">{lesson.course_name} Â· {lesson.status}</p>
+                      <p className="text-xs opacity-85">{lesson.course_name} · {lesson.status}</p>
                     </button>
                   ))}
-                  {day.lessons.length === 0 && <p className="text-xs text-slate-400">Sin clases programadas.</p>}
+                  {day.nteaching.map((block) => (
+                    <div key={block.id} className={`w-full text-left rounded-2xl p-3 border-2 ${block.status === 'realizado' ? 'border-emerald-300 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold flex items-center gap-1 text-amber-700"><Clock size={12} /> {block.start_time}-{block.end_time}</p>
+                        <div className="flex gap-1">
+                          <button onClick={() => handleToggleNtbDone(block)} title={block.status === 'realizado' ? 'Marcar pendiente' : 'Marcar realizado'} className={`rounded-lg px-1.5 py-0.5 text-[10px] font-bold ${block.status === 'realizado' ? 'bg-emerald-200 text-emerald-800' : 'bg-amber-200 text-amber-800'}`}>{block.status === 'realizado' ? 'OK' : 'Pend'}</button>
+                          <button onClick={() => handleEditNtb(block)} className="rounded-lg bg-white border px-1.5 py-0.5 text-[10px] font-bold text-slate-600">Edit</button>
+                          <button onClick={() => void handleDeleteNtb(block.id)} className="rounded-lg bg-white border px-1.5 py-0.5 text-[10px] font-bold text-red-600">×</button>
+                        </div>
+                      </div>
+                      <p className="mt-1 font-black text-sm text-slate-800">{block.title}</p>
+                      <p className="text-[11px] text-slate-500">{NON_TEACHING_TYPES.find((t) => t.value === block.non_teaching_type)?.label || block.non_teaching_type}{block.location ? ` · ${block.location}` : ''}</p>
+                      {block.reminder_enabled === 1 && <p className="text-[10px] text-amber-600 mt-0.5">Recordatorio preparado</p>}
+                    </div>
+                  ))}
+                  {day.lessons.length === 0 && day.nteaching.length === 0 && <p className="text-xs text-slate-400">Sin bloques programados.</p>}
                 </div>
               </div>
             ))}
@@ -609,19 +801,51 @@ export function MisClases() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="font-black text-slate-900">PrÃ³ximas clases</h2>
           <div className="mt-4 space-y-3">
-            {upcoming.map((lesson) => (
-              <div key={lesson.id} className="rounded-2xl border border-slate-100 p-4">
-                <p className="text-xs text-slate-500">{lesson.lesson_date} Â· {lesson.start_time}</p>
-                <h3 className="font-black text-slate-900">{lesson.title}</h3>
-                <p className="text-sm text-slate-500">{lesson.course_name} Â· {lesson.class_name}</p>
+            {upcoming.map((item) => (
+              <div key={item.id} className={`rounded-2xl border p-4 ${item._type === 'ntb' ? 'border-amber-200 bg-amber-50' : 'border-slate-100'}`}>
+                <p className="text-xs text-slate-500">{item.lesson_date} · {item.start_time}</p>
+                <h3 className="font-black text-slate-900">{item.title}</h3>
+                <p className="text-sm text-slate-500">{item._type === 'ntb' ? (item as any).course_name : `${item.course_name} · ${item.class_name}`}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button onClick={() => void openLesson(lesson)} className="rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">Abrir clase</button>
-                  <button onClick={() => setToast('Duplicar queda preparado para la siguiente iteraciÃ³n.')} className="rounded-xl border px-3 py-1.5 text-xs font-bold"><Copy size={12} className="inline" /> Duplicar</button>
-                  {!lesson.is_virtual && <button onClick={() => void deleteLesson(lesson.id).then(loadMain)} className="rounded-xl border px-3 py-1.5 text-xs font-bold text-red-600"><Trash2 size={12} className="inline" /> Eliminar</button>}
+                  {item._type === 'lesson' && <button onClick={() => void openLesson(item as LessonInstance)} className="rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">Abrir clase</button>}
+                  {item._type === 'ntb' && <button onClick={() => handleEditNtb(item as NonTeachingBlock)} className="rounded-xl bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700">Editar</button>}
+                  {item._type === 'lesson' && !item.is_virtual && <button onClick={() => void deleteLesson(item.id).then(loadMain)} className="rounded-xl border px-3 py-1.5 text-xs font-bold text-red-600"><Trash2 size={12} className="inline" /> Eliminar</button>}
+                  {item._type === 'ntb' && <button onClick={() => void handleDeleteNtb(item.id)} className="rounded-xl border px-3 py-1.5 text-xs font-bold text-red-600"><Trash2 size={12} className="inline" /> Eliminar</button>}
                 </div>
               </div>
             ))}
             {upcoming.length === 0 && <p className="text-sm text-slate-500">Crea una clase o un horario semanal para empezar.</p>}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="font-black text-slate-900">Resumen semanal</h2>
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 text-center">
+            <p className="text-xs font-bold text-indigo-600">Clases lectivas</p>
+            <p className="font-black text-2xl text-indigo-800">{calendar.length}</p>
+          </div>
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 text-center">
+            <p className="text-xs font-bold text-amber-600">Horas no lectivas</p>
+            <p className="font-black text-2xl text-amber-800">{(() => {
+              const total = ntbBlocks.reduce((sum, b) => {
+                const [sh, sm] = b.start_time.split(':').map(Number);
+                const [eh, em] = b.end_time.split(':').map(Number);
+                return sum + ((eh * 60 + em) - (sh * 60 + sm));
+              }, 0);
+              const h = Math.floor(total / 60);
+              const m = total % 60;
+              return total > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}` : '0h';
+            })()}</p>
+          </div>
+          <div className="rounded-2xl bg-slate-100 border border-slate-200 p-4 text-center">
+            <p className="text-xs font-bold text-slate-600">Total horas</p>
+            <p className="font-black text-2xl text-slate-800">{calendar.length + ntbBlocks.length} bloques</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-center">
+            <p className="text-xs font-bold text-slate-600">% No lectivo</p>
+            <p className="font-black text-2xl text-slate-800">{calendar.length + ntbBlocks.length > 0 ? Math.round((ntbBlocks.length / (calendar.length + ntbBlocks.length)) * 100) : 0}%</p>
           </div>
         </div>
       </section>

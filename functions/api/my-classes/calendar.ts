@@ -61,5 +61,20 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     }];
   });
 
-  return json({ data: [...explicitRows, ...generated].sort((a, b) => String(a.lesson_date).localeCompare(String(b.lesson_date)) || String(a.start_time).localeCompare(String(b.start_time))), week: { start, end } });
+  const ntb = await context.env.DB.prepare(`
+    SELECT id, teacher_id, block_type, non_teaching_type, title, description,
+           block_date AS lesson_date, start_time, end_time, location, priority,
+           status, course_name, subject_name,
+           1 AS is_non_teaching,
+           reminder_enabled, reminder_minutes_before, reminder_email
+    FROM non_teaching_blocks
+    WHERE teacher_id = ? AND block_date BETWEEN ? AND ?
+    ORDER BY block_date, start_time
+  `).bind(teacherId, start, end).all<Record<string, unknown>>();
+  const ntbResults = (ntb.results || []).map((row) => ({
+    ...row,
+    color: row.priority === 'alta' ? '#ef4444' : row.priority === 'media' ? '#f59e0b' : '#6b7280',
+  }));
+
+  return json({ data: [...explicitRows, ...generated, ...(ntbResults || [])].sort((a, b) => String(a.lesson_date || a.block_date).localeCompare(String(b.lesson_date || b.block_date)) || String(a.start_time).localeCompare(String(b.start_time))), week: { start, end } });
 }

@@ -39,11 +39,12 @@
 
 ## Tablas D1 usadas
 
-Migración nueva:
+Migraciones:
 
 - `migrations/008_mis_clases.sql`
+- `migrations/009_non_teaching_blocks.sql`
 
-Tablas:
+Tablas de 008:
 
 - `teacher_classes`
 - `teacher_weekly_schedules`
@@ -58,7 +59,84 @@ Tablas:
 - `lesson_comments`
 - `lesson_autosave_events`
 
-Estas tablas fueron agregadas a `scripts/validate-d1-schema.mjs` porque pasan a ser usadas por endpoints activos.
+Tabla de 009:
+
+- `non_teaching_blocks`
+
+## Bloques no lectivos
+
+### Qué son
+
+Además de las clases lectivas en aula, Mis Clases permite crear **bloques no lectivos** para tareas importantes del trabajo docente chileno. Estos bloques aparecen en el calendario semanal junto a las clases y se suman al resumen de horas.
+
+### Ejemplos de uso docente chileno
+
+- Planificación de unidades
+- Preparación de material didáctico
+- Revisión de evaluaciones
+- Reunión de departamento
+- Consejo de profesores
+- Reunión PIE / convivencia / equipo multidisciplinario
+- Atención de apoderados
+- Entrevistas con estudiantes
+- Capacitaciones
+- Trabajo colaborativo
+- Tareas administrativas
+- Reemplazos o coordinaciones especiales
+- Otro
+
+### Cómo se crean
+
+1. Desde el encabezado de Mis Clases, hacer clic en **Bloque no lectivo**.
+2. Seleccionar tipo de actividad, título, fecha, horario, prioridad.
+3. Opcionalmente activar recordatorio (preparado para fase futura).
+4. Guardar. El bloque aparece en el calendario con borde ámbar y en la lista de próximos.
+
+### Cómo aparecen en el calendario
+
+- Bloques lectivos: tarjetas con color del curso, clickeables para abrir detalle.
+- Bloques no lectivos: tarjetas con borde ámbar, botones de Editar / Eliminar / Marcar realizado.
+- Cada bloque puede marcarse como realizado o pendiente.
+- Los bloques no lectivos no exigen OA ni asignatura.
+
+### Resumen semanal
+
+Debajo del calendario aparece un resumen con:
+
+- Clases lectivas (cantidad)
+- Horas no lectivas (calculadas por diferencia de horarios)
+- Total de bloques
+- Porcentaje no lectivo
+
+### Reglas
+
+- No exigen OA ni asignatura.
+- Pueden asociarse opcionalmente a curso, asignatura o estudiante.
+- Deben aparecer en el calendario semanal.
+- Deben contar en las horas no lectivas.
+- Deben incluirse en el resumen semanal.
+
+## Campos preparados para recordatorios por correo
+
+La tabla `non_teaching_blocks` incluye campos listos para un sistema futuro de recordatorios:
+
+- `reminder_enabled` (boolean): indica si se desea recordatorio.
+- `reminder_minutes_before` (número): minutos antes del evento.
+- `reminder_email` (texto): correo destinatario.
+- `reminder_status` (texto): `pendiente` / `enviado` / `cancelado` / `no_aplica`.
+- `reminder_sent_at` (texto): timestamp de envío efectivo.
+
+**No se envían correos todavía.** Los datos quedan guardados para que en una fase futura se pueda crear una tarea automática tipo:
+
+> "Enviar recordatorio al profesor X minutos antes del bloque no lectivo importante."
+
+### Qué queda pendiente para activar el envío real de emails
+
+1. Verificar que el servicio de envío de correos (SMTP o API) está disponible y seguro.
+2. Crear un worker o scheduled task que consulte `non_teaching_blocks` con `reminder_enabled = 1` y `reminder_status = 'pendiente'`.
+3. Calcular la diferencia entre `block_date + start_time` y `now`.
+4. Cuando la diferencia sea igual o menor a `reminder_minutes_before`, enviar el correo y actualizar `reminder_status = 'enviado'` y `reminder_sent_at`.
+5. Agregar campo `block_type` para distinguir `lectivo` / `no_lectivo` / `reemplazo` si se necesita filtrar.
 
 ## Endpoints creados
 
@@ -79,6 +157,10 @@ Estas tablas fueron agregadas a `scripts/validate-d1-schema.mjs` porque pasan a 
 - `POST /api/lessons/:id/generate-evaluation`
 - `POST /api/lessons/:id/generate-presentation`
 - `POST /api/lessons/:id/generate-guide`
+- `GET /api/non-teaching-blocks`
+- `POST /api/non-teaching-blocks`
+- `PATCH /api/non-teaching-blocks/:id`
+- `DELETE /api/non-teaching-blocks/:id`
 
 Todos usan `context.env.DB` y guardan fechas `created_at`/`updated_at` donde corresponde.
 

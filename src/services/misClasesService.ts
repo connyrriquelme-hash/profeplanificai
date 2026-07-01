@@ -116,6 +116,49 @@ export function generateLessonEvaluation(id: string, action: string) {
   return api.post<{ ok: boolean; message: string; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-evaluation`, { action });
 }
 
+export interface NonTeachingBlock {
+  id: string;
+  teacher_id: string;
+  block_type: string;
+  non_teaching_type: string;
+  title: string;
+  description: string;
+  block_date: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  priority: string;
+  course_name: string;
+  subject_name: string;
+  status: string;
+  reminder_enabled: number;
+  reminder_minutes_before: number;
+  reminder_email: string;
+  reminder_status: string;
+  requires_follow_up: number;
+  follow_up_notes: string;
+  created_at: string;
+  updated_at: string;
+  is_non_teaching?: number;
+  color?: string;
+}
+
+export function getNonTeachingBlocks(week: string) {
+  return api.get<{ data: NonTeachingBlock[]; week: { start: string; end: string } }>(`/api/non-teaching-blocks?week=${encodeURIComponent(week)}`);
+}
+
+export function createNonTeachingBlock(payload: Record<string, unknown>) {
+  return api.post<{ ok: boolean; data: { id: string } }>('/api/non-teaching-blocks', payload);
+}
+
+export function updateNonTeachingBlock(id: string, payload: Record<string, unknown>) {
+  return api.patch<{ ok: boolean }>(`/api/non-teaching-blocks/${encodeURIComponent(id)}`, payload);
+}
+
+export function deleteNonTeachingBlock(id: string) {
+  return api.del<{ ok: boolean }>(`/api/non-teaching-blocks/${encodeURIComponent(id)}`);
+}
+
 export function generateLessonPresentation(id: string) {
   return api.post<{ ok: boolean; message: string; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-presentation`, {});
 }
