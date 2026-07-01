@@ -16,7 +16,11 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "import:curriculum": "node scripts/import-curriculum.mjs"
+    "import:curriculum": "node scripts/import-curriculum.mjs",
+    "import:curriculum:local": "node scripts/import-curriculum.mjs",
+    "import:curriculum:remote": "node scripts/import-curriculum.mjs --remote",
+    "seed:methodologies:local": "node scripts/seed-methodologies.mjs",
+    "seed:methodologies:remote": "node scripts/seed-methodologies.mjs --remote"
   },
   "dependencies": {
     "@google/genai": "^2.9.0",
