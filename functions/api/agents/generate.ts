@@ -27,7 +27,13 @@ const VALID_AGENTS = [
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
-    const body = await context.request.json() as AgentRequest;
+    let body: AgentRequest;
+    try {
+      const text = await context.request.text();
+      body = JSON.parse(text) as AgentRequest;
+    } catch (e: any) {
+      return Response.json({ error: 'Cuerpo de la petición debe ser JSON válido', detail: e.message }, { status: 400 });
+    }
 
     if (!body.agent || !VALID_AGENTS.includes(body.agent)) {
       return Response.json({
@@ -108,20 +114,26 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const duration = Date.now() - startTime;
 
-    // Save agent run to D1
-    const runId = `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-    await db.prepare(
-      `INSERT INTO agent_runs (id, agent_name, input_json, context_json, output_json, curriculum_context_json, status, duration_ms, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, datetime('now'))`
-    ).bind(
-      runId,
-      body.agent,
-      JSON.stringify(body.input || {}),
-      JSON.stringify(ctx),
-      JSON.stringify(content).substring(0, 50000),
-      JSON.stringify(enrichedContext),
-      duration
-    ).run();
+    // Save agent run to D1 (best effort - table might not exist yet)
+    try {
+      const runId = `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      const outputStr = JSON.stringify(content);
+      const ctxStr = JSON.stringify(enrichedContext);
+      await db.prepare(
+        `INSERT INTO agent_runs (id, agent_name, input_json, context_json, output_json, curriculum_context_json, status, duration_ms, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, datetime('now'))`
+      ).bind(
+        runId,
+        body.agent,
+        JSON.stringify(body.input || {}),
+        ctxStr.substring(0, 10000),
+        outputStr.substring(0, 50000),
+        ctxStr.substring(0, 10000),
+        duration
+      ).run();
+    } catch {
+      // Table might not exist yet, skip logging
+    }
 
     return Response.json({
       ok: true,

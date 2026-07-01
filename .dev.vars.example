@@ -1,0 +1,9 @@
+JWT_SECRET=pon-un-secreto-local-largo
+ADMIN_TOKEN=pon-un-token-admin-local
+IMAGE_PROVIDER_ORDER=wikimedia,pollinations,svg
+ENABLE_IMAGE_AI=false
+IMAGE_CACHE_TTL_DAYS=30
+
+# Opcionales solo si los configuras como secretos locales.
+# GEMINI_API_KEY=
+# HF_API_TOKEN=
