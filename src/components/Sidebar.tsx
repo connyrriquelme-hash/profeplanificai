@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { LayoutDashboard, FolderKanban, ClipboardCheck, WandSparkles, LibraryBig, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
+}
+
+const COLLAPSED_WIDTH = 80;
+
+function getInitialCollapsed(): boolean {
+  try {
+    const stored = localStorage.getItem('sidebarCollapsed');
+    if (stored !== null) return stored === 'true';
+  } catch { /* noop */ }
+  return false;
 }
 
 const menuSections = [
@@ -33,8 +43,14 @@ const menuSections = [
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed);
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    try { localStorage.setItem('sidebarCollapsed', String(isCollapsed)); } catch { /* noop */ }
+  }, [isCollapsed]);
+
+  const toggleCollapse = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
   const handleNavigate = (view: string) => {
     onViewChange(view);
@@ -110,16 +126,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
       {/* User Footer */}
       <div className={`${collapsed ? 'px-2' : 'px-3'} py-3 border-t border-slate-100`}>
-        {!mobile && collapsed && (
-          <button
-            onClick={() => setIsCollapsed(false)}
-            className="w-full mb-2 p-2 rounded-xl text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
-            aria-label="Expandir sidebar"
-            title="Expandir sidebar"
-          >
-            <PanelLeftOpen size={18} className="mx-auto" />
-          </button>
-        )}
         <div className={`flex items-center ${collapsed ? 'justify-center px-1' : 'gap-3 px-2'} py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer`}>
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-violet-500/20 flex-shrink-0">
             {initials}
@@ -170,16 +176,29 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       <nav className={`hidden lg:flex ${isCollapsed ? 'w-20 min-w-[80px]' : 'w-64 min-w-[256px]'} bg-white border-r border-slate-200 flex-col h-screen sticky top-0 z-10 no-print transition-all duration-200`}>
         {!isCollapsed && (
           <button
-            onClick={() => setIsCollapsed(true)}
+            onClick={toggleCollapse}
             className="absolute right-3 top-3 p-2 rounded-xl text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
-            aria-label="Colapsar sidebar"
-            title="Colapsar sidebar"
+            aria-label="Contraer menu"
+            title="Contraer menu"
           >
             <PanelLeftClose size={18} />
           </button>
         )}
         {sidebarContent(isCollapsed)}
       </nav>
+
+      {/* Floating expand tab when collapsed */}
+      {isCollapsed && (
+        <button
+          onClick={toggleCollapse}
+          className="hidden lg:flex fixed top-1/2 -translate-y-1/2 z-20 items-center justify-center w-5 h-14 rounded-l-lg bg-violet-500 text-white shadow-md hover:bg-violet-600 transition-all duration-200 no-print"
+          style={{ left: COLLAPSED_WIDTH }}
+          aria-label="Expandir menu"
+          title="Expandir menu"
+        >
+          <PanelLeftOpen size={14} />
+        </button>
+      )}
     </>
   );
 }
