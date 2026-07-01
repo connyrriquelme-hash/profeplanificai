@@ -40,6 +40,15 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
   newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   newHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
+  if (path.startsWith('/api/')) {
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    });
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
