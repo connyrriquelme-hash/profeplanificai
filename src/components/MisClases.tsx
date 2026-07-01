@@ -96,7 +96,6 @@ export function MisClases() {
   const [selectedBundle, setSelectedBundle] = useState<LessonBundle | null>(null);
   const [rightTab, setRightTab] = useState<RightTab>('semana');
   const [detailTab, setDetailTab] = useState<DetailTab>('oa');
-  const [objectives, setObjectives] = useState<any[]>([]);
   const [selectedObjective, setSelectedObjective] = useState<any | null>(null);
   const [indicators, setIndicators] = useState<any[]>([]);
   const [skills, setSkills] = useState<any[]>([]);
@@ -185,10 +184,6 @@ export function MisClases() {
     setLcContextLoading(true);
     fetch(`/api/curriculum/context?objective_id=${encodeURIComponent(lessonCurriculum.objectiveId)}`).then((r) => r.json()).then((d) => setLcContext(d?.data || null)).catch(() => setLcContext(null)).finally(() => setLcContextLoading(false));
   }, [lessonCurriculum.objectiveId]);
-  useEffect(() => {
-    if (!selectedBundle?.lesson?.level_id || !selectedBundle?.lesson?.subject_id) return;
-    getObjectives(String(selectedBundle.lesson.level_id), String(selectedBundle.lesson.subject_id)).then(setObjectives).catch(() => setObjectives([]));
-  }, [selectedBundle?.lesson?.level_id, selectedBundle?.lesson?.subject_id]);
 
   const openLesson = async (lesson: LessonInstance) => {
     if (lesson.is_virtual) {
@@ -242,6 +237,7 @@ export function MisClases() {
         status: 'planificada', title, notes,
       });
       setSelectedLessonId(created.data.id);
+      setRightTab('clase');
       setToast('Clase guardada y agregada al calendario semanal.');
       setSavingState('saved'); setDraftLesson({ title: '', lesson_date: todayDate(), start_time: '08:00', end_time: '09:00', notes: '' });
       await loadMain();
@@ -323,13 +319,12 @@ export function MisClases() {
   };
 
   const handleObjectiveSelect = async (objectiveId: string) => {
-    const objective = objectives.find((oa) => oa.id === objectiveId); if (!objective || !selectedBundle?.plan?.id) return;
+    const objective = lcObjectives.find((oa) => oa.id === objectiveId); if (!objective || !selectedBundle?.plan?.id) return;
     setSelectedObjective(objective);
     const [loadedIndicators, loadedSkills] = await Promise.all([getIndicatorsByObjective(objective.code), getSkillsByObjective(objective.id)]);
     const loadedAttitudes = parseJsonList(objective.attitude_tags_json);
     setIndicators(loadedIndicators); setSkills(loadedSkills); setAttitudes(loadedAttitudes);
-    setLessonCurriculum((prev) => { const next = { ...prev, objectiveId: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes }; if (!selectedLessonId) return next; saveFields({}, { curriculum: next }); return next; });
-    saveFields({ objective_text: objective.official_text || objective.normalized_text || objective.code }, { level_id: selectedBundle.lesson.level_id || lessonCurriculum.levelId, subject_id: selectedBundle.lesson.subject_id || lessonCurriculum.subjectId, axis_id: objective.axis_id, objective_id: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes });
+    setLessonCurriculum((prev) => { const next = { ...prev, objectiveId: objective.id, indicatorIds: loadedIndicators.map((i) => i.id), skillIds: loadedSkills.map((s) => s.id), attitudeIds: loadedAttitudes }; if (!selectedLessonId) return next; saveFields({ objective_text: objective.official_text || objective.normalized_text || objective.code }, { curriculum: next }); return next; });
     setToast('OA conectado a la clase');
   };
 
@@ -486,9 +481,9 @@ export function MisClases() {
               <div className="rounded-2xl bg-slate-50 p-4 min-h-[280px]">
                 {detailTab === 'oa' && (<div className="space-y-4">
                   <h3 className="font-black text-slate-900">Selecciona OA desde D1</h3>
-                  <select value={selectedObjective?.id || String(selectedBundle.curriculum?.objective_id || '')} onChange={(e) => void handleObjectiveSelect(e.target.value)} className={IC}>
+                  <select value={lessonCurriculum.objectiveId} onChange={(e) => { updateLessonCurriculum({ objectiveId: e.target.value }); const oa = lcObjectives.find((o) => o.id === e.target.value); if (oa) { setSelectedObjective(oa); void handleObjectiveSelect(e.target.value); } }} className={IC}>
                     <option value="">Selecciona un OA</option>
-                    {objectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}
+                    {lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}
                   </select>
                   <textarea value={selectedBundle.plan?.objective_text || ''} onChange={(e) => updatePlanField('objective_text', e.target.value)} placeholder="Objetivo especifico de la clase" className="w-full min-h-[110px] rounded-2xl border border-slate-200 p-3 text-sm" />
                   <textarea value={selectedBundle.plan?.purpose_text || ''} onChange={(e) => updatePlanField('purpose_text', e.target.value)} placeholder="Proposito de la clase" className="w-full min-h-[90px] rounded-2xl border border-slate-200 p-3 text-sm" />

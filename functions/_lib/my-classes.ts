@@ -200,7 +200,7 @@ export async function saveCurriculumSelection(db: D1Database, lessonPlanId: stri
   const levelId = text(body.level_id || body.levelId);
   const subjectId = text(body.subject_id || body.subjectId);
   if (!objectiveId || !levelId || !subjectId) {
-    throw new Error('level_id, subject_id y objective_id son requeridos');
+    return null;
   }
 
   const ctx = await getCurriculumContext(db, objectiveId, levelId, subjectId);
