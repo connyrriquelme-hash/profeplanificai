@@ -1,9 +1,9 @@
-# ENTREGA PROFEPLANIFICAI — FASES 1-6
+# ENTREGA PROFEPLANIFICAI — FASES 1-7 COMPLETADAS
 
 > Fecha: 2026-07-01
-> Último commit: f44a06d
+> Último commit: 7c71b65
 > Producción: https://profeplanificai.cl
-> Preview: https://26230efe.planificaia-chile.pages.dev
+> Preview: https://3f1528f4.planificaia-chile.pages.dev
 
 ---
 
@@ -94,28 +94,10 @@
 
 ## PENDIENTES
 
-### FASE 5 — Agentes IA
-- [ ] Arquitectura de agentes pedagógicos
-- [ ] Agente CurriculumChile
-- [ ] Agente Methodology
-- [ ] Agente Planning
-- [ ] Agente Assessment
-- [ ] Agente Materials
-- [ ] Agente Presentation
-- [ ] Agente DUAInclusion
-- [ ] Agente Simce
-- [ ] Agente ReflectionReport
-
-### FASE 7 — UI Flujo Docente
-- [ ] Vista unificada paso a paso
-- [ ] Sugerencia de metodologías
-- [ ] Selector de producto
-- [ ] Integración con nuevos endpoints de materiales
-
 ### FASE 8 — Validación completa
 - [ ] wrangler pages functions build
 - [ ] Validación manual de todos los casos
-- [ ] Integración UI completa
+- [ ] Integración UI completa del Flujo Docente con agentes
 
 ## CÓMO DESPLEGAR
 
@@ -134,6 +116,8 @@ npx wrangler pages deploy dist --project-name planificaia-chile --branch main
 
 | Commit | Descripción |
 |--------|-------------|
+| `7c71b65` | FASE 5: Agentes IA pedagógicos — 9 agentes + orquestador + endpoint |
+| `2c0be9b` | FASE 7: UI Flujo Docente — vista unificada paso a paso |
 | `f44a06d` | FASE 4-6: Motor búsqueda curricular + generador materiales |
 | `6fbea15` | Agrega documento de entrega FASES 1-3 |
 | `f963e03` | FASE 1-3: Migración pedagógica, semillas metodologías, API curricular y búsqueda |
