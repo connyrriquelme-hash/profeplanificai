@@ -222,6 +222,21 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     }
   }, [topic, level, subject, selectedOA]);
 
+  const displayedIndicators = d1Indicators.length > 0
+    ? normalizeCurriculumTextList(d1Indicators)
+    : selectedOA?.indicators?.length
+      ? selectedOA.indicators
+      : fallbackIndicators;
+
+  const displayedSkills = d1Skills.length > 0
+    ? normalizeCurriculumTextList(d1Skills)
+    : selectedOA?.skills?.length
+      ? selectedOA.skills
+      : fallbackSkills;
+
+  const indicatorsAreSuggested = d1Indicators.length === 0 && displayedIndicators.length > 0;
+  const skillsAreSuggested = d1Skills.length === 0 && displayedSkills.length > 0;
+
   const handleSelectOA = useCallback((oa: LearningObjective) => {
     setSelectedOA(oa);
     setSelectedIndicator('');
@@ -270,6 +285,8 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       topic,
       additionalContext,
       designStyle,
+      displayedIndicators: Array.isArray(displayedIndicators) ? displayedIndicators : undefined,
+      displayedSkills: Array.isArray(displayedSkills) ? displayedSkills : undefined,
       options: {
         lessonFramework: refineOptions.lessonFramework,
         curriculumAlignment: refineOptions.curriculumAlignment,
@@ -314,22 +331,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
     } finally {
       setGenerating(false);
     }
-  }, [creationType, level, subject, selectedOA, selectedIndicator, selectedSkill, topic, additionalContext, designStyle, refineOptions]);
-
-  const displayedIndicators = d1Indicators.length > 0
-    ? normalizeCurriculumTextList(d1Indicators)
-    : selectedOA?.indicators?.length
-      ? selectedOA.indicators
-      : fallbackIndicators;
-
-  const displayedSkills = d1Skills.length > 0
-    ? normalizeCurriculumTextList(d1Skills)
-    : selectedOA?.skills?.length
-      ? selectedOA.skills
-      : fallbackSkills;
-
-  const indicatorsAreSuggested = d1Indicators.length === 0 && displayedIndicators.length > 0;
-  const skillsAreSuggested = d1Skills.length === 0 && displayedSkills.length > 0;
+  }, [creationType, level, subject, selectedOA, selectedIndicator, selectedSkill, topic, additionalContext, designStyle, refineOptions, displayedIndicators, displayedSkills]);
 
   const handleHubSelect = (tipo: string) => {
     setCreationType(tipo);

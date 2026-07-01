@@ -19,6 +19,8 @@ export interface GenerateResourceRequest {
   topic: string;
   additionalContext: string;
   designStyle: string;
+  displayedIndicators?: string[];
+  displayedSkills?: string[];
   options: {
     lessonFramework: boolean;
     curriculumAlignment: boolean;
@@ -202,14 +204,20 @@ function buildAdvancedPrompt(req: GenerateResourceRequest): string {
 }
 
 function buildMockSlideResult(req: GenerateResourceRequest): SlideLesson {
+  const ctx = req.subject.toLowerCase().includes('ciencia') ? 'ecosistemas chilenos'
+    : req.subject.toLowerCase().includes('matematica') ? 'aula latinoamericana con material concreto'
+    : req.subject.toLowerCase().includes('historia') ? 'patrimonio cultural chileno'
+    : req.subject.toLowerCase().includes('lenguaje') ? 'biblioteca escolar chilena'
+    : 'contexto escolar chileno';
+
   const slides: Slide[] = [
-    { type: 'cover', title: req.topic || req.objectiveCode, subtitle: 'Leccion individual alineada al curriculo nacional chileno' },
-    { type: 'activation', title: 'Activacion de conocimientos previos', bullets: ['Pregunta inicial sobre experiencias cotidianas relacionadas', 'Lluvia de ideas en grupos de 3-4 estudiantes', 'Vocabulario clave: se introducen 3-5 terminos esenciales'], activity: 'En grupos, los estudiantes escriben en post-its todo lo que saben sobre el tema y lo pegan en un papelografo compartido.', questions: ['Que sabemos sobre este tema?', 'Donde lo hemos visto antes?', 'Por que es importante aprenderlo?'] },
-    { type: 'explanation', title: 'Concepto clave de la clase', subtitle: 'Contenido fundamental alineado al OA', bullets: ['Definicion clara y accesible del concepto central', 'Relacion con aprendizajes anteriores', 'Conexion con la vida cotidiana y contexto local', 'Representacion visual del concepto'], example: 'Ejemplo concreto aplicado a la realidad chilena, utilizando material familiar para los estudiantes.', activity: 'Los estudiantes observan una representacion visual y toman notas guiadas en su cuaderno.' },
-    { type: 'guided-practice', title: 'Practica guiada', subtitle: 'Aplicacion con apoyo del docente', activity: 'Los estudiantes resuelven un problema o analizan un caso en parejas con mediacion docente. El docente circula y retroalimenta constantemente.', instructions: 'Formar grupos de 2-3 estudiantes. Entregar guia de trabajo. Monitorear y preguntar: "Como llegaron a esa respuesta?", "Que pasaria si...?"', materials: ['Guia de trabajo impresa', 'Material concreto segun asignatura', 'Apoyo visual en pizarra o proyector'] },
-    { type: 'independent-practice', title: 'Trabajo individual', subtitle: 'Aplicacion autonoma con distintos niveles de dificultad', activity: 'Cada estudiante resuelve un ejercicio o crea un producto que demuestre su comprension del OA trabajado, con opciones de dificultad creciente.', successCriteria: ['Completa la actividad siguiendo las instrucciones', 'Aplica correctamente el concepto trabajado', 'Revisa su trabajo antes de entregar', 'Explica con sus palabras lo aprendido'], questions: ['Que aprendi hoy?', 'Que fue lo mas facil?', 'Que me costo mas?'] },
-    { type: 'formative-assessment', title: 'Evaluacion formativa', subtitle: 'Monitoreo del aprendizaje durante la clase', activity: 'Ticket de salida: pregunta breve que cada estudiante responde antes de irse, permitiendo al docente verificar la comprension del OA.', questions: ['Explica con tus palabras el concepto principal de la clase', 'Dibuja o escribe un ejemplo de lo aprendido', 'Que dudas te quedan?'], successCriteria: ['Responde al menos 2 de las 3 preguntas', 'Demuestra comprension basica del OA trabajado', 'Identifica una duda o pregunta para la proxima clase'] },
-    { type: 'closure', title: 'Cierre y metacognicion', bullets: ['Sintesis oral de los aprendizajes clave', 'Conexion con la proxima clase', 'Refuerzo positivo y reconocimiento del esfuerzo'], metacognition: 'Pregunta de metacognicion: Que estrategia usaste hoy que te ayudo a aprender mejor? Como puedes aplicarla en otras asignaturas?', exitTicket: 'Escribe en una palabra lo que te llevas de la clase de hoy.', speakerNotes: 'Dar tiempo para que 2-3 estudiantes compartan su respuesta. Cerrar con entusiasmo y expectativa positiva para la proxima clase.' },
+    { type: 'cover', title: req.topic || `Clase: ${req.objectiveCode}`, subtitle: `${req.level} — ${req.subject}`, speakerNotes: 'Presentar el objetivo de la clase y motivar a los estudiantes con una pregunta inicial.' },
+    { type: 'activation', title: 'Activacion de conocimientos previos', bullets: ['Que sabes sobre este tema?', 'Donde lo has visto antes?', 'Comparte con tu companero'], activity: 'En grupos, los estudiantes escriben en post-its todo lo que saben sobre el tema y lo pegan en un papelografo compartido.', questions: ['Que sabemos sobre este tema?', 'Donde lo hemos visto en la vida diaria?', 'Por que es importante aprenderlo?'], speakerNotes: 'Dar 2 minutos para pensar individualmente antes de compartir en grupos.' },
+    { type: 'explanation', title: 'Concepto clave de la clase', subtitle: 'Contenido fundamental alineado al OA', bullets: [`Definicion clara del concepto central`, `Conexion con ${ctx}`, `Representacion visual del concepto`], example: `Ejemplo concreto aplicado a la realidad chilena, utilizando material familiar para los estudiantes de ${req.level}.`, activity: 'Los estudiantes observan una representacion visual y toman notas guiadas en su cuaderno.', speakerNotes: 'Usar preguntas guiadas: "Que observan?", "Que creen que pasara?"' },
+    { type: 'guided-practice', title: 'Practica guiada', subtitle: 'Aplicacion con apoyo del docente', activity: 'Los estudiantes resuelven un problema o analizan un caso en parejas con mediacion docente. El docente circula y retroalimenta constantemente.', instructions: 'Formar grupos de 2-3 estudiantes. Entregar guia de trabajo. Monitorear y preguntar: "Como llegaron a esa respuesta?", "Que pasaria si...?"', materials: ['Guia de trabajo impresa', 'Material concreto segun asignatura', 'Apoyo visual en pizarra o proyector'], speakerNotes: 'Circular constantemente. Preguntar "por que" y "como" en lugar de dar respuestas directas.' },
+    { type: 'independent-practice', title: 'Trabajo individual', subtitle: 'Aplicacion autonoma', activity: 'Cada estudiante resuelve un ejercicio o crea un producto que demuestre su comprension del OA trabajado, con opciones de dificultad creciente.', successCriteria: ['Completa la actividad siguiendo las instrucciones', 'Aplica correctamente el concepto trabajado', 'Explica con sus palabras lo aprendido'], questions: ['Que aprendi hoy?', 'Que fue lo mas facil?', 'Que me costo mas?'], speakerNotes: 'Ofrecer apoyo diferenciado a estudiantes que lo necesiten.' },
+    { type: 'formative-assessment', title: 'Evaluacion formativa', subtitle: 'Ticket de salida', activity: 'Ticket de salida: pregunta breve que cada estudiante responde antes de irse, permitiendo al docente verificar la comprension del OA.', questions: ['Explica con tus palabras el concepto principal de la clase', 'Dibuja o escribe un ejemplo de lo aprendido', 'Que dudas te quedan?'], successCriteria: ['Responde al menos 2 de las 3 preguntas', 'Demuestra comprension basica del OA trabajado'], speakerNotes: 'Revisar rapidamente los tickets para ajustar la proxima clase.' },
+    { type: 'closure', title: 'Cierre y metacognicion', bullets: ['Sintesis oral de los aprendizajes clave', 'Conexion con la proxima clase', 'Reconocimiento del esfuerzo'], metacognition: 'Que estrategia usaste hoy que te ayudo a aprender mejor? Como puedes aplicarla en otras asignaturas?', exitTicket: 'Escribe en una palabra lo que te llevas de la clase de hoy.', speakerNotes: 'Dar tiempo para que 2-3 estudiantes compartan su respuesta. Cerrar con entusiasmo.' },
   ];
   return {
     title: req.topic || `Clase sobre ${req.objectiveCode}`,
@@ -223,59 +231,76 @@ function buildMockSlideResult(req: GenerateResourceRequest): SlideLesson {
 }
 
 function buildSlidePrompt(req: GenerateResourceRequest): string {
+  const indicatorsList = req.displayedIndicators?.length
+    ? `- Indicadores de evaluacion: ${req.displayedIndicators.join('; ')}`
+    : req.indicator ? `- Indicador: ${req.indicator}` : '';
+  const skillsList = req.displayedSkills?.length
+    ? `- Habilidades: ${req.displayedSkills.join('; ')}`
+    : req.skill ? `- Habilidad: ${req.skill}` : '';
+
   return [
-    `Genera una leccion individual en formato JSON para una presentacion visual tipo slide.`,
+    `Genera una leccion individual en formato JSON para una presentacion visual premium tipo Gamma IA.`,
     ``,
     `Contexto curricular chileno:`,
     `- Nivel: ${req.level}`,
     `- Asignatura: ${req.subject}`,
     `- OA: ${req.objectiveCode} - ${req.objectiveText}`,
-    req.indicator ? `- Indicador: ${req.indicator}` : '',
-    req.skill ? `- Habilidad: ${req.skill}` : '',
+    indicatorsList,
+    skillsList,
     `- Tema: ${req.topic || 'No especificado'}`,
     req.additionalContext ? `- Contexto adicional: ${req.additionalContext}` : '',
+    `- Estilo de diseno: ${req.designStyle}`,
     ``,
     `Instrucciones:`,
     `- Devuelve SOLO un objeto JSON valido, sin markdown, sin codigo de bloque, sin comentarios.`,
     `- El JSON debe tener esta estructura exacta:`,
     `{`,
-    `  "title": "Titulo de la leccion",`,
-    `  "subtitle": "Subtitulo o descripcion breve",`,
+    `  "title": "Titulo atractivo de la leccion",`,
+    `  "subtitle": "Subtitulo pedagogico breve",`,
     `  "slides": [`,
-    `    { "type": "cover", "title": "...", "subtitle": "..." },`,
-    `    { "type": "activation", "title": "...", "bullets": ["..."], "questions": ["..."] },`,
-    `    { "type": "explanation", "title": "...", "bullets": ["..."], "example": "...", "activity": "..." },`,
-    `    { "type": "guided-practice", "title": "...", "activity": "...", "instructions": "...", "materials": ["..."] },`,
-    `    { "type": "independent-practice", "title": "...", "bullets": ["..."], "successCriteria": ["..."], "questions": ["..."] },`,
-    `    { "type": "formative-assessment", "title": "...", "activity": "...", "questions": ["..."], "successCriteria": ["..."] },`,
-    `    { "type": "closure", "title": "...", "bullets": ["..."], "metacognition": "...", "exitTicket": "..." }`,
+    `    { "type": "cover", "title": "...", "subtitle": "...", "speakerNotes": "..." },`,
+    `    { "type": "activation", "title": "...", "bullets": ["...", "..."], "questions": ["...", "..."], "activity": "...", "speakerNotes": "..." },`,
+    `    { "type": "explanation", "title": "...", "subtitle": "...", "bullets": ["...", "..."], "example": "...", "activity": "...", "speakerNotes": "..." },`,
+    `    { "type": "guided-practice", "title": "...", "activity": "...", "instructions": "...", "materials": ["..."], "speakerNotes": "..." },`,
+    `    { "type": "independent-practice", "title": "...", "bullets": ["..."], "successCriteria": ["...", "..."], "questions": ["..."], "speakerNotes": "..." },`,
+    `    { "type": "formative-assessment", "title": "...", "activity": "...", "questions": ["...", "..."], "successCriteria": ["..."], "speakerNotes": "..." },`,
+    `    { "type": "closure", "title": "...", "bullets": ["..."], "metacognition": "...", "exitTicket": "...", "speakerNotes": "..." }`,
     `  ]`,
     `}`,
     ``,
     `Tipos de slide (usa exactamente 7 slides, uno por cada tipo en este orden):`,
-    `1. "cover" - Portada con titulo y datos curriculares`,
-    `2. "activation" - Activacion de conocimientos previos con preguntas y lluvia de ideas`,
-    `3. "explanation" - Explicacion del concepto clave con ejemplo concreto`,
-    `4. "guided-practice" - Practica guiada con instrucciones y materiales`,
-    `5. "independent-practice" - Trabajo individual con criterios de exito`,
+    `1. "cover" - Portada premium con titulo atractivo y datos curriculares`,
+    `2. "activation" - Activacion de conocimientos previos con preguntas provocadoras`,
+    `3. "explanation" - Explicacion del concepto clave con ejemplo concreto chileno/latinoamericano`,
+    `4. "guided-practice" - Practica guiada con instrucciones claras y materiales`,
+    `5. "independent-practice" - Trabajo individual con criterios de exito visibles`,
     `6. "formative-assessment" - Evaluacion formativa con preguntas de ticket de salida`,
     `7. "closure" - Cierre con metacognicion y conexion a proxima clase`,
     ``,
     `Cada slide puede incluir (segun su tipo):`,
-    `- "title" (requerido): titulo de la diapositiva`,
-    `- "subtitle": subtitulo opcional`,
-    `- "bullets": array de puntos clave (max 4 por slide, cada uno de max 12 palabras)`,
+    `- "title" (requerido): titulo breve y atractivo de la diapositiva`,
+    `- "subtitle": subtitulo pedagogico opcional`,
+    `- "bullets": array de puntos clave (max 3 por slide, cada uno de max 10 palabras)`,
     `- "activity": descripcion de la actividad en 1-2 oraciones`,
-    `- "example": ejemplo concreto aplicado a la realidad chilena`,
+    `- "example": ejemplo concreto aplicado a la realidad chilena o latinoamericana`,
     `- "instructions": instrucciones para el docente en 1-2 oraciones`,
     `- "materials": array de materiales necesarios`,
-    `- "questions": array de preguntas (max 3)`,
+    `- "questions": array de preguntas de comprension (max 3)`,
     `- "successCriteria": array de criterios de exito (max 3)`,
     `- "metacognition": pregunta o reflexion metacognitiva`,
     `- "exitTicket": pregunta de ticket de salida`,
-    `- "speakerNotes": notas breves para el docente`,
+    `- "speakerNotes": notas breves para el docente (siempre incluir)`,
     ``,
-    `DIAGRAMAS Y TABLAS (muy importante - incluir en al menos 2 slides):`,
+    `REQUISITOS VISUALES PREMIUM (muy importante):`,
+    `- Cada slide debe tener poco texto, estilo presentacion profesional`,
+    `- Maximo 3 bullets por slide, cada bullet maximo 10 palabras`,
+    `- Usar lenguaje visual: "muestra", "observa", "descubre", no solo "lee"`,
+    `- Incluir al menos 1 ejemplo contextual chileno o latinoamericano`,
+    `- Usar vocabulario apropiado para la edad del nivel indicado`,
+    `- Incluir preguntas de comprension en slides de practica y evaluacion`,
+    `- Las notas del docente (speakerNotes) deben ser practicas y breves`,
+    ``,
+    `DIAGRAMAS Y TABLAS (incluir en al menos 2 slides):`,
     `- "diagram": objeto con estructura para diagramas SmartArt`,
     `  - "type": "process" | "cycle" | "hierarchy" | "comparison"`,
     `  - "nodes": array de { "id": "string", "label": "string", "description": "string" }`,
@@ -299,9 +324,10 @@ function buildSlidePrompt(req: GenerateResourceRequest): string {
     `- Vocabulario accesible para el nivel indicado`,
     `- Sin markdown ni asteriscos en los textos`,
     `- INCLUIR diagramas o tablas en al menos 2 slides para enriquecer el contenido visual`,
+    `- CONTEXTO CHILENO/LATINOAMERICANO: usar ejemplos, animales, plantas, lugares o situaciones reconocibles para estudiantes chilenos`,
     ``,
     `Ejemplo de slide de activacion valido:`,
-    `{ "type": "activation", "title": "Activacion de conocimientos", "bullets": ["Pregunta inicial sobre experiencias cotidianas", "Lluvia de ideas en grupos pequenos", "Vocabulario clave de la clase"], "questions": ["Que sabemos sobre este tema?", "Donde lo hemos visto en la vida diaria?"] }`,
+    `{ "type": "activation", "title": "Activacion de conocimientos", "bullets": ["Pregunta inicial sobre experiencias cotidianas", "Lluvia de ideas en grupos pequenos", "Vocabulario clave de la clase"], "questions": ["Que sabemos sobre este tema?", "Donde lo hemos visto en la vida diaria?"], "speakerNotes": "Dar 2 minutos para pensar individualmente antes de compartir en grupos." }`,
   ].filter(Boolean).join('\n');
 }
 
