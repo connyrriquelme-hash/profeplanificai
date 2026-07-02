@@ -6,15 +6,15 @@ export async function onRequestGet(context: EventContext<AIEnv>): Promise<Respon
   return Response.json({
     ok: true,
     providers: {
-      workersAI: providers['workers-ai'].available,
       gemini: providers.gemini.available,
+      workersAI: providers['workers-ai'].available,
       openrouter: providers.openrouter.available,
       huggingface: providers.huggingface.available,
       local: true,
     },
     models: {
-      workersAI: providers['workers-ai'].model || null,
       gemini: providers.gemini.model || null,
+      workersAI: providers['workers-ai'].model || null,
       openrouter: providers.openrouter.model || null,
       huggingface: providers.huggingface.model || null,
     },

@@ -74,6 +74,7 @@ export interface AIEnv {
   GEMINI_API_KEY?: string;
   OPENROUTER_API_KEY?: string;
   HUGGINGFACE_API_KEY?: string;
+  AI_DEFAULT_MODEL_GEMINI?: string;
   AI?: { run: (model: string, input: unknown) => Promise<unknown> };
 }
 

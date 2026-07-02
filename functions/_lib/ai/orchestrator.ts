@@ -92,7 +92,7 @@ export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string)
 
   const prompt = buildPrompt(req.agentType, req.taskType, safeReq);
   const { providers, recommended } = await statusProviders(env);
-  const providerOrder: ProviderName[] = ['workers-ai', 'gemini', 'openrouter', 'huggingface'];
+  const providerOrder: ProviderName[] = ['gemini', 'workers-ai', 'openrouter', 'huggingface'];
 
   for (const provider of providerOrder) {
     if (!providers[provider].available) continue;

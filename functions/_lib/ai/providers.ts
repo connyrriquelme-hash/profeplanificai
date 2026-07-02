@@ -11,14 +11,23 @@ function parseStructured(raw: string): Record<string, unknown> {
   }
 }
 
+function getGeminiModel(env: AIEnv): string {
+  return env.AI_DEFAULT_MODEL_GEMINI || 'gemini-2.5-flash';
+}
+
 export async function statusProviders(env: AIEnv): Promise<{ providers: Record<ProviderName, ProviderStatus>; recommended: ProviderName }> {
+  const geminiModel = getGeminiModel(env);
   const providers: Record<ProviderName, ProviderStatus> = {
-    'workers-ai': { available: false },
     gemini: { available: false },
+    'workers-ai': { available: false },
     openrouter: { available: false },
     huggingface: { available: false },
     local: { available: true, model: 'fallback-pedagogico' },
   };
+
+  if (env.GEMINI_API_KEY) {
+    providers.gemini = { available: true, model: geminiModel };
+  }
 
   if (env.AI) {
     try {
@@ -29,10 +38,6 @@ export async function statusProviders(env: AIEnv): Promise<{ providers: Record<P
     }
   }
 
-  if (env.GEMINI_API_KEY) {
-    providers.gemini = { available: true, model: 'gemini-2.5-flash' };
-  }
-
   if (env.OPENROUTER_API_KEY) {
     providers.openrouter = { available: true, model: 'openrouter-default' };
   }
@@ -41,7 +46,7 @@ export async function statusProviders(env: AIEnv): Promise<{ providers: Record<P
     providers.huggingface = { available: true, model: 'huggingface-default' };
   }
 
-  const priority: ProviderName[] = ['workers-ai', 'gemini', 'openrouter', 'huggingface', 'local'];
+  const priority: ProviderName[] = ['gemini', 'workers-ai', 'openrouter', 'huggingface', 'local'];
   const recommended = priority.find((p) => providers[p].available) || 'local';
 
   return { providers, recommended };
@@ -58,8 +63,8 @@ async function callWorkersAI(env: AIEnv, prompt: string): Promise<ProviderResult
   return { ok: true, content: raw, model, provider: 'workers-ai', structured: parseStructured(raw) };
 }
 
-async function callGemini(apiKey: string, prompt: string): Promise<ProviderResult> {
-  const model = 'gemini-2.5-flash';
+async function callGemini(apiKey: string, prompt: string, env: AIEnv): Promise<ProviderResult> {
+  const model = getGeminiModel(env);
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
@@ -129,7 +134,7 @@ export async function callProvider(provider: ProviderName, env: AIEnv, prompt: s
       return callWorkersAI(env, prompt);
     case 'gemini':
       if (!env.GEMINI_API_KEY) return { ok: false, content: '', model: '', provider, error: 'Gemini API key no configurada' };
-      return callGemini(env.GEMINI_API_KEY, prompt);
+      return callGemini(env.GEMINI_API_KEY, prompt, env);
     case 'openrouter':
       if (!env.OPENROUTER_API_KEY) return { ok: false, content: '', model: '', provider, error: 'OpenRouter API key no configurada' };
       return callOpenRouter(env.OPENROUTER_API_KEY, prompt);
