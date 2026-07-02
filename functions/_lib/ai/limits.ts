@@ -1,7 +1,7 @@
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 20;
 const MAX_CHARS_PER_REQUEST = 12_000;
-const MAX_TOKENS_OUTPUT = 4_096;
+const MAX_TOKENS_OUTPUT = 8_192;
 
 const requestCounts = new Map<string, { count: number; windowStart: number }>();
 

@@ -1,4 +1,25 @@
 import { buildActividadesClase, ensureLessonPlan, getCurriculumContext, getLessonBundle, getTeacherId, json, nowIso, readJson, text, type Env } from '../../../_lib/my-classes';
+import { orchestrate } from '../../../_lib/ai/orchestrator';
+import type { AIEnv, AIRequest } from '../../../_lib/ai/types';
+
+function normalizeActividadesFromAI(aiStructured: Record<string, unknown>, fallback: Record<string, string>): Record<string, string> {
+  return {
+    objetivoEspecifico: text(aiStructured.objetivoEspecifico) || fallback.objetivoEspecifico || '',
+    proposito: text(aiStructured.proposito) || fallback.proposito || '',
+    inicio: text(aiStructured.inicio) || fallback.inicio || '',
+    desarrollo: text(aiStructured.desarrollo) || fallback.desarrollo || '',
+    cierre: text(aiStructured.cierre) || fallback.cierre || '',
+    evaluacionFormativa: text(aiStructured.evaluacionFormativa) || fallback.evaluacionFormativa || '',
+    ticketSalida: text(aiStructured.ticketSalida) || fallback.ticketSalida || '',
+    recursosMateriales: Array.isArray(aiStructured.recursosMateriales)
+      ? aiStructured.recursosMateriales.map(String).filter(Boolean).join('\n')
+      : typeof aiStructured.recursosMateriales === 'string' ? aiStructured.recursosMateriales
+      : fallback.recursosMateriales || '',
+    adecuacionesDUA: text(aiStructured.adecuacionesDUA) || fallback.adecuacionesDUA || '',
+    apoyoEstudiantesDescendidos: text(aiStructured.apoyoEstudiantesDescendidos) || fallback.apoyoEstudiantesDescendidos || '',
+    extensionAvanzados: text(aiStructured.extensionAvanzados) || fallback.extensionAvanzados || '',
+  };
+}
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   const teacherId = await getTeacherId(context);
@@ -36,10 +57,78 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   if (!curriculumContext) return json({ error: 'No se pudo recuperar contexto curricular.' }, 400);
 
   const instructions = text(body.instructions || bundle.plan?.teacher_observations);
-  const actividades = buildActividadesClase(curriculumContext, bundle.lesson, bundle.plan || {}, instructions || undefined);
+  const objective = curriculumContext.objective as Record<string, unknown>;
+  const hasRealOA = objective?.code && objective.code !== 'OA pendiente';
+  const courseName = String(bundle.lesson.course_name || '');
+  const subjectId = String(bundle.lesson.subject_id || '');
+  const lessonTitle = String(bundle.lesson.title || 'Clase');
 
-  const ac = actividades.actividadesClase as Record<string, string>;
-  const planId = await ensureLessonPlan(context.env.DB, lessonId, teacherId, String(bundle.lesson.title || 'Clase'));
+  const localActividades = buildActividadesClase(curriculumContext, bundle.lesson, bundle.plan || {}, instructions || undefined);
+  const localAc = localActividades.actividadesClase as Record<string, string>;
+
+  let provider = 'local';
+  let model = 'fallback-pedagogico';
+  let usedFallback = true;
+  const warnings: string[] = [];
+
+  const aiEnv: AIEnv = {
+    DB: context.env.DB,
+    JWT_SECRET: context.env.JWT_SECRET,
+    GEMINI_API_KEY: context.env.GEMINI_API_KEY,
+    OPENROUTER_API_KEY: context.env.OPENROUTER_API_KEY,
+    HUGGINGFACE_API_KEY: context.env.HUGGINGFACE_API_KEY,
+    AI_DEFAULT_MODEL_GEMINI: context.env.AI_DEFAULT_MODEL_GEMINI,
+    AI: context.env.AI,
+  };
+
+  const aiRequest: AIRequest = {
+    agentType: 'actividades_clase',
+    taskType: 'generar',
+    lessonId,
+    course: courseName,
+    subject: subjectId,
+    grade: courseName,
+    oa: hasRealOA ? `${objective.code}: ${objective.official_text}` : undefined,
+    oaCode: hasRealOA ? String(objective.code) : undefined,
+    oaText: hasRealOA ? String(objective.official_text) : undefined,
+    indicators: (curriculumContext.indicators as Record<string, unknown>[]).map((i) => String(i.indicator_text || i.description || '')).filter(Boolean),
+    skills: (curriculumContext.skills as Record<string, unknown>[]).map((s) => String(s.official_text || s.description || '')).filter(Boolean),
+    attitudes: (curriculumContext.attitudes as Record<string, unknown>[]).map((a) => String(a.official_text || a.description || '')).filter(Boolean),
+    instructions: instructions || undefined,
+    outputFormat: 'json',
+  };
+
+  let ai: Awaited<ReturnType<typeof orchestrate>> | null = null;
+  try {
+    ai = await orchestrate(aiEnv, aiRequest, teacherId);
+  } catch (e) {
+    warnings.push(`Error en orquestador: ${e instanceof Error ? e.message : 'desconocido'}. Se usa generacion local.`);
+  }
+
+  let ac: Record<string, string>;
+  if (ai && ai.ok && ai.structured && Object.keys(ai.structured).length > 0) {
+    provider = ai.provider;
+    model = ai.model;
+    usedFallback = ai.usedFallback;
+    warnings.push(...ai.warnings);
+    ac = normalizeActividadesFromAI(ai.structured, localAc);
+  } else if (ai && ai.ok && ai.content) {
+    provider = ai.provider;
+    model = ai.model;
+    usedFallback = ai.usedFallback;
+    warnings.push(...ai.warnings);
+    ac = localAc;
+    warnings.push('Respuesta IA no era JSON estructurado. Se uso generacion local para campos.');
+  } else {
+    if (ai?.warnings?.length) warnings.push(...ai.warnings);
+    ac = localAc;
+  }
+
+  if (!hasRealOA) {
+    warnings.push('Generado sin OA explicito. Puedes seleccionar OA despues para mejorar la alineacion curricular.');
+  }
+
+  const planId = await ensureLessonPlan(context.env.DB, lessonId, teacherId, lessonTitle);
   const now = nowIso();
 
   const planFields: [string, string][] = [
@@ -50,11 +139,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     ['closure_text', ac.cierre || ''],
     ['evaluation_text', ac.evaluacionFormativa || ''],
     ['instruments_text', ac.ticketSalida || ''],
-    ['resources_text', Array.isArray(ac.recursosMateriales) ? ac.recursosMateriales.join('\n') : ''],
+    ['resources_text', ac.recursosMateriales || ''],
     ['dua_adjustments_text', ac.adecuacionesDUA || ''],
     ['abp_project_text', ac.apoyoEstudiantesDescendidos || ''],
     ['challenge_question', ac.extensionAvanzados || ''],
-    ['ai_summary', JSON.stringify(actividades)],
+    ['ai_summary', JSON.stringify({ ...localActividades, provider, model, usedFallback, warnings })],
   ];
 
   const updates: string[] = [];
@@ -72,7 +161,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
   return json({
     ok: true,
+    provider,
+    model,
+    usedFallback,
+    warnings,
     message: 'Actividades de clase generadas. Recuerda guardar los cambios.',
-    data: actividades,
+    data: localActividades,
   }, 201);
 }

@@ -10,7 +10,7 @@ import {
   deleteNonTeachingBlock, deleteTeacherClass, generateActividadesClase,
   generateLessonEvaluation, generateLessonResource, getCalendar, getLesson,
   getNonTeachingBlocks, listTeacherClasses, updateLesson, updateNonTeachingBlock,
-  type LessonBundle, type LessonInstance, type NonTeachingBlock, type TeacherClass,
+  type GenerateActividadesResult, type LessonBundle, type LessonInstance, type NonTeachingBlock, type TeacherClass,
 } from '../services/misClasesService';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
@@ -385,22 +385,29 @@ export function MisClases() {
         if (!confirm(res.message || 'Esta clase ya tiene actividades generadas. Deseas reemplazarlas?')) { setLoading(false); return; }
         const res2 = await generateActividadesClase(selectedLessonId, { force: true, instructions });
         if (!res2.ok) throw new Error(res2.message || 'No se pudieron generar las actividades.');
-        refreshBundle();
+        refreshBundle(res2);
       } else if (!res.ok) {
         throw new Error(res.message || 'No se pudieron generar las actividades.');
       } else {
-        refreshBundle();
+        refreshBundle(res);
       }
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudieron generar las actividades.'); }
     finally { setLoading(false); }
   };
 
-  const refreshBundle = async () => {
+  const refreshBundle = async (result?: GenerateActividadesResult) => {
     try {
       const r = await getLesson(selectedLessonId!);
       setSelectedBundle(r.data);
-      setToast('Actividades de clase generadas.');
-      setTimeout(() => setToast(''), 3000);
+      let msg = 'Actividades de clase generadas.';
+      if (result?.provider && result.provider !== 'local') {
+        const providerLabel: Record<string, string> = { gemini: 'Gemini', 'workers-ai': 'Workers AI', openrouter: 'OpenRouter', huggingface: 'Hugging Face' };
+        msg = `Generado con ${providerLabel[result.provider] || result.provider}.`;
+      } else if (result?.usedFallback || result?.provider === 'local') {
+        msg = 'Modo local activo. Conecta una API IA para mejorar la calidad.';
+      }
+      setToast(msg);
+      setTimeout(() => setToast(''), 4000);
     } catch { /* ignore */ }
   };
   const lessonsByDay = useMemo(() => WEEKDAYS.map((day, i) => { const date = addDays(week, i); return { ...day, date, lessons: calendar.filter((l) => l.lesson_date === date), nteaching: ntbBlocks.filter((b) => b.block_date === date) }; }), [calendar, ntbBlocks, week]);

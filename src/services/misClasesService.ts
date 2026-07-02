@@ -163,6 +163,17 @@ export function generateLessonPresentation(id: string) {
   return api.post<{ ok: boolean; message: string; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-presentation`, {});
 }
 
+export interface GenerateActividadesResult {
+  ok: boolean;
+  provider?: string;
+  model?: string;
+  usedFallback?: boolean;
+  warnings?: string[];
+  message: string;
+  data: Record<string, unknown>;
+  error?: string;
+}
+
 export function generateActividadesClase(id: string, options?: { force?: boolean; instructions?: string }) {
-  return api.post<{ ok: boolean; message: string; data: Record<string, unknown>; error?: string }>(`/api/lessons/${encodeURIComponent(id)}/generate-actividades-clase`, options || {});
+  return api.post<GenerateActividadesResult>(`/api/lessons/${encodeURIComponent(id)}/generate-actividades-clase`, options || {});
 }
