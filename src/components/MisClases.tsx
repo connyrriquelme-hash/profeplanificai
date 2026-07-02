@@ -58,6 +58,13 @@ const METHODOLOGY_OPTIONS = [
   { value: 'semilleros', label: 'Semilleros de investigacion' },
   { value: 'otro', label: 'Otra metodologia' },
 ];
+const AI_PROVIDER_LABELS: Record<string, string> = {
+  gemini: 'Gemini',
+  'workers-ai': 'Workers AI',
+  openrouter: 'OpenRouter',
+  huggingface: 'Hugging Face',
+  local: 'modo local',
+};
 const NTB_FORM_DEFAULT = {
   non_teaching_type: 'planificacion', title: '', description: '', block_date: todayDate(),
   start_time: '08:00', end_time: '09:00', location: '', priority: 'media',
@@ -78,6 +85,7 @@ function parseJsonList(value: unknown): string[] {
   try { const p = JSON.parse(value); return Array.isArray(p) ? p.map(String) : []; } catch { return []; }
 }
 function displayText(value: unknown) { return typeof value === 'string' ? value : value == null ? '' : String(value); }
+function providerLabel(value: unknown) { return AI_PROVIDER_LABELS[displayText(value)] || displayText(value) || 'IA'; }
 function hoursBetween(s: string, e: string) { const [sh, sm] = s.split(':').map(Number); const [eh, em] = e.split(':').map(Number); return (eh * 60 + em) - (sh * 60 + sm); }
 function fmtH(total: number) { const h = Math.floor(total / 60); const m = total % 60; return total > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''}` : '0h'; }
 
@@ -357,8 +365,10 @@ export function MisClases() {
     if (!ok) { setError('Selecciona nivel y asignatura antes de generar con IA'); setRightTab('clase'); setDetailTab('oa'); return; }
     setLoading(true);
     try {
-      if (kind === 'evaluation') await generateLessonEvaluation(selectedLessonId, action); else await generateLessonResource(selectedLessonId, action);
-      setToast('Recurso guardado automaticamente'); const r = await getLesson(selectedLessonId); setSelectedBundle(r.data);
+      const result = kind === 'evaluation' ? await generateLessonEvaluation(selectedLessonId, action) : await generateLessonResource(selectedLessonId, action);
+      const provider = providerLabel(result?.provider);
+      setToast(provider === 'modo local' ? 'Modo local activo. Recurso guardado automáticamente.' : `Recurso guardado con ${provider}.`);
+      const r = await getLesson(selectedLessonId); setSelectedBundle(r.data);
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo generar el recurso.'); } finally { setLoading(false); }
   };
 
@@ -595,7 +605,7 @@ export function MisClases() {
                     <button onClick={() => window.print()} className="flex-1 rounded-xl bg-white border border-slate-200 px-2 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-all">Imprimir</button>
                   </div>
                   <div className="mt-5 space-y-2"><h4 className="text-xs font-black text-slate-500 uppercase">Generados</h4>
-                    {[...(selectedBundle.resources || []), ...(selectedBundle.evaluations || [])].slice(0, 6).map((item) => (<div key={String(item.id)} className="rounded-xl bg-white p-3 text-xs border border-slate-100"><p className="font-bold text-slate-800">{displayText(item.title)}</p><p className="text-emerald-600">Guardado automaticamente</p></div>))}
+                    {[...(selectedBundle.resources || []), ...(selectedBundle.evaluations || [])].slice(0, 6).map((item) => (<div key={String(item.id)} className="rounded-xl bg-white p-3 text-xs border border-slate-100"><p className="font-bold text-slate-800">{displayText(item.title)}</p><p className="text-emerald-600">Guardado con {providerLabel(item.ai_provider || item.provider)}</p></div>))}
                   </div>
                 </aside>
               </div>
@@ -631,7 +641,7 @@ export function MisClases() {
             <h3 className="font-black text-slate-900 text-lg">Recursos con IA</h3>
             <p className="text-sm text-slate-500">{hasOA ? 'Cada recurso usa el contexto curricular guardado: nivel, asignatura y OA seleccionados.' : 'Genera recursos usando nivel y asignatura. Seleccionar OA mejora la alineacion curricular.'}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {[['Crear guia', 'guia', 'resource'], ['Crear presentacion', 'presentation', 'presentation'], ['Crear actividad', 'colaborativa', 'resource'], ['Crear ticket de salida', 'ticket', 'evaluation'], ['Crear recurso DUA', 'dua', 'resource'], ['Mejorar esta clase', 'mejora', 'resource']].map(([label, action, kind]) => (
+              {[['Guia de aprendizaje', 'guia', 'resource'], ['Ficha de trabajo', 'ficha_trabajo', 'resource'], ['Actividad pedagogica', 'actividad_pedagogica', 'resource'], ['Recurso DUA', 'recurso_dua', 'resource'], ['Reforzamiento', 'reforzamiento', 'resource'], ['Extension para avanzados', 'extension_avanzados', 'resource'], ['Material para apoderados', 'material_apoderados', 'resource'], ['Banco de preguntas', 'banco_preguntas', 'resource'], ['Crear presentacion', 'presentation', 'presentation'], ['Crear ticket de salida', 'ticket', 'evaluation']].map(([label, action, kind]) => (
                 <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
               ))}
             </div>

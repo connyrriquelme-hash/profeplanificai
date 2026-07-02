@@ -109,11 +109,11 @@ export function autosaveLesson(id: string, payload: Record<string, unknown>) {
 }
 
 export function generateLessonResource(id: string, action: string) {
-  return api.post<{ ok: boolean; message: string; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-resource`, { action });
+  return api.post<{ ok: boolean; message: string; provider?: string; warnings?: string[]; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-resource`, { action });
 }
 
 export function generateLessonEvaluation(id: string, action: string) {
-  return api.post<{ ok: boolean; message: string; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-evaluation`, { action });
+  return api.post<{ ok: boolean; message: string; provider?: string; warnings?: string[]; data: Record<string, unknown> }>(`/api/lessons/${encodeURIComponent(id)}/generate-evaluation`, { action });
 }
 
 export interface NonTeachingBlock {

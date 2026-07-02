@@ -1,15 +1,50 @@
 import { buildLocalGeneration, getCurriculumContext, getLessonBundle, getTeacherId, json, labelForAction, randomId, readJson, type Env } from '../../../_lib/my-classes';
 import { orchestrate } from '../../../_lib/ai/orchestrator';
-import type { AIEnv, AIRequest, TaskType } from '../../../_lib/ai/types';
+import type { AgentType, AIEnv, AIRequest, TaskType } from '../../../_lib/ai/types';
 
-function taskForResourceAction(action: string): TaskType {
-  if (action === 'guia') return 'crear_guia';
-  if (action === 'rubrica') return 'crear_rubrica';
-  if (action === 'ticket') return 'crear_ticket_salida';
-  if (action === 'presentation') return 'crear_ppt';
-  if (action === 'mejora') return 'mejorar';
-  if (['descendidos', 'alta_exigencia', 'dua'].includes(action)) return 'adaptar';
-  return 'generar';
+function normalizeResourceAction(action: string): string {
+  return action
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[_\s]+/g, '-')
+    .trim();
+}
+
+function routeForResourceAction(action: string): { agentType: AgentType; taskType: TaskType } {
+  const normalized = normalizeResourceAction(action);
+  if (['guia', 'guia-de-aprendizaje', 'guia-aprendizaje'].includes(normalized)) {
+    return { agentType: 'generador_recursos', taskType: 'crear_guia' };
+  }
+  if (normalized === 'presentation') {
+    return { agentType: 'presentacion', taskType: 'crear_ppt' };
+  }
+  if (normalized === 'ticket') {
+    return { agentType: 'generador_recursos', taskType: 'crear_ticket_salida' };
+  }
+  if (normalized === 'rubrica') {
+    return { agentType: 'generador_recursos', taskType: 'crear_rubrica' };
+  }
+  if (['recurso-dua', 'dua', 'reforzamiento', 'descendidos'].includes(normalized)) {
+    return { agentType: 'dua', taskType: 'adaptar' };
+  }
+  if (['extension-para-avanzados', 'extension-avanzados', 'alta-exigencia', 'mejora'].includes(normalized)) {
+    return { agentType: 'dua', taskType: 'mejorar' };
+  }
+  return { agentType: 'generador_recursos', taskType: 'generar' };
+}
+
+function resourceActionLabel(action: string): string {
+  const labels: Record<string, string> = {
+    ficha_trabajo: 'Ficha de trabajo',
+    actividad_pedagogica: 'Actividad pedagógica',
+    recurso_dua: 'Recurso DUA',
+    reforzamiento: 'Reforzamiento',
+    extension_avanzados: 'Extensión para avanzados',
+    material_apoderados: 'Material para apoderados',
+    banco_preguntas: 'Banco de preguntas',
+  };
+  return labels[action] || labelForAction(action);
 }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
@@ -22,6 +57,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   if (!bundle) return json({ error: 'Clase no encontrada' }, 404);
 
   const action = String(body.action || body.resource_type || 'guia');
+  const route = routeForResourceAction(action);
 
   let curriculumContext;
   if (bundle.curriculum?.objective_id) {
@@ -51,8 +87,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     REPO_PEDAGOGICO: context.env.REPO_PEDAGOGICO,
   };
   const aiRequest: AIRequest = {
-    agentType: action === 'dua' ? 'dua' : 'generador_recursos',
-    taskType: taskForResourceAction(action),
+    agentType: route.agentType,
+    taskType: route.taskType,
     lessonId,
     course: String(bundle.lesson.course_name || ''),
     subject: String(bundle.lesson.subject_id || ''),
@@ -62,7 +98,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     indicators: (curriculumContext.indicators as Record<string, unknown>[]).map((i) => String(i.description || i.indicator_text || '')).filter(Boolean),
     skills: (curriculumContext.skills as Record<string, unknown>[]).map((s) => String(s.description || s.official_text || '')).filter(Boolean),
     attitudes: (curriculumContext.attitudes as Record<string, unknown>[]).map((a) => String(a.description || a.official_text || '')).filter(Boolean),
-    instructions: `${labelForAction(action)}. ${String(bundle.plan?.teacher_observations || '')}`.trim(),
+    instructions: [
+      resourceActionLabel(action),
+      body.topic ? `Tema: ${String(body.topic)}` : '',
+      body.instructions ? String(body.instructions) : '',
+      String(bundle.plan?.teacher_observations || ''),
+    ].filter(Boolean).join('. '),
     outputFormat: 'json',
     existingContent: JSON.stringify(bundle.plan || {}),
   };
@@ -104,12 +145,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       id,
       bundle.plan?.id,
       action,
-      labelForAction(action),
+      resourceActionLabel(action),
       JSON.stringify(content),
       null,
       JSON.stringify({ ...curriculumContext, warnings }),
       provider,
     ).run();
 
-  return json({ ok: true, provider, warnings, message: 'Recurso guardado automaticamente', data: { id, type: action, title: labelForAction(action), content } }, 201);
+  return json({ ok: true, provider, warnings, message: 'Recurso guardado automaticamente', data: { id, type: action, title: resourceActionLabel(action), content } }, 201);
 }
