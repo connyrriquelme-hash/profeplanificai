@@ -1,0 +1,127 @@
+import type { AIEnv, AIRequest, AIResponse, ProviderName } from './types';
+import { buildPrompt } from './prompts';
+import { callProvider, statusProviders } from './providers';
+import { sanitizeOutput, scanContent, scanForSecrets } from './safety';
+import { checkRateLimit, sanitizeForPrompt, validateInputSize } from './limits';
+
+function localFallback(agentType: string, taskType: string, req: AIRequest): { content: string; structured: Record<string, unknown> } {
+  const course = req.course || 'el curso';
+  const subject = req.subject || 'la asignatura';
+  const oa = req.oaCode ? `${req.oaCode}: ${req.oaText || ''}` : 'OA pendiente — el docente debe seleccionar un OA del Curriculo Nacional.';
+
+  const base = `Actividad pedagogica para ${course} — ${subject}.
+OA: ${oa}
+Generado por fallback local pedagogico. Para contenido enriquecido, configura una API key de IA (Gemini, Workers AI, OpenRouter o HuggingFace).`;
+
+  if (agentType === 'actividades_clase' && taskType === 'generar') {
+    return {
+      content: base,
+      structured: {
+        objetivoEspecifico: `Que los estudiantes demuestren comprension de los aprendizajes propios de ${course} en ${subject}.`,
+        proposito: `Fortalecer competencias de ${subject} en el contexto de ${course}.`,
+        inicio: `Momento de activacion (10-15 min): Pregunta motivadora que conecte con conocimientos previos de los estudiantes sobre ${subject}.`,
+        desarrollo: `Momento de construccion (25-35 min): Actividad principal con instrucciones paso a paso. Trabajo colaborativo con intercambio de ideas.`,
+        cierre: `Momento de cierre (10-15 min): Reflexion y metacognicion. Que aprendi y como puedo aplicarlo.`,
+        evaluacionFormativa: 'Observacion directa, productos escritos, retroalimentacion entre pares.',
+        ticketSalida: '1. Que aprendi hoy?\n2. En que situacion puedo aplicar lo aprendido?\n3. Que me falta por aprender o practicar?',
+        recursosMateriales: ['Cuaderno o ficha de trabajo', 'Materiales visuales', 'Pizarron'],
+        adecuacionesDUA: 'Representacion en multiples formatos. Diversas formas de demostrar aprendizaje. Conexion con intereses.',
+        apoyoEstudiantesDescendidos: 'Grupos heterogeneos, instrucciones paso a paso, ejemplos concretos, tiempo adicional.',
+        extensionAvanzados: 'Problemas de mayor complejidad, proyectos breves, rol de tutores.',
+      },
+    };
+  }
+
+  return {
+    content: base,
+    structured: { message: 'Contenido generado por fallback local. Configura una API key para resultados enriquecidos.' },
+  };
+}
+
+function parseResponse(raw: string): { content: string; structured: Record<string, unknown> } {
+  try {
+    const cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { content: raw, structured: parsed };
+    }
+  } catch { /* not JSON */ }
+  return { content: raw, structured: {} };
+}
+
+export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string): Promise<AIResponse> {
+  const start = Date.now();
+  const warnings: string[] = [];
+
+  const rateCheck = checkRateLimit(teacherId);
+  if (!rateCheck.allowed) {
+    return {
+      ok: false, provider: 'local', model: '', agentType: req.agentType, taskType: req.taskType,
+      content: '', structured: {}, warnings: [`Rate limit excedido. Intenta en ${Math.ceil((rateCheck.retryAfterMs || 60000) / 1000)} segundos.`],
+      usedFallback: false, durationMs: Date.now() - start,
+    };
+  }
+
+  const inputText = [req.course, req.subject, req.grade, req.oa, req.instructions, req.existingContent].filter(Boolean).join(' ');
+  const inputCheck = validateInputSize(inputText);
+  if (!inputCheck.valid) {
+    return {
+      ok: false, provider: 'local', model: '', agentType: req.agentType, taskType: req.taskType,
+      content: '', structured: {}, warnings: [inputCheck.error!],
+      usedFallback: false, durationMs: Date.now() - start,
+    };
+  }
+
+  const secretCheck = scanForSecrets(inputText);
+  if (!secretCheck.safe) {
+    return {
+      ok: false, provider: 'local', model: '', agentType: req.agentType, taskType: req.taskType,
+      content: '', structured: {}, warnings: [secretCheck.reason!],
+      usedFallback: false, durationMs: Date.now() - start,
+    };
+  }
+
+  const safeReq: AIRequest = {
+    ...req,
+    course: sanitizeForPrompt(req.course),
+    subject: sanitizeForPrompt(req.subject),
+    grade: sanitizeForPrompt(req.grade),
+    oa: sanitizeForPrompt(req.oa),
+    instructions: sanitizeForPrompt(req.instructions),
+  };
+
+  const prompt = buildPrompt(req.agentType, req.taskType, safeReq);
+  const { providers, recommended } = await statusProviders(env);
+  const providerOrder: ProviderName[] = ['workers-ai', 'gemini', 'openrouter', 'huggingface'];
+
+  for (const provider of providerOrder) {
+    if (!providers[provider].available) continue;
+
+    try {
+      const result = await callProvider(provider, env, prompt);
+      if (result.ok && result.content) {
+        const contentCheck = scanContent(result.content);
+        if (contentCheck.reason) warnings.push(contentCheck.reason);
+
+        const sanitized = sanitizeOutput(result.content);
+        const { content, structured } = parseResponse(sanitized);
+
+        return {
+          ok: true, provider, model: result.model, agentType: req.agentType, taskType: req.taskType,
+          content, structured: structured || result.structured || {}, warnings,
+          usedFallback: false, durationMs: Date.now() - start,
+        };
+      }
+    } catch (e) {
+      warnings.push(`Error con ${provider}: ${e instanceof Error ? e.message : 'desconocido'}`);
+    }
+  }
+
+  const fallback = localFallback(req.agentType, req.taskType, safeReq);
+  return {
+    ok: true, provider: 'local', model: 'fallback-pedagogico', agentType: req.agentType, taskType: req.taskType,
+    content: fallback.content, structured: fallback.structured,
+    warnings: [...warnings, 'Todos los proveedores IA fallaron o no estan configurados. Se uso fallback local.'],
+    usedFallback: true, durationMs: Date.now() - start,
+  };
+}
