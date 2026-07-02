@@ -22,6 +22,7 @@ import { FlujoDocenteView } from './components/FlujoDocenteView';
 import { MisClases } from './components/MisClases';
 import { ReportesView } from './components/ReportesView';
 import AdminView from './components/AdminView';
+import AdminPanelView from './components/AdminPanelView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -87,7 +88,9 @@ function AppContent() {
       case 'reportes':
         return <ReportesView />;
       case 'admin':
-        return <AdminView />;
+        return <AdminView onNavigate={handleViewChange} />;
+      case 'admin-panel':
+        return <AdminPanelView />;
       default:
         return <DashboardView onNavigate={handleViewChange} />;
     }

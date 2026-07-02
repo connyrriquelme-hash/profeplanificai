@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/apiClient';
 import { getPlans, getRecursosGuardados, getEvalsGuardadas, getCursos, getEstudiantes, getCollabPosts } from '../services/storageService';
-import { BarChart3, Users, Database, Wifi, WifiOff, UserCog, RefreshCw, Save, Monitor, Trash2, ShieldOff } from 'lucide-react';
+import { BarChart3, Users, Database, Wifi, WifiOff, UserCog, RefreshCw, Save, Monitor, Trash2, ShieldOff, Building2 } from 'lucide-react';
 
 interface DashboardStats {
   planes: number; recursos: number; evaluaciones: number;
@@ -14,7 +14,7 @@ interface Usuario {
   rol: string; created_at: string; updated_at: string;
 }
 
-export default function AdminView() {
+export default function AdminView({ onNavigate }: { onNavigate?: (view: string) => void }) {
   const { user, online, sessions, loadSessions, revokeSession, revokeOtherSessions } = useAuth();
   const [tab, setTab] = useState<'dashboard' | 'usuarios' | 'sesiones'>('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -110,10 +110,18 @@ export default function AdminView() {
           <BarChart3 size={22} />
           Panel de Administración
         </h2>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: online ? 'var(--success)' : 'var(--muted)' }}>
-          {online ? <Wifi size={14} /> : <WifiOff size={14} />}
-          {online ? 'Conectado al servidor' : 'Modo local'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {user?.rol === 'admin' && onNavigate && (
+            <button className="primary" onClick={() => onNavigate('admin-panel')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+              <Building2 size={14} /> Panel Institucional
+            </button>
+          )}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: online ? 'var(--success)' : 'var(--muted)' }}>
+            {online ? <Wifi size={14} /> : <WifiOff size={14} />}
+            {online ? 'Conectado al servidor' : 'Modo local'}
+          </span>
+        </div>
       </div>
 
       {error && <div className="status warn" style={{ marginBottom: 14 }}>{error}</div>}

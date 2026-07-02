@@ -1,26 +1,25 @@
-interface Env {
-  DB: D1Database;
-}
+import { requireAdmin, logAdminAction, type AdminEnv } from '../../_lib/roles';
+import { hashPassword } from '../../_lib/auth';
+
+interface Env extends AdminEnv {}
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
-  const adminId = await requireAdmin(context);
-  if (!adminId) return Response.json({ error: 'No autorizado' }, { status: 401 });
-
   try {
+    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
     const { results } = await context.env.DB.prepare(
       'SELECT id, email, nombre, rol, created_at, updated_at FROM usuarios ORDER BY created_at DESC'
     ).all();
     return Response.json({ usuarios: results });
   } catch (err) {
+    if (err instanceof Response) return err;
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
   }
 }
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
-  const adminId = await requireAdmin(context);
-  if (!adminId) return Response.json({ error: 'No autorizado' }, { status: 401 });
-
   try {
+    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
+
     const body = await context.request.json() as { userId?: string; rol?: string; password?: string; nombre?: string };
     const { userId, rol, password, nombre } = body;
 
@@ -28,8 +27,8 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       return Response.json({ error: 'Falta userId' }, { status: 400 });
     }
 
-    if (rol && !['admin', 'docente'].includes(rol)) {
-      return Response.json({ error: 'Rol inválido. Debe ser admin o docente' }, { status: 400 });
+    if (rol && !['admin', 'docente', 'institution_admin'].includes(rol)) {
+      return Response.json({ error: 'Rol inválido.' }, { status: 400 });
     }
 
     const updates: string[] = [];
@@ -38,9 +37,9 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
     if (rol) { updates.push('rol = ?'); values.push(rol); }
     if (nombre) { updates.push('nombre = ?'); values.push(nombre); }
     if (password) {
-      const passwordHash = await hashPassword(password);
+      const ph = await hashPassword(password);
       updates.push('password_hash = ?');
-      values.push(passwordHash);
+      values.push(ph);
     }
     updates.push("updated_at = datetime('now')");
 
@@ -53,28 +52,11 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       `UPDATE usuarios SET ${updates.join(', ')} WHERE id = ?`
     ).bind(...values).run();
 
+    await logAdminAction({ DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET }, admin.id, 'update_user', 'user', userId, { rol, nombre: !!nombre });
+
     return Response.json({ success: true });
   } catch (err) {
+    if (err instanceof Response) return err;
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
   }
-}
-
-async function requireAdmin(context: EventContext<Env>): Promise<string | null> {
-  const auth = context.request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  try {
-    const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-    const userId = payload.sub;
-    if (!userId) return null;
-    const user = await context.env.DB.prepare('SELECT rol FROM usuarios WHERE id = ?').bind(userId).first() as { rol: string } | null;
-    if (!user || user.rol !== 'admin') return null;
-    return userId as string;
-  } catch { return null; }
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(hash)));
 }

@@ -268,6 +268,7 @@ export type ViewType =
   | 'unidades-didacticas'
   | 'reportes'
   | 'admin'
+  | 'admin-panel'
   | 'print';
 
 export type SharedDocumentPermission = 'view' | 'comment' | 'edit';

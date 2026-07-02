@@ -1,19 +1,18 @@
-interface Env {
-  DB: D1Database;
-}
+import { requireAdmin, type AdminEnv } from '../../_lib/roles';
+
+interface Env extends AdminEnv {}
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
-  const auth = getUserId(context);
-  if (!auth) return Response.json({ error: 'No autorizado' }, { status: 401 });
-
   try {
+    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
+
     const [user, planes, recursos, evaluaciones, cursos, estudiantes, posts] = await Promise.all([
-      context.env.DB.prepare('SELECT id, email, nombre, rol FROM usuarios WHERE id = ?').bind(auth).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM planes WHERE usuario_id = ?').bind(auth).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM recursos WHERE usuario_id = ?').bind(auth).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM evaluaciones WHERE usuario_id = ?').bind(auth).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM cursos WHERE usuario_id = ?').bind(auth).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM estudiantes WHERE usuario_id = ?').bind(auth).first(),
+      context.env.DB.prepare('SELECT id, email, nombre, rol FROM usuarios WHERE id = ?').bind(admin.id).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM planes WHERE usuario_id = ?').bind(admin.id).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM recursos WHERE usuario_id = ?').bind(admin.id).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM evaluaciones WHERE usuario_id = ?').bind(admin.id).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM cursos WHERE usuario_id = ?').bind(admin.id).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM estudiantes WHERE usuario_id = ?').bind(admin.id).first(),
       context.env.DB.prepare('SELECT COUNT(*) as count FROM colaboracion_posts').first(),
     ]);
 
@@ -29,15 +28,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       },
     });
   } catch (err) {
+    if (err instanceof Response) return err;
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
   }
-}
-
-function getUserId(context: EventContext<Env>): string | null {
-  const auth = context.request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  try {
-    const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-    return payload.sub || null;
-  } catch { return null; }
 }
