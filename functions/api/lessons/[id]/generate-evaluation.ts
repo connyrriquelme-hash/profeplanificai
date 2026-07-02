@@ -1,12 +1,19 @@
 import { buildLocalGeneration, getCurriculumContext, getLessonBundle, getTeacherId, json, labelForAction, randomId, readJson, type Env } from '../../../_lib/my-classes';
 import { orchestrate } from '../../../_lib/ai/orchestrator';
-import type { AIEnv, AIRequest, TaskType } from '../../../_lib/ai/types';
+import type { AgentType, AIEnv, AIRequest, TaskType } from '../../../_lib/ai/types';
 
-function taskForEvaluationAction(action: string): TaskType {
-  if (action === 'rubrica') return 'crear_rubrica';
-  if (action === 'ticket') return 'crear_ticket_salida';
-  if (action === 'evaluacion') return 'crear_evaluacion';
-  return 'generar';
+function normalizeAction(action: string): string {
+  return action.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_-]+/g, '-');
+}
+
+function routeForEvaluationAction(action: string): { agentType: AgentType; taskType: TaskType } {
+  const normalized = normalizeAction(action);
+  if (['ticket', 'ticket-salida', 'ticket-de-salida'].includes(normalized)) return { agentType: 'evaluador', taskType: 'crear_ticket_salida' };
+  if (['simce', 'ensayo-simce', 'item-simce'].includes(normalized)) return { agentType: 'simce', taskType: 'generar' };
+  if (['rubrica', 'rubrica-analitica', 'lista', 'lista-cotejo', 'lista-de-cotejo', 'escala', 'escala-apreciacion', 'escala-de-apreciacion'].includes(normalized)) return { agentType: 'rubrica', taskType: 'crear_rubrica' };
+  if (['retroalimentacion', 'feedback'].includes(normalized)) return { agentType: 'retroalimentacion', taskType: 'crear_retroalimentacion' };
+  if (['pauta', 'pauta-correccion', 'pauta-de-correccion'].includes(normalized)) return { agentType: 'evaluador', taskType: 'evaluar' };
+  return { agentType: 'evaluador', taskType: 'crear_evaluacion' };
 }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
@@ -19,6 +26,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   if (!bundle) return json({ error: 'Clase no encontrada' }, 404);
 
   const action = String(body.action || body.evaluation_type || 'evaluacion');
+  const route = routeForEvaluationAction(action);
 
   let curriculumContext;
   if (bundle.curriculum?.objective_id) {
@@ -48,8 +56,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     REPO_PEDAGOGICO: context.env.REPO_PEDAGOGICO,
   };
   const aiRequest: AIRequest = {
-    agentType: 'evaluador',
-    taskType: taskForEvaluationAction(action),
+    agentType: route.agentType,
+    taskType: route.taskType,
     lessonId,
     course: String(bundle.lesson.course_name || ''),
     subject: String(bundle.lesson.subject_id || ''),
@@ -59,7 +67,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     indicators: (curriculumContext.indicators as Record<string, unknown>[]).map((i) => String(i.description || i.indicator_text || '')).filter(Boolean),
     skills: (curriculumContext.skills as Record<string, unknown>[]).map((s) => String(s.description || s.official_text || '')).filter(Boolean),
     attitudes: (curriculumContext.attitudes as Record<string, unknown>[]).map((a) => String(a.description || a.official_text || '')).filter(Boolean),
-    instructions: `${labelForAction(action)} con pauta, criterios, niveles de logro y adecuaciones DUA. ${String(bundle.plan?.teacher_observations || '')}`.trim(),
+    instructions: `${labelForAction(action)} con curso, asignatura, instrucciones docentes y OA si existe. ${String(body.instructions || '')} ${String(bundle.plan?.teacher_observations || '')}`.trim(),
     outputFormat: 'json',
     existingContent: JSON.stringify(bundle.plan || {}),
   };

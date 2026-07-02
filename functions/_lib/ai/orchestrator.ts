@@ -33,6 +33,94 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
     };
   }
 
+  if (agentType === 'evaluador') {
+    const evalType = req.instructions?.includes('SIMCE') ? 'SIMCE' : 'formativa';
+    return {
+      content: base,
+      structured: {
+        titulo: `Evaluacion ${evalType} — ${course} / ${subject}`,
+        tipoEvaluacion: evalType.toLowerCase(),
+        curso: course,
+        asignatura: subject,
+        proposito: `Evaluar los aprendizajes de ${subject} en ${course}.`,
+        instruccionesEstudiantes: 'Lee cada pregunta con atencion. Responde segun lo solicitado.',
+        preguntas: [
+          { numero: 1, tipo: 'abierta', enunciado: 'Explica con tus palabras la idea central del tema trabajado.', alternativas: [], respuestaCorrecta: '', respuestaEsperada: 'Respuesta alineada al OA y a los indicadores seleccionados.', habilidadEvaluada: 'Comprension', indicadorEvaluado: '', puntaje: 4, retroalimentacion: 'Se valora la claridad y uso de vocabulario propio.' },
+          { numero: 2, tipo: 'aplicacion', enunciado: 'Resuelve o crea un ejemplo conectado al contexto chileno de la clase.', alternativas: [], respuestaCorrecta: '', respuestaEsperada: 'Ejemplo contextualizado y correcto.', habilidadEvaluada: 'Aplicacion', indicadorEvaluado: '', puntaje: 4, retroalimentacion: 'Se evalua la conexion con la realidad y correcta aplicacion.' },
+          { numero: 3, tipo: 'metacognicion', enunciado: 'Que estrategia te ayudo mas y por que?', alternativas: [], respuestaCorrecta: '', respuestaEsperada: 'Reflexion personal sobre su proceso de aprendizaje.', habilidadEvaluada: 'Metacognicion', indicadorEvaluado: '', puntaje: 2, retroalimentacion: 'Toda respuesta reflexiva es valida.' },
+        ],
+        pautaCorreccion: 'Respuesta esperada alineada al texto oficial del OA y a indicadores seleccionados.',
+        nivelesLogro: ['Logrado', 'En desarrollo', 'Por reforzar'],
+        tablaEspecificaciones: [],
+        adecuacionesDUA: 'Permitir respuesta oral, escrita o grafica. Entregar pautas visuales. Tiempo adicional si se requiere.',
+        reforzamientoSugerido: 'Repasar conceptos clave. Practicar con ejercicios similares.',
+      },
+    };
+  }
+
+  if (agentType === 'simce') {
+    return {
+      content: base,
+      structured: {
+        titulo: `Item SIMCE — ${course} / ${subject}`,
+        tipoItem: 'seleccion_multiple',
+        enunciado: 'Enunciado del item alineado al OA. Complejidad media.',
+        alternativas: [
+          { texto: 'Alternativa A (correcta)', esCorrecta: true },
+          { texto: 'Alternativa B (distractor plausible)', esCorrecta: false },
+          { texto: 'Alternativa C (distractor plausible)', esCorrecta: false },
+          { texto: 'Alternativa D (distractor plausible)', esCorrecta: false },
+        ],
+        nivelComplejidad: 'medio',
+        OA: req.oaCode || 'OA pendiente',
+        justificacion: 'La alternativa A es correcta porque... Las demas son distractores basados en errores comunes.',
+        tiempoEstimado: '3-5 min',
+      },
+    };
+  }
+
+  if (agentType === 'rubrica') {
+    return {
+      content: base,
+      structured: {
+        titulo: `Rubrica — ${course} / ${subject}`,
+        descripcion: 'Rubrica de evaluacion alineada al curriculo.',
+        criterios: [
+          { nombre: 'Comprension del OA', ponderacion: 40, niveles: [
+            { nivel: 'Logrado', puntaje: 4, descripcion: 'Demuestra comprension profunda y precisa.' },
+            { nivel: 'En desarrollo', puntaje: 3, descripcion: 'Comprension parcial con algunos errores.' },
+            { nivel: 'Por reforzar', puntaje: 2, descripcion: 'Comprension basica, errores significativos.' },
+            { nivel: 'No logrado', puntaje: 1, descripcion: 'No demuestra comprension del tema.' },
+          ]},
+          { nombre: 'Uso de evidencia', ponderacion: 30, niveles: [
+            { nivel: 'Logrado', puntaje: 4, descripcion: 'Evidencia clara, pertinente y bien explicada.' },
+            { nivel: 'En desarrollo', puntaje: 3, descripcion: 'Evidencia parcialmente clara.' },
+            { nivel: 'Por reforzar', puntaje: 2, descripcion: 'Evidencia insuficiente o poco clara.' },
+            { nivel: 'No logrado', puntaje: 1, descripcion: 'No presenta evidencia.' },
+          ]},
+          { nombre: 'Comunicacion', ponderacion: 30, niveles: [
+            { nivel: 'Logrado', puntaje: 4, descripcion: 'Expresion clara, vocabulario adecuado.' },
+            { nivel: 'En desarrollo', puntaje: 3, descripcion: 'Expresion mayormente clara.' },
+            { nivel: 'Por reforzar', puntaje: 2, descripcion: 'Expresion confusa o limitada.' },
+            { nivel: 'No logrado', puntaje: 1, descripcion: 'No se entiende la respuesta.' },
+          ]},
+        ],
+      },
+    };
+  }
+
+  if (agentType === 'retroalimentacion') {
+    return {
+      content: base,
+      structured: {
+        fortalezas: ['Participacion activa', 'Comprension de conceptos clave'],
+        sugerencias: ['Profundizar en la argumentacion', 'Conectar mas con experiencias personales'],
+        proximoPaso: 'Trabajar en la estructuracion de respuestas escritas.',
+        reflexionDocente: 'El grupo avanza bien. Considerar actividades de extension para los mas rapidos.',
+      },
+    };
+  }
+
   return {
     content: base,
     structured: { message: 'Contenido generado por fallback local. Configura una API key para resultados enriquecidos.' },

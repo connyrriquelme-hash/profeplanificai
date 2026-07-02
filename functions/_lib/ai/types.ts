@@ -92,7 +92,15 @@ export const VALID_AGENT_TYPES: AgentType[] = [
 ];
 
 export const VALID_TASK_TYPES: TaskType[] = [
-  'generar', 'mejorar', 'adaptar', 'evaluar', 'crear_guia',
-  'crear_rubrica', 'crear_ticket_salida', 'crear_ppt', 'crear_reporte',
-  'crear_evaluacion', 'crear_retroalimentacion',
+  'generar',
+  'mejorar',
+  'adaptar',
+  'evaluar',
+  'crear_guia',
+  'crear_rubrica',
+  'crear_ticket_salida',
+  'crear_ppt',
+  'crear_reporte',
+  'crear_evaluacion',
+  'crear_retroalimentacion',
 ];

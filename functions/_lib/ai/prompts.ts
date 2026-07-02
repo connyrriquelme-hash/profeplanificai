@@ -1,4 +1,5 @@
 import type { AgentType, TaskType, AIRequest } from './types';
+import { buildEvaluationPrompt } from './evaluationPrompts';
 
 const BASE_CONTEXT = `Eres un asistente pedagogico experto en el Curriculo Nacional de Chile y practicas docentes efectivas.
 Reglas generales:
@@ -412,6 +413,9 @@ JSON: {"titulo":"","resumen":""}`,
 };
 
 export function buildPrompt(agentType: AgentType, taskType: TaskType, req: AIRequest): string {
+  const evaluationPrompt = buildEvaluationPrompt(agentType, taskType, req);
+  if (evaluationPrompt) return evaluationPrompt;
+
   const agentPrompts = PROMPTS[agentType];
   if (!agentPrompts) return `Tarea no soportada: ${agentType}/${taskType}`;
   const taskFn = agentPrompts[taskType];
