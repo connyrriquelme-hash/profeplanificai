@@ -7,10 +7,10 @@ import {
 import { getCourses, getIndicatorsByObjective, getObjectives, getSkillsByObjective, getSubjectsByCourse } from '../services/curriculumD1Service';
 import {
   autosaveLesson, createLesson, createNonTeachingBlock, createSchedule, createTeacherClass,
-  deleteNonTeachingBlock, deleteTeacherClass, generateLessonEvaluation,
-  generateLessonResource, getCalendar, getLesson, getNonTeachingBlocks, listTeacherClasses,
-  updateLesson, updateNonTeachingBlock, type LessonBundle, type LessonInstance,
-  type NonTeachingBlock, type TeacherClass,
+  deleteNonTeachingBlock, deleteTeacherClass, generateActividadesClase,
+  generateLessonEvaluation, generateLessonResource, getCalendar, getLesson,
+  getNonTeachingBlocks, listTeacherClasses, updateLesson, updateNonTeachingBlock,
+  type LessonBundle, type LessonInstance, type NonTeachingBlock, type TeacherClass,
 } from '../services/misClasesService';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
@@ -365,8 +365,8 @@ export function MisClases() {
   };
 
   const generate = async (action: string, kind: 'resource' | 'evaluation' | 'presentation' = 'resource') => {
-    const ok = Boolean(selectedLessonId && lessonCurriculum.levelId && lessonCurriculum.subjectId && lessonCurriculum.objectiveId);
-    if (!ok) { setError('Selecciona nivel, asignatura y OA antes de generar con IA'); setRightTab('clase'); setDetailTab('oa'); return; }
+    const ok = Boolean(selectedLessonId && lessonCurriculum.levelId && lessonCurriculum.subjectId);
+    if (!ok) { setError('Selecciona nivel y asignatura antes de generar con IA'); setRightTab('clase'); setDetailTab('oa'); return; }
     setLoading(true);
     try {
       if (kind === 'evaluation') await generateLessonEvaluation(selectedLessonId, action); else await generateLessonResource(selectedLessonId, action);
@@ -375,6 +375,34 @@ export function MisClases() {
   };
 
   const hasOA = Boolean(lessonCurriculum.objectiveId);
+
+  const handleGenerateActividades = async (force = false) => {
+    if (!selectedLessonId) return;
+    setLoading(true); setError('');
+    try {
+      const res = await generateActividadesClase(selectedLessonId, { force, instructions });
+      if (!res.ok && res.error === 'replace_required') {
+        if (!confirm(res.message || 'Esta clase ya tiene actividades generadas. Deseas reemplazarlas?')) { setLoading(false); return; }
+        const res2 = await generateActividadesClase(selectedLessonId, { force: true, instructions });
+        if (!res2.ok) throw new Error(res2.message || 'No se pudieron generar las actividades.');
+        refreshBundle();
+      } else if (!res.ok) {
+        throw new Error(res.message || 'No se pudieron generar las actividades.');
+      } else {
+        refreshBundle();
+      }
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudieron generar las actividades.'); }
+    finally { setLoading(false); }
+  };
+
+  const refreshBundle = async () => {
+    try {
+      const r = await getLesson(selectedLessonId!);
+      setSelectedBundle(r.data);
+      setToast('Actividades de clase generadas.');
+      setTimeout(() => setToast(''), 3000);
+    } catch { /* ignore */ }
+  };
   const lessonsByDay = useMemo(() => WEEKDAYS.map((day, i) => { const date = addDays(week, i); return { ...day, date, lessons: calendar.filter((l) => l.lesson_date === date), nteaching: ntbBlocks.filter((b) => b.block_date === date) }; }), [calendar, ntbBlocks, week]);
   const totalTeachingMin = useMemo(() => calendar.reduce((s, l) => s + hoursBetween(l.start_time, l.end_time), 0), [calendar]);
   const totalNonTeachingMin = useMemo(() => ntbBlocks.reduce((s, b) => s + hoursBetween(b.start_time, b.end_time), 0), [ntbBlocks]);
@@ -416,7 +444,7 @@ export function MisClases() {
             <p className="text-[11px] font-black tracking-wide uppercase text-violet-600">Curriculo</p>
             <label className={LC}>Nivel educativo<select value={lessonCurriculum.levelId} onChange={(e) => updateLessonCurriculum({ levelId: e.target.value })} className={IC}><option value="">Selecciona nivel</option>{courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
             <label className={LC}>Asignatura<select value={lessonCurriculum.subjectId} onChange={(e) => updateLessonCurriculum({ subjectId: e.target.value })} disabled={!lessonCurriculum.levelId || lcSubjectsLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcSubjectsLoading ? 'Cargando...' : 'Selecciona asignatura'}</option>{lcSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-            <label className={LC}>Objetivo Curricular OA<select value={lessonCurriculum.objectiveId} onChange={(e) => updateLessonCurriculum({ objectiveId: e.target.value })} disabled={!lessonCurriculum.subjectId || lcObjectivesLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcObjectivesLoading ? 'Cargando...' : 'Selecciona OA'}</option>{lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}</select></label>
+            <label className={LC}>Objetivo Curricular OA (opcional)<select value={lessonCurriculum.objectiveId} onChange={(e) => updateLessonCurriculum({ objectiveId: e.target.value })} disabled={!lessonCurriculum.subjectId || lcObjectivesLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcObjectivesLoading ? 'Cargando...' : 'Selecciona OA (opcional)'}</option>{lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}</select></label>
             <label className={LC}>Metodologia<select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></label>
           </div>
 
@@ -510,51 +538,88 @@ export function MisClases() {
               <div><p className="text-xs font-bold text-violet-600">Detalle de clase</p><h3 className="font-black text-slate-900 text-lg">{selectedBundle.plan?.title || selectedBundle.lesson.title}</h3><p className="text-sm text-slate-500">{selectedBundle.lesson.lesson_date} &middot; {selectedBundle.lesson.start_time}-{selectedBundle.lesson.end_time}</p></div>
               <div className="flex items-center gap-2 text-sm text-slate-500">{savingState === 'saving' ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{savingState === 'saving' ? 'Guardando...' : savingState === 'saved' ? 'Guardado automaticamente' : 'Borrador'}</div>
             </div>
-            <div className="flex gap-1 overflow-x-auto pb-2 mb-4">
-              {(['oa', 'inicio', 'desarrollo', 'cierre', 'metodologia', 'comentarios'] as DetailTab[]).map((t) => (<button key={t} onClick={() => setDetailTab(t)} className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${detailTab === t ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>{t === 'oa' ? 'OA' : t === 'inicio' ? 'Inicio' : t === 'desarrollo' ? 'Desarrollo' : t === 'cierre' ? 'Cierre' : t === 'metodologia' ? 'Metodologia' : 'Comentarios'}</button>))}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
-              <div className="rounded-2xl bg-slate-50 p-4 min-h-[280px]">
-                {detailTab === 'oa' && (<div className="space-y-4">
-                  <h3 className="font-black text-slate-900">Selecciona OA desde D1</h3>
-                  <select value={lessonCurriculum.objectiveId} onChange={(e) => { updateLessonCurriculum({ objectiveId: e.target.value }); const oa = lcObjectives.find((o) => o.id === e.target.value); if (oa) { setSelectedObjective(oa); void handleObjectiveSelect(e.target.value); } }} className={IC}>
-                    <option value="">Selecciona un OA</option>
-                    {lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}
-                  </select>
-                  <textarea value={selectedBundle.plan?.objective_text || ''} onChange={(e) => updatePlanField('objective_text', e.target.value)} placeholder="Objetivo especifico de la clase" className="w-full min-h-[110px] rounded-2xl border border-slate-200 p-3 text-sm" />
-                  <textarea value={selectedBundle.plan?.purpose_text || ''} onChange={(e) => updatePlanField('purpose_text', e.target.value)} placeholder="Proposito de la clase" className="w-full min-h-[90px] rounded-2xl border border-slate-200 p-3 text-sm" />
-                </div>)}
-                {detailTab === 'metodologia' && (<div className="space-y-3"><h3 className="font-black text-slate-900">Metodologia sugerida</h3>
-                  <select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select>
-                  <p className="text-xs text-slate-500">Selecciona una metodologia del curriculo chileno.</p></div>)}
-                {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100" placeholder={`Escribe o genera contenido para ${detailTab}`} />)}
+
+            {/* RESUMEN: Datos de clase */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 mb-5">
+              <h4 className="text-xs font-black tracking-wide uppercase text-slate-500 mb-3">Datos de clase</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div><span className="text-[11px] font-bold text-slate-400 uppercase">Curso</span><p className="font-semibold text-slate-800">{courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId || '-'}</p></div>
+                <div><span className="text-[11px] font-bold text-slate-400 uppercase">Asignatura</span><p className="font-semibold text-slate-800">{lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId || '-'}</p></div>
+                <div><span className="text-[11px] font-bold text-slate-400 uppercase">OA</span><p className="font-semibold text-slate-800">{lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.code || 'Seleccionado' : <span className="text-slate-400 italic">Opcional</span>}</p></div>
+                <div><span className="text-[11px] font-bold text-slate-400 uppercase">Metodologia</span><p className="font-semibold text-slate-800">{METHODOLOGY_OPTIONS.find((m) => m.value === methodologyId)?.label || '-'}</p></div>
               </div>
-              <aside className="rounded-2xl border border-violet-100 p-4 bg-violet-50/50">
-                <h3 className="font-black text-slate-900 flex items-center gap-2"><Sparkles size={18} /> IA integrada</h3>
-                <p className="mt-1 text-xs text-slate-500">La IA se bloquea si no hay OA seleccionado y guarda todo automaticamente en D1.</p>
-                <div className="mt-4 grid grid-cols-1 gap-2">
-                  {[['Generar inicio', 'inicio', 'resource'], ['Generar desarrollo', 'desarrollo', 'resource'], ['Generar cierre', 'cierre', 'resource']].map(([label, action, kind]) => (
-                    <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-xl bg-white border border-violet-100 px-3 py-2 text-left text-xs font-bold text-violet-700 hover:bg-violet-600 hover:text-white transition-colors disabled:opacity-50">{label}</button>
-                  ))}
+            </div>
+
+            {/* SECCION: Actividades de clase */}
+            <div className="rounded-2xl border border-violet-200 bg-violet-50/30 p-5 mb-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="font-black text-slate-900 text-lg flex items-center gap-2"><BookOpen size={18} className="text-violet-600" /> Actividades de clase</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Momentos pedagogicos: Inicio, Desarrollo, Cierre y componentes complementarios.</p>
                 </div>
-                <div className="mt-5 space-y-2"><h4 className="text-xs font-black text-slate-500 uppercase">Generados</h4>
-                  {[...(selectedBundle.resources || []), ...(selectedBundle.evaluations || [])].slice(0, 6).map((item) => (<div key={String(item.id)} className="rounded-xl bg-white p-3 text-xs border border-slate-100"><p className="font-bold text-slate-800">{displayText(item.title)}</p><p className="text-emerald-600">Guardado automaticamente</p></div>))}
+                <button disabled={loading} onClick={() => void handleGenerateActividades()} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-white text-sm font-bold shadow-md shadow-violet-900/10 hover:shadow-lg transition-all disabled:opacity-50">
+                  {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Generar actividades de clase
+                </button>
+              </div>
+
+              {/* Sub-tabs de actividades */}
+              <div className="flex gap-1 overflow-x-auto pb-2 mb-4">
+                {(['oa', 'inicio', 'desarrollo', 'cierre', 'metodologia', 'comentarios'] as DetailTab[]).map((t) => (<button key={t} onClick={() => setDetailTab(t)} className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${detailTab === t ? 'bg-violet-100 text-violet-700' : 'bg-white text-slate-500 hover:bg-slate-100'}`}>{t === 'oa' ? 'OA' : t === 'inicio' ? 'Inicio' : t === 'desarrollo' ? 'Desarrollo' : t === 'cierre' ? 'Cierre' : t === 'metodologia' ? 'Metodologia' : 'Comentarios'}</button>))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+                <div className="rounded-2xl bg-white p-4 min-h-[280px] border border-slate-100">
+                  {detailTab === 'oa' && (<div className="space-y-4">
+                    <h3 className="font-black text-slate-900">Objetivo Curricular (opcional)</h3>
+                    <select value={lessonCurriculum.objectiveId} onChange={(e) => { updateLessonCurriculum({ objectiveId: e.target.value }); const oa = lcObjectives.find((o) => o.id === e.target.value); if (oa) { setSelectedObjective(oa); void handleObjectiveSelect(e.target.value); } }} className={IC}>
+                      <option value="">Selecciona un OA</option>
+                      {lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}
+                    </select>
+                    <textarea value={selectedBundle.plan?.objective_text || ''} onChange={(e) => updatePlanField('objective_text', e.target.value)} placeholder="Objetivo especifico de la clase" className="w-full min-h-[110px] rounded-2xl border border-slate-200 p-3 text-sm" />
+                    <textarea value={selectedBundle.plan?.purpose_text || ''} onChange={(e) => updatePlanField('purpose_text', e.target.value)} placeholder="Proposito de la clase" className="w-full min-h-[90px] rounded-2xl border border-slate-200 p-3 text-sm" />
+                  </div>)}
+                  {detailTab === 'metodologia' && (<div className="space-y-3"><h3 className="font-black text-slate-900">Metodologia sugerida</h3>
+                    <select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select>
+                    <p className="text-xs text-slate-500">Selecciona una metodologia del curriculo chileno.</p></div>)}
+                  {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100" placeholder={`Escribe o genera contenido para ${detailTab}`} />)}
                 </div>
-              </aside>
+                <aside className="rounded-2xl border border-violet-100 p-4 bg-violet-50/50">
+                  <h3 className="font-black text-slate-900 flex items-center gap-2"><Sparkles size={18} /> IA integrada</h3>
+                  <p className="mt-1 text-xs text-slate-500">Genera actividades completas o por separado. Seleccionar OA mejora la alineacion curricular.</p>
+                  <div className="mt-4 grid grid-cols-1 gap-2">
+                    <button disabled={loading} onClick={() => void handleGenerateActividades()} className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-3 py-2 text-left text-xs font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
+                      <Sparkles size={12} /> Generar actividades de clase
+                    </button>
+                    <div className="border-t border-violet-100 my-1" />
+                    {[['Generar inicio', 'inicio', 'resource'], ['Generar desarrollo', 'desarrollo', 'resource'], ['Generar cierre', 'cierre', 'resource']].map(([label, action, kind]) => (
+                      <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-xl bg-white border border-violet-100 px-3 py-2 text-left text-xs font-bold text-violet-700 hover:bg-violet-600 hover:text-white transition-colors disabled:opacity-50">{label}</button>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button onClick={() => { const plan = selectedBundle?.plan; if (!plan) return; const text = [plan.objective_text, plan.purpose_text, plan.beginning_text, plan.development_text, plan.closure_text, plan.evaluation_text, plan.instruments_text].filter(Boolean).join('\n\n'); navigator.clipboard.writeText(text); setToast('Actividades copiadas al portapapeles.'); setTimeout(() => setToast(''), 3000); }} className="flex-1 rounded-xl bg-white border border-slate-200 px-2 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-all">Copiar</button>
+                    <button onClick={() => window.print()} className="flex-1 rounded-xl bg-white border border-slate-200 px-2 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-all">Imprimir</button>
+                  </div>
+                  <div className="mt-5 space-y-2"><h4 className="text-xs font-black text-slate-500 uppercase">Generados</h4>
+                    {[...(selectedBundle.resources || []), ...(selectedBundle.evaluations || [])].slice(0, 6).map((item) => (<div key={String(item.id)} className="rounded-xl bg-white p-3 text-xs border border-slate-100"><p className="font-bold text-slate-800">{displayText(item.title)}</p><p className="text-emerald-600">Guardado automaticamente</p></div>))}
+                  </div>
+                </aside>
+              </div>
             </div>
           </div>)}
         </div>)}
 
         {/* TAB: Curriculo */}
         {rightTab === 'curriculum' && (<div>
-          {!hasOA ? (<div className="flex flex-col items-center justify-center min-h-[400px] text-center text-slate-500">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-violet-600"><GraduationCap size={24} /></div>
-            <h3 className="font-black text-slate-900">Selecciona un OA en el panel izquierdo para ver el contexto curricular.</h3>
-          </div>) : (<div className="space-y-4">
+          <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Clase conectada al curriculo</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[['Nivel', lessonCurriculum.levelId ? courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId : '-'], ['Asignatura', lessonCurriculum.subjectId ? lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId : '-'], ['OA', lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.official_text || lessonCurriculum.objectiveId : '-'], ['Metodologia', METHODOLOGY_OPTIONS.find((m) => m.value === methodologyId)?.label || '-']].map(([label, value]) => (<div key={label} className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">{label}</p><p className="text-sm font-semibold text-slate-700 mt-1">{value}</p></div>))}
+              {[['Nivel', lessonCurriculum.levelId ? courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId : '-'], ['Asignatura', lessonCurriculum.subjectId ? lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId : '-'], ['OA', lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.official_text || lessonCurriculum.objectiveId : 'OA opcional'], ['Metodologia', METHODOLOGY_OPTIONS.find((m) => m.value === methodologyId)?.label || '-']].map(([label, value]) => (<div key={label} className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">{label}</p><p className="text-sm font-semibold text-slate-700 mt-1">{value}</p></div>))}
             </div>
+            {!lessonCurriculum.objectiveId && lessonCurriculum.levelId && lessonCurriculum.subjectId && (
+              <div className="rounded-xl bg-violet-50 border border-violet-100 p-4 text-center">
+                <p className="text-sm text-violet-700">Selecciona un OA en el panel izquierdo para enriquecer el contexto curricular.</p>
+              </div>
+            )}
             {lcContext && (<div className="space-y-3">
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">Eje</p><p className="text-sm text-slate-700 mt-1">{lcContext.axis_name || '-'}</p></div>
               {lcContext.indicators?.length > 0 && (<div><p className="text-xs font-black text-slate-400 uppercase mb-2">Indicadores ({lcContext.indicators.length})</p><div className="flex flex-wrap gap-1">{lcContext.indicators.map((i: any, idx: number) => (<span key={idx} className="rounded-lg bg-violet-100 text-violet-700 px-2 py-1 text-[11px] font-bold">{i.description}</span>))}</div></div>)}
@@ -562,38 +627,32 @@ export function MisClases() {
               {attitudes.length > 0 && (<div><p className="text-xs font-black text-slate-400 uppercase mb-2">Actitudes</p><div className="flex flex-wrap gap-1">{attitudes.map((a, idx) => (<span key={idx} className="rounded-lg bg-amber-100 text-amber-700 px-2 py-1 text-[11px] font-bold">{a}</span>))}</div></div>)}
             </div>)}
             {lcContextLoading && <p className="text-xs text-violet-500">Cargando contexto curricular...</p>}
-          </div>)}
+          </div>
         </div>)}
 
         {/* TAB: Recursos IA */}
         {rightTab === 'recursos' && (<div>
-          {!hasOA ? (<div className="flex flex-col items-center justify-center min-h-[400px] text-center text-slate-500">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-violet-600"><Sparkles size={24} /></div>
-            <h3 className="font-black text-slate-900">Selecciona nivel, asignatura y OA antes de generar recursos.</h3>
-          </div>) : (<div className="space-y-4">
+          <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Recursos con IA</h3>
-            <p className="text-sm text-slate-500">Cada recurso usa el contexto curricular guardado: nivel, asignatura y OA seleccionados.</p>
+            <p className="text-sm text-slate-500">{hasOA ? 'Cada recurso usa el contexto curricular guardado: nivel, asignatura y OA seleccionados.' : 'Genera recursos usando nivel y asignatura. Seleccionar OA mejora la alineacion curricular.'}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[['Crear guia', 'guia', 'resource'], ['Crear presentacion', 'presentation', 'presentation'], ['Crear actividad', 'colaborativa', 'resource'], ['Crear ticket de salida', 'ticket', 'evaluation'], ['Crear recurso DUA', 'dua', 'resource'], ['Mejorar esta clase', 'mejora', 'resource']].map(([label, action, kind]) => (
-                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">Genera con contexto D1</p></button>
+                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
               ))}
             </div>
-          </div>)}
+          </div>
         </div>)}
 
         {/* TAB: Evaluacion */}
         {rightTab === 'evaluacion' && (<div>
-          {!hasOA ? (<div className="flex flex-col items-center justify-center min-h-[400px] text-center text-slate-500">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-violet-600"><ListChecks size={24} /></div>
-            <h3 className="font-black text-slate-900">Selecciona nivel, asignatura y OA antes de generar evaluaciones.</h3>
-          </div>) : (<div className="space-y-4">
+          <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Evaluaciones con IA</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[['Crear evaluacion', 'evaluacion', 'evaluation'], ['Crear rubrica', 'rubrica', 'evaluation'], ['Crear pauta', 'pauta', 'evaluation'], ['Crear evaluacion tipo SIMCE', 'simce', 'evaluation'], ['Crear retroalimentacion', 'retroalimentacion', 'evaluation']].map(([label, action, kind]) => (
-                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">Basado en el OA seleccionado</p></button>
+                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Basado en el OA seleccionado' : 'Genera con curso y asignatura'}</p></button>
               ))}
             </div>
-          </div>)}
+          </div>
         </div>)}
 
         {/* TAB: Bloques no lectivos */}

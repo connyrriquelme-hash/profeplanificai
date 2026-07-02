@@ -8,13 +8,23 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   const body = await readJson(context.request);
   const bundle = await getLessonBundle(context.env.DB, lessonId, teacherId);
   if (!bundle) return json({ error: 'Clase no encontrada' }, 404);
-  if (!bundle.curriculum?.objective_id) {
-    return json({ error: 'Selecciona nivel, asignatura y OA antes de generar recursos con IA.' }, 400);
-  }
 
   const action = String(body.action || body.resource_type || 'guia');
-  const curriculumContext = await getCurriculumContext(context.env.DB, String(bundle.curriculum.objective_id), String(bundle.curriculum.level_id), String(bundle.curriculum.subject_id));
-  if (!curriculumContext) return json({ error: 'No se pudo recuperar contexto curricular D1 para el OA seleccionado.' }, 400);
+
+  let curriculumContext;
+  if (bundle.curriculum?.objective_id) {
+    curriculumContext = await getCurriculumContext(context.env.DB, String(bundle.curriculum.objective_id), String(bundle.curriculum.level_id), String(bundle.curriculum.subject_id));
+  } else {
+    const levelId = String(bundle.lesson.level_id || '');
+    const subjectId = String(bundle.lesson.subject_id || '');
+    const courseName = String(bundle.lesson.course_name || '');
+    curriculumContext = {
+      level_id: levelId, subject_id: subjectId, axis_id: null,
+      objective: { id: '', code: 'OA pendiente', official_text: `Actividad curricular para ${courseName}. El OA debe ser revisado y ajustado por el docente.`, normalized_text: '' },
+      indicators: [], skills: [], attitudes: [], methodologies: [],
+    };
+  }
+  if (!curriculumContext) return json({ error: 'No se pudo recuperar contexto curricular.' }, 400);
 
   const content = buildLocalGeneration('resource', action, curriculumContext, bundle.lesson, bundle.plan || {});
   const id = randomId('lesson_resource');

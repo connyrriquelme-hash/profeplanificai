@@ -204,8 +204,13 @@ export async function saveCurriculumSelection(db: D1Database, lessonPlanId: stri
     return null;
   }
 
-  const ctx = await getCurriculumContext(db, objectiveId, levelId, subjectId);
-  if (!ctx) throw new Error('OA no encontrado en D1');
+  let ctx;
+  try {
+    ctx = await getCurriculumContext(db, objectiveId, levelId, subjectId);
+  } catch {
+    return null;
+  }
+  if (!ctx) return null;
 
   const id = randomId('lpc');
   const now = nowIso();
@@ -247,7 +252,8 @@ export function buildLocalGeneration(kind: string, action: string, ctx: JsonReco
   const indicators = (ctx.indicators as JsonRecord[] || []).map((i) => i.description || i.indicator_text).filter(Boolean);
   const skills = (ctx.skills as JsonRecord[] || []).map((s) => s.description || s.official_text).filter(Boolean);
   const attitudes = (ctx.attitudes as JsonRecord[] || []).map((a) => a.description || a.official_text).filter(Boolean);
-  const title = `${labelForAction(action)} - ${objective?.code || 'OA'}`;
+  const hasRealOA = objective?.code && objective.code !== 'OA pendiente';
+  const title = `${labelForAction(action)} - ${hasRealOA ? (objective?.code || 'OA') : (lesson.course_name || 'Curso')}`;
   const base = {
     title,
     action,
@@ -271,11 +277,14 @@ export function buildLocalGeneration(kind: string, action: string, ctx: JsonReco
       attitudes,
     },
     content: [
-      `Propuesta para ${lesson.course_name || 'el curso'} alineada al ${objective?.code || 'OA seleccionado'}.`,
-      `Foco: ${objective?.official_text || plan.objective_text || 'objetivo curricular seleccionado'}`,
-      indicators.length ? `Indicadores usados: ${indicators.slice(0, 3).join('; ')}` : 'Indicadores: revisar y ajustar segun evidencia de clase.',
+      hasRealOA
+        ? `Propuesta para ${lesson.course_name || 'el curso'} alineada al ${objective?.code}.`
+        : `Propuesta para ${lesson.course_name || 'elcurso'} basada en curso y asignatura. Si no hay OA explicito, crea una actividad curricularmente plausible, indicando que el OA debe ser revisado y ajustado por el docente.`,
+      `Foco: ${objective?.official_text || plan.objective_text || 'objetivo curricular del curso y asignatura'}`,
+      indicators.length ? `Indicadores usados: ${indicators.slice(0, 3).join('; ')}` : hasRealOA ? 'Indicadores: revisar y ajustar segun evidencia de clase.' : 'Indicadores: a definir segun OA seleccionado por el docente.',
       `Accion docente sugerida: ${labelForAction(action)} con instrucciones claras, tiempos breves y cierre formativo.`,
-    ],
+      !hasRealOA ? 'Nota: El OA debe ser seleccionado y revisado por el docente para completar la alineacion curricular.' : '',
+    ].filter(Boolean),
     teacherEditable: true,
   };
 
@@ -313,6 +322,144 @@ export function labelForAction(action: string): string {
     descendidos: 'Adaptar para estudiantes descendidos',
     alta_exigencia: 'Adaptar para alta exigencia',
     colaborativa: 'Crear actividad colaborativa',
+    actividades_clase: 'Generar actividades de clase',
   };
   return labels[action] || action;
+}
+
+const SUBJECT_TEMPLATES: Record<string, { inicio: string; desarrollo: string; cierre: string }> = {
+  'comunicacion-integral': {
+    inicio: 'Activacion de conocimientos previos con una breve lectura, imagen o situacion comunicativa que invite a la reflexion. Pregunta guia para activar el interes.',
+    desarrollo: 'Comprension lectora, analisis de textos, produccion escrita u oral. Trabajo colaborativo con intercambio de ideas y retroalimentacion entre pares.',
+    cierre: 'Metacognicion: que aprendi y como puedo aplicarlo. Ticket de salida con una pregunta breve o reflexion personal.',
+  },
+  lenguaje: {
+    inicio: 'Activacion de conocimientos previos con una breve lectura, imagen o situacion comunicativa que invite a la reflexion. Pregunta guia para activar el interes.',
+    desarrollo: 'Comprension lectora, analisis de textos, produccion escrita u oral. Trabajo colaborativo con intercambio de ideas y retroalimentacion entre pares.',
+    cierre: 'Metacognicion: que aprendi y como puedo aplicarlo. Ticket de salida con una pregunta breve o reflexion personal.',
+  },
+  matematica: {
+    inicio: 'Problema contextualizado vinculado a la vida real del estudiante. Exploracion inicial con vật liệu concreto o situacion cotidiana.',
+    desarrollo: 'Modelamiento matematico, practica guiada con ejemplos progresivos, aplicacion a situaciones nuevas. Trabajo en parejas o individual.',
+    cierre: 'Estrategia matematica usada, error frecuente identificado y como evitarlo. Ticket de salida con un problema breve.',
+  },
+  'ciencias': {
+    inicio: 'Pregunta investigable que despierte curiosidad. Observacion de un fenomeno, experimento breve o situacion del entorno.',
+    desarrollo: 'Exploracion guiada, observacion sistematica, recoleccion de evidencias, discusion en grupo sobre hallazgos.',
+    cierre: 'Conclusion con evidencia. Reflexion sobre lo observado y como se conecta con el objetivo de la clase.',
+  },
+  historia: {
+    inicio: 'Activacion con imagen historica, fuente primaria o pregunta que conecte con el contexto chileno o universal.',
+    desarrollo: 'Analisis de fuente historica, comparacion de perspectivas, construccion de linea de tiempo o debate guiado.',
+    cierre: 'Reflexion ciudadana: que nos ensena la historia sobre nuestra responsabilidad actual. Ticket de salida con opinion fundamentada.',
+  },
+  ingles: {
+    inicio: 'Warm-up con vocabulario visual, cancion breve o situacion comunicativa que active el tema de la clase.',
+    desarrollo: 'Practica oral y escrita con enfoque comunicativo. Actividades de comprension, produccion e interaccion guiadas.',
+    cierre: 'Produccion breve: oracion, dialogo o escrito corto usando el vocabulario y estructuras trabajadas.',
+  },
+};
+
+function getSubjectTemplate(subjectId: string, courseName: string) {
+  const norm = (subjectId || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (const [key, tpl] of Object.entries(SUBJECT_TEMPLATES)) {
+    if (norm.includes(key) || (courseName || '').toLowerCase().includes(key)) return tpl;
+  }
+  return SUBJECT_TEMPLATES['comunicacion-integral'];
+}
+
+export function buildActividadesClase(ctx: JsonRecord, lesson: JsonRecord, plan: JsonRecord, instructions?: string) {
+  const objective = ctx.objective as JsonRecord;
+  const hasRealOA = objective?.code && objective.code !== 'OA pendiente';
+  const subjectId = String(ctx.subject_id || lesson.subject_id || '');
+  const courseName = String(lesson.course_name || '');
+  const lessonTitle = String(lesson.title || 'Clase');
+  const tpl = getSubjectTemplate(subjectId, courseName);
+
+  const oaNote = hasRealOA
+    ? `OA: ${objective.code} - ${objective.official_text}`
+    : 'Sin OA explicito. El docente debe seleccionar y ajustar el OA del Curriculum Nacional.';
+
+  const instruccionExtra = instructions ? `\nInstrucciones adicionales del docente: ${instructions}` : '';
+
+  const objetivoEspecifico = hasRealOA
+    ? `Que los estudiantes demuestren comprension y aplicacion del ${objective.code}: ${objective.official_text}`
+    : `Que los estudiantes demuestren comprension y aplicacion de los aprendizajes propios de ${courseName || 'la asignatura'} en el contexto de la clase "${lessonTitle}". ${oaNote}`;
+
+  const proposito = hasRealOA
+    ? `Fortalecer las competencias asociadas al ${objective.code} mediante actividades significativas que conecten con la realidad de los estudiantes.${instruccionExtra}`
+    : `Fortalecer las competencias de ${courseName} mediante actividades significativas que conecten con la realidad de los estudiantes.${instruccionExtra}`;
+
+  const inicio = `Momento de activacion:\n${tpl.inicio}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
+
+  const desarrollo = `Momento de construccion:\n${tpl.desarrollo}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
+
+  const cierre = `Momento de cierre:\n${tpl.cierre}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
+
+  const actividadesEstudiantes = [
+    { nombre: 'Activacion', momento: 'inicio', duracion: '10-15 min', modalidad: 'curso completo', instruccionesEstudiantes: tpl.inicio, rolDocente: 'Facilitar la situacion motivadora y guiar la reflexion inicial.', evidenciaEsperada: 'Participacion activa y formulacion de preguntas o hipotesis.' },
+    { nombre: 'Trabajo principal', momento: 'desarrollo', duracion: '25-35 min', modalidad: 'parejas', instruccionesEstudiantes: tpl.desarrollo, rolDocente: 'Observar, orientar y retroalimentar durante la actividad.', evidenciaEsperada: 'Producto observable: escrito, oral, diagrama o resolucion de problema.' },
+    { nombre: 'Cierre', momento: 'cierre', duracion: '10-15 min', modalidad: 'curso completo', instruccionesEstudiantes: tpl.cierre, rolDocente: 'Guiar la metacognicion y recoger evidencias.', evidenciaEsperada: 'Ticket de salida o reflexion escrita individual.' },
+  ];
+
+  const evaluacionFormativa = hasRealOA
+    ? `Evaluacion formativa durante la clase:\n- Observacion directa de participacion y comprension\n- Productos escritos o orales durante el desarrollo\n- Retroalimentacion entre pares\n- Ticket de salida para verificar aprendizajes clave del ${objective.code}`
+    : `Evaluacion formativa durante la clase:\n- Observacion directa de participacion y comprension\n- Productos escritos o orales durante el desarrollo\n- Retroalimentacion entre pares\n- Ticket de salida para verificar aprendizajes clave`;
+
+  const ticketSalida = hasRealOA
+    ? `Ticket de salida (${objective.code}):\n1. Que aprendi hoy sobre este objetivo?\n2. En que situacion puedo aplicar lo aprendido?\n3. Que me falta por aprender o practicar?`
+    : 'Ticket de salida:\n1. Que aprendi hoy?\n2. En que situacion puedo aplicar lo aprendido?\n3. Que me falta por aprender o practicar?';
+
+  const recursosMateriales = [
+    'Cuaderno o ficha de trabajo del estudiante',
+    'Textos, imagenes o materiales visuales segun la actividad',
+    'Pizarron o papelógrafo para modelamiento',
+    hasRealOA ? `Referente al ${objective.code} para orientar la actividad` : 'Referente curricular para orientar la actividad (seleccionar OA)',
+  ];
+
+  const adecuacionesDUA = 'Representacion: ofrecer la informacion en multiples formatos (texto, audio, visual). Accion y expresion: permitir diversas formas de demostrar el aprendizaje (escrito, oral, grafico). Implicacion: conectar con intereses y experiencias de los estudiantes. Fornecer apoyos visuales y estructurados.';
+
+  const apoyoDescendidos = 'Trabajo en grupos heterogeneos con apoyo de pares avanzados. Instrucciones paso a paso con ejemplos concretos. Tiempo adicional si es necesario. Fichas de apoyo con vocabulario clave y estructuras guia. Retroalimentacion individual positiva y formativa.';
+
+  const extensionAvanzados = 'Actividades de profundizacion: problemas de mayor complejidad, proyectos de investigacion breve, rol de tutores de pares, creacion de material didactico para el curso. Desafios que conecten con situaciones reales del entorno.';
+
+  const content = [
+    oaNote,
+    `Curso: ${courseName} | Duracion: ${lesson.start_time || ''}-${lesson.end_time || ''}`,
+    `Objetivo: ${objetivoEspecifico.substring(0, 120)}...`,
+    `Inicio: ${tpl.inicio.substring(0, 100)}...`,
+    `Desarrollo: ${tpl.desarrollo.substring(0, 100)}...`,
+    `Cierre: ${tpl.cierre.substring(0, 100)}...`,
+    !hasRealOA ? 'Nota: Actividades generadas sin OA explícito. Puedes seleccionar un OA después para ajustar la alineacion curricular.' : '',
+  ].filter(Boolean);
+
+  return {
+    title: `Actividades de clase - ${lessonTitle}`,
+    action: 'actividades_clase',
+    kind: 'actividades',
+    generatedAt: nowIso(),
+    chileContext: true,
+    hasOA: hasRealOA,
+    lesson: { title: lessonTitle, date: lesson.lesson_date, course: courseName, subject: subjectId },
+    curriculum: {
+      level: ctx.level_id, subject: ctx.subject_id, axis: ctx.axis_id,
+      objectiveCode: objective?.code, objectiveText: objective?.official_text,
+    },
+    actividadesClase: {
+      objetivoEspecifico,
+      proposito,
+      inicio,
+      desarrollo,
+      cierre,
+      actividadesEstudiantes,
+      evaluacionFormativa,
+      ticketSalida,
+      recursosMateriales,
+      adecuacionesDUA,
+      apoyoEstudiantesDescendidos: apoyoDescendidos,
+      extensionAvanzados,
+    },
+    content,
+    teacherEditable: true,
+  };
 }

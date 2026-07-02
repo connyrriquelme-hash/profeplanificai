@@ -30,7 +30,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   const now = nowIso();
 
   if (body.curriculum && typeof body.curriculum === 'object') {
-    await saveCurriculumSelection(context.env.DB, planId, body.curriculum as Record<string, unknown>);
+    try {
+      await saveCurriculumSelection(context.env.DB, planId, body.curriculum as Record<string, unknown>);
+    } catch (curErr) {
+      console.error('[autosave] curriculum save failed:', curErr);
+    }
   }
 
   const updates: string[] = [];
