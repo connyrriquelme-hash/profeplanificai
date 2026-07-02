@@ -2,6 +2,8 @@ import { buildActividadesClase, ensureLessonPlan, getCurriculumContext, getLesso
 import { orchestrate } from '../../../_lib/ai/orchestrator';
 import type { AIEnv, AIRequest } from '../../../_lib/ai/types';
 
+const EXPECTED_AI_FIELDS = ['objetivoEspecifico', 'proposito', 'inicio', 'desarrollo', 'cierre', 'evaluacionFormativa', 'ticketSalida', 'recursosMateriales', 'adecuacionesDUA', 'apoyoEstudiantesDescendidos', 'extensionAvanzados'];
+
 function normalizeActividadesFromAI(aiStructured: Record<string, unknown>, fallback: Record<string, string>): Record<string, string> {
   return {
     objetivoEspecifico: text(aiStructured.objetivoEspecifico) || fallback.objetivoEspecifico || '',
@@ -106,11 +108,21 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   }
 
   let ac: Record<string, string>;
+  let aiPartial = false;
   if (ai && ai.ok && ai.structured && Object.keys(ai.structured).length > 0) {
     provider = ai.provider;
     model = ai.model;
     usedFallback = ai.usedFallback;
     warnings.push(...ai.warnings);
+    const filledFields = EXPECTED_AI_FIELDS.filter((f) => {
+      const v = ai!.structured[f];
+      if (Array.isArray(v)) return v.length > 0;
+      return typeof v === 'string' ? v.trim().length > 0 : Boolean(v);
+    });
+    if (filledFields.length < EXPECTED_AI_FIELDS.length * 0.6) {
+      aiPartial = true;
+      warnings.push('Respuesta IA incompleta; se completaron campos con fallback local.');
+    }
     ac = normalizeActividadesFromAI(ai.structured, localAc);
   } else if (ai && ai.ok && ai.content) {
     provider = ai.provider;
@@ -118,6 +130,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     usedFallback = ai.usedFallback;
     warnings.push(...ai.warnings);
     ac = localAc;
+    aiPartial = true;
     warnings.push('Respuesta IA no era JSON estructurado. Se uso generacion local para campos.');
   } else {
     if (ai?.warnings?.length) warnings.push(...ai.warnings);
@@ -143,7 +156,13 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     ['dua_adjustments_text', ac.adecuacionesDUA || ''],
     ['abp_project_text', ac.apoyoEstudiantesDescendidos || ''],
     ['challenge_question', ac.extensionAvanzados || ''],
-    ['ai_summary', JSON.stringify({ ...localActividades, provider, model, usedFallback, warnings })],
+    ['ai_summary', JSON.stringify({
+      provider, model, usedFallback, warnings,
+      generatedAt: now,
+      agentType: 'actividades_clase',
+      taskType: 'generar',
+      partialResponse: aiPartial,
+    })],
   ];
 
   const updates: string[] = [];

@@ -8,7 +8,8 @@ Reglas generales:
 - DUA: considera representacion, accion/expresion e implicacion.
 - Apoyo a estudiantes descendidos: instrucciones claras, ejemplos concretos, vocabulario clave.
 - Si hay OA, usalo para alinear. Si no hay OA, indica suavemente que el docente debe seleccionarlo.
-- Nunca inventes codigos OA. Si no hay, di "OA pendiente".`;
+- Nunca inventes codigos OA. Si no hay, di "OA pendiente".
+- RESPUESTA: Responde SOLO con JSON valido. Sin markdown, sin explicaciones, sin texto antes ni despues del JSON.`;
 
 function oaBlock(req: AIRequest): string {
   if (!req.oaCode) return 'OA: No especificado. El docente debe seleccionar un OA del Curriculo Nacional.';
@@ -35,20 +36,20 @@ ${oaBlock(req)}
 
 INSTRUCCIONES ADICIONALES: ${req.instructions || 'Ninguna'}
 
-Genera:
-1. Objetivo especifico de la clase.
-2. Proposito pedagogico.
-3. INICIO (momento de activacion, 10-15 min): actividad motivadora concreta.
-4. DESARROLLO (momento de construccion, 25-35 min): actividad principal con instrucciones paso a paso.
-5. CIERRE (momento de cierre, 10-15 min): reflexion y metacognicion.
-6. Evaluacion formativa durante la clase.
-7. Ticket de salida (3 preguntas breves).
-8. Recursos y materiales necesarios.
-9. Adecuaciones DUA.
-10. Apoyo para estudiantes descendidos.
-11. Extension para estudiantes avanzados.
+Campos obligatorios (todos en texto plano, sin saltos de linea excesivos):
+- objetivoEspecifico: 1-2 oraciones con el objetivo concreto.
+- proposito: 1 oracion con el proposito pedagogico.
+- inicio: 2-4 oraciones con la actividad de activacion (10-15 min).
+- desarrollo: 3-5 oraciones con la actividad principal (25-35 min).
+- cierre: 2-3 oraciones con la reflexion (10-15 min).
+- evaluacionFormativa: 2-3 oraciones con formas de evaluar.
+- ticketSalida: 3 preguntas breves separadas por salto de linea.
+- recursosMateriales: lista de 3-5 materiales.
+- adecuacionesDUA: 2-3 oraciones.
+- apoyoEstudiantesDescendidos: 2-3 oraciones.
+- extensionAvanzados: 2-3 oraciones.
 
-Responde en formato JSON:
+Responde SOLO este JSON (sin markdown, sin explicaciones):
 {"objetivoEspecifico":"","proposito":"","inicio":"","desarrollo":"","cierre":"","evaluacionFormativa":"","ticketSalida":"","recursosMateriales":[],"adecuacionesDUA":"","apoyoEstudiantesDescendidos":"","extensionAvanzados":""}`,
 
     mejorar: (req) => `${BASE_CONTEXT}

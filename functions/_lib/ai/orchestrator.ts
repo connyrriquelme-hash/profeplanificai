@@ -38,14 +38,55 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
   };
 }
 
-function parseResponse(raw: string): { content: string; structured: Record<string, unknown> } {
+export function parseAIJsonSafely(raw: string): Record<string, unknown> | null {
+  if (!raw || typeof raw !== 'string') return null;
+
+  let candidate = raw.trim();
+
+  const mdMatch = candidate.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (mdMatch?.[1]) {
+    candidate = mdMatch[1].trim();
+  }
+
+  const jsonStart = candidate.indexOf('{');
+  const jsonEnd = candidate.lastIndexOf('}');
+  if (jsonStart !== -1 && jsonEnd > jsonStart) {
+    candidate = candidate.substring(jsonStart, jsonEnd + 1);
+  }
+
   try {
-    const cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-    const parsed = JSON.parse(cleaned);
-    if (typeof parsed === 'object' && parsed !== null) {
-      return { content: raw, structured: parsed };
+    const parsed = JSON.parse(candidate);
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed;
     }
-  } catch { /* not JSON */ }
+  } catch { /* try repair */ }
+
+  try {
+    let repaired = candidate;
+    const openBraces = (repaired.match(/{/g) || []).length;
+    const closeBraces = (repaired.match(/}/g) || []).length;
+    for (let i = 0; i < openBraces - closeBraces; i++) repaired += '}';
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/]/g) || []).length;
+    for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += ']';
+
+    const lastComma = repaired.lastIndexOf(',');
+    if (lastComma === repaired.length - 2) {
+      repaired = repaired.substring(0, lastComma) + repaired.substring(lastComma + 1);
+    }
+
+    const parsed = JSON.parse(repaired);
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch { /* unrepairable */ }
+
+  return null;
+}
+
+function parseResponse(raw: string): { content: string; structured: Record<string, unknown> } {
+  const parsed = parseAIJsonSafely(raw);
+  if (parsed) return { content: raw, structured: parsed };
   return { content: raw, structured: {} };
 }
 
