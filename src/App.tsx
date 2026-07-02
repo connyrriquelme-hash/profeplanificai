@@ -41,6 +41,8 @@ function AppContent() {
   const initialView = (() => {
     const path = window.location.pathname.replace(/\/+$/, '');
     if (path === '/mis-clases' || path === '/generador-rapido') return 'mis-clases';
+    if (path === '/admin-panel') return 'admin-panel';
+    if (path === '/admin') return 'admin';
     return 'dashboard';
   })() as ViewType;
   const [activeView, setActiveView] = useState<ViewType>(initialView);
@@ -57,6 +59,10 @@ function AppContent() {
     setViewState(state ?? null);
     if (nextView === 'mis-clases' && window.location.pathname !== '/mis-clases') {
       window.history.pushState(null, '', '/mis-clases');
+    } else if (nextView === 'admin-panel' && window.location.pathname !== '/admin-panel') {
+      window.history.pushState(null, '', '/admin-panel');
+    } else if (nextView === 'admin' && window.location.pathname !== '/admin') {
+      window.history.pushState(null, '', '/admin');
     }
   }, []);
 

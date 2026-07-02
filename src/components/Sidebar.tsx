@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -92,6 +92,39 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           </div>
         </div>
       ))}
+      {user?.rol === 'admin' && (
+        <div>
+          {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-amber-500 uppercase">Administración</p>}
+          <div className="space-y-0.5">
+            {[
+              { id: 'admin', label: 'Admin General', icon: LayoutDashboard },
+              { id: 'admin-panel', label: 'Panel Institucional', icon: Shield },
+            ].map((item) => {
+              const isActive = activeView === item.id;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  title={collapsed ? item.label : undefined}
+                  className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3.5'} py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
+                    isActive
+                      ? 'bg-amber-50 text-slate-900 font-semibold shadow-sm border border-amber-100'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                  onClick={() => handleNavigate(item.id)}
+                >
+                  <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200 ${
+                    isActive ? 'text-amber-600' : 'text-slate-400 group-hover:text-slate-600'
+                  }`}>
+                    <Icon size={18} strokeWidth={2} />
+                  </span>
+                  {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </nav>
   );
 

@@ -76,6 +76,7 @@ export async function verifySession(): Promise<User | null> {
 
   try {
     const data = await api.get<{ user: User }>('/api/auth/me');
+    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
     return data.user;
   } catch (error) {
     const status = (error as Error & { status?: number })?.status;
@@ -85,6 +86,16 @@ export async function verifySession(): Promise<User | null> {
     }
     const stored = localStorage.getItem(USER_KEY);
     return stored ? JSON.parse(stored) as User : null;
+  }
+}
+
+export async function refreshUser(): Promise<User | null> {
+  try {
+    const data = await api.get<{ user: User }>('/api/auth/me');
+    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    return data.user;
+  } catch {
+    return null;
   }
 }
 

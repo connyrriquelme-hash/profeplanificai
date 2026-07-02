@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { loginAPI, registerAPI, verifySession, logoutAPI, getSessions, revokeSessionAPI, revokeOtherSessionsAPI, type SessionInfo } from '../services/authService';
+import { loginAPI, registerAPI, verifySession, logoutAPI, refreshUser, getSessions, revokeSessionAPI, revokeOtherSessionsAPI, type SessionInfo } from '../services/authService';
 
 export interface User {
   id: string;
@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, nombre: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   sessions: SessionInfo[];
   loadSessions: () => Promise<void>;
@@ -66,6 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessions([]);
   }, []);
 
+  const refreshUserCallback = useCallback(async () => {
+    const u = await refreshUser();
+    if (u) setUser(u);
+  }, []);
+
   const loadSessions = useCallback(async () => {
     if (!user) return;
     try {
@@ -88,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadSessions]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, online, login, register, logout, isAuthenticated: !!user, sessions, loadSessions, revokeSession, revokeOtherSessions }}>
+    <AuthContext.Provider value={{ user, loading, online, login, register, logout, refreshUser: refreshUserCallback, isAuthenticated: !!user, sessions, loadSessions, revokeSession, revokeOtherSessions }}>
       {children}
     </AuthContext.Provider>
   );
