@@ -81,6 +81,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     HUGGINGFACE_API_KEY: context.env.HUGGINGFACE_API_KEY,
     AI_DEFAULT_MODEL_GEMINI: context.env.AI_DEFAULT_MODEL_GEMINI,
     AI: context.env.AI,
+    REPO_PEDAGOGICO: context.env.REPO_PEDAGOGICO,
   };
 
   const aiRequest: AIRequest = {

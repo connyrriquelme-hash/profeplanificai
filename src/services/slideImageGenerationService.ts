@@ -20,7 +20,6 @@ export class ProviderNotConfiguredError extends Error {
 }
 
 export async function generateSlideImage(prompt: string, signal?: AbortSignal): Promise<string> {
-  console.log('[slideImageGenerationService] Generando imagen para:', prompt.slice(0, 80));
   let response: Response;
   try {
     response = await fetch(API_URL, {
@@ -35,7 +34,6 @@ export async function generateSlideImage(prompt: string, signal?: AbortSignal): 
     throw new Error('No se pudo conectar con el servidor de generación de imágenes.');
   }
 
-  console.log('[slideImageGenerationService] Respuesta status:', response.status);
   let data: GenerateImageResponse;
   try {
     data = await response.json();
@@ -43,8 +41,6 @@ export async function generateSlideImage(prompt: string, signal?: AbortSignal): 
     console.error('[slideImageGenerationService] Error parseando JSON:', err);
     throw new Error('El servidor devolvió una respuesta inesperada.');
   }
-
-  console.log('[slideImageGenerationService] Respuesta data:', { ok: data.ok, code: data.code, hasImage: !!data.imageUrl, provider: data.provider });
 
   if (!data.ok) {
     if (data.code === 'provider_not_configured') {

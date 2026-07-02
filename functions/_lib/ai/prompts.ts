@@ -22,7 +22,7 @@ function classBlock(req: AIRequest): string {
   return `Curso: ${req.course || 'No especificado'}
 Asignatura: ${req.subject || 'No especificada'}
 Grado: ${req.grade || 'No especificado'}
-Clase: ${req.lessonId || 'Sin nombre'}`;
+Clase: ${req.lessonId || 'Sin nombre'}${req.pedagogicalContext ? `\n\n${req.pedagogicalContext}` : ''}`;
 }
 
 const PROMPTS: Record<AgentType, Record<TaskType, (req: AIRequest) => string>> = {

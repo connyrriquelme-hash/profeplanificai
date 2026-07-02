@@ -3,6 +3,7 @@ import { buildPrompt } from './prompts';
 import { callProvider, statusProviders } from './providers';
 import { sanitizeOutput, scanContent, scanForSecrets } from './safety';
 import { checkRateLimit, sanitizeForPrompt, validateInputSize } from './limits';
+import { enrichAIRequestWithPedagogicalContext } from './context';
 
 function localFallback(agentType: string, taskType: string, req: AIRequest): { content: string; structured: Record<string, unknown> } {
   const course = req.course || 'el curso';
@@ -131,7 +132,15 @@ export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string)
     instructions: sanitizeForPrompt(req.instructions),
   };
 
-  const prompt = buildPrompt(req.agentType, req.taskType, safeReq);
+  let contextualReq = safeReq;
+  try {
+    contextualReq = await enrichAIRequestWithPedagogicalContext(env, safeReq);
+    if (contextualReq.pedagogicalContext) warnings.push('Contexto D1/Vectorize agregado al prompt.');
+  } catch (e) {
+    warnings.push(`No se pudo enriquecer con D1/Vectorize: ${e instanceof Error ? e.message : 'desconocido'}`);
+  }
+
+  const prompt = buildPrompt(req.agentType, req.taskType, contextualReq);
   const { providers, recommended } = await statusProviders(env);
   const providerOrder: ProviderName[] = ['gemini', 'workers-ai', 'openrouter', 'huggingface'];
 

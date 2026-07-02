@@ -18,7 +18,9 @@ export type TaskType =
   | 'crear_rubrica'
   | 'crear_ticket_salida'
   | 'crear_ppt'
-  | 'crear_reporte';
+  | 'crear_reporte'
+  | 'crear_evaluacion'
+  | 'crear_retroalimentacion';
 
 export type ProviderName = 'workers-ai' | 'gemini' | 'openrouter' | 'huggingface' | 'local';
 
@@ -38,6 +40,7 @@ export interface AIRequest {
   instructions?: string;
   outputFormat?: 'text' | 'json' | 'markdown';
   existingContent?: string;
+  pedagogicalContext?: string;
 }
 
 export interface AIResponse {
@@ -76,6 +79,11 @@ export interface AIEnv {
   HUGGINGFACE_API_KEY?: string;
   AI_DEFAULT_MODEL_GEMINI?: string;
   AI?: { run: (model: string, input: unknown) => Promise<unknown> };
+  REPO_PEDAGOGICO?: {
+    query: (vector: number[], options: { topK: number; returnMetadata?: boolean }) => Promise<{
+      matches?: Array<{ id: string; score?: number; metadata?: Record<string, unknown> }>;
+    }>;
+  };
 }
 
 export const VALID_AGENT_TYPES: AgentType[] = [
@@ -86,4 +94,5 @@ export const VALID_AGENT_TYPES: AgentType[] = [
 export const VALID_TASK_TYPES: TaskType[] = [
   'generar', 'mejorar', 'adaptar', 'evaluar', 'crear_guia',
   'crear_rubrica', 'crear_ticket_salida', 'crear_ppt', 'crear_reporte',
+  'crear_evaluacion', 'crear_retroalimentacion',
 ];

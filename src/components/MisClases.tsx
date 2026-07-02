@@ -219,12 +219,6 @@ export function MisClases() {
     const startTime = selectedBundle?.lesson?.start_time || draftLesson.start_time;
     const endTime = selectedBundle?.lesson?.end_time || draftLesson.end_time;
 
-    console.log('[handleSaveClass] draftLesson:', draftLesson);
-    console.log('[handleSaveClass] selectedBundle:', selectedBundle);
-    console.log('[handleSaveClass] blockType:', blockType);
-    console.log('[handleSaveClass] lessonCurriculum:', lessonCurriculum);
-    console.log('[handleSaveClass] resolved values:', { title, lessonDate, startTime, endTime });
-
     if (!title.trim()) { setError('Ingresa un nombre para la clase.'); return; }
     if (!lessonDate) { setError('Selecciona fecha.'); return; }
     if (!startTime || !endTime) { setError('Selecciona hora de inicio y termino.'); return; }
@@ -233,7 +227,6 @@ export function MisClases() {
     setSavingState('saving'); setError('');
     try {
       let classId = scheduleForm.class_id || selectedClass?.id || '';
-      console.log('[handleSaveClass] existing classId:', classId);
 
       if (!classId) {
         const teacherClassPayload = {
@@ -241,9 +234,7 @@ export function MisClases() {
           subject_id: lessonCurriculum.subjectId || subjectId || '',
           course_name: title, class_name: title, color: '#6d28d9',
         };
-        console.log('[handleSaveClass] createTeacherClass payload:', teacherClassPayload);
         const createdClass = await createTeacherClass(teacherClassPayload);
-        console.log('[handleSaveClass] createTeacherClass response:', createdClass);
         classId = createdClass.data?.id || (createdClass as any).id;
         if (!classId) throw new Error('No se recibio id de teacher_class');
         setScheduleForm((prev) => ({ ...prev, class_id: classId }));
@@ -254,16 +245,13 @@ export function MisClases() {
         class_id: classId, lesson_date: lessonDate, start_time: startTime, end_time: endTime,
         title, status: 'planificada', notes,
       };
-      console.log('[handleSaveClass] createLesson payload:', lessonPayload);
       const createdLesson = await createLesson(lessonPayload);
-      console.log('[handleSaveClass] createLesson response:', createdLesson);
       const lessonId = createdLesson.data?.id || (createdLesson as any).id;
       if (!lessonId) throw new Error('No se recibio id de lesson');
 
       if (lessonCurriculum.objectiveId) {
         try {
           await autosaveLesson(lessonId, { curriculum: { levelId: lessonCurriculum.levelId, subjectId: lessonCurriculum.subjectId, objectiveId: lessonCurriculum.objectiveId, indicatorIds: lessonCurriculum.indicatorIds, skillIds: lessonCurriculum.skillIds, attitudeIds: lessonCurriculum.attitudeIds, methodologyId: lessonCurriculum.methodologyId } });
-          console.log('[handleSaveClass] curriculum saved via autosave');
         } catch (curErr) { console.error('[handleSaveClass] curriculum save failed:', curErr); }
       }
 

@@ -8,6 +8,11 @@ export interface Env {
   HUGGINGFACE_API_KEY?: string;
   AI_DEFAULT_MODEL_GEMINI?: string;
   AI?: { run: (model: string, input: unknown) => Promise<unknown> };
+  REPO_PEDAGOGICO?: {
+    query: (vector: number[], options: { topK: number; returnMetadata?: boolean }) => Promise<{
+      matches?: Array<{ id: string; score?: number; metadata?: Record<string, unknown> }>;
+    }>;
+  };
 }
 
 export type JsonRecord = Record<string, unknown>;
