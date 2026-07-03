@@ -8,6 +8,12 @@ database_name = "planificaia-db"
 database_id = "19c4fea3-444e-4094-8c66-610704c674be"
 preview_database_id = "19c4fea3-444e-4094-8c66-610704c674be"
 
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "profeplanificai_db"
+database_id = "0c1c09ca-cfd6-44b4-9c71-e6bd158f17c0"
+preview_database_id = "0c1c09ca-cfd6-44b4-9c71-e6bd158f17c0"
+
 [ai]
 binding = "AI"
 
