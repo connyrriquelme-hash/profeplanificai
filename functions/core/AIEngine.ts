@@ -80,7 +80,8 @@ export class AIEngine {
 
     const response = await env.AI.run(MODEL, {
       messages,
-      temperature: 0.4,
+      response_format: { type: 'json_object' },
+      temperature: 0.2,
       max_tokens: 1200,
     });
 
