@@ -56,6 +56,34 @@ function validateClassContent(value: unknown): ClassContent {
   };
 }
 
+function buildFallbackClassContent(plan: PedagogicalPlan): ClassContent {
+  return {
+    titulo_clase: `Clase: ${plan.tema}`,
+    actividades_inicio: [
+      `Presentar el tema "${plan.tema}" y levantar conocimientos previos mediante preguntas breves.`,
+      `Relacionar las respuestas de los estudiantes con el objetivo de aprendizaje: ${plan.objetivo_aprendizaje}.`,
+      `Explicar el propósito de la clase y los criterios simples de logro.`,
+    ],
+    actividades_desarrollo: [
+      `Desarrollar una explicación guiada del tema usando ejemplos concretos, vocabulario clave y apoyo visual.`,
+      `Organizar una actividad colaborativa donde los estudiantes observen, comparen y registren evidencias relacionadas con ${plan.tema}.`,
+      `Realizar una puesta en común para analizar hallazgos y conectar con las habilidades: ${plan.habilidades}.`,
+    ],
+    actividades_cierre: [
+      'Sintetizar las ideas centrales en conjunto con el curso.',
+      'Aplicar un ticket de salida con una pregunta de comprensión y una pregunta de metacognición.',
+      'Indicar una acción de refuerzo o extensión según el nivel de logro observado.',
+    ],
+    materiales_sugeridos: [
+      'Pizarra o proyector',
+      'Guía breve de trabajo',
+      'Imágenes o esquemas del tema',
+      'Cuaderno del estudiante',
+      'Ticket de salida',
+    ],
+  };
+}
+
 function getResponseText(response: unknown): string {
   if (typeof response === 'string') return response;
 
@@ -104,13 +132,16 @@ export class AIEngine {
 
     const rawText = getResponseText(response);
     if (!rawText) {
-      throw new Error('La IA devolvió una respuesta vacía.');
+      return buildFallbackClassContent(plan);
     }
 
-    const jsonText = extractJsonObject(rawText);
-    const parsed = JSON.parse(jsonText) as unknown;
-
-    return validateClassContent(parsed);
+    try {
+      const jsonText = extractJsonObject(rawText);
+      const parsed = JSON.parse(jsonText) as unknown;
+      return validateClassContent(parsed);
+    } catch {
+      return buildFallbackClassContent(plan);
+    }
   }
 }
 
