@@ -6,7 +6,7 @@ type WorkersAITextResponse = {
   text?: string;
 };
 
-const MODEL = '@cf/meta/llama-3-8b-instruct';
+const MODEL = '@cf/meta/llama-3.1-8b-instruct';
 
 const SYSTEM_PROMPT =
   'Eres un profesor experto en diseño instruccional. Tu tarea es tomar un plan pedagógico y redactar las actividades de la clase. Debes responder ÚNICAMENTE con un objeto JSON válido que siga esta estructura: { titulo_clase, actividades_inicio, actividades_desarrollo, actividades_cierre, materiales_sugeridos }. No incluyas saludos ni explicaciones, solo el JSON.';
