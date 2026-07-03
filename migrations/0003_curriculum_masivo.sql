@@ -78,9 +78,9 @@ INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('historia-geografia-y-ciencias-sociales-5-basico', '5-basico', 'Historia, Geografía y Ciencias Sociales');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
-  ('lenguaje-y-comunicacion-6-basico', '6-basico', 'Lenguaje y Comunicación');
-INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('matematica-6-basico', '6-basico', 'Matemática');
+INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
+  ('lenguaje-y-comunicacion-6-basico', '6-basico', 'Lenguaje y Comunicación');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('ciencias-naturales-6-basico', '6-basico', 'Ciencias Naturales');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
@@ -182,9 +182,9 @@ INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
   ('historia-geografia-y-ciencias-sociales-5-basico-u1', 'historia-geografia-y-ciencias-sociales-5-basico', 1, 'Chile: regiones naturales y población');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-6-basico-u1', 'lenguaje-y-comunicacion-6-basico', 1, 'Análisis de textos argumentativos');
+  ('matematica-6-basico-u1', 'matematica-6-basico', 1, 'Operaciones, fracciones y razones');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-6-basico-u1', 'matematica-6-basico', 1, 'Operaciones con fracciones y decimales');
+  ('lenguaje-y-comunicacion-6-basico-u1', 'lenguaje-y-comunicacion-6-basico', 1, 'Profundización de la comprensión lectora');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
   ('ciencias-naturales-6-basico-u1', 'ciencias-naturales-6-basico', 1, 'El sistema solar y la Tierra');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
@@ -340,15 +340,17 @@ INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripci
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
   ('historia-geografia-y-ciencias-sociales-5-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-5-basico-u1', 'OA 2', 'Explicar la relación entre las regiones naturales y las actividades económicas de la población chilena.', 'explicar,relacionar,actividades económicas,población,regiones');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-6-basico-oa1-1', 'lenguaje-y-comunicacion-6-basico-u1', 'OA 1', 'Leer comprensivamente textos argumentativos identificando tesis, argumentos y contraargumentos.', 'lectura,análisis,argumentación,tesis');
+  ('matematica-6-basico-oa1-1', 'matematica-6-basico-u1', 'OA 1', 'Demostrar que comprenden los factores y múltiplos determinando los mínimos comunes múltiplos.', 'factores,múltiplos,mcm');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-6-basico-oa1-2', 'lenguaje-y-comunicacion-6-basico-u1', 'OA 2', 'Producir textos argumentativos sencillos con estructura coherente.', 'escritura,argumentación,estructura,coherencia');
+  ('matematica-6-basico-oa1-2', 'matematica-6-basico-u1', 'OA 3', 'Demostrar que comprenden el concepto de razón de manera concreta, pictórica y simbólica.', 'razón,concreto,pictórico,simbólico');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-6-basico-oa1-1', 'matematica-6-basico-u1', 'OA 1', 'Multiplicar y dividir fracciones con distinto denominador.', 'multiplicación,división,fracciones,denominador');
+  ('matematica-6-basico-oa1-3', 'matematica-6-basico-u1', 'OA 8', 'Resolver problemas rutinarios y no rutinarios que involucren adiciones y sustracciones de fracciones.', 'adición,sustracción,fracciones,resolución de problemas');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-6-basico-oa1-2', 'matematica-6-basico-u1', 'OA 2', 'Operar con números decimales: suma, resta, multiplicación y división.', 'decimales,operaciones,cálculo');
+  ('lenguaje-y-comunicacion-6-basico-oa1-1', 'lenguaje-y-comunicacion-6-basico-u1', 'OA 3', 'Leer y familiarizarse con un amplio repertorio de literatura para aumentar su conocimiento del mundo.', 'lectura,repertorio literario,conocimiento');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-6-basico-oa1-3', 'matematica-6-basico-u1', 'OA 3', 'Resolver problemas que involucren fracciones y decimales en contextos cotidianos.', 'resolución de problemas,contexto,fracciones,decimales');
+  ('lenguaje-y-comunicacion-6-basico-oa1-2', 'lenguaje-y-comunicacion-6-basico-u1', 'OA 4', 'Analizar aspectos relevantes de las narraciones leídas para profundizar su comprensión.', 'análisis,narraciones,comprensión');
+INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
+  ('lenguaje-y-comunicacion-6-basico-oa1-3', 'lenguaje-y-comunicacion-6-basico-u1', 'OA 6', 'Leer de manera fluida textos variados apropiados a su edad.', 'fluidez,textos variados,adecuación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
   ('ciencias-naturales-6-basico-oa1-1', 'ciencias-naturales-6-basico-u1', 'OA 1', 'Describir los componentes del sistema solar y las características de los planetas.', 'describir,sistema solar,planetas,componentes');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES

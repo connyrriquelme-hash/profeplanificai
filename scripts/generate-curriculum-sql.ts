@@ -409,28 +409,29 @@ const CURRICULUM: Nivel[] = [
     nombre: '6° Básico',
     asignaturas: [
       {
-        nombre: 'Lenguaje y Comunicación',
+        nombre: 'Matemática',
         unidades: [
           {
             numero: 1,
-            titulo: 'Análisis de textos argumentativos',
+            titulo: 'Operaciones, fracciones y razones',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Leer comprensivamente textos argumentativos identificando tesis, argumentos y contraargumentos.', habilidades: ['lectura', 'análisis', 'argumentación', 'tesis'] },
-              { codigo: 'OA 2', descripcion: 'Producir textos argumentativos sencillos con estructura coherente.', habilidades: ['escritura', 'argumentación', 'estructura', 'coherencia'] },
+              { codigo: 'OA 1', descripcion: 'Demostrar que comprenden los factores y múltiplos determinando los mínimos comunes múltiplos.', habilidades: ['factores', 'múltiplos', 'mcm'] },
+              { codigo: 'OA 3', descripcion: 'Demostrar que comprenden el concepto de razón de manera concreta, pictórica y simbólica.', habilidades: ['razón', 'concreto', 'pictórico', 'simbólico'] },
+              { codigo: 'OA 8', descripcion: 'Resolver problemas rutinarios y no rutinarios que involucren adiciones y sustracciones de fracciones.', habilidades: ['adición', 'sustracción', 'fracciones', 'resolución de problemas'] },
             ],
           },
         ],
       },
       {
-        nombre: 'Matemática',
+        nombre: 'Lenguaje y Comunicación',
         unidades: [
           {
             numero: 1,
-            titulo: 'Operaciones con fracciones y decimales',
+            titulo: 'Profundización de la comprensión lectora',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Multiplicar y dividir fracciones con distinto denominador.', habilidades: ['multiplicación', 'división', 'fracciones', 'denominador'] },
-              { codigo: 'OA 2', descripcion: 'Operar con números decimales: suma, resta, multiplicación y división.', habilidades: ['decimales', 'operaciones', 'cálculo'] },
-              { codigo: 'OA 3', descripcion: 'Resolver problemas que involucren fracciones y decimales en contextos cotidianos.', habilidades: ['resolución de problemas', 'contexto', 'fracciones', 'decimales'] },
+              { codigo: 'OA 3', descripcion: 'Leer y familiarizarse con un amplio repertorio de literatura para aumentar su conocimiento del mundo.', habilidades: ['lectura', 'repertorio literario', 'conocimiento'] },
+              { codigo: 'OA 4', descripcion: 'Analizar aspectos relevantes de las narraciones leídas para profundizar su comprensión.', habilidades: ['análisis', 'narraciones', 'comprensión'] },
+              { codigo: 'OA 6', descripcion: 'Leer de manera fluida textos variados apropiados a su edad.', habilidades: ['fluidez', 'textos variados', 'adecuación'] },
             ],
           },
         ],
