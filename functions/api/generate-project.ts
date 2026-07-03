@@ -29,15 +29,15 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
     }
 
     const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema);
-    const contenido = await AIEngine.generateClassContent(context.env, plan);
+    const duaGuide = await AIEngine.generateDuaGuide(context.env, plan);
 
     return jsonResponse({
       ok: true,
       plan,
-      contenido,
+      duaGuide,
       data: {
         ...plan,
-        ...contenido,
+        ...duaGuide,
       },
     });
   } catch (error) {

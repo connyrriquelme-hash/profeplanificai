@@ -28,6 +28,7 @@ const menuSections = [
       { id: 'workspace', label: 'Espacio de Trabajo', icon: FolderKanban },
       { id: 'unidades-didacticas', label: 'Unidades Didacticas', icon: BookOpen },
       { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
+      { id: 'dua-guide', label: 'Guía DUA (Multinivel)', icon: BookOpen },
       { id: 'reportes', label: 'Reportes', icon: BarChart2 },
     ],
   },

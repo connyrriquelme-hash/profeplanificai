@@ -23,12 +23,12 @@ export interface AIEngineEnv {
   AI: Ai;
 }
 
-export interface ClassContent {
-  titulo_clase: string;
-  actividades_inicio: string[];
-  actividades_desarrollo: string[];
-  actividades_cierre: string[];
-  materiales_sugeridos: string[];
+export interface DuaGuide {
+  titulo_guia: string;
+  contexto_motivacional: string;
+  nivel_apoyo: string[];
+  nivel_estandar: string[];
+  nivel_desafio: string[];
 }
 
 export interface CurriculumObjectiveRow {

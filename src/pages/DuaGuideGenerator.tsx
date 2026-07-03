@@ -1,5 +1,5 @@
-﻿import { FormEvent, useState } from 'react';
-import type { CopilotProjectResult } from '../types/copilot';
+import { FormEvent, useState } from 'react';
+import type { CopilotProjectResult, DuaGuide, PedagogicalPlan } from '../types/copilot';
 
 const DEFAULT_FORM = {
   nivel: '5° Básico',
@@ -7,10 +7,25 @@ const DEFAULT_FORM = {
   tema: 'La célula',
 };
 
-function ActivityCard({ title, items }: { title: string; items: string[] }) {
+function LevelCard({ 
+  title, 
+  items, 
+  borderColor, 
+  bgColor, 
+  iconColor 
+}: { 
+  title: string; 
+  items: string[]; 
+  borderColor: string;
+  bgColor: string;
+  iconColor: string;
+}) {
   return (
-    <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-4 print:shadow-none">
-      <h3 className="text-lg font-black text-slate-900 print:text-black">{title}</h3>
+    <section className={`rounded-3xl border-2 ${borderColor} ${bgColor} p-5 shadow-sm print:break-inside-avoid print:border-slate-300 print:bg-white print:p-4 print:shadow-none`}>
+      <h3 className="flex items-center gap-2 text-lg font-black text-slate-900 print:text-black">
+        <span className={`text-xl ${iconColor}`} aria-hidden="true"></span>
+        {title}
+      </h3>
       <ol className="mt-3 space-y-2 list-decimal list-inside text-sm text-slate-700 print:text-black">
         {items.map((item, index) => (
           <li key={`${title}-${index}`} className="leading-relaxed">{item}</li>
@@ -20,7 +35,7 @@ function ActivityCard({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-export function CopilotTest() {
+export function DuaGuideGenerator() {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,6 +67,8 @@ export function CopilotTest() {
     }
   };
 
+  const duaGuide = result?.duaGuide;
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 print:m-0 print:w-full print:max-w-none print:bg-white print:p-0 print:text-black">
       <style>{`
@@ -75,9 +92,9 @@ export function CopilotTest() {
 
       <div className="rounded-[2rem] bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 p-6 text-white shadow-lg print:hidden">
         <p className="text-sm font-bold uppercase tracking-[0.24em] text-white/75">Copilot pedagógico</p>
-        <h1 className="mt-2 text-3xl font-black">Generador de proyecto de clase</h1>
+        <h1 className="mt-2 text-3xl font-black">Generador de Guía DUA</h1>
         <p className="mt-2 max-w-3xl text-sm text-white/85">
-          Prueba la orquestación CORE_DB → PedagogicalEngine → Workers AI → planificación estructurada.
+          Prueba la orquestación CORE_DB → PedagogicalEngine → Workers AI → Guía DUA Multinivel.
         </p>
       </div>
 
@@ -99,7 +116,7 @@ export function CopilotTest() {
             disabled={loading}
             className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? 'Generando...' : 'Generar Proyecto'}
+            {loading ? 'Generando...' : 'Generar Guía DUA'}
           </button>
         </div>
       </form>
@@ -114,58 +131,90 @@ export function CopilotTest() {
         <div id="copilot-print-area" className="space-y-5 print:w-full print:max-w-none print:space-y-4 print:bg-white print:text-black">
           <div className="hidden print:block print:break-inside-avoid print:border-b print:border-black print:pb-3">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-black">
-              Planificación Curricular - Generado por ProfePlanificAI
+              Guía DUA Multinivel - Generado por ProfePlanificAI
             </p>
             <p className="mt-1 text-sm text-black">Documento de apoyo docente para revisión, ajuste y uso profesional.</p>
           </div>
 
           <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-0 print:pb-4 print:shadow-none">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-500 print:text-black">Resultado IA</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-500 print:text-black">Guía DUA Generada</p>
                 <h2 className="mt-2 text-2xl font-black text-slate-950 print:text-2xl print:text-black">
-                  {result.contenido.titulo_clase}
+                  {duaGuide?.titulo_guia || 'Guía DUA Multinivel'}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 print:hidden"
+                className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 print:hidden shrink-0"
               >
                 Exportar a PDF / Imprimir
               </button>
             </div>
 
+            {duaGuide?.contexto_motivacional && (
+              <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-5 print:break-inside-avoid print:bg-white print:border-slate-200 print:p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-600 print:text-black">Contexto Motivacional</p>
+                <p className="mt-2 text-base italic text-gray-800 leading-relaxed print:text-black">{duaGuide.contexto_motivacional}</p>
+              </div>
+            )}
+
             <div className="mt-4 grid gap-3 md:grid-cols-3 print:grid-cols-1">
-              <div className="rounded-2xl bg-violet-50 p-4 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
-                <p className="text-xs font-black uppercase text-violet-500 print:text-black">OA a trabajar</p>
+              <div className="rounded-2xl bg-green-50 p-4 border border-green-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-green-600 print:text-black">OA a trabajar</p>
                 <p className="mt-1 text-sm font-semibold text-slate-800 print:text-black">{result.plan.objetivo_aprendizaje}</p>
               </div>
-              <div className="rounded-2xl bg-fuchsia-50 p-4 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
-                <p className="text-xs font-black uppercase text-fuchsia-500 print:text-black">Habilidades</p>
+              <div className="rounded-2xl bg-blue-50 p-4 border border-blue-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-blue-600 print:text-black">Habilidades</p>
                 <p className="mt-1 text-sm font-semibold text-slate-800 print:text-black">{result.plan.habilidades}</p>
               </div>
-              <div className="rounded-2xl bg-pink-50 p-4 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
-                <p className="text-xs font-black uppercase text-pink-500 print:text-black">Bloom sugerido</p>
+              <div className="rounded-2xl bg-orange-50 p-4 border border-orange-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-orange-600 print:text-black">Bloom sugerido</p>
                 <p className="mt-1 text-sm font-semibold text-slate-800 print:text-black">{result.plan.taxonomia_bloom_sugerida}</p>
               </div>
             </div>
           </section>
 
-          <div className="grid gap-4 lg:grid-cols-3 print:block print:space-y-4">
-            <ActivityCard title={`Inicio (${result.plan.estructura_clase.inicio.tiempo_minutos} min)`} items={result.contenido.actividades_inicio} />
-            <ActivityCard title={`Desarrollo (${result.plan.estructura_clase.desarrollo.tiempo_minutos} min)`} items={result.contenido.actividades_desarrollo} />
-            <ActivityCard title={`Cierre (${result.plan.estructura_clase.cierre.tiempo_minutos} min)`} items={result.contenido.actividades_cierre} />
+          <div className="grid gap-4 md:grid-cols-3 print:grid-cols-3">
+            <LevelCard
+              title="Nivel de Apoyo"
+              items={duaGuide?.nivel_apoyo || []}
+              borderColor="border-green-300"
+              bgColor="bg-green-50"
+              iconColor="text-green-600"
+            />
+            <LevelCard
+              title="Nivel Estándar"
+              items={duaGuide?.nivel_estandar || []}
+              borderColor="border-blue-300"
+              bgColor="bg-blue-50"
+              iconColor="text-blue-600"
+            />
+            <LevelCard
+              title="Nivel Desafío"
+              items={duaGuide?.nivel_desafio || []}
+              borderColor="border-orange-300"
+              bgColor="bg-orange-50"
+              iconColor="text-orange-600"
+            />
           </div>
 
           <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm print:break-before-page print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-4 print:shadow-none">
-            <h3 className="text-lg font-black text-slate-900 print:text-black">Materiales sugeridos</h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {result.contenido.materiales_sugeridos.map((material) => (
-                <span key={material} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 print:rounded-none print:border print:border-slate-300 print:bg-white print:text-black">
-                  {material}
-                </span>
-              ))}
+            <h3 className="text-lg font-black text-slate-900 print:text-black">Principios DUA aplicados</h3>
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <div className="rounded-xl bg-blue-50 p-3 border border-blue-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-blue-600 print:text-black">Representación</p>
+                <p className="mt-1 text-xs text-slate-700 print:text-black">Múltiples medios: texto, imágenes, esquemas visuales, organizadores gráficos</p>
+              </div>
+              <div className="rounded-xl bg-green-50 p-3 border border-green-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-green-600 print:text-black">Acción y Expresión</p>
+                <p className="mt-1 text-xs text-slate-700 print:text-black">Diversas formas: escritura, oralidad, esquemas, modelos, debate</p>
+              </div>
+              <div className="rounded-xl bg-orange-50 p-3 border border-orange-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-orange-600 print:text-black">Implicación</p>
+                <p className="mt-1 text-xs text-slate-700 print:text-black">Intereses reales, autonomía, desafío progresivo, retroalimentación formativa</p>
+              </div>
             </div>
           </section>
         </div>

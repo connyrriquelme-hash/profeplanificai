@@ -1,28 +1,30 @@
-import type { AIEngineEnv, ClassContent, PedagogicalPlan } from './types';
-
-type WorkersAITextResponse = {
-  response?: unknown;
-  result?: string;
-  text?: string;
-};
+import type { AIEngineEnv, DuaGuide, PedagogicalPlan } from './types';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
 const SYSTEM_PROMPT =
-  'Eres un profesor experto en diseño instruccional. Tu tarea es tomar un plan pedagógico y redactar las actividades de la clase. Debes responder ÚNICAMENTE con un objeto JSON válido que siga esta estructura: { titulo_clase, actividades_inicio, actividades_desarrollo, actividades_cierre, materiales_sugeridos }. No incluyas saludos ni explicaciones, solo el JSON.';
+  "Eres un especialista en Inclusión Educativa y diseño DUA, experto en el currículo nacional chileno. Tu tarea es tomar un plan pedagógico y diseñar una Guía de Aprendizaje Multinivel que siga los principios DUA. Debes responder ÚNICAMENTE con un objeto JSON válido que respete esta estructura: { titulo_guia, contexto_motivacional, nivel_apoyo, nivel_estandar, nivel_desafio }. No incluyas explicaciones, saludos, ni texto adicional. Es esencial que la guía incluya especificaciones de accesibilidad y apoyo diferenciado para estudiantes diversos.";
 
-function extractJsonObject(rawText: string): string {
-  const start = rawText.indexOf('{');
-  const end = rawText.lastIndexOf('}');
+function extractJsonString(raw: string): string {
+  if (!raw || typeof raw !== 'string') return '';
 
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error('La IA no devolvió un objeto JSON válido.');
+  let candidate = raw.trim();
+
+  const mdMatch = candidate.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (mdMatch?.[1]) {
+    candidate = mdMatch[1].trim();
   }
 
-  return rawText.slice(start, end + 1);
+  const jsonStart = candidate.indexOf('{');
+  const jsonEnd = candidate.lastIndexOf('}');
+  if (jsonStart !== -1 && jsonEnd > jsonStart) {
+    candidate = candidate.substring(jsonStart, jsonEnd + 1);
+  }
+
+  return candidate;
 }
 
-function ensureStringArray(value: unknown, fieldName: keyof ClassContent): string[] {
+function ensureStringArray(value: unknown, fieldName: string): string[] {
   if (!Array.isArray(value)) {
     throw new Error(`El campo ${fieldName} debe ser un arreglo de strings.`);
   }
@@ -35,76 +37,51 @@ function ensureStringArray(value: unknown, fieldName: keyof ClassContent): strin
   return normalized;
 }
 
-function validateClassContent(value: unknown): ClassContent {
+function validateDuaGuide(value: unknown): DuaGuide {
   if (!value || typeof value !== 'object') {
     throw new Error('La respuesta de IA no es un objeto.');
   }
 
   const record = value as Record<string, unknown>;
-  const tituloClase = String(record.titulo_clase || '').trim();
+  const tituloGuia = String(record.titulo_guia || '').trim();
 
-  if (!tituloClase) {
-    throw new Error('El campo titulo_clase es obligatorio.');
+  if (!tituloGuia) {
+    throw new Error('El campo titulo_guia es obligatorio.');
   }
 
   return {
-    titulo_clase: tituloClase,
-    actividades_inicio: ensureStringArray(record.actividades_inicio, 'actividades_inicio'),
-    actividades_desarrollo: ensureStringArray(record.actividades_desarrollo, 'actividades_desarrollo'),
-    actividades_cierre: ensureStringArray(record.actividades_cierre, 'actividades_cierre'),
-    materiales_sugeridos: ensureStringArray(record.materiales_sugeridos, 'materiales_sugeridos'),
+    titulo_guia: tituloGuia,
+    contexto_motivacional: String(record.contexto_motivacional || '').trim(),
+    nivel_apoyo: ensureStringArray(record.nivel_apoyo, 'nivel_apoyo'),
+    nivel_estandar: ensureStringArray(record.nivel_estandar, 'nivel_estandar'),
+    nivel_desafio: ensureStringArray(record.nivel_desafio, 'nivel_desafio'),
   };
 }
 
-function buildFallbackClassContent(plan: PedagogicalPlan): ClassContent {
+function buildFallbackDuaGuide(plan: PedagogicalPlan): DuaGuide {
   return {
-    titulo_clase: `Clase: ${plan.tema}`,
-    actividades_inicio: [
-      `Presentar el tema "${plan.tema}" y levantar conocimientos previos mediante preguntas breves.`,
-      `Relacionar las respuestas de los estudiantes con el objetivo de aprendizaje: ${plan.objetivo_aprendizaje}.`,
-      `Explicar el propósito de la clase y los criterios simples de logro.`,
+    titulo_guia: `Guía Multinivel: ${plan.tema}`, 
+    contexto_motivacional: `Conectar el tema "${plan.tema}" con la vida real de los estudiantes para despertar su interés y relevancia.`, 
+    nivel_apoyo: [
+      `Fichas paso a paso con vocabulario clave y ejemplos concretos para resolver actividades básicas.`,
+      `Esquemas visuales y organizadores gráficos para entender el tema principal.`,
+      `Temporizador visible y apoyos físicos (tarjetas, paletas) para indicar el paso a paso.`,
     ],
-    actividades_desarrollo: [
-      `Desarrollar una explicación guiada del tema usando ejemplos concretos, vocabulario clave y apoyo visual.`,
-      `Organizar una actividad colaborativa donde los estudiantes observen, comparen y registren evidencias relacionadas con ${plan.tema}.`,
-      `Realizar una puesta en común para analizar hallazgos y conectar con las habilidades: ${plan.habilidades}.`,
+    nivel_estandar: [
+      `Realizar una explicación guiada del tema con imágenes y analogías relevantes.`,
+      `Actividad colaborativa de intercambio de ideas y retroalimentación entre pares.`,
+      `Discusión grupal y escritura reflexiva sobre el tema en contexto.`,
     ],
-    actividades_cierre: [
-      'Sintetizar las ideas centrales en conjunto con el curso.',
-      'Aplicar un ticket de salida con una pregunta de comprensión y una pregunta de metacognición.',
-      'Indicar una acción de refuerzo o extensión según el nivel de logro observado.',
-    ],
-    materiales_sugeridos: [
-      'Pizarra o proyector',
-      'Guía breve de trabajo',
-      'Imágenes o esquemas del tema',
-      'Cuaderno del estudiante',
-      'Ticket de salida',
+    nivel_desafio: [
+      `Análisis crítico del tema con propuestas de solución para desafíos reales.`,
+      `Generar un producto de creación construyendo algo que muestre comprensión profunda y originalidad.`,
+      `Presentar un debate o simulación de roles mostrando aplicación a contextos alternativos.`,
     ],
   };
-}
-
-function getResponseText(response: unknown): string {
-  if (typeof response === 'string') return response;
-
-  if (response && typeof response === 'object') {
-    const typed = response as WorkersAITextResponse;
-    if (typeof typed.response === 'string') return typed.response.trim();
-    return String(typed.result || typed.text || '').trim();
-  }
-
-  return '';
-}
-
-function getStructuredResponse(response: unknown): unknown {
-  if (!response || typeof response !== 'object') return null;
-  const typed = response as WorkersAITextResponse;
-  if (typed.response && typeof typed.response === 'object') return typed.response;
-  return response;
 }
 
 export class AIEngine {
-  static async generateClassContent(env: AIEngineEnv, plan: PedagogicalPlan): Promise<ClassContent> {
+  static async generateDuaGuide(env: AIEngineEnv, plan: PedagogicalPlan): Promise<DuaGuide> {
     if (!env.AI) {
       throw new Error('AI no está configurado en el entorno.');
     }
@@ -121,30 +98,20 @@ export class AIEngine {
       max_tokens: 1200,
     });
 
-    const structuredResponse = getStructuredResponse(response);
-    if (structuredResponse) {
-      try {
-        return validateClassContent(structuredResponse);
-      } catch {
-        // Si no cumple el contrato final, cae al parser de texto.
-      }
-    }
-
-    const rawText = getResponseText(response);
-    if (!rawText) {
-      return buildFallbackClassContent(plan);
+    const parsed = extractJsonString(JSON.stringify(response));
+    if (!parsed) {
+      return buildFallbackDuaGuide(plan);
     }
 
     try {
-      const jsonText = extractJsonObject(rawText);
-      const parsed = JSON.parse(jsonText) as unknown;
-      return validateClassContent(parsed);
+      const parsedJson = JSON.parse(parsed) as unknown;
+      return validateDuaGuide(parsedJson);
     } catch {
-      return buildFallbackClassContent(plan);
+      return buildFallbackDuaGuide(plan);
     }
   }
 }
 
-export function generateClassContent(env: AIEngineEnv, plan: PedagogicalPlan): Promise<ClassContent> {
-  return AIEngine.generateClassContent(env, plan);
+export function generateDuaGuide(env: AIEngineEnv, plan: PedagogicalPlan): Promise<DuaGuide> {
+  return AIEngine.generateDuaGuide(env, plan);
 }

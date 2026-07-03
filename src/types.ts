@@ -267,7 +267,7 @@ export type ViewType =
   | 'panel-compartido'
   | 'unidades-didacticas'
   | 'reportes'
-  | 'test-copilot'
+  | 'dua-guide'
   | 'admin'
   | 'admin-panel'
   | 'print';
