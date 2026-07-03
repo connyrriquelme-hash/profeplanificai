@@ -25,6 +25,7 @@ import AdminView from './components/AdminView';
 import AdminPanelView from './components/AdminPanelView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CopilotTest } from './pages/CopilotTest';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -41,6 +42,7 @@ function AppContent() {
   const initialView = (() => {
     const path = window.location.pathname.replace(/\/+$/, '');
     if (path === '/mis-clases' || path === '/generador-rapido') return 'mis-clases';
+    if (path === '/test-copilot') return 'test-copilot';
     if (path === '/admin-panel') return 'admin-panel';
     if (path === '/admin') return 'admin';
     return 'dashboard';
@@ -59,6 +61,8 @@ function AppContent() {
     setViewState(state ?? null);
     if (nextView === 'mis-clases' && window.location.pathname !== '/mis-clases') {
       window.history.pushState(null, '', '/mis-clases');
+    } else if (nextView === 'test-copilot' && window.location.pathname !== '/test-copilot') {
+      window.history.pushState(null, '', '/test-copilot');
     } else if (nextView === 'admin-panel' && window.location.pathname !== '/admin-panel') {
       window.history.pushState(null, '', '/admin-panel');
     } else if (nextView === 'admin' && window.location.pathname !== '/admin') {
@@ -93,6 +97,8 @@ function AppContent() {
         return <FlujoDocenteView />;
       case 'reportes':
         return <ReportesView />;
+      case 'test-copilot':
+        return <CopilotTest />;
       case 'admin':
         return <AdminView onNavigate={handleViewChange} />;
       case 'admin-panel':
