@@ -30,6 +30,7 @@ interface Unidad {
 interface Asignatura {
   nombre: string;
   unidades: Unidad[];
+  textos?: string[];
 }
 
 interface Nivel {
@@ -71,13 +72,17 @@ function oaId(nombreAsignatura: string, nombreNivel: string, unidadNum: number, 
   return `${slugify(nombreAsignatura)}-${slugify(nombreNivel)}-oa${unidadNum}-${oaIndex + 1}`;
 }
 
+function textoId(titulo: string, nombreNivel: string): string {
+  return `${slugify(titulo)}-${slugify(nombreNivel)}`;
+}
+
 // ---------------------------------------------------------------------------
 // Datos curriculares (1° Básico → 4° Medio)
 // ---------------------------------------------------------------------------
 
 const CURRICULUM: Nivel[] = [
   // ========================================================================
-  // 1° BÁSICO
+  // 1° BÁSICO — Primer Ciclo
   // ========================================================================
   {
     nombre: '1° Básico',
@@ -87,19 +92,11 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Iniciación a la lectura y escritura',
+            titulo: 'Comprensión oral y escrita',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer y producir sonidos del habla y asociarlos con letras y sílabas.', habilidades: ['fonología', 'conciencia fonológica', 'asociar grafemas'] },
-              { codigo: 'OA 2', descripcion: 'Leer y escribir sílabas y palabras simples del vocabulario conocido.', habilidades: ['lectura', 'escritura', 'sílabas'] },
-              { codigo: 'OA 3', descripcion: 'Comprender textos escritos simples identificando su tema principal.', habilidades: ['comprensión lectora', 'idea principal'] },
-            ],
-          },
-          {
-            numero: 2,
-            titulo: 'Producción de textos escritos',
-            oa: [
-              { codigo: 'OA 4', descripcion: 'Escribir oraciones simples relacionadas con experiencias personales.', habilidades: ['escritura', 'oraciones', 'expresión personal'] },
-              { codigo: 'OA 5', descripcion: 'Dictar y escribir palabras y oraciones coherentes.', habilidades: ['dictado', 'escritura', 'coherencia'] },
+              { codigo: 'OA 1', descripcion: 'Expresarse oralmente con claridad usando vocabulario variado en situaciones cotidianas.', habilidades: ['expresión oral', 'vocabulario', 'comunicación', 'turnos'] },
+              { codigo: 'OA 2', descripcion: 'Leer textos significativos que incluyan palabras con hiatos y diptongos.', habilidades: ['lectura', 'hiatos', 'diptongos', 'puntuación'] },
+              { codigo: 'OA 3', descripcion: 'Escribir textos breves usando mayúsculas, puntos y conectores simples.', habilidades: ['escritura', 'ortografía', 'conectores', 'puntuación'] },
             ],
           },
         ],
@@ -109,11 +106,11 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Números y operaciones básicas',
+            titulo: 'Números y geometría',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Contar, leer y escribir números del 0 al 100.', habilidades: ['conteo', 'lectura numérica', 'escritura numérica'] },
-              { codigo: 'OA 2', descripcion: 'Comparar y ordenar números naturales usando los símbolos <, >, =.', habilidades: ['comparación', 'ordenamiento', 'desigualdad'] },
-              { codigo: 'OA 3', descripcion: 'Sumar y restar números de un dígito con resultado hasta 10.', habilidades: ['suma', 'resta', 'cálculo mental'] },
+              { codigo: 'OA 1', descripcion: 'Reconocer y nombrar números hasta el 20, cuantificar colecciones.', habilidades: ['números', 'conteo', 'colecciones', 'material concreto'] },
+              { codigo: 'OA 2', descripcion: 'Establecer relaciones de correspondencia, clasificación y seriación.', habilidades: ['clasificación', 'seriación', 'correspondencia', 'igualdad'] },
+              { codigo: 'OA 3', descripcion: 'Reconocer figuras geométricas básicas en objetos del entorno.', habilidades: ['figuras geométricas', 'círculo', 'cuadrado', 'triángulo'] },
             ],
           },
         ],
@@ -123,10 +120,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Mi cuerpo y los seres vivos',
+            titulo: 'Observación de seres vivos',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar y nombrar las partes principales del cuerpo humano.', habilidades: ['identificación', 'anatomía básica', 'observación'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer características de seres vivos y no vivos del entorno.', habilidades: ['clasificación', 'observación', 'cuidado del medio'] },
+              { codigo: 'OA 1', descripcion: 'Observar y describir características de seres vivos y materiales.', habilidades: ['observación', 'descripción', 'clasificación', 'comunicación'] },
             ],
           },
         ],
@@ -136,10 +132,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Mi entorno y comunidad',
+            titulo: 'Mi identidad y entorno',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar elementos de su entorno familiar, escolar y vecinal.', habilidades: ['identificación', 'observación', 'sentido de pertenencia'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer normas de convivencia en la familia y la escuela.', habilidades: ['normas', 'convivencia', 'responsabilidad'] },
+              { codigo: 'OA 1', descripcion: 'Reconocer su identidad personal dentro de la familia y la escuela.', habilidades: ['identidad', 'familia', 'escuela', 'normas'] },
             ],
           },
         ],
@@ -148,7 +143,7 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 2° BÁSICO
+  // 2° BÁSICO — Primer Ciclo
   // ========================================================================
   {
     nombre: '2° Básico',
@@ -158,18 +153,11 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Lectura comprensiva de textos narrativos',
+            titulo: 'Lectura y escritura',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Leer comprensivamente textos narrativos identificando personajes, lugar y tiempo.', habilidades: ['lectura', 'comprensión', 'elementos narrativos'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer la secuencia de eventos en un texto narrativo.', habilidades: ['secuencia', 'orden cronológico', 'ordenamiento'] },
-            ],
-          },
-          {
-            numero: 2,
-            titulo: 'Escritura de textos simples',
-            oa: [
-              { codigo: 'OA 3', descripcion: 'Escribir textos narrativos breves usando oraciones coherentes y conectores básicos.', habilidades: ['escritura', 'conectores', 'coherencia'] },
-              { codigo: 'OA 4', descripcion: 'Utilizar vocabulario variado en la producción de textos escritos.', habilidades: ['vocabulario', 'expresión', 'variedad léxica'] },
+              { codigo: 'OA 1', descripcion: 'Leer textos significativos que incluyan palabras con hiatos y diptongos, con grupos consonánticos y con combinación.', habilidades: ['lectura', 'hiatos', 'diptongos', 'combinaciones'] },
+              { codigo: 'OA 2', descripcion: 'Escribir textos narrativos, descriptivos y expositivos breves.', habilidades: ['escritura', 'narrativo', 'descriptivo', 'expositivo'] },
+              { codigo: 'OA 4', descripcion: 'Leer independientemente y familiarizarse con un amplio repertorio de literatura.', habilidades: ['lectura', 'repertorio literario', 'preferencia'] },
             ],
           },
         ],
@@ -179,11 +167,131 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Números hasta el 1000 y operaciones',
+            titulo: 'Números y medidas',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Contar, leer y escribir números del 0 al 1000.', habilidades: ['conteo', 'lectura', 'escritura'] },
-              { codigo: 'OA 2', descripcion: 'Sumar y restar números de dos dígitos con y sin reagrupación.', habilidades: ['suma', 'resta', 'reagrupación'] },
-              { codigo: 'OA 3', descripcion: 'Resolver problemas de addition y sustracción del contexto diario.', habilidades: ['resolución de problemas', 'contexto', 'operación'] },
+              { codigo: 'OA 1', descripcion: 'Reconocer y escribir números naturales de hasta 3 dígitos.', habilidades: ['números', 'escritura', 'valor posicional', 'comparación'] },
+              { codigo: 'OA 2', descripcion: 'Resolver problemas de suma y resta hasta 3 dígitos sin reagrupar.', habilidades: ['suma', 'resta', 'problemas', 'material concreto'] },
+              { codigo: 'OA 3', descripcion: 'Medir objetos usando unidades no convencionales.', habilidades: ['medición', 'unidades no convencionales', 'longitud'] },
+            ],
+          },
+        ],
+      },
+      {
+        nombre: 'Ciencias Naturales',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Exploración del entorno',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Observar y describir características de seres vivos y materiales del entorno.', habilidades: ['observación', 'descripción', 'clasificación'] },
+            ],
+          },
+        ],
+      },
+      {
+        nombre: 'Historia, Geografía y Ciencias Sociales',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Mi comunidad',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Reconocer su identidad personal y los roles dentro de la familia y comunidad.', habilidades: ['identidad', 'familia', 'comunidad', 'normas'] },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  // ========================================================================
+  // 3° BÁSICO — Primer Ciclo
+  // ========================================================================
+  {
+    nombre: '3° Básico',
+    asignaturas: [
+      {
+        nombre: 'Lenguaje y Comunicación',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Comprensión lectora',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Leer y comprender textos narrativos, descriptivos e instructivos.', habilidades: ['lectura', 'comprensión', 'idea principal', 'personajes'] },
+              { codigo: 'OA 2', descripcion: 'Escribir textos narrativos y descriptivos con estructura clara.', habilidades: ['escritura', 'planificación', 'coherencia', 'ortografía'] },
+              { codigo: 'OA 3', descripcion: 'Participar en conversaciones respetando normas de interacción.', habilidades: ['conversación', 'turnos', 'opiniones', 'escucha activa'] },
+            ],
+          },
+        ],
+      },
+      {
+        nombre: 'Matemática',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Operaciones y geometría',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de números naturales y operaciones básicas.', habilidades: ['números', 'suma', 'resta', 'multiplicación'] },
+              { codigo: 'OA 2', descripcion: 'Reconocer y describir figuras geométricas en el entorno.', habilidades: ['figuras', 'geometría', 'perímetro', 'área'] },
+            ],
+          },
+        ],
+      },
+      {
+        nombre: 'Ciencias Naturales',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Seres vivos y materiales',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Observar y clasificar seres vivos según sus características.', habilidades: ['observación', 'clasificación', 'seres vivos', 'características'] },
+            ],
+          },
+        ],
+      },
+      {
+        nombre: 'Historia, Geografía y Ciencias Sociales',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Espacio geográfico',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Identificar elementos básicos del espacio geográfico local.', habilidades: ['espacio', 'mapa', 'localización', 'entorno'] },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  // ========================================================================
+  // 4° BÁSICO — Primer Ciclo
+  // ========================================================================
+  {
+    nombre: '4° Básico',
+    asignaturas: [
+      {
+        nombre: 'Lenguaje y Comunicación',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Lectura y producción de textos',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Leer y comprender textos literarios e informativos de mayor extensión.', habilidades: ['lectura', 'propósito comunicativo', 'información explícita', 'recursos literarios'] },
+              { codigo: 'OA 2', descripcion: 'Escribir textos de diversos géneros con coherencia y cohesión.', habilidades: ['escritura', 'estructura', 'conectores', 'ortografía'] },
+              { codigo: 'OA 3', descripcion: 'Investigar y presentar información usando múltiples fuentes.', habilidades: ['investigación', 'fuentes', 'organización', 'presentación oral'] },
+            ],
+          },
+        ],
+      },
+      {
+        nombre: 'Matemática',
+        unidades: [
+          {
+            numero: 1,
+            titulo: 'Números y operaciones',
+            oa: [
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de números naturales y sus operaciones.', habilidades: ['números', 'operaciones', 'problemas', 'estrategias'] },
+              { codigo: 'OA 2', descripcion: 'Reconocer y describir propiedades de figuras geométricas.', habilidades: ['figuras', 'propiedades', 'simetría', 'perímetro'] },
             ],
           },
         ],
@@ -195,8 +303,7 @@ const CURRICULUM: Nivel[] = [
             numero: 1,
             titulo: 'Materia y energía',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar estados de la materia: sólido, líquido y gaseoso.', habilidades: ['identificación', 'estados de la materia', 'observación'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer fuentes de luz y calor en el entorno.', habilidades: ['identificación', 'luz', 'calor'] },
+              { codigo: 'OA 1', descripcion: 'Observar y describir propiedades de la materia.', habilidades: ['observación', 'propiedades', 'estado', 'cambio'] },
             ],
           },
         ],
@@ -206,10 +313,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Chile: mi país',
+            titulo: 'Historia de Chile',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar elementos geográficos básicos de Chile: montañas, ríos, mar.', habilidades: ['geografía', 'identificación', 'elementos naturales'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer símbolos patrios y su importancia en la identidad nacional.', habilidades: ['símbolos', 'identidad', 'nación'] },
+              { codigo: 'OA 1', descripcion: 'Reconocer hechos relevantes de la historia de Chile.', habilidades: ['historia', 'fechos', 'personajes', 'contexto'] },
             ],
           },
         ],
@@ -218,131 +324,7 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 3° BÁSICO
-  // ========================================================================
-  {
-    nombre: '3° Básico',
-    asignaturas: [
-      {
-        nombre: 'Lenguaje y Comunicación',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Comprensión de textos informativos',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Leer comprensivamente textos informativos identificando la idea principal y datos relevantes.', habilidades: ['comprensión', 'idea principal', 'datos relevantes'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer la estructura de textos informativos: título, subtitulo, párrafos.', habilidades: ['estructura textos', 'organización', 'identificación'] },
-            ],
-          },
-        ],
-      },
-      {
-        nombre: 'Matemática',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Tabla pitagórica y operaciones',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer la tabla pitagórica como herramienta para multiplicar.', habilidades: ['tabla pitagórica', 'multiplicación', 'cálculo'] },
-              { codigo: 'OA 2', descripcion: 'Multiplicar y dividir números naturales de dos dígitos.', habilidades: ['multiplicación', 'división', 'algoritmo'] },
-              { codigo: 'OA 3', descripcion: 'Resolver problemas que involucren las cuatro operaciones básicas.', habilidades: ['resolución de problemas', 'operaciones', 'razonamiento'] },
-            ],
-          },
-        ],
-      },
-      {
-        nombre: 'Ciencias Naturales',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Ecosistemas terrestres y acuáticos',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar componentes bióticos y abióticos de un ecosistema.', habilidades: ['identificación', 'componentes', 'ecosistema'] },
-              { codigo: 'OA 2', descripcion: 'Describir relaciones de alimentación en cadenas alimentarias.', habilidades: ['cadena alimentaria', 'relaciones', 'descripción'] },
-            ],
-          },
-        ],
-      },
-      {
-        nombre: 'Historia, Geografía y Ciencias Sociales',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Pueblos originarios de Chile',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer la existencia de pueblos originarios en Chile antes de la conquista.', habilidades: ['historia', 'pueblos originarios', 'reconocimiento'] },
-              { codigo: 'OA 2', descripcion: 'Identificar características culturales de al menos dos pueblos originarios.', habilidades: ['cultura', 'identificación', 'diversidad'] },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-
-  // ========================================================================
-  // 4° BÁSICO
-  // ========================================================================
-  {
-    nombre: '4° Básico',
-    asignaturas: [
-      {
-        nombre: 'Lenguaje y Comunicación',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Géneros literarios: narración y descripción',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Leer comprensivamente textos literarios de los géneros narrativo y descriptivo.', habilidades: ['comprensión', 'géneros literarios', 'lectura'] },
-              { codigo: 'OA 2', descripcion: 'Identificar elementos constitutivos del cuento: personajes, escenario, conflicto, desenlace.', habilidades: ['elementos del cuento', 'análisis', 'estructura'] },
-            ],
-          },
-        ],
-      },
-      {
-        nombre: 'Matemática',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Números naturales y fracciones',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Leer, escribir y comparar números naturales hasta el millón.', habilidades: ['lectura', 'escritura', 'comparación'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer fracciones como partes de un todo y representarlas gráficamente.', habilidades: ['fracciones', 'representación gráfica', 'partes'] },
-              { codigo: 'OA 3', descripcion: 'Sumar y restar fracciones con igual denominador.', habilidades: ['suma', 'resta', 'fracciones'] },
-            ],
-          },
-        ],
-      },
-      {
-        nombre: 'Ciencias Naturales',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Máquinas simples y su uso',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar máquinas simples: palanca, plano inclinado, polea, tornillo, cuña.', habilidades: ['identificación', 'máquinas simples', 'tecnología'] },
-              { codigo: 'OA 2', descripcion: 'Explicar cómo las máquinas simples facilitan las tareas cotidianas.', habilidades: ['explicación', 'aplicación', 'vida cotidiana'] },
-            ],
-          },
-        ],
-      },
-      {
-        nombre: 'Historia, Geografía y Ciencias Sociales',
-        unidades: [
-          {
-            numero: 1,
-            titulo: 'Conquista y Colonia en Chile',
-            oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer los principales acontecimientos de la Conquista española en Chile.', habilidades: ['historia', 'conquista', 'cronología'] },
-              { codigo: 'OA 2', descripcion: 'Describir la vida en las ciudades coloniales y su organización social.', habilidades: ['vida colonial', 'organización social', 'descripción'] },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-
-  // ========================================================================
-  // 5° BÁSICO
+  // 5° BÁSICO — Segundo Ciclo (datos completos)
   // ========================================================================
   {
     nombre: '5° Básico',
@@ -403,7 +385,7 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 6° BÁSICO
+  // 6° BÁSICO — Segundo Ciclo (datos completos)
   // ========================================================================
   {
     nombre: '6° Básico',
@@ -421,6 +403,7 @@ const CURRICULUM: Nivel[] = [
             ],
           },
         ],
+        textos: ['Texto del Estudiante Matemática 6° Básico 2026'],
       },
       {
         nombre: 'Lenguaje y Comunicación',
@@ -466,7 +449,7 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 7° BÁSICO
+  // 7° BÁSICO — Segundo Ciclo
   // ========================================================================
   {
     nombre: '7° Básico',
@@ -476,10 +459,10 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Textos periodísticos y opinativos',
+            titulo: 'Análisis crítico de textos',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Leer y analizar textos periodísticos identificando titulares, lead y cuerpos de la noticia.', habilidades: ['lectura', 'análisis', 'periodismo', 'estructura'] },
-              { codigo: 'OA 2', descripcion: 'Producir textos opinativos sobre temas de interés social.', habilidades: ['escritura', 'opinión', 'temas sociales'] },
+              { codigo: 'OA 1', descripcion: 'Leer críticamente textos de diversos géneros y formatos.', habilidades: ['análisis crítico', 'intencionalidad', 'posición ideológica', 'falacias'] },
+              { codigo: 'OA 2', descripcion: 'Producir textos creativos y académicos con voz propia.', habilidades: ['escritura creativa', 'ensayos', 'coherencia', 'autoevaluación'] },
             ],
           },
         ],
@@ -489,10 +472,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Álgebra elemental',
+            titulo: 'Álgebra y funciones',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer expresiones algebraicas y evaluarlas sustituyendo valores.', habilidades: ['expresiones algebraicas', 'evaluación', 'sustitución'] },
-              { codigo: 'OA 2', descripcion: 'Resolver ecuaciones de primer grado con una incógnita.', habilidades: ['ecuaciones', 'primer grado', 'resolución'] },
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de ecuaciones lineales y funciones.', habilidades: ['ecuaciones', 'funciones', 'variables', 'representación'] },
             ],
           },
         ],
@@ -502,10 +484,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Células y tejidos',
+            titulo: 'Ecosistemas',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Identificar las partes principales de una célula vegetal y animal.', habilidades: ['célula', 'identificación', 'estructura celular'] },
-              { codigo: 'OA 2', descripcion: 'Comparar células vegetales y animales usando un microscopio.', habilidades: ['comparación', 'microscopio', 'observación'] },
+              { codigo: 'OA 1', descripcion: 'Explicar la interacción de los seres vivos con su ambiente.', habilidades: ['ecosistemas', 'interacción', 'ambiente', 'biodiversidad'] },
             ],
           },
         ],
@@ -515,10 +496,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'La república en Chile',
+            titulo: 'Proceso histórico chileno',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer los períodos de la República en Chile y sus características políticas.', habilidades: ['historia', 'república', 'períodos'] },
-              { codigo: 'OA 2', descripcion: 'Identificar los cambios sociales y económicos del siglo XIX en Chile.', habilidades: ['cambios sociales', 'economía', 'siglo XIX'] },
+              { codigo: 'OA 1', descripcion: 'Analizar el proceso de formación del Estado Nacional chileno.', habilidades: ['historia', 'Estado Nacional', 'independencia', 'guerra'] },
             ],
           },
         ],
@@ -527,7 +507,7 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 8° BÁSICO
+  // 8° BÁSICO — Segundo Ciclo
   // ========================================================================
   {
     nombre: '8° Básico',
@@ -537,10 +517,11 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Análisis de textos literarios',
+            titulo: 'Comprensión y producción de textos',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Analizar textos literarios de autores chilenos e iberoamericanos.', habilidades: ['análisis', 'literatura', 'autores', 'comprensión'] },
-              { codigo: 'OA 2', descripcion: 'Interpretar recursos literarios: metáfora, símbolo, ironía, hipérbole.', habilidades: ['recursos literarios', 'interpretación', 'análisis'] },
+              { codigo: 'OA 1', descripcion: 'Leer y comprender textos literarios y no literarios.', habilidades: ['géneros literarios', 'inferencia', 'estructura', 'opinión fundamentada'] },
+              { codigo: 'OA 2', descripcion: 'Escribir textos de distintos géneros con intención comunicativa.', habilidades: ['géneros', 'estructura', 'convenciones ortográficas'] },
+              { codigo: 'OA 3', descripcion: 'Analizar críticamente textos de los medios de comunicación.', habilidades: ['medios', 'hechos', 'opiniones', 'fuentes'] },
             ],
           },
         ],
@@ -550,10 +531,10 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Funciones lineales y cuadráticas',
+            titulo: 'Proporciones y ecuaciones',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer y graficar funciones lineales y cuadráticas.', habilidades: ['funciones', 'gráfica', 'lineal', 'cuadrática'] },
-              { codigo: 'OA 2', descripcion: 'Resolver ecuaciones de segundo grado y aplicar la fórmula general.', habilidades: ['ecuaciones', 'segundo grado', 'fórmula general'] },
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de proporciones y fracciones.', habilidades: ['proporciones', 'fracciones', 'porcentajes', 'regla de tres'] },
+              { codigo: 'OA 2', descripcion: 'Demostrar comprensión de ecuaciones de segundo grado.', habilidades: ['ecuaciones', 'segundo grado', 'coeficientes', 'fórmula general'] },
             ],
           },
         ],
@@ -563,10 +544,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Genética y evolución',
+            titulo: 'La célula',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Explicar los fundamentos de la genética mendeliana y la herencia de caracteres.', habilidades: ['genética', 'herencia', 'mendel'] },
-              { codigo: 'OA 2', descripcion: 'Describir el proceso de evolución de las especies según la teoría de Darwin.', habilidades: ['evolución', 'Darwin', 'selección natural'] },
+              { codigo: 'OA 1', descripcion: 'Explicar el papel central de la célula como unidad básica de los seres vivos.', habilidades: ['célula', 'organelas', 'animal', 'vegetal'] },
             ],
           },
         ],
@@ -576,10 +556,10 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Chile en el siglo XX',
+            titulo: 'Estado Nacional y democracia',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer los principales acontecimientos políticos de Chile en el siglo XX.', habilidades: ['historia', 'siglo XX', 'política'] },
-              { codigo: 'OA 2', descripcion: 'Analizar los cambios sociales, económicos y culturales del siglo XX en Chile.', habilidades: ['análisis', 'cambios sociales', 'economía', 'cultura'] },
+              { codigo: 'OA 1', descripcion: 'Analizar el proceso de formación del Estado Nacional chileno.', habilidades: ['Estado Nacional', 'independencia', 'Guerra del Pacífico'] },
+              { codigo: 'OA 2', descripcion: 'Analizar el quiebre de la democracia en Chile en la década de 1970.', habilidades: ['golpe de Estado', 'dictadura', 'interpretaciones'] },
             ],
           },
         ],
@@ -588,20 +568,21 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 1° MEDIO
+  // 1° MEDIO — Enseñanza Media
   // ========================================================================
   {
     nombre: '1° Medio',
     asignaturas: [
       {
-        nombre: 'Lenguaje y Comunicación',
+        nombre: 'Lengua y Literatura',
         unidades: [
           {
             numero: 1,
-            titulo: 'Texto argumentativo y pensamiento crítico',
+            titulo: 'Análisis literario',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Analizar textos argumentativos complejos identificando tesis, argumentos y tipos de evidencia.', habilidades: ['análisis', 'argumentación', 'tesis', 'evidencia'] },
-              { codigo: 'OA 2', descripcion: 'Producir ensayos argumentativos con estructura clara: introducción, desarrollo y conclusión.', habilidades: ['escritura', 'ensayo', 'estructura', 'argumentación'] },
+              { codigo: 'OA 1', descripcion: 'Analizar e interpretar textos literarios chilenos e hispanoamericanos.', habilidades: ['contextualización', 'construcción de personajes', 'temas universales'] },
+              { codigo: 'OA 2', descripcion: 'Escribir textos argumentativos complejos y académicos.', habilidades: ['argumentación', 'evidencia', 'contraargumentos', 'normas APA'] },
+              { codigo: 'OA 3', descripcion: 'Participar en debates y diálogos argumentativos formales.', habilidades: ['debate', 'argumentación', 'refutación', 'lenguaje persuasivo'] },
             ],
           },
         ],
@@ -611,10 +592,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Funciones y ecuaciones',
+            titulo: 'Funciones y álgebra',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Definir y representar funciones polinomiales de grado mayor a 2.', habilidades: ['funciones', 'polinomios', 'grado', 'representación'] },
-              { codigo: 'OA 2', descripcion: 'Resolver sistemas de ecuaciones lineales con dos incógnitas.', habilidades: ['sistemas', 'ecuaciones', 'incógnitas', 'resolución'] },
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de funciones lineales y cuadráticas.', habilidades: ['funciones', 'lineales', 'cuadráticas', 'representación'] },
             ],
           },
         ],
@@ -624,10 +604,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Química: materia y transformaciones',
+            titulo: 'Energía y materia',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer los estados de la materia y las transformaciones físicas y químicas.', habilidades: ['estados', 'transformaciones', 'físicas', 'químicas'] },
-              { codigo: 'OA 2', descripcion: 'Describir la tabla periódica y las propiedades de los elementos.', habilidades: ['tabla periódica', 'elementos', 'propiedades'] },
+              { codigo: 'OA 1', descripcion: 'Explicar los principios de conservación de la energía.', habilidades: ['energía', 'conservación', 'transformación', 'fuentes'] },
             ],
           },
         ],
@@ -637,10 +616,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Chile en el siglo XXI',
+            titulo: 'Siglo XX chileno',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Analizar los principales desafíos políticos, sociales y económicos de Chile en el siglo XXI.', habilidades: ['análisis', 'desafíos', 'siglo XXI'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer la diversidad cultural y la interculturalidad en Chile contemporáneo.', habilidades: ['diversidad', 'interculturalidad', 'contemporáneo'] },
+              { codigo: 'OA 1', descripcion: 'Analizar los procesos políticos y sociales del siglo XX en Chile.', habilidades: ['siglo XX', 'reformas', 'movimientos sociales'] },
             ],
           },
         ],
@@ -649,20 +627,20 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 2° MEDIO
+  // 2° MEDIO — Enseñanza Media
   // ========================================================================
   {
     nombre: '2° Medio',
     asignaturas: [
       {
-        nombre: 'Lenguaje y Comunicación',
+        nombre: 'Lengua y Literatura',
         unidades: [
           {
             numero: 1,
-            titulo: 'Análisis de textos filosóficos y ensayísticos',
+            titulo: 'Producción académica',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Leer y analizar textos filosóficos y ensayísticos de autores chilenos e iberoamericanos.', habilidades: ['lectura', 'análisis', 'filosofía', 'ensayo'] },
-              { codigo: 'OA 2', descripcion: 'Producir textos reflexivos sobre problemáticas sociales y éticas contemporáneas.', habilidades: ['escritura', 'reflexión', 'problemas sociales', 'ética'] },
+              { codigo: 'OA 1', descripcion: 'Analizar la construcción del sentido en textos literarios y no literarios.', habilidades: ['intertextualidad', 'construcción de sentido', 'enfoques críticos'] },
+              { codigo: 'OA 2', descripcion: 'Producir textos académico-científicos con metodología de investigación.', habilidades: ['investigación', 'hipótesis', 'monografías', 'criterios éticos'] },
             ],
           },
         ],
@@ -672,10 +650,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Trigonometría y geometría',
+            titulo: 'Probabilidad y estadística',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Definir y aplicar las razones trigonométricas en triángulos rectángulos.', habilidades: ['trigonometría', 'razones', 'triángulos'] },
-              { codigo: 'OA 2', descripcion: 'Resolver problemas de geometría plana y del espacio usando fórmulas de áreas y volúmenes.', habilidades: ['geometría', 'áreas', 'volúmenes', 'fórmulas'] },
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de probabilidades y estadística descriptiva.', habilidades: ['probabilidad', 'estadística', 'datos', 'análisis'] },
             ],
           },
         ],
@@ -685,10 +662,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Física: movimiento y fuerzas',
+            titulo: 'Biología molecular',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Describir los conceptos de velocidad, aceleración y movimiento rectilíneo.', habilidades: ['velocidad', 'aceleración', 'movimiento'] },
-              { codigo: 'OA 2', descripcion: 'Explicar las leyes de Newton y su aplicación en la vida cotidiana.', habilidades: ['Newton', 'leyes', 'aplicación'] },
+              { codigo: 'OA 1', descripcion: 'Explicar los procesos moleculares de la herencia.', habilidades: ['ADN', 'genes', 'herencia', 'mutaciones'] },
             ],
           },
         ],
@@ -698,10 +674,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Globalización y mundo contemporáneo',
+            titulo: 'Chile contemporáneo',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Analizar el proceso de globalización y sus efectos en la cultura, economía y política.', habilidades: ['globalización', 'análisis', 'efectos'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer los desafíos ambientales globales y las políticas de sustentabilidad.', habilidades: ['medio ambiente', 'sustentabilidad', 'desafíos'] },
+              { codigo: 'OA 1', descripcion: 'Analizar los procesos de democratización y desarrollo en Chile.', habilidades: ['democratización', 'desarrollo', 'sociedad civil'] },
             ],
           },
         ],
@@ -710,20 +685,20 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 3° MEDIO
+  // 3° MEDIO — Enseñanza Media
   // ========================================================================
   {
     nombre: '3° Medio',
     asignaturas: [
       {
-        nombre: 'Lenguaje y Comunicación',
+        nombre: 'Lengua y Literatura',
         unidades: [
           {
             numero: 1,
-            titulo: 'Producción de textos académicos y creativos',
+            titulo: 'Literatura como construcción cultural',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Producir textos académicos con estructura formal: tesis, argumentación y conclusión.', habilidades: ['escritura', 'académico', 'estructura', 'tesis'] },
-              { codigo: 'OA 2', descripcion: 'Crear textos literarios experimentales aplicando recursos estilísticos avanzados.', habilidades: ['creatividad', 'literatura', 'estilo', 'experimentación'] },
+              { codigo: 'OA 1', descripcion: 'Interpretar y valorar la literatura como construcción cultural.', habilidades: ['canon literario', 'artes', 'función social', 'lectura crítica'] },
+              { codigo: 'OA 2', descripcion: 'Comunicar ideas complejas en contextos académicos y profesionales.', habilidades: ['registro', 'presentaciones', 'medios digitales', 'portfolio'] },
             ],
           },
         ],
@@ -733,11 +708,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Probabilidad, estadística y cálculo',
+            titulo: 'Geometría y trigonometría',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Calcular probabilidades de eventos simples y compuestos.', habilidades: ['probabilidad', 'eventos', 'cálculo'] },
-              { codigo: 'OA 2', descripcion: 'Interpretar y analizar datos estadísticos usando medidas de tendencia central y dispersión.', habilidades: ['estadística', 'datos', 'medidas'] },
-              { codigo: 'OA 3', descripcion: 'Introducción al cálculo diferencial: derivadas y sus aplicaciones.', habilidades: ['cálculo', 'derivadas', 'aplicaciones'] },
+              { codigo: 'OA 1', descripcion: 'Demostrar comprensión de relaciones geométricas y trigonométricas.', habilidades: ['geometría', 'trigonometría', 'relaciones', 'demostración'] },
             ],
           },
         ],
@@ -747,10 +720,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Biología molecular y biotecnología',
+            titulo: 'Química orgánica',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Explicar los procesos de replicación del ADN y síntesis de proteínas.', habilidades: ['ADN', 'replicación', 'proteínas'] },
-              { codigo: 'OA 2', descripcion: 'Reconocer aplicaciones de la biotecnología en la medicina, agricultura y industria.', habilidades: ['biotecnología', 'aplicaciones', 'medicina'] },
+              { codigo: 'OA 1', descripcion: 'Explicar la estructura y propiedades de compuestos orgánicos.', habilidades: ['orgánicos', 'propiedades', 'reacciones', 'laboratorio'] },
             ],
           },
         ],
@@ -760,10 +732,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Derechos humanos y democracia',
+            titulo: 'Globalización y desafíos',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Reconocer los derechos humanos fundamentales y su importancia en sociedades democráticas.', habilidades: ['derechos humanos', 'democracia', 'fundamentos'] },
-              { codigo: 'OA 2', descripcion: 'Analizar el rol de la sociedad civil en la protección y promoción de los derechos humanos.', habilidades: ['sociedad civil', 'análisis', 'protección'] },
+              { codigo: 'OA 1', descripcion: 'Analizar los efectos de la globalización en la sociedad chilena.', habilidades: ['globalización', 'cultura', 'economía', 'desafíos'] },
             ],
           },
         ],
@@ -772,20 +743,20 @@ const CURRICULUM: Nivel[] = [
   },
 
   // ========================================================================
-  // 4° MEDIO
+  // 4° MEDIO — Enseñanza Media
   // ========================================================================
   {
     nombre: '4° Medio',
     asignaturas: [
       {
-        nombre: 'Lenguaje y Comunicación',
+        nombre: 'Lengua y Literatura',
         unidades: [
           {
             numero: 1,
-            titulo: 'Síntesis y evaluación de textos',
+            titulo: 'Ciudadanía y comunicación',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Sintetizar información de múltiples fuentes para producir textos argumentativos originales.', habilidades: ['síntesis', 'múltiples fuentes', 'originalidad'] },
-              { codigo: 'OA 2', descripcion: 'Evaluar críticamente discursos mediáticos y publicitarios.', habilidades: ['evaluación', 'crítica', 'medios', 'discurso'] },
+              { codigo: 'OA 1', descripcion: 'Ejercer ciudadanía crítica a través del lenguaje y la comunicación.', habilidades: ['discursos', 'medios', 'noticias falsas', 'debate público'] },
+              { codigo: 'OA 2', descripcion: 'Producir comunicaciones efectivas para su proyecto de vida.', habilidades: ['CV', 'portfolio', 'negociación', 'autoevaluación'] },
             ],
           },
         ],
@@ -797,8 +768,7 @@ const CURRICULUM: Nivel[] = [
             numero: 1,
             titulo: 'Modelamiento matemático',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Aplicar modelos matemáticos para resolver problemas reales de diversas disciplinas.', habilidades: ['modelamiento', 'aplicación', 'interdisciplinario'] },
-              { codigo: 'OA 2', descripcion: 'Interpretar y comunicar resultados matemáticos en contextos sociales y científicos.', habilidades: ['interpretación', 'comunicación', 'contexto'] },
+              { codigo: 'OA 1', descripcion: 'Aplicar modelos matemáticos para resolver problemas del mundo real.', habilidades: ['modelamiento', 'optimización', 'análisis', 'conclusión'] },
             ],
           },
         ],
@@ -808,10 +778,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Ciencia, tecnología y sociedad',
+            titulo: 'Ciencia y sociedad',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Analizar el impacto de la ciencia y la tecnología en el desarrollo social y ambiental.', habilidades: ['análisis', 'impacto', 'ciencia', 'tecnología'] },
-              { codigo: 'OA 2', descripcion: 'Proponer soluciones a problemas ambientales usando el método científico.', habilidades: ['soluciones', 'método científico', 'medio ambiente'] },
+              { codigo: 'OA 1', descripcion: 'Analizar el impacto de la ciencia y tecnología en la sociedad.', habilidades: ['ciencia', 'tecnología', 'impacto', 'ética'] },
             ],
           },
         ],
@@ -821,10 +790,9 @@ const CURRICULUM: Nivel[] = [
         unidades: [
           {
             numero: 1,
-            titulo: 'Chile: desafíos para el bicentenario',
+            titulo: 'Desafíos del siglo XXI',
             oa: [
-              { codigo: 'OA 1', descripcion: 'Analizar los principales desafíos de Chile para consolidar una sociedad justa, equitativa y sustentable.', habilidades: ['análisis', 'desafíos', 'justicia', 'sustentabilidad'] },
-              { codigo: 'OA 2', descripcion: 'Proponer alternativas de participación ciudadana para mejorar la calidad de vida en la comunidad.', habilidades: ['participación', 'ciudadana', 'propuestas', 'calidad de vida'] },
+              { codigo: 'OA 1', descripcion: 'Analizar los grandes desafíos de la humanidad en el siglo XXI.', habilidades: ['cambio climático', 'desigualdad', 'sostenibilidad'] },
             ],
           },
         ],
@@ -926,6 +894,30 @@ function generateSQL(): string {
           lines.push(
             `INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES`,
             `  ('${oid}', '${uid}', '${sqlStr(oa.codigo)}', '${sqlStr(oa.descripcion)}', '${sqlStr(habilidadesCsv)}');`,
+          );
+        }
+      }
+    }
+  }
+
+  lines.push('');
+
+  // ------------------------------------------------------------------
+  // 5. TEXTOS ESCOLARES (quinto)
+  // ------------------------------------------------------------------
+  lines.push('-- ============================================================');
+  lines.push('-- 5. TEXTOS ESCOLARES');
+  lines.push('-- ============================================================');
+
+  for (const nivel of CURRICULUM) {
+    for (const asig of nivel.asignaturas) {
+      if (asig.textos && asig.textos.length > 0) {
+        const aid = asignaturaId(asig.nombre, nivel.nombre);
+        for (const titulo of asig.textos) {
+          const tid = textoId(titulo, nivel.nombre);
+          lines.push(
+            `INSERT OR IGNORE INTO textos_escolares (id, asignatura_id, titulo) VALUES`,
+            `  ('${tid}', '${aid}', '${sqlStr(titulo)}');`,
           );
         }
       }

@@ -102,7 +102,7 @@ INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('historia-geografia-y-ciencias-sociales-8-basico', '8-basico', 'Historia, Geografía y Ciencias Sociales');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
-  ('lenguaje-y-comunicacion-1-medio', '1-medio', 'Lenguaje y Comunicación');
+  ('lengua-y-literatura-1-medio', '1-medio', 'Lengua y Literatura');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('matematica-1-medio', '1-medio', 'Matemática');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
@@ -110,7 +110,7 @@ INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('historia-geografia-y-ciencias-sociales-1-medio', '1-medio', 'Historia, Geografía y Ciencias Sociales');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
-  ('lenguaje-y-comunicacion-2-medio', '2-medio', 'Lenguaje y Comunicación');
+  ('lengua-y-literatura-2-medio', '2-medio', 'Lengua y Literatura');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('matematica-2-medio', '2-medio', 'Matemática');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
@@ -118,7 +118,7 @@ INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('historia-geografia-y-ciencias-sociales-2-medio', '2-medio', 'Historia, Geografía y Ciencias Sociales');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
-  ('lenguaje-y-comunicacion-3-medio', '3-medio', 'Lenguaje y Comunicación');
+  ('lengua-y-literatura-3-medio', '3-medio', 'Lengua y Literatura');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('matematica-3-medio', '3-medio', 'Matemática');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
@@ -126,7 +126,7 @@ INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('historia-geografia-y-ciencias-sociales-3-medio', '3-medio', 'Historia, Geografía y Ciencias Sociales');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
-  ('lenguaje-y-comunicacion-4-medio', '4-medio', 'Lenguaje y Comunicación');
+  ('lengua-y-literatura-4-medio', '4-medio', 'Lengua y Literatura');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
   ('matematica-4-medio', '4-medio', 'Matemática');
 INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
@@ -138,41 +138,37 @@ INSERT OR IGNORE INTO asignaturas (id, nivel_id, nombre) VALUES
 -- 3. UNIDADES
 -- ============================================================
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-1-basico-u1', 'lenguaje-y-comunicacion-1-basico', 1, 'Iniciación a la lectura y escritura');
+  ('lenguaje-y-comunicacion-1-basico-u1', 'lenguaje-y-comunicacion-1-basico', 1, 'Comprensión oral y escrita');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-1-basico-u2', 'lenguaje-y-comunicacion-1-basico', 2, 'Producción de textos escritos');
+  ('matematica-1-basico-u1', 'matematica-1-basico', 1, 'Números y geometría');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-1-basico-u1', 'matematica-1-basico', 1, 'Números y operaciones básicas');
+  ('ciencias-naturales-1-basico-u1', 'ciencias-naturales-1-basico', 1, 'Observación de seres vivos');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-1-basico-u1', 'ciencias-naturales-1-basico', 1, 'Mi cuerpo y los seres vivos');
+  ('historia-geografia-y-ciencias-sociales-1-basico-u1', 'historia-geografia-y-ciencias-sociales-1-basico', 1, 'Mi identidad y entorno');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-1-basico-u1', 'historia-geografia-y-ciencias-sociales-1-basico', 1, 'Mi entorno y comunidad');
+  ('lenguaje-y-comunicacion-2-basico-u1', 'lenguaje-y-comunicacion-2-basico', 1, 'Lectura y escritura');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-2-basico-u1', 'lenguaje-y-comunicacion-2-basico', 1, 'Lectura comprensiva de textos narrativos');
+  ('matematica-2-basico-u1', 'matematica-2-basico', 1, 'Números y medidas');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-2-basico-u2', 'lenguaje-y-comunicacion-2-basico', 2, 'Escritura de textos simples');
+  ('ciencias-naturales-2-basico-u1', 'ciencias-naturales-2-basico', 1, 'Exploración del entorno');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-2-basico-u1', 'matematica-2-basico', 1, 'Números hasta el 1000 y operaciones');
+  ('historia-geografia-y-ciencias-sociales-2-basico-u1', 'historia-geografia-y-ciencias-sociales-2-basico', 1, 'Mi comunidad');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-2-basico-u1', 'ciencias-naturales-2-basico', 1, 'Materia y energía');
+  ('lenguaje-y-comunicacion-3-basico-u1', 'lenguaje-y-comunicacion-3-basico', 1, 'Comprensión lectora');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-2-basico-u1', 'historia-geografia-y-ciencias-sociales-2-basico', 1, 'Chile: mi país');
+  ('matematica-3-basico-u1', 'matematica-3-basico', 1, 'Operaciones y geometría');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-3-basico-u1', 'lenguaje-y-comunicacion-3-basico', 1, 'Comprensión de textos informativos');
+  ('ciencias-naturales-3-basico-u1', 'ciencias-naturales-3-basico', 1, 'Seres vivos y materiales');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-3-basico-u1', 'matematica-3-basico', 1, 'Tabla pitagórica y operaciones');
+  ('historia-geografia-y-ciencias-sociales-3-basico-u1', 'historia-geografia-y-ciencias-sociales-3-basico', 1, 'Espacio geográfico');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-3-basico-u1', 'ciencias-naturales-3-basico', 1, 'Ecosistemas terrestres y acuáticos');
+  ('lenguaje-y-comunicacion-4-basico-u1', 'lenguaje-y-comunicacion-4-basico', 1, 'Lectura y producción de textos');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-3-basico-u1', 'historia-geografia-y-ciencias-sociales-3-basico', 1, 'Pueblos originarios de Chile');
+  ('matematica-4-basico-u1', 'matematica-4-basico', 1, 'Números y operaciones');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-4-basico-u1', 'lenguaje-y-comunicacion-4-basico', 1, 'Géneros literarios: narración y descripción');
+  ('ciencias-naturales-4-basico-u1', 'ciencias-naturales-4-basico', 1, 'Materia y energía');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-4-basico-u1', 'matematica-4-basico', 1, 'Números naturales y fracciones');
-INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-4-basico-u1', 'ciencias-naturales-4-basico', 1, 'Máquinas simples y su uso');
-INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-4-basico-u1', 'historia-geografia-y-ciencias-sociales-4-basico', 1, 'Conquista y Colonia en Chile');
+  ('historia-geografia-y-ciencias-sociales-4-basico-u1', 'historia-geografia-y-ciencias-sociales-4-basico', 1, 'Historia de Chile');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
   ('lenguaje-y-comunicacion-5-basico-u1', 'lenguaje-y-comunicacion-5-basico', 1, 'Comprensión de textos escritos');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
@@ -190,139 +186,117 @@ INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
   ('historia-geografia-y-ciencias-sociales-6-basico-u1', 'historia-geografia-y-ciencias-sociales-6-basico', 1, 'Independencia de Chile');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-7-basico-u1', 'lenguaje-y-comunicacion-7-basico', 1, 'Textos periodísticos y opinativos');
+  ('lenguaje-y-comunicacion-7-basico-u1', 'lenguaje-y-comunicacion-7-basico', 1, 'Análisis crítico de textos');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-7-basico-u1', 'matematica-7-basico', 1, 'Álgebra elemental');
+  ('matematica-7-basico-u1', 'matematica-7-basico', 1, 'Álgebra y funciones');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-7-basico-u1', 'ciencias-naturales-7-basico', 1, 'Células y tejidos');
+  ('ciencias-naturales-7-basico-u1', 'ciencias-naturales-7-basico', 1, 'Ecosistemas');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-7-basico-u1', 'historia-geografia-y-ciencias-sociales-7-basico', 1, 'La república en Chile');
+  ('historia-geografia-y-ciencias-sociales-7-basico-u1', 'historia-geografia-y-ciencias-sociales-7-basico', 1, 'Proceso histórico chileno');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-8-basico-u1', 'lenguaje-y-comunicacion-8-basico', 1, 'Análisis de textos literarios');
+  ('lenguaje-y-comunicacion-8-basico-u1', 'lenguaje-y-comunicacion-8-basico', 1, 'Comprensión y producción de textos');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-8-basico-u1', 'matematica-8-basico', 1, 'Funciones lineales y cuadráticas');
+  ('matematica-8-basico-u1', 'matematica-8-basico', 1, 'Proporciones y ecuaciones');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-8-basico-u1', 'ciencias-naturales-8-basico', 1, 'Genética y evolución');
+  ('ciencias-naturales-8-basico-u1', 'ciencias-naturales-8-basico', 1, 'La célula');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-8-basico-u1', 'historia-geografia-y-ciencias-sociales-8-basico', 1, 'Chile en el siglo XX');
+  ('historia-geografia-y-ciencias-sociales-8-basico-u1', 'historia-geografia-y-ciencias-sociales-8-basico', 1, 'Estado Nacional y democracia');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-1-medio-u1', 'lenguaje-y-comunicacion-1-medio', 1, 'Texto argumentativo y pensamiento crítico');
+  ('lengua-y-literatura-1-medio-u1', 'lengua-y-literatura-1-medio', 1, 'Análisis literario');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-1-medio-u1', 'matematica-1-medio', 1, 'Funciones y ecuaciones');
+  ('matematica-1-medio-u1', 'matematica-1-medio', 1, 'Funciones y álgebra');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-1-medio-u1', 'ciencias-naturales-1-medio', 1, 'Química: materia y transformaciones');
+  ('ciencias-naturales-1-medio-u1', 'ciencias-naturales-1-medio', 1, 'Energía y materia');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-1-medio-u1', 'historia-geografia-y-ciencias-sociales-1-medio', 1, 'Chile en el siglo XXI');
+  ('historia-geografia-y-ciencias-sociales-1-medio-u1', 'historia-geografia-y-ciencias-sociales-1-medio', 1, 'Siglo XX chileno');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-2-medio-u1', 'lenguaje-y-comunicacion-2-medio', 1, 'Análisis de textos filosóficos y ensayísticos');
+  ('lengua-y-literatura-2-medio-u1', 'lengua-y-literatura-2-medio', 1, 'Producción académica');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-2-medio-u1', 'matematica-2-medio', 1, 'Trigonometría y geometría');
+  ('matematica-2-medio-u1', 'matematica-2-medio', 1, 'Probabilidad y estadística');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-2-medio-u1', 'ciencias-naturales-2-medio', 1, 'Física: movimiento y fuerzas');
+  ('ciencias-naturales-2-medio-u1', 'ciencias-naturales-2-medio', 1, 'Biología molecular');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-2-medio-u1', 'historia-geografia-y-ciencias-sociales-2-medio', 1, 'Globalización y mundo contemporáneo');
+  ('historia-geografia-y-ciencias-sociales-2-medio-u1', 'historia-geografia-y-ciencias-sociales-2-medio', 1, 'Chile contemporáneo');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-3-medio-u1', 'lenguaje-y-comunicacion-3-medio', 1, 'Producción de textos académicos y creativos');
+  ('lengua-y-literatura-3-medio-u1', 'lengua-y-literatura-3-medio', 1, 'Literatura como construcción cultural');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('matematica-3-medio-u1', 'matematica-3-medio', 1, 'Probabilidad, estadística y cálculo');
+  ('matematica-3-medio-u1', 'matematica-3-medio', 1, 'Geometría y trigonometría');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-3-medio-u1', 'ciencias-naturales-3-medio', 1, 'Biología molecular y biotecnología');
+  ('ciencias-naturales-3-medio-u1', 'ciencias-naturales-3-medio', 1, 'Química orgánica');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-3-medio-u1', 'historia-geografia-y-ciencias-sociales-3-medio', 1, 'Derechos humanos y democracia');
+  ('historia-geografia-y-ciencias-sociales-3-medio-u1', 'historia-geografia-y-ciencias-sociales-3-medio', 1, 'Globalización y desafíos');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('lenguaje-y-comunicacion-4-medio-u1', 'lenguaje-y-comunicacion-4-medio', 1, 'Síntesis y evaluación de textos');
+  ('lengua-y-literatura-4-medio-u1', 'lengua-y-literatura-4-medio', 1, 'Ciudadanía y comunicación');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
   ('matematica-4-medio-u1', 'matematica-4-medio', 1, 'Modelamiento matemático');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('ciencias-naturales-4-medio-u1', 'ciencias-naturales-4-medio', 1, 'Ciencia, tecnología y sociedad');
+  ('ciencias-naturales-4-medio-u1', 'ciencias-naturales-4-medio', 1, 'Ciencia y sociedad');
 INSERT OR IGNORE INTO unidades (id, asignatura_id, numero, titulo) VALUES
-  ('historia-geografia-y-ciencias-sociales-4-medio-u1', 'historia-geografia-y-ciencias-sociales-4-medio', 1, 'Chile: desafíos para el bicentenario');
+  ('historia-geografia-y-ciencias-sociales-4-medio-u1', 'historia-geografia-y-ciencias-sociales-4-medio', 1, 'Desafíos del siglo XXI');
 
 -- ============================================================
 -- 4. OBJETIVOS DE APRENDIZAJE
 -- ============================================================
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-basico-oa1-1', 'lenguaje-y-comunicacion-1-basico-u1', 'OA 1', 'Reconocer y producir sonidos del habla y asociarlos con letras y sílabas.', 'fonología,conciencia fonológica,asociar grafemas');
+  ('lenguaje-y-comunicacion-1-basico-oa1-1', 'lenguaje-y-comunicacion-1-basico-u1', 'OA 1', 'Expresarse oralmente con claridad usando vocabulario variado en situaciones cotidianas.', 'expresión oral,vocabulario,comunicación,turnos');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-basico-oa1-2', 'lenguaje-y-comunicacion-1-basico-u1', 'OA 2', 'Leer y escribir sílabas y palabras simples del vocabulario conocido.', 'lectura,escritura,sílabas');
+  ('lenguaje-y-comunicacion-1-basico-oa1-2', 'lenguaje-y-comunicacion-1-basico-u1', 'OA 2', 'Leer textos significativos que incluyan palabras con hiatos y diptongos.', 'lectura,hiatos,diptongos,puntuación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-basico-oa1-3', 'lenguaje-y-comunicacion-1-basico-u1', 'OA 3', 'Comprender textos escritos simples identificando su tema principal.', 'comprensión lectora,idea principal');
+  ('lenguaje-y-comunicacion-1-basico-oa1-3', 'lenguaje-y-comunicacion-1-basico-u1', 'OA 3', 'Escribir textos breves usando mayúsculas, puntos y conectores simples.', 'escritura,ortografía,conectores,puntuación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-basico-oa2-1', 'lenguaje-y-comunicacion-1-basico-u2', 'OA 4', 'Escribir oraciones simples relacionadas con experiencias personales.', 'escritura,oraciones,expresión personal');
+  ('matematica-1-basico-oa1-1', 'matematica-1-basico-u1', 'OA 1', 'Reconocer y nombrar números hasta el 20, cuantificar colecciones.', 'números,conteo,colecciones,material concreto');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-basico-oa2-2', 'lenguaje-y-comunicacion-1-basico-u2', 'OA 5', 'Dictar y escribir palabras y oraciones coherentes.', 'dictado,escritura,coherencia');
+  ('matematica-1-basico-oa1-2', 'matematica-1-basico-u1', 'OA 2', 'Establecer relaciones de correspondencia, clasificación y seriación.', 'clasificación,seriación,correspondencia,igualdad');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-1-basico-oa1-1', 'matematica-1-basico-u1', 'OA 1', 'Contar, leer y escribir números del 0 al 100.', 'conteo,lectura numérica,escritura numérica');
+  ('matematica-1-basico-oa1-3', 'matematica-1-basico-u1', 'OA 3', 'Reconocer figuras geométricas básicas en objetos del entorno.', 'figuras geométricas,círculo,cuadrado,triángulo');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-1-basico-oa1-2', 'matematica-1-basico-u1', 'OA 2', 'Comparar y ordenar números naturales usando los símbolos <, >, =.', 'comparación,ordenamiento,desigualdad');
+  ('ciencias-naturales-1-basico-oa1-1', 'ciencias-naturales-1-basico-u1', 'OA 1', 'Observar y describir características de seres vivos y materiales.', 'observación,descripción,clasificación,comunicación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-1-basico-oa1-3', 'matematica-1-basico-u1', 'OA 3', 'Sumar y restar números de un dígito con resultado hasta 10.', 'suma,resta,cálculo mental');
+  ('historia-geografia-y-ciencias-sociales-1-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-1-basico-u1', 'OA 1', 'Reconocer su identidad personal dentro de la familia y la escuela.', 'identidad,familia,escuela,normas');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-1-basico-oa1-1', 'ciencias-naturales-1-basico-u1', 'OA 1', 'Identificar y nombrar las partes principales del cuerpo humano.', 'identificación,anatomía básica,observación');
+  ('lenguaje-y-comunicacion-2-basico-oa1-1', 'lenguaje-y-comunicacion-2-basico-u1', 'OA 1', 'Leer textos significativos que incluyan palabras con hiatos y diptongos, con grupos consonánticos y con combinación.', 'lectura,hiatos,diptongos,combinaciones');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-1-basico-oa1-2', 'ciencias-naturales-1-basico-u1', 'OA 2', 'Reconocer características de seres vivos y no vivos del entorno.', 'clasificación,observación,cuidado del medio');
+  ('lenguaje-y-comunicacion-2-basico-oa1-2', 'lenguaje-y-comunicacion-2-basico-u1', 'OA 2', 'Escribir textos narrativos, descriptivos y expositivos breves.', 'escritura,narrativo,descriptivo,expositivo');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-1-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-1-basico-u1', 'OA 1', 'Identificar elementos de su entorno familiar, escolar y vecinal.', 'identificación,observación,sentido de pertenencia');
+  ('lenguaje-y-comunicacion-2-basico-oa1-3', 'lenguaje-y-comunicacion-2-basico-u1', 'OA 4', 'Leer independientemente y familiarizarse con un amplio repertorio de literatura.', 'lectura,repertorio literario,preferencia');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-1-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-1-basico-u1', 'OA 2', 'Reconocer normas de convivencia en la familia y la escuela.', 'normas,convivencia,responsabilidad');
+  ('matematica-2-basico-oa1-1', 'matematica-2-basico-u1', 'OA 1', 'Reconocer y escribir números naturales de hasta 3 dígitos.', 'números,escritura,valor posicional,comparación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-2-basico-oa1-1', 'lenguaje-y-comunicacion-2-basico-u1', 'OA 1', 'Leer comprensivamente textos narrativos identificando personajes, lugar y tiempo.', 'lectura,comprensión,elementos narrativos');
+  ('matematica-2-basico-oa1-2', 'matematica-2-basico-u1', 'OA 2', 'Resolver problemas de suma y resta hasta 3 dígitos sin reagrupar.', 'suma,resta,problemas,material concreto');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-2-basico-oa1-2', 'lenguaje-y-comunicacion-2-basico-u1', 'OA 2', 'Reconocer la secuencia de eventos en un texto narrativo.', 'secuencia,orden cronológico,ordenamiento');
+  ('matematica-2-basico-oa1-3', 'matematica-2-basico-u1', 'OA 3', 'Medir objetos usando unidades no convencionales.', 'medición,unidades no convencionales,longitud');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-2-basico-oa2-1', 'lenguaje-y-comunicacion-2-basico-u2', 'OA 3', 'Escribir textos narrativos breves usando oraciones coherentes y conectores básicos.', 'escritura,conectores,coherencia');
+  ('ciencias-naturales-2-basico-oa1-1', 'ciencias-naturales-2-basico-u1', 'OA 1', 'Observar y describir características de seres vivos y materiales del entorno.', 'observación,descripción,clasificación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-2-basico-oa2-2', 'lenguaje-y-comunicacion-2-basico-u2', 'OA 4', 'Utilizar vocabulario variado en la producción de textos escritos.', 'vocabulario,expresión,variedad léxica');
+  ('historia-geografia-y-ciencias-sociales-2-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-2-basico-u1', 'OA 1', 'Reconocer su identidad personal y los roles dentro de la familia y comunidad.', 'identidad,familia,comunidad,normas');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-2-basico-oa1-1', 'matematica-2-basico-u1', 'OA 1', 'Contar, leer y escribir números del 0 al 1000.', 'conteo,lectura,escritura');
+  ('lenguaje-y-comunicacion-3-basico-oa1-1', 'lenguaje-y-comunicacion-3-basico-u1', 'OA 1', 'Leer y comprender textos narrativos, descriptivos e instructivos.', 'lectura,comprensión,idea principal,personajes');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-2-basico-oa1-2', 'matematica-2-basico-u1', 'OA 2', 'Sumar y restar números de dos dígitos con y sin reagrupación.', 'suma,resta,reagrupación');
+  ('lenguaje-y-comunicacion-3-basico-oa1-2', 'lenguaje-y-comunicacion-3-basico-u1', 'OA 2', 'Escribir textos narrativos y descriptivos con estructura clara.', 'escritura,planificación,coherencia,ortografía');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-2-basico-oa1-3', 'matematica-2-basico-u1', 'OA 3', 'Resolver problemas de addition y sustracción del contexto diario.', 'resolución de problemas,contexto,operación');
+  ('lenguaje-y-comunicacion-3-basico-oa1-3', 'lenguaje-y-comunicacion-3-basico-u1', 'OA 3', 'Participar en conversaciones respetando normas de interacción.', 'conversación,turnos,opiniones,escucha activa');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-2-basico-oa1-1', 'ciencias-naturales-2-basico-u1', 'OA 1', 'Identificar estados de la materia: sólido, líquido y gaseoso.', 'identificación,estados de la materia,observación');
+  ('matematica-3-basico-oa1-1', 'matematica-3-basico-u1', 'OA 1', 'Demostrar comprensión de números naturales y operaciones básicas.', 'números,suma,resta,multiplicación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-2-basico-oa1-2', 'ciencias-naturales-2-basico-u1', 'OA 2', 'Reconocer fuentes de luz y calor en el entorno.', 'identificación,luz,calor');
+  ('matematica-3-basico-oa1-2', 'matematica-3-basico-u1', 'OA 2', 'Reconocer y describir figuras geométricas en el entorno.', 'figuras,geometría,perímetro,área');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-2-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-2-basico-u1', 'OA 1', 'Identificar elementos geográficos básicos de Chile: montañas, ríos, mar.', 'geografía,identificación,elementos naturales');
+  ('ciencias-naturales-3-basico-oa1-1', 'ciencias-naturales-3-basico-u1', 'OA 1', 'Observar y clasificar seres vivos según sus características.', 'observación,clasificación,seres vivos,características');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-2-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-2-basico-u1', 'OA 2', 'Reconocer símbolos patrios y su importancia en la identidad nacional.', 'símbolos,identidad,nación');
+  ('historia-geografia-y-ciencias-sociales-3-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-3-basico-u1', 'OA 1', 'Identificar elementos básicos del espacio geográfico local.', 'espacio,mapa,localización,entorno');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-3-basico-oa1-1', 'lenguaje-y-comunicacion-3-basico-u1', 'OA 1', 'Leer comprensivamente textos informativos identificando la idea principal y datos relevantes.', 'comprensión,idea principal,datos relevantes');
+  ('lenguaje-y-comunicacion-4-basico-oa1-1', 'lenguaje-y-comunicacion-4-basico-u1', 'OA 1', 'Leer y comprender textos literarios e informativos de mayor extensión.', 'lectura,propósito comunicativo,información explícita,recursos literarios');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-3-basico-oa1-2', 'lenguaje-y-comunicacion-3-basico-u1', 'OA 2', 'Reconocer la estructura de textos informativos: título, subtitulo, párrafos.', 'estructura textos,organización,identificación');
+  ('lenguaje-y-comunicacion-4-basico-oa1-2', 'lenguaje-y-comunicacion-4-basico-u1', 'OA 2', 'Escribir textos de diversos géneros con coherencia y cohesión.', 'escritura,estructura,conectores,ortografía');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-3-basico-oa1-1', 'matematica-3-basico-u1', 'OA 1', 'Reconocer la tabla pitagórica como herramienta para multiplicar.', 'tabla pitagórica,multiplicación,cálculo');
+  ('lenguaje-y-comunicacion-4-basico-oa1-3', 'lenguaje-y-comunicacion-4-basico-u1', 'OA 3', 'Investigar y presentar información usando múltiples fuentes.', 'investigación,fuentes,organización,presentación oral');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-3-basico-oa1-2', 'matematica-3-basico-u1', 'OA 2', 'Multiplicar y dividir números naturales de dos dígitos.', 'multiplicación,división,algoritmo');
+  ('matematica-4-basico-oa1-1', 'matematica-4-basico-u1', 'OA 1', 'Demostrar comprensión de números naturales y sus operaciones.', 'números,operaciones,problemas,estrategias');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-3-basico-oa1-3', 'matematica-3-basico-u1', 'OA 3', 'Resolver problemas que involucren las cuatro operaciones básicas.', 'resolución de problemas,operaciones,razonamiento');
+  ('matematica-4-basico-oa1-2', 'matematica-4-basico-u1', 'OA 2', 'Reconocer y describir propiedades de figuras geométricas.', 'figuras,propiedades,simetría,perímetro');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-3-basico-oa1-1', 'ciencias-naturales-3-basico-u1', 'OA 1', 'Identificar componentes bióticos y abióticos de un ecosistema.', 'identificación,componentes,ecosistema');
+  ('ciencias-naturales-4-basico-oa1-1', 'ciencias-naturales-4-basico-u1', 'OA 1', 'Observar y describir propiedades de la materia.', 'observación,propiedades,estado,cambio');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-3-basico-oa1-2', 'ciencias-naturales-3-basico-u1', 'OA 2', 'Describir relaciones de alimentación en cadenas alimentarias.', 'cadena alimentaria,relaciones,descripción');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-3-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-3-basico-u1', 'OA 1', 'Reconocer la existencia de pueblos originarios en Chile antes de la conquista.', 'historia,pueblos originarios,reconocimiento');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-3-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-3-basico-u1', 'OA 2', 'Identificar características culturales de al menos dos pueblos originarios.', 'cultura,identificación,diversidad');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-4-basico-oa1-1', 'lenguaje-y-comunicacion-4-basico-u1', 'OA 1', 'Leer comprensivamente textos literarios de los géneros narrativo y descriptivo.', 'comprensión,géneros literarios,lectura');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-4-basico-oa1-2', 'lenguaje-y-comunicacion-4-basico-u1', 'OA 2', 'Identificar elementos constitutivos del cuento: personajes, escenario, conflicto, desenlace.', 'elementos del cuento,análisis,estructura');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-4-basico-oa1-1', 'matematica-4-basico-u1', 'OA 1', 'Leer, escribir y comparar números naturales hasta el millón.', 'lectura,escritura,comparación');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-4-basico-oa1-2', 'matematica-4-basico-u1', 'OA 2', 'Reconocer fracciones como partes de un todo y representarlas gráficamente.', 'fracciones,representación gráfica,partes');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-4-basico-oa1-3', 'matematica-4-basico-u1', 'OA 3', 'Sumar y restar fracciones con igual denominador.', 'suma,resta,fracciones');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-4-basico-oa1-1', 'ciencias-naturales-4-basico-u1', 'OA 1', 'Identificar máquinas simples: palanca, plano inclinado, polea, tornillo, cuña.', 'identificación,máquinas simples,tecnología');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-4-basico-oa1-2', 'ciencias-naturales-4-basico-u1', 'OA 2', 'Explicar cómo las máquinas simples facilitan las tareas cotidianas.', 'explicación,aplicación,vida cotidiana');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-4-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-4-basico-u1', 'OA 1', 'Reconocer los principales acontecimientos de la Conquista española en Chile.', 'historia,conquista,cronología');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-4-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-4-basico-u1', 'OA 2', 'Describir la vida en las ciudades coloniales y su organización social.', 'vida colonial,organización social,descripción');
+  ('historia-geografia-y-ciencias-sociales-4-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-4-basico-u1', 'OA 1', 'Reconocer hechos relevantes de la historia de Chile.', 'historia,fechos,personajes,contexto');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
   ('lenguaje-y-comunicacion-5-basico-oa1-1', 'lenguaje-y-comunicacion-5-basico-u1', 'OA 1', 'Leer comprensivamente textos escritos de diverso tipo, identificando la idea principal y los detalles relevantes.', 'leer,identificar idea principal,identificar detalles,infiriendo');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
@@ -360,102 +334,78 @@ INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripci
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
   ('historia-geografia-y-ciencias-sociales-6-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-6-basico-u1', 'OA 2', 'Identificar los próceres de la Independencia y su contribución.', 'próceres,contribución,identificación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-7-basico-oa1-1', 'lenguaje-y-comunicacion-7-basico-u1', 'OA 1', 'Leer y analizar textos periodísticos identificando titulares, lead y cuerpos de la noticia.', 'lectura,análisis,periodismo,estructura');
+  ('lenguaje-y-comunicacion-7-basico-oa1-1', 'lenguaje-y-comunicacion-7-basico-u1', 'OA 1', 'Leer críticamente textos de diversos géneros y formatos.', 'análisis crítico,intencionalidad,posición ideológica,falacias');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-7-basico-oa1-2', 'lenguaje-y-comunicacion-7-basico-u1', 'OA 2', 'Producir textos opinativos sobre temas de interés social.', 'escritura,opinión,temas sociales');
+  ('lenguaje-y-comunicacion-7-basico-oa1-2', 'lenguaje-y-comunicacion-7-basico-u1', 'OA 2', 'Producir textos creativos y académicos con voz propia.', 'escritura creativa,ensayos,coherencia,autoevaluación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-7-basico-oa1-1', 'matematica-7-basico-u1', 'OA 1', 'Reconocer expresiones algebraicas y evaluarlas sustituyendo valores.', 'expresiones algebraicas,evaluación,sustitución');
+  ('matematica-7-basico-oa1-1', 'matematica-7-basico-u1', 'OA 1', 'Demostrar comprensión de ecuaciones lineales y funciones.', 'ecuaciones,funciones,variables,representación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-7-basico-oa1-2', 'matematica-7-basico-u1', 'OA 2', 'Resolver ecuaciones de primer grado con una incógnita.', 'ecuaciones,primer grado,resolución');
+  ('ciencias-naturales-7-basico-oa1-1', 'ciencias-naturales-7-basico-u1', 'OA 1', 'Explicar la interacción de los seres vivos con su ambiente.', 'ecosistemas,interacción,ambiente,biodiversidad');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-7-basico-oa1-1', 'ciencias-naturales-7-basico-u1', 'OA 1', 'Identificar las partes principales de una célula vegetal y animal.', 'célula,identificación,estructura celular');
+  ('historia-geografia-y-ciencias-sociales-7-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-7-basico-u1', 'OA 1', 'Analizar el proceso de formación del Estado Nacional chileno.', 'historia,Estado Nacional,independencia,guerra');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-7-basico-oa1-2', 'ciencias-naturales-7-basico-u1', 'OA 2', 'Comparar células vegetales y animales usando un microscopio.', 'comparación,microscopio,observación');
+  ('lenguaje-y-comunicacion-8-basico-oa1-1', 'lenguaje-y-comunicacion-8-basico-u1', 'OA 1', 'Leer y comprender textos literarios y no literarios.', 'géneros literarios,inferencia,estructura,opinión fundamentada');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-7-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-7-basico-u1', 'OA 1', 'Reconocer los períodos de la República en Chile y sus características políticas.', 'historia,república,períodos');
+  ('lenguaje-y-comunicacion-8-basico-oa1-2', 'lenguaje-y-comunicacion-8-basico-u1', 'OA 2', 'Escribir textos de distintos géneros con intención comunicativa.', 'géneros,estructura,convenciones ortográficas');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-7-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-7-basico-u1', 'OA 2', 'Identificar los cambios sociales y económicos del siglo XIX en Chile.', 'cambios sociales,economía,siglo XIX');
+  ('lenguaje-y-comunicacion-8-basico-oa1-3', 'lenguaje-y-comunicacion-8-basico-u1', 'OA 3', 'Analizar críticamente textos de los medios de comunicación.', 'medios,hechos,opiniones,fuentes');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-8-basico-oa1-1', 'lenguaje-y-comunicacion-8-basico-u1', 'OA 1', 'Analizar textos literarios de autores chilenos e iberoamericanos.', 'análisis,literatura,autores,comprensión');
+  ('matematica-8-basico-oa1-1', 'matematica-8-basico-u1', 'OA 1', 'Demostrar comprensión de proporciones y fracciones.', 'proporciones,fracciones,porcentajes,regla de tres');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-8-basico-oa1-2', 'lenguaje-y-comunicacion-8-basico-u1', 'OA 2', 'Interpretar recursos literarios: metáfora, símbolo, ironía, hipérbole.', 'recursos literarios,interpretación,análisis');
+  ('matematica-8-basico-oa1-2', 'matematica-8-basico-u1', 'OA 2', 'Demostrar comprensión de ecuaciones de segundo grado.', 'ecuaciones,segundo grado,coeficientes,fórmula general');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-8-basico-oa1-1', 'matematica-8-basico-u1', 'OA 1', 'Reconocer y graficar funciones lineales y cuadráticas.', 'funciones,gráfica,lineal,cuadrática');
+  ('ciencias-naturales-8-basico-oa1-1', 'ciencias-naturales-8-basico-u1', 'OA 1', 'Explicar el papel central de la célula como unidad básica de los seres vivos.', 'célula,organelas,animal,vegetal');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-8-basico-oa1-2', 'matematica-8-basico-u1', 'OA 2', 'Resolver ecuaciones de segundo grado y aplicar la fórmula general.', 'ecuaciones,segundo grado,fórmula general');
+  ('historia-geografia-y-ciencias-sociales-8-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-8-basico-u1', 'OA 1', 'Analizar el proceso de formación del Estado Nacional chileno.', 'Estado Nacional,independencia,Guerra del Pacífico');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-8-basico-oa1-1', 'ciencias-naturales-8-basico-u1', 'OA 1', 'Explicar los fundamentos de la genética mendeliana y la herencia de caracteres.', 'genética,herencia,mendel');
+  ('historia-geografia-y-ciencias-sociales-8-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-8-basico-u1', 'OA 2', 'Analizar el quiebre de la democracia en Chile en la década de 1970.', 'golpe de Estado,dictadura,interpretaciones');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-8-basico-oa1-2', 'ciencias-naturales-8-basico-u1', 'OA 2', 'Describir el proceso de evolución de las especies según la teoría de Darwin.', 'evolución,Darwin,selección natural');
+  ('lengua-y-literatura-1-medio-oa1-1', 'lengua-y-literatura-1-medio-u1', 'OA 1', 'Analizar e interpretar textos literarios chilenos e hispanoamericanos.', 'contextualización,construcción de personajes,temas universales');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-8-basico-oa1-1', 'historia-geografia-y-ciencias-sociales-8-basico-u1', 'OA 1', 'Reconocer los principales acontecimientos políticos de Chile en el siglo XX.', 'historia,siglo XX,política');
+  ('lengua-y-literatura-1-medio-oa1-2', 'lengua-y-literatura-1-medio-u1', 'OA 2', 'Escribir textos argumentativos complejos y académicos.', 'argumentación,evidencia,contraargumentos,normas APA');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-8-basico-oa1-2', 'historia-geografia-y-ciencias-sociales-8-basico-u1', 'OA 2', 'Analizar los cambios sociales, económicos y culturales del siglo XX en Chile.', 'análisis,cambios sociales,economía,cultura');
+  ('lengua-y-literatura-1-medio-oa1-3', 'lengua-y-literatura-1-medio-u1', 'OA 3', 'Participar en debates y diálogos argumentativos formales.', 'debate,argumentación,refutación,lenguaje persuasivo');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-medio-oa1-1', 'lenguaje-y-comunicacion-1-medio-u1', 'OA 1', 'Analizar textos argumentativos complejos identificando tesis, argumentos y tipos de evidencia.', 'análisis,argumentación,tesis,evidencia');
+  ('matematica-1-medio-oa1-1', 'matematica-1-medio-u1', 'OA 1', 'Demostrar comprensión de funciones lineales y cuadráticas.', 'funciones,lineales,cuadráticas,representación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-1-medio-oa1-2', 'lenguaje-y-comunicacion-1-medio-u1', 'OA 2', 'Producir ensayos argumentativos con estructura clara: introducción, desarrollo y conclusión.', 'escritura,ensayo,estructura,argumentación');
+  ('ciencias-naturales-1-medio-oa1-1', 'ciencias-naturales-1-medio-u1', 'OA 1', 'Explicar los principios de conservación de la energía.', 'energía,conservación,transformación,fuentes');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-1-medio-oa1-1', 'matematica-1-medio-u1', 'OA 1', 'Definir y representar funciones polinomiales de grado mayor a 2.', 'funciones,polinomios,grado,representación');
+  ('historia-geografia-y-ciencias-sociales-1-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-1-medio-u1', 'OA 1', 'Analizar los procesos políticos y sociales del siglo XX en Chile.', 'siglo XX,reformas,movimientos sociales');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-1-medio-oa1-2', 'matematica-1-medio-u1', 'OA 2', 'Resolver sistemas de ecuaciones lineales con dos incógnitas.', 'sistemas,ecuaciones,incógnitas,resolución');
+  ('lengua-y-literatura-2-medio-oa1-1', 'lengua-y-literatura-2-medio-u1', 'OA 1', 'Analizar la construcción del sentido en textos literarios y no literarios.', 'intertextualidad,construcción de sentido,enfoques críticos');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-1-medio-oa1-1', 'ciencias-naturales-1-medio-u1', 'OA 1', 'Reconocer los estados de la materia y las transformaciones físicas y químicas.', 'estados,transformaciones,físicas,químicas');
+  ('lengua-y-literatura-2-medio-oa1-2', 'lengua-y-literatura-2-medio-u1', 'OA 2', 'Producir textos académico-científicos con metodología de investigación.', 'investigación,hipótesis,monografías,criterios éticos');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-1-medio-oa1-2', 'ciencias-naturales-1-medio-u1', 'OA 2', 'Describir la tabla periódica y las propiedades de los elementos.', 'tabla periódica,elementos,propiedades');
+  ('matematica-2-medio-oa1-1', 'matematica-2-medio-u1', 'OA 1', 'Demostrar comprensión de probabilidades y estadística descriptiva.', 'probabilidad,estadística,datos,análisis');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-1-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-1-medio-u1', 'OA 1', 'Analizar los principales desafíos políticos, sociales y económicos de Chile en el siglo XXI.', 'análisis,desafíos,siglo XXI');
+  ('ciencias-naturales-2-medio-oa1-1', 'ciencias-naturales-2-medio-u1', 'OA 1', 'Explicar los procesos moleculares de la herencia.', 'ADN,genes,herencia,mutaciones');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-1-medio-oa1-2', 'historia-geografia-y-ciencias-sociales-1-medio-u1', 'OA 2', 'Reconocer la diversidad cultural y la interculturalidad en Chile contemporáneo.', 'diversidad,interculturalidad,contemporáneo');
+  ('historia-geografia-y-ciencias-sociales-2-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-2-medio-u1', 'OA 1', 'Analizar los procesos de democratización y desarrollo en Chile.', 'democratización,desarrollo,sociedad civil');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-2-medio-oa1-1', 'lenguaje-y-comunicacion-2-medio-u1', 'OA 1', 'Leer y analizar textos filosóficos y ensayísticos de autores chilenos e iberoamericanos.', 'lectura,análisis,filosofía,ensayo');
+  ('lengua-y-literatura-3-medio-oa1-1', 'lengua-y-literatura-3-medio-u1', 'OA 1', 'Interpretar y valorar la literatura como construcción cultural.', 'canon literario,artes,función social,lectura crítica');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-2-medio-oa1-2', 'lenguaje-y-comunicacion-2-medio-u1', 'OA 2', 'Producir textos reflexivos sobre problemáticas sociales y éticas contemporáneas.', 'escritura,reflexión,problemas sociales,ética');
+  ('lengua-y-literatura-3-medio-oa1-2', 'lengua-y-literatura-3-medio-u1', 'OA 2', 'Comunicar ideas complejas en contextos académicos y profesionales.', 'registro,presentaciones,medios digitales,portfolio');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-2-medio-oa1-1', 'matematica-2-medio-u1', 'OA 1', 'Definir y aplicar las razones trigonométricas en triángulos rectángulos.', 'trigonometría,razones,triángulos');
+  ('matematica-3-medio-oa1-1', 'matematica-3-medio-u1', 'OA 1', 'Demostrar comprensión de relaciones geométricas y trigonométricas.', 'geometría,trigonometría,relaciones,demostración');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-2-medio-oa1-2', 'matematica-2-medio-u1', 'OA 2', 'Resolver problemas de geometría plana y del espacio usando fórmulas de áreas y volúmenes.', 'geometría,áreas,volúmenes,fórmulas');
+  ('ciencias-naturales-3-medio-oa1-1', 'ciencias-naturales-3-medio-u1', 'OA 1', 'Explicar la estructura y propiedades de compuestos orgánicos.', 'orgánicos,propiedades,reacciones,laboratorio');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-2-medio-oa1-1', 'ciencias-naturales-2-medio-u1', 'OA 1', 'Describir los conceptos de velocidad, aceleración y movimiento rectilíneo.', 'velocidad,aceleración,movimiento');
+  ('historia-geografia-y-ciencias-sociales-3-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-3-medio-u1', 'OA 1', 'Analizar los efectos de la globalización en la sociedad chilena.', 'globalización,cultura,economía,desafíos');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-2-medio-oa1-2', 'ciencias-naturales-2-medio-u1', 'OA 2', 'Explicar las leyes de Newton y su aplicación en la vida cotidiana.', 'Newton,leyes,aplicación');
+  ('lengua-y-literatura-4-medio-oa1-1', 'lengua-y-literatura-4-medio-u1', 'OA 1', 'Ejercer ciudadanía crítica a través del lenguaje y la comunicación.', 'discursos,medios,noticias falsas,debate público');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-2-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-2-medio-u1', 'OA 1', 'Analizar el proceso de globalización y sus efectos en la cultura, economía y política.', 'globalización,análisis,efectos');
+  ('lengua-y-literatura-4-medio-oa1-2', 'lengua-y-literatura-4-medio-u1', 'OA 2', 'Producir comunicaciones efectivas para su proyecto de vida.', 'CV,portfolio,negociación,autoevaluación');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-2-medio-oa1-2', 'historia-geografia-y-ciencias-sociales-2-medio-u1', 'OA 2', 'Reconocer los desafíos ambientales globales y las políticas de sustentabilidad.', 'medio ambiente,sustentabilidad,desafíos');
+  ('matematica-4-medio-oa1-1', 'matematica-4-medio-u1', 'OA 1', 'Aplicar modelos matemáticos para resolver problemas del mundo real.', 'modelamiento,optimización,análisis,conclusión');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-3-medio-oa1-1', 'lenguaje-y-comunicacion-3-medio-u1', 'OA 1', 'Producir textos académicos con estructura formal: tesis, argumentación y conclusión.', 'escritura,académico,estructura,tesis');
+  ('ciencias-naturales-4-medio-oa1-1', 'ciencias-naturales-4-medio-u1', 'OA 1', 'Analizar el impacto de la ciencia y tecnología en la sociedad.', 'ciencia,tecnología,impacto,ética');
 INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-3-medio-oa1-2', 'lenguaje-y-comunicacion-3-medio-u1', 'OA 2', 'Crear textos literarios experimentales aplicando recursos estilísticos avanzados.', 'creatividad,literatura,estilo,experimentación');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-3-medio-oa1-1', 'matematica-3-medio-u1', 'OA 1', 'Calcular probabilidades de eventos simples y compuestos.', 'probabilidad,eventos,cálculo');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-3-medio-oa1-2', 'matematica-3-medio-u1', 'OA 2', 'Interpretar y analizar datos estadísticos usando medidas de tendencia central y dispersión.', 'estadística,datos,medidas');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-3-medio-oa1-3', 'matematica-3-medio-u1', 'OA 3', 'Introducción al cálculo diferencial: derivadas y sus aplicaciones.', 'cálculo,derivadas,aplicaciones');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-3-medio-oa1-1', 'ciencias-naturales-3-medio-u1', 'OA 1', 'Explicar los procesos de replicación del ADN y síntesis de proteínas.', 'ADN,replicación,proteínas');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-3-medio-oa1-2', 'ciencias-naturales-3-medio-u1', 'OA 2', 'Reconocer aplicaciones de la biotecnología en la medicina, agricultura y industria.', 'biotecnología,aplicaciones,medicina');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-3-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-3-medio-u1', 'OA 1', 'Reconocer los derechos humanos fundamentales y su importancia en sociedades democráticas.', 'derechos humanos,democracia,fundamentos');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-3-medio-oa1-2', 'historia-geografia-y-ciencias-sociales-3-medio-u1', 'OA 2', 'Analizar el rol de la sociedad civil en la protección y promoción de los derechos humanos.', 'sociedad civil,análisis,protección');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-4-medio-oa1-1', 'lenguaje-y-comunicacion-4-medio-u1', 'OA 1', 'Sintetizar información de múltiples fuentes para producir textos argumentativos originales.', 'síntesis,múltiples fuentes,originalidad');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('lenguaje-y-comunicacion-4-medio-oa1-2', 'lenguaje-y-comunicacion-4-medio-u1', 'OA 2', 'Evaluar críticamente discursos mediáticos y publicitarios.', 'evaluación,crítica,medios,discurso');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-4-medio-oa1-1', 'matematica-4-medio-u1', 'OA 1', 'Aplicar modelos matemáticos para resolver problemas reales de diversas disciplinas.', 'modelamiento,aplicación,interdisciplinario');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('matematica-4-medio-oa1-2', 'matematica-4-medio-u1', 'OA 2', 'Interpretar y comunicar resultados matemáticos en contextos sociales y científicos.', 'interpretación,comunicación,contexto');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-4-medio-oa1-1', 'ciencias-naturales-4-medio-u1', 'OA 1', 'Analizar el impacto de la ciencia y la tecnología en el desarrollo social y ambiental.', 'análisis,impacto,ciencia,tecnología');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('ciencias-naturales-4-medio-oa1-2', 'ciencias-naturales-4-medio-u1', 'OA 2', 'Proponer soluciones a problemas ambientales usando el método científico.', 'soluciones,método científico,medio ambiente');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-4-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-4-medio-u1', 'OA 1', 'Analizar los principales desafíos de Chile para consolidar una sociedad justa, equitativa y sustentable.', 'análisis,desafíos,justicia,sustentabilidad');
-INSERT OR IGNORE INTO objetivos_aprendizaje (id, unidad_id, codigo_oa, descripcion, habilidades_csv) VALUES
-  ('historia-geografia-y-ciencias-sociales-4-medio-oa1-2', 'historia-geografia-y-ciencias-sociales-4-medio-u1', 'OA 2', 'Proponer alternativas de participación ciudadana para mejorar la calidad de vida en la comunidad.', 'participación,ciudadana,propuestas,calidad de vida');
+  ('historia-geografia-y-ciencias-sociales-4-medio-oa1-1', 'historia-geografia-y-ciencias-sociales-4-medio-u1', 'OA 1', 'Analizar los grandes desafíos de la humanidad en el siglo XXI.', 'cambio climático,desigualdad,sostenibilidad');
+
+-- ============================================================
+-- 5. TEXTOS ESCOLARES
+-- ============================================================
+INSERT OR IGNORE INTO textos_escolares (id, asignatura_id, titulo) VALUES
+  ('texto-del-estudiante-matematica-6-basico-2026-6-basico', 'matematica-6-basico', 'Texto del Estudiante Matemática 6° Básico 2026');
 
 -- Fin de la migración 0003

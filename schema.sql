@@ -1,6 +1,7 @@
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS objetivos_aprendizaje;
+DROP TABLE IF EXISTS textos_escolares;
 DROP TABLE IF EXISTS unidades;
 DROP TABLE IF EXISTS asignaturas;
 DROP TABLE IF EXISTS niveles;
@@ -36,6 +37,14 @@ CREATE TABLE objetivos_aprendizaje (
   habilidades_csv TEXT NOT NULL DEFAULT '',
   FOREIGN KEY (unidad_id) REFERENCES unidades(id) ON DELETE CASCADE,
   UNIQUE (unidad_id, codigo_oa)
+);
+
+CREATE TABLE textos_escolares (
+  id TEXT PRIMARY KEY,
+  asignatura_id TEXT NOT NULL,
+  titulo TEXT NOT NULL,
+  FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
+  UNIQUE (asignatura_id, titulo)
 );
 
 CREATE INDEX idx_asignaturas_nivel ON asignaturas(nivel_id);
