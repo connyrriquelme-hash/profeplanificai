@@ -1,7 +1,7 @@
 import type { AIEngineEnv, ClassContent, PedagogicalPlan } from './types';
 
 type WorkersAITextResponse = {
-  response?: string;
+  response?: unknown;
   result?: string;
   text?: string;
 };
@@ -61,10 +61,18 @@ function getResponseText(response: unknown): string {
 
   if (response && typeof response === 'object') {
     const typed = response as WorkersAITextResponse;
-    return String(typed.response || typed.result || typed.text || '').trim();
+    if (typeof typed.response === 'string') return typed.response.trim();
+    return String(typed.result || typed.text || '').trim();
   }
 
   return '';
+}
+
+function getStructuredResponse(response: unknown): unknown {
+  if (!response || typeof response !== 'object') return null;
+  const typed = response as WorkersAITextResponse;
+  if (typed.response && typeof typed.response === 'object') return typed.response;
+  return response;
 }
 
 export class AIEngine {
@@ -84,6 +92,15 @@ export class AIEngine {
       temperature: 0.2,
       max_tokens: 1200,
     });
+
+    const structuredResponse = getStructuredResponse(response);
+    if (structuredResponse) {
+      try {
+        return validateClassContent(structuredResponse);
+      } catch {
+        // Si no cumple el contrato final, cae al parser de texto.
+      }
+    }
 
     const rawText = getResponseText(response);
     if (!rawText) {
