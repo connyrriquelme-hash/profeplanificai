@@ -268,6 +268,7 @@ export type ViewType =
   | 'unidades-didacticas'
   | 'reportes'
   | 'dua-guide'
+  | 'project-copilot'
   | 'admin'
   | 'admin-panel'
   | 'print';

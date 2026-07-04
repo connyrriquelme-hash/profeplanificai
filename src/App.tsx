@@ -26,6 +26,7 @@ import AdminPanelView from './components/AdminPanelView';
 import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DuaGuideGenerator } from './pages/DuaGuideGenerator';
+import { ProjectCopilot } from './components/ProjectCopilot';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -99,6 +100,8 @@ function AppContent() {
         return <ReportesView />;
       case 'dua-guide':
         return <DuaGuideGenerator />;
+      case 'project-copilot':
+        return <ProjectCopilot onNavigate={handleViewChange} />;
       case 'admin':
         return <AdminView onNavigate={handleViewChange} />;
       case 'admin-panel':

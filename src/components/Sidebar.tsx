@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -29,6 +29,7 @@ const menuSections = [
       { id: 'unidades-didacticas', label: 'Unidades Didacticas', icon: BookOpen },
       { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
       { id: 'dua-guide', label: 'Guía DUA (Multinivel)', icon: BookOpen },
+      { id: 'project-copilot', label: 'Project Copilot', icon: Bot },
       { id: 'reportes', label: 'Reportes', icon: BarChart2 },
     ],
   },
