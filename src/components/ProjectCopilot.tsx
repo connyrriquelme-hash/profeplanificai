@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { Bot, Loader2, AlertCircle, BookOpen, Clock, CheckCircle2 } from 'lucide-react';
+import { Bot, Loader2, AlertCircle, Clock, CheckCircle2, Printer } from 'lucide-react';
 import type { CopilotProjectResult } from '../types/copilot';
 
 interface ProjectCopilotProps {
@@ -73,7 +73,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-      <header className="text-center space-y-2">
+      <header className="no-print text-center space-y-2">
         <div className="inline-flex items-center gap-2 bg-violet-50 text-violet-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">
           <Bot size={14} /> Project Copilot
         </div>
@@ -83,7 +83,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+      <form onSubmit={handleSubmit} className="no-print bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tema</label>
@@ -145,56 +145,148 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
 
       {result && result.plan && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900 mb-1">{result.plan.tema}</h2>
-            <p className="text-sm text-slate-500">{result.plan.curso} — {result.plan.asignatura}</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="no-print inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer"
+          >
+            <Printer size={16} />
+            Exportar a PDF
+          </button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InfoCard label="Objetivo de Aprendizaje" value={result.plan.objetivo_aprendizaje} />
-            <InfoCard label="Habilidades" value={result.plan.habilidades} />
-            <InfoCard label="Taxonomía Bloom" value={result.plan.taxonomia_bloom_sugerida} />
-          </div>
+          <div className="print-area">
+            <div className="print-header">
+              <h1 className="print-title">Planificación Docente</h1>
+              <p className="print-subtitle">{result.plan.curso} — {result.plan.asignatura}</p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StageCard
-              title="Inicio"
-              time={result.plan.estructura_clase.inicio.tiempo_minutos}
-              description={result.plan.estructura_clase.inicio.descripcion}
-              color="emerald"
-            />
-            <StageCard
-              title="Desarrollo"
-              time={result.plan.estructura_clase.desarrollo.tiempo_minutos}
-              description={result.plan.estructura_clase.desarrollo.descripcion}
-              color="blue"
-            />
-            <StageCard
-              title="Cierre"
-              time={result.plan.estructura_clase.cierre.tiempo_minutos}
-              description={result.plan.estructura_clase.cierre.descripcion}
-              color="amber"
-            />
-          </div>
+            <div className="print-section">
+              <h2 className="print-section-title">Tema</h2>
+              <p className="print-body">{result.plan.tema}</p>
+            </div>
 
-          {result.duaGuide && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <h3 className="text-base font-bold text-slate-900">{result.duaGuide.titulo_guia}</h3>
-              {result.duaGuide.contexto_motivacional && (
-                <p className="text-sm text-slate-600 italic">{result.duaGuide.contexto_motivacional}</p>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <DuaLevelCard title="Nivel de Apoyo" items={result.duaGuide.nivel_apoyo} color="rose" />
-                <DuaLevelCard title="Nivel Estándar" items={result.duaGuide.nivel_estandar} color="sky" />
-                <DuaLevelCard title="Nivel Desafío" items={result.duaGuide.nivel_desafio} color="violet" />
+            <div className="print-meta-grid">
+              <div className="print-meta-item">
+                <span className="print-meta-label">Objetivo de Aprendizaje</span>
+                <span className="print-meta-value">{result.plan.objetivo_aprendizaje}</span>
+              </div>
+              <div className="print-meta-item">
+                <span className="print-meta-label">Habilidades</span>
+                <span className="print-meta-value">{result.plan.habilidades}</span>
+              </div>
+              <div className="print-meta-item">
+                <span className="print-meta-label">Taxonomía Bloom</span>
+                <span className="print-meta-value">{result.plan.taxonomia_bloom_sugerida}</span>
               </div>
             </div>
-          )}
+
+            <div className="print-section">
+              <h2 className="print-section-title">Estructura de la Clase</h2>
+              <div className="print-stage">
+                <div className="print-stage-header print-stage-inicio">
+                  <span className="print-stage-name">Inicio</span>
+                  <span className="print-stage-time">{result.plan.estructura_clase.inicio.tiempo_minutos} min</span>
+                </div>
+                <p className="print-body">{result.plan.estructura_clase.inicio.descripcion}</p>
+              </div>
+              <div className="print-stage">
+                <div className="print-stage-header print-stage-desarrollo">
+                  <span className="print-stage-name">Desarrollo</span>
+                  <span className="print-stage-time">{result.plan.estructura_clase.desarrollo.tiempo_minutos} min</span>
+                </div>
+                <p className="print-body">{result.plan.estructura_clase.desarrollo.descripcion}</p>
+              </div>
+              <div className="print-stage">
+                <div className="print-stage-header print-stage-cierre">
+                  <span className="print-stage-name">Cierre</span>
+                  <span className="print-stage-time">{result.plan.estructura_clase.cierre.tiempo_minutos} min</span>
+                </div>
+                <p className="print-body">{result.plan.estructura_clase.cierre.descripcion}</p>
+              </div>
+            </div>
+
+            {result.duaGuide && (
+              <div className="print-section print-break-before">
+                <h2 className="print-section-title">{result.duaGuide.titulo_guia}</h2>
+                {result.duaGuide.contexto_motivacional && (
+                  <p className="print-italic">{result.duaGuide.contexto_motivacional}</p>
+                )}
+                <div className="print-dua-grid">
+                  <div className="print-dua-column">
+                    <h3 className="print-dua-level">Nivel de Apoyo</h3>
+                    <ul className="print-list">
+                      {result.duaGuide.nivel_apoyo.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                  <div className="print-dua-column">
+                    <h3 className="print-dua-level">Nivel Estándar</h3>
+                    <ul className="print-list">
+                      {result.duaGuide.nivel_estandar.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                  <div className="print-dua-column">
+                    <h3 className="print-dua-level">Nivel Desafío</h3>
+                    <ul className="print-list">
+                      {result.duaGuide.nivel_desafio.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="screen-only space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900 mb-1">{result.plan.tema}</h2>
+              <p className="text-sm text-slate-500">{result.plan.curso} — {result.plan.asignatura}</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoCard label="Objetivo de Aprendizaje" value={result.plan.objetivo_aprendizaje} />
+              <InfoCard label="Habilidades" value={result.plan.habilidades} />
+              <InfoCard label="Taxonomía Bloom" value={result.plan.taxonomia_bloom_sugerida} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StageCard
+                title="Inicio"
+                time={result.plan.estructura_clase.inicio.tiempo_minutos}
+                description={result.plan.estructura_clase.inicio.descripcion}
+                color="emerald"
+              />
+              <StageCard
+                title="Desarrollo"
+                time={result.plan.estructura_clase.desarrollo.tiempo_minutos}
+                description={result.plan.estructura_clase.desarrollo.descripcion}
+                color="blue"
+              />
+              <StageCard
+                title="Cierre"
+                time={result.plan.estructura_clase.cierre.tiempo_minutos}
+                description={result.plan.estructura_clase.cierre.descripcion}
+                color="amber"
+              />
+            </div>
+
+            {result.duaGuide && (
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <h3 className="text-base font-bold text-slate-900">{result.duaGuide.titulo_guia}</h3>
+                {result.duaGuide.contexto_motivacional && (
+                  <p className="text-sm text-slate-600 italic">{result.duaGuide.contexto_motivacional}</p>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <DuaLevelCard title="Nivel de Apoyo" items={result.duaGuide.nivel_apoyo} color="rose" />
+                  <DuaLevelCard title="Nivel Estándar" items={result.duaGuide.nivel_estandar} color="sky" />
+                  <DuaLevelCard title="Nivel Desafío" items={result.duaGuide.nivel_desafio} color="violet" />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {loading && !result && (
-        <div className="space-y-4">
+        <div className="no-print space-y-4">
           <SkeletonCard />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <SkeletonCard />

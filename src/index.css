@@ -1026,3 +1026,336 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
+/* Project Copilot — print-only layout */
+.print-area {
+  display: none;
+}
+
+.screen-only {
+  display: block;
+}
+
+.print-header {
+  display: none;
+}
+
+.print-title {
+  display: none;
+}
+
+.print-subtitle {
+  display: none;
+}
+
+.print-section {
+  display: none;
+}
+
+.print-section-title {
+  display: none;
+}
+
+.print-meta-grid {
+  display: none;
+}
+
+.print-meta-item {
+  display: none;
+}
+
+.print-meta-label {
+  display: none;
+}
+
+.print-meta-value {
+  display: none;
+}
+
+.print-stage {
+  display: none;
+}
+
+.print-stage-header {
+  display: none;
+}
+
+.print-stage-name {
+  display: none;
+}
+
+.print-stage-time {
+  display: none;
+}
+
+.print-body {
+  display: none;
+}
+
+.print-italic {
+  display: none;
+}
+
+.print-dua-grid {
+  display: none;
+}
+
+.print-dua-column {
+  display: none;
+}
+
+.print-dua-level {
+  display: none;
+}
+
+.print-list {
+  display: none;
+}
+
+.print-break-before {
+  display: none;
+}
+
+/* Project Copilot — print overrides */
+@media print {
+  /* Hide all interactive / non-print chrome */
+  .no-print,
+  .screen-only,
+  .sidebar,
+  .topbar,
+  nav,
+  button,
+  .btnrow,
+  form,
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  /* Show print-area, hide everything else in the page */
+  .print-area {
+    display: block !important;
+  }
+
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #1e293b;
+  }
+
+  .print-title {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 6px;
+  }
+
+  .print-subtitle {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+  }
+
+  .print-section {
+    display: block !important;
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-section-title {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #94a3b8;
+    padding-bottom: 4px;
+    margin: 0 0 8px;
+  }
+
+  .print-meta-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .print-meta-item {
+    display: flex !important;
+    flex-direction: column;
+    gap: 2px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-meta-label {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #555;
+  }
+
+  .print-meta-value {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 13px;
+    color: #000;
+    line-height: 1.5;
+  }
+
+  .print-stage {
+    display: block !important;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-stage-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-left: 4px solid #1e293b;
+    background: #f1f5f9;
+  }
+
+  .print-stage-inicio {
+    border-left-color: #059669;
+  }
+
+  .print-stage-desarrollo {
+    border-left-color: #2563eb;
+  }
+
+  .print-stage-cierre {
+    border-left-color: #d97706;
+  }
+
+  .print-stage-name {
+    display: inline !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #000;
+  }
+
+  .print-stage-time {
+    display: inline !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 12px;
+    color: #555;
+  }
+
+  .print-body {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 13px;
+    color: #000;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .print-italic {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: #333;
+    margin: 0 0 12px;
+  }
+
+  .print-dua-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .print-dua-column {
+    display: block !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-dua-level {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #000;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 3px;
+    margin: 0 0 6px;
+  }
+
+  .print-list {
+    display: block !important;
+    margin: 0;
+    padding-left: 16px;
+  }
+
+  .print-list li {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 12px;
+    color: #000;
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  .print-break-before {
+    page-break-before: always;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 18mm 15mm 18mm 15mm;
+  }
+
+  /* Global print resets */
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: Georgia, 'Times New Roman', Times, serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove shadows, gradients, dark backgrounds */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Prevent orphaned headings */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Prevent image/table break */
+  img, table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Main content fill width */
+  .main-content {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
