@@ -5,6 +5,8 @@ export interface LessonStage {
 
 export interface PedagogicalPlan {
   tema: string;
+  curso: string;
+  asignatura: string;
   objetivo_aprendizaje: string;
   habilidades: string;
   taxonomia_bloom_sugerida: string;
@@ -21,6 +23,20 @@ export interface PedagogicalEngineEnv {
 
 export interface AIEngineEnv {
   AI: Ai;
+}
+
+export interface LessonContent {
+  titulo: string;
+  curso: string;
+  asignatura: string;
+  objetivoAprendizaje: string;
+  habilidadBloom: string;
+  inicio: string;
+  desarrollo: string;
+  cierre: string;
+  recursos: string[];
+  evaluacionFormativa: string;
+  adecuacionesDUA: string;
 }
 
 export interface DuaGuide {

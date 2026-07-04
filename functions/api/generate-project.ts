@@ -41,10 +41,21 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
       },
     });
   } catch (error) {
-    return jsonResponse({
-      ok: false,
-      error: 'No se pudo generar el proyecto pedagógico.',
-      details: error instanceof Error ? error.message : String(error),
-    }, 500);
+    console.error('[generate-project] Error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message.includes('No se encontró OA')) {
+      return jsonResponse({ ok: false, error: 'No se encontró un objetivo de aprendizaje para los parámetros indicados.' }, 404);
+    }
+
+    if (message.includes('CORE_DB') || message.includes('AI no está configurado')) {
+      return jsonResponse({ ok: false, error: 'Error de configuración del servidor.' }, 500);
+    }
+
+    return jsonResponse({ ok: false, error: 'No se pudo generar el proyecto pedagógico.' }, 500);
   }
+}
+
+export async function onRequest(): Promise<Response> {
+  return jsonResponse({ ok: false, error: 'Método no permitido. Use POST.' }, 405);
 }
