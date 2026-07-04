@@ -46,7 +46,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
       const res = await fetch('/api/generate-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tema: trimmedTema, curso: trimmedCurso, asignatura: trimmedAsignatura }),
+        body: JSON.stringify({ tema: trimmedTema, nivel: trimmedCurso, asignatura: trimmedAsignatura }),
       });
 
       const json = await res.json();
