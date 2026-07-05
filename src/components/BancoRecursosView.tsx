@@ -55,20 +55,39 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
     if (activeTab === 'recursos' || activeTab === 'planificaciones' || activeTab === 'evaluaciones') fetchResources();
   }, [activeTab, fetchResources]);
 
+  const PLANNING_TYPES = new Set(['planificacion', 'planificacion_clase', 'actividades_clase']);
+  const isPlanningResource = (r: Resource) =>
+    PLANNING_TYPES.has(r.type) ||
+    (r.type === '' && !!r.content);
+
   const allPlans = useMemo(() => {
     const cloudPlans = resources
-      .filter(r => r.type === 'planificacion' || (r.type === '' && r.content))
-      .map(r => ({
-        id: r.id,
-        titulo: r.title || 'Planificación sin título',
-        fecha: r.created_at,
-        objetivos: r.objective_text || r.objective_code || '',
-        nivel: r.level || '',
-        inicio: r.content || '',
-        desarrollo: '',
-        cierre: '',
-        source: 'cloud' as const,
-      }));
+      .filter(r => isPlanningResource(r))
+      .map(r => {
+        let inicio = '', desarrollo = '', cierre = '';
+        const content = r.content || '';
+        const secMatch = content.match(/^##\s*Inicio\s*\n([\s\S]*?)^##\s*Desarrollo\s*\n([\s\S]*?)^##\s*Cierre\s*\n([\s\S]*?)$/m);
+        if (secMatch) {
+          inicio = secMatch[1].trim();
+          desarrollo = secMatch[2].trim();
+          cierre = secMatch[3].trim();
+        } else {
+          inicio = content;
+        }
+        return {
+          id: r.id,
+          titulo: r.title || 'Planificación sin título',
+          fecha: r.created_at,
+          objetivos: r.objective_text || r.objective_code || '',
+          nivel: r.level || '',
+          subject: r.subject || '',
+          inicio,
+          desarrollo,
+          cierre,
+          source: 'cloud' as const,
+          metadata_json: r.metadata_json || '',
+        };
+      });
     const localPlans = library.map(p => ({ ...p, source: 'local' as const }));
     return [...localPlans, ...cloudPlans].sort((a, b) =>
       new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
@@ -114,6 +133,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   }, [mergedResources, activeTab]);
 
   const filteredResources = mergedResources.filter(r => {
+    if (isEvaluationResource(r) || isPlanningResource(r)) return false;
     const matchesQuery = !query || 
       r.title?.toLowerCase().includes(query.toLowerCase()) ||
       r.subject?.toLowerCase().includes(query.toLowerCase()) ||
@@ -125,12 +145,17 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
 
   const recommendedResource = filteredResources.length > 0 ? filteredResources[0] : null;
 
-  const EVALUATION_TYPES = new Set(['evaluacion', 'rubrica', 'pauta', 'ticket', 'ticket_salida', 'prueba', 'simce', 'retroalimentacion', 'banco_preguntas_evaluativos']);
+  const EVALUATION_TYPES = new Set([
+    'evaluacion', 'rubrica', 'pauta', 'ticket', 'ticket_salida', 'prueba',
+    'simce', 'instrumento_simce', 'retroalimentacion',
+    'banco_preguntas', 'banco_preguntas_evaluativos', 'banco_preguntas_evaluativas',
+    'recurso_dua', 'material_apoderados',
+  ]);
+  const isEvaluationResource = (r: Resource) => EVALUATION_TYPES.has(r.type);
 
   const filteredEvaluations = useMemo(() => {
     return resources.filter(r => {
-      const isEval = EVALUATION_TYPES.has(r.type) || r.source === 'mis_clases' && EVALUATION_TYPES.has(r.type);
-      if (!isEval) return false;
+      if (!isEvaluationResource(r)) return false;
       const matchesQuery = !query || r.title?.toLowerCase().includes(query.toLowerCase()) || r.subject?.toLowerCase().includes(query.toLowerCase()) || r.level?.toLowerCase().includes(query.toLowerCase());
       return matchesQuery;
     });
@@ -314,6 +339,9 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       {item.desarrollo && <Badge color="indigo" size="sm">Desarrollo</Badge>}
                       {item.cierre && <Badge color="amber" size="sm">Cierre</Badge>}
                       {item.nivel && <Badge color="slate" size="sm">{item.nivel}</Badge>}
+                      {(item as any).subject && <Badge color="teal" size="sm">{(item as any).subject}</Badge>}
+                      {(() => { try { const m = JSON.parse((item as any).metadata_json || '{}'); return m.sourceTab ? <Badge color="green" size="sm">{m.sourceTab === 'actividades' ? 'Actividades' : m.sourceTab === 'recursos_ia' ? 'Mis Clases' : m.sourceTab}</Badge> : null; } catch { return null; } })()}
+                      {(() => { try { const m = JSON.parse((item as any).metadata_json || '{}'); return m.classTitle ? <Badge color="slate" size="sm">{m.classTitle}</Badge> : null; } catch { return null; } })()}
                     </div>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 flex-1">
                       {hasContent ? item.objetivos || item.inicio || 'Sin contenido' : 'Sin contenido'}
