@@ -1,18 +1,27 @@
-import { FormEvent, useState } from 'react';
-import { Bot, Loader2, AlertCircle, Clock, CheckCircle2, Printer } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
+import { Bot, Loader2, AlertCircle, Clock, CheckCircle2, Printer, Save } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult } from '../types/copilot';
+import { saveToBank } from '../services/bankService';
+
+interface CurriculumNivel {
+  nivel: string;
+  asignaturas: string[];
+}
+
+const TOAST_ID = 'project-copilot-save';
 
 interface ProjectCopilotProps {
   onNavigate?: (view: string) => void;
 }
 
-const CURSOS = [
+const CURSOS_FALLBACK = [
   '1° Básico', '2° Básico', '3° Básico', '4° Básico',
   '5° Básico', '6° Básico', '7° Básico', '8° Básico',
   '1° Medio', '2° Medio', '3° Medio', '4° Medio',
 ];
 
-const ASIGNATURAS = [
+const ASIGNATURAS_FALLBACK = [
   'Lenguaje y Comunicación', 'Lengua y Literatura', 'Matemática',
   'Ciencias Naturales', 'Historia, Geografía y Ciencias Sociales',
   'Educación Ciudadana', 'Inglés', 'Filosofía',
@@ -20,12 +29,46 @@ const ASIGNATURAS = [
 ];
 
 export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
+  const [curriculum, setCurriculum] = useState<CurriculumNivel[]>([]);
+  const [loadingCurriculum, setLoadingCurriculum] = useState(true);
   const [tema, setTema] = useState('La célula');
   const [curso, setCurso] = useState('5° Básico');
   const [asignatura, setAsignatura] = useState('Ciencias Naturales');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CopilotProjectResult | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchCurriculum() {
+      try {
+        const res = await fetch('/api/curriculum');
+        const json = await res.json() as { ok: boolean; data: CurriculumNivel[] };
+        if (!cancelled && json.ok && json.data.length > 0) {
+          setCurriculum(json.data);
+          const first = json.data[0];
+          setCurso(first.nivel);
+          setAsignatura(first.asignaturas[0] || '');
+        }
+      } catch {
+        // silent — fallback lists remain
+      } finally {
+        if (!cancelled) setLoadingCurriculum(false);
+      }
+    }
+    fetchCurriculum();
+    return () => { cancelled = true; };
+  }, []);
+
+  const cursos = curriculum.length > 0 ? curriculum.map((c) => c.nivel) : CURSOS_FALLBACK;
+  const selectedNivel = curriculum.find((n) => n.nivel === curso);
+  const asignaturas = selectedNivel?.asignaturas || ASIGNATURAS_FALLBACK;
+
+  const handleCursoChange = (value: string) => {
+    setCurso(value);
+    const nivel = curriculum.find((n) => n.nivel === value);
+    if (nivel?.asignaturas[0]) setAsignatura(nivel.asignaturas[0]);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -71,6 +114,37 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
     }
   };
 
+  const handleSaveToBank = async () => {
+    if (!result || !result.plan) return;
+    toast.loading('Guardando en Banco de Recursos...', { id: TOAST_ID });
+    try {
+      const content = JSON.stringify({
+        title: `Planificación: ${result.plan.tema}`,
+        action: 'project_copilot',
+        kind: 'resource',
+        generatedAt: new Date().toISOString(),
+        plan: result.plan,
+        duaGuide: result.duaGuide || null,
+      });
+      await saveToBank({
+        title: `Planificación: ${result.plan.tema}`,
+        type: 'planificacion_clase',
+        content,
+        source: 'project_copilot',
+        level: result.plan.curso,
+        subject: result.plan.asignatura,
+        objectiveCode: result.plan.objetivo_aprendizaje,
+        objectiveText: result.plan.objetivo_aprendizaje,
+        skill: result.plan.habilidades,
+      });
+      toast.dismiss(TOAST_ID);
+      toast.success('Guardado en Banco de Recursos');
+    } catch {
+      toast.dismiss(TOAST_ID);
+      toast.error('No se pudo guardar. Intenta de nuevo.');
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <header className="no-print text-center space-y-2">
@@ -99,10 +173,10 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
             <label className="block text-xs font-semibold text-slate-600 mb-1.5">Curso</label>
             <select
               value={curso}
-              onChange={(e) => setCurso(e.target.value)}
+              onChange={(e) => handleCursoChange(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
             >
-              {CURSOS.map((c) => <option key={c} value={c}>{c}</option>)}
+              {cursos.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
@@ -112,7 +186,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
               onChange={(e) => setAsignatura(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
             >
-              {ASIGNATURAS.map((a) => <option key={a} value={a}>{a}</option>)}
+              {asignaturas.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
         </div>
@@ -145,14 +219,24 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
 
       {result && result.plan && (
         <div className="space-y-6">
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="no-print inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer"
-          >
-            <Printer size={16} />
-            Exportar a PDF
-          </button>
+          <div className="no-print flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSaveToBank}
+              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer"
+            >
+              <Save size={16} />
+              Guardar en Banco
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer"
+            >
+              <Printer size={16} />
+              Exportar a PDF
+            </button>
+          </div>
 
           <div className="print-area">
             <div className="print-header">
@@ -295,6 +379,23 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
           </div>
         </div>
       )}
+
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            borderRadius: '16px',
+            background: '#1e1b4b',
+            color: '#f1f5f9',
+            fontSize: '14px',
+            fontWeight: 600,
+            padding: '12px 16px',
+          },
+          success: { iconTheme: { primary: '#22c55e', secondary: '#f1f5f9' } },
+          error: { iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' } },
+        }}
+        containerStyle={{ marginTop: 80 }}
+      />
     </div>
   );
 }

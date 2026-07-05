@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult, DuaGuide, PedagogicalPlan } from '../types/copilot';
+import { saveToBank } from '../services/bankService';
 
 interface CurriculumNivel {
   nivel: string;
@@ -203,6 +204,37 @@ export function DuaGuideGenerator() {
 
   const duaGuide = result?.duaGuide;
 
+  const handleSaveToBank = async () => {
+    if (!result || !duaGuide) return;
+    toast.loading('Guardando en Banco de Recursos...', { id: TOAST_ID });
+    try {
+      const content = JSON.stringify({
+        title: duaGuide.titulo_guia,
+        action: 'guia_dua',
+        kind: 'resource',
+        generatedAt: new Date().toISOString(),
+        plan: result.plan,
+        duaGuide,
+      });
+      await saveToBank({
+        title: duaGuide.titulo_guia || 'Guía DUA Multinivel',
+        type: 'recurso_dua',
+        content,
+        source: 'guia_dua',
+        level: result.plan.curso,
+        subject: result.plan.asignatura,
+        objectiveCode: result.plan.objetivo_aprendizaje,
+        objectiveText: result.plan.objetivo_aprendizaje,
+        skill: result.plan.habilidades,
+      });
+      toast.dismiss(TOAST_ID);
+      toast.success('Guardado en Banco de Recursos');
+    } catch {
+      toast.dismiss(TOAST_ID);
+      toast.error('No se pudo guardar. Intenta de nuevo.');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 print:m-0 print:w-full print:max-w-none print:bg-white print:p-0 print:text-black">
       <style>{`
@@ -309,6 +341,13 @@ export function DuaGuideGenerator() {
                   {duaGuide?.titulo_guia || 'Guía DUA Multinivel'}
                 </h2>
               </div>
+              <button
+                type="button"
+                onClick={handleSaveToBank}
+                className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 print:hidden shrink-0"
+              >
+                Guardar en Banco
+              </button>
               <button
                 type="button"
                 onClick={() => window.print()}
