@@ -132,6 +132,14 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
     return [...new Set(mergedResources.map(r => r.level).filter(Boolean))].sort();
   }, [mergedResources, activeTab]);
 
+  const EVALUATION_TYPES = new Set([
+    'evaluacion', 'rubrica', 'pauta', 'ticket', 'ticket_salida', 'prueba',
+    'simce', 'instrumento_simce', 'retroalimentacion',
+    'banco_preguntas', 'banco_preguntas_evaluativos', 'banco_preguntas_evaluativas',
+    'recurso_dua', 'material_apoderados',
+  ]);
+  const isEvaluationResource = (r: Resource) => EVALUATION_TYPES.has(r.type);
+
   const filteredResources = mergedResources.filter(r => {
     if (isEvaluationResource(r) || isPlanningResource(r)) return false;
     const matchesQuery = !query || 
@@ -144,14 +152,6 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   });
 
   const recommendedResource = filteredResources.length > 0 ? filteredResources[0] : null;
-
-  const EVALUATION_TYPES = new Set([
-    'evaluacion', 'rubrica', 'pauta', 'ticket', 'ticket_salida', 'prueba',
-    'simce', 'instrumento_simce', 'retroalimentacion',
-    'banco_preguntas', 'banco_preguntas_evaluativos', 'banco_preguntas_evaluativas',
-    'recurso_dua', 'material_apoderados',
-  ]);
-  const isEvaluationResource = (r: Resource) => EVALUATION_TYPES.has(r.type);
 
   const filteredEvaluations = useMemo(() => {
     return resources.filter(r => {
