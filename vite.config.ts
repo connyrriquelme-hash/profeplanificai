@@ -23,5 +23,17 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'esbuild',
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'pdf-vendor': ['jspdf', 'html2canvas'],
+          'tiptap-vendor': ['@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-highlight', '@tiptap/extension-text-align', '@tiptap/extension-underline'],
+          'pptx-vendor': ['pptxgenjs'],
+          'xlsx-vendor': ['xlsx'],
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
   },
 });

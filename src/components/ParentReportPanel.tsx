@@ -6,7 +6,6 @@ import {
 import { Button } from './ui/Button';
 import type { ParentReportBatch, ParentReportSheet, ParentStudentReport } from '../services/reportImportService';
 import { importParentReportExcel } from '../services/reportImportService';
-import { exportParentReportIndividualPDF, exportParentReportMassivePDF } from '../utils/exportParentReportPdf';
 import {
   generateChileanCurriculumIndicators,
   generateChileanCurriculumSkills,
@@ -300,6 +299,7 @@ export function ParentReportPanel() {
   const handleExportPDF = useCallback(async () => {
     setExporting(true);
     try {
+      const { exportParentReportMassivePDF } = await import('../utils/exportParentReportPdf');
       await exportParentReportMassivePDF(batch);
       await handleSaveToLibrary();
     } catch { setError('Error al exportar PDF.'); }
