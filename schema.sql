@@ -43,6 +43,9 @@ CREATE TABLE textos_escolares (
   id TEXT PRIMARY KEY,
   asignatura_id TEXT NOT NULL,
   titulo TEXT NOT NULL,
+  url TEXT DEFAULT '',
+  actividades TEXT DEFAULT '[]',
+  planificacion_detalle TEXT DEFAULT '',
   FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
   UNIQUE (asignatura_id, titulo)
 );
