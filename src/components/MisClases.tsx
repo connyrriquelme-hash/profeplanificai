@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BookOpen, BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight,
+  BookOpen, BookOpenCheck, BookMarked, CalendarDays, ChevronLeft, ChevronRight,
   Clock, FileDown, GraduationCap, ListChecks, Loader2, Plus, Printer,
   Save, Sparkles, Trash2, X,
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import {
   getNonTeachingBlocks, listTeacherClasses, updateLesson, updateNonTeachingBlock,
   type GenerateActividadesResult, type LessonBundle, type LessonInstance, type NonTeachingBlock, type TeacherClass,
 } from '../services/misClasesService';
+import { saveToBank, resourceTypeLabel, isEvaluationType, type SourceTab } from '../services/bankService';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
 
@@ -136,6 +137,8 @@ export function MisClases() {
   const [scheduleForm, setScheduleForm] = useState({ class_id: '', weekday: '1', start_time: '08:30', end_time: '10:00', room: '', starts_on: mondayOf(), ends_on: '', repeats_weekly: true });
   const autosaveTimer = useRef<number | null>(null);
   const lastAutosave = useRef('');
+  const [bankResources, setBankResources] = useState<any[]>([]);
+  const [bankRefreshKey, setBankRefreshKey] = useState(0);
 
   const selectedClass = useMemo(() => classes.find((c) => c.id === scheduleForm.class_id) || classes[0], [classes, scheduleForm.class_id]);
 
@@ -192,6 +195,21 @@ export function MisClases() {
     setLcContextLoading(true);
     fetch(`/api/curriculum/context?objective_id=${encodeURIComponent(lessonCurriculum.objectiveId)}`).then((r) => r.json()).then((d) => setLcContext(d?.data || null)).catch(() => setLcContext(null)).finally(() => setLcContextLoading(false));
   }, [lessonCurriculum.objectiveId]);
+  useEffect(() => {
+    if (!selectedLessonId) { setBankResources([]); return; }
+    import('../services/apiClient').then(({ api }) => {
+      api.get<{ data: any[] }>('/api/resources').then((res) => {
+        const all = res.data || [];
+        const filtered = all.filter((r: any) => {
+          try {
+            const meta = JSON.parse(r.metadata_json || '{}');
+            return meta.lessonId === selectedLessonId;
+          } catch { return false; }
+        });
+        setBankResources(filtered);
+      }).catch(() => setBankResources([]));
+    });
+  }, [selectedLessonId, bankRefreshKey]);
 
   const openLesson = async (lesson: LessonInstance) => {
     if (lesson.is_virtual) {
@@ -368,14 +386,48 @@ export function MisClases() {
       const result = kind === 'evaluation' ? await generateLessonEvaluation(selectedLessonId, action) : await generateLessonResource(selectedLessonId, action);
       const provider = providerLabel(result?.provider);
       const warnings = result?.warnings || [];
-      let msg = '';
-      if (provider === 'modo local') {
-        msg = hasOA ? `Recurso generado con modo local (contexto D1: ${selectedObjective?.code || 'OA'}).` : 'Recurso generado con modo local. Selecciona un OA para mayor precision.';
+      const resourceData = result?.data;
+      const content = resourceData?.content ? (typeof resourceData.content === 'string' ? resourceData.content : JSON.stringify(resourceData.content, null, 2)) : '';
+
+      if (content && selectedLessonId) {
+        const sourceTab: SourceTab = kind === 'evaluation' ? 'evaluacion' : 'recursos_ia';
+        const title = `${resourceTypeLabel(action)} — ${selectedObjective?.code || 'OA'} — ${lessonCurriculum.levelId} ${lessonCurriculum.subjectId}`;
+        const bankResult = await saveToBank({
+          title,
+          type: action,
+          content,
+          source: 'mis_clases',
+          sourceTab,
+          lessonId: selectedLessonId,
+          classId: selectedClass?.id,
+          classTitle: selectedClass?.class_name || '',
+          level: lessonCurriculum.levelId,
+          subject: lessonCurriculum.subjectId,
+          objectiveCode: selectedObjective?.code || '',
+          objectiveText: selectedObjective?.official_text || '',
+          generatedWith: result?.provider || 'local',
+          warnings,
+        });
+        if (bankResult) setBankRefreshKey((k) => k + 1);
+        const bankMsg = bankResult ? ' y guardado en Banco de Recursos' : ' (no se pudo guardar en Banco de Recursos)';
+        let msg = '';
+        if (provider === 'modo local') {
+          msg = hasOA ? `${resourceTypeLabel(action)} generado con modo local${bankMsg}.` : `${resourceTypeLabel(action)} generado con modo local. Selecciona un OA para mayor precision.`;
+        } else {
+          msg = `${resourceTypeLabel(action)} generado con ${provider}${bankMsg}.`;
+        }
+        if (warnings.length) msg += ` Advertencias: ${warnings.slice(0, 2).join('; ')}`;
+        setToast(msg);
       } else {
-        msg = `Recurso guardado con ${provider}.`;
+        let msg = '';
+        if (provider === 'modo local') {
+          msg = hasOA ? `Recurso generado con modo local (contexto D1: ${selectedObjective?.code || 'OA'}).` : 'Recurso generado con modo local. Selecciona un OA para mayor precision.';
+        } else {
+          msg = `Recurso guardado con ${provider}.`;
+        }
+        if (warnings.length) msg += ` Advertencias: ${warnings.slice(0, 2).join('; ')}`;
+        setToast(msg);
       }
-      if (warnings.length) msg += ` Advertencias: ${warnings.slice(0, 2).join('; ')}`;
-      setToast(msg);
       const r = await getLesson(selectedLessonId); setSelectedBundle(r.data);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudo generar el recurso.';
@@ -399,13 +451,53 @@ export function MisClases() {
         const res2 = await generateActividadesClase(selectedLessonId, { force: true, instructions });
         if (!res2.ok) throw new Error(res2.message || 'No se pudieron generar las actividades.');
         refreshBundle(res2);
+        saveActividadesToBank(res2);
       } else if (!res.ok) {
         throw new Error(res.message || 'No se pudieron generar las actividades.');
       } else {
         refreshBundle(res);
+        saveActividadesToBank(res);
       }
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudieron generar las actividades.'); }
     finally { setLoading(false); }
+  };
+
+  const saveActividadesToBank = async (result: GenerateActividadesResult) => {
+    if (!selectedLessonId || !result.ok) return;
+    try {
+      const d = result.data as Record<string, unknown>;
+      const plan = d.plan as Record<string, unknown> | undefined;
+      const sections: string[] = [];
+      if (plan?.beginning_text) sections.push(`## Inicio\n${plan.beginning_text}`);
+      if (plan?.development_text) sections.push(`## Desarrollo\n${plan.development_text}`);
+      if (plan?.closure_text) sections.push(`## Cierre\n${plan.closure_text}`);
+      if (plan?.evaluation_text) sections.push(`## Evaluación\n${plan.evaluation_text}`);
+      if (plan?.instruments_text) sections.push(`## Instrumentos\n${plan.instruments_text}`);
+      if (plan?.dua_adjustments_text) sections.push(`## Adecuaciones DUA\n${plan.dua_adjustments_text}`);
+      const content = sections.join('\n\n') || JSON.stringify(d, null, 2);
+      if (!content.trim()) return;
+      const title = `Planificación de clase — ${selectedObjective?.code || 'OA'} — ${lessonCurriculum.levelId} ${lessonCurriculum.subjectId}`;
+      await saveToBank({
+        title,
+        type: 'planificacion_clase',
+        content,
+        source: 'mis_clases',
+        sourceTab: 'actividades',
+        lessonId: selectedLessonId,
+        classId: selectedClass?.id,
+        classTitle: selectedClass?.class_name || '',
+        level: lessonCurriculum.levelId,
+        subject: lessonCurriculum.subjectId,
+        objectiveCode: selectedObjective?.code || '',
+        objectiveText: selectedObjective?.official_text || '',
+        generatedWith: result.provider || 'local',
+        warnings: result.warnings,
+      });
+      setBankRefreshKey((k) => k + 1);
+      setToast('Planificación generada y guardada en Banco de Recursos.');
+    } catch (err) {
+      console.error('[saveActividadesToBank] error:', err);
+    }
   };
 
   const refreshBundle = async (result?: GenerateActividadesResult) => {
@@ -661,6 +753,37 @@ export function MisClases() {
                 <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
               ))}
             </div>
+
+            {bankResources.length > 0 && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/30 p-5 mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <BookMarked size={16} className="text-emerald-600" />
+                  <h4 className="font-black text-slate-900 text-sm">Recursos guardados de esta clase ({bankResources.length})</h4>
+                </div>
+                <div className="space-y-2">
+                  {bankResources.slice(0, 8).map((r: any) => {
+                    let meta: Record<string, string> = {};
+                    try { meta = JSON.parse(r.metadata_json || '{}'); } catch {}
+                    return (
+                      <div key={r.id} className="rounded-xl bg-white border border-emerald-100 p-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-800 truncate">{r.title}</p>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            {meta.sourceTab && <span className="rounded-md bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-[10px] font-bold">{meta.sourceTab === 'recursos_ia' ? 'Recursos IA' : meta.sourceTab === 'evaluacion' ? 'Evaluacion' : meta.sourceTab === 'actividades' ? 'Actividades' : meta.sourceTab}</span>}
+                            {r.type && <span className="rounded-md bg-slate-100 text-slate-600 px-1.5 py-0.5 text-[10px] font-bold">{r.type}</span>}
+                            {meta.generatedWith && <span className="rounded-md bg-violet-100 text-violet-700 px-1.5 py-0.5 text-[10px] font-bold">{meta.generatedWith}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button onClick={() => { navigator.clipboard.writeText(r.content); setToast('Copiado al portapapeles.'); setTimeout(() => setToast(''), 2000); }} className="rounded-lg bg-white border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-50">Copiar</button>
+                          <button onClick={() => setToast('Abre Banco de Recursos desde el menú lateral para ver todos los recursos.')} className="rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700">Banco</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>)}
 

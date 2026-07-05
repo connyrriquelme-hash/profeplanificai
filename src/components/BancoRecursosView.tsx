@@ -52,7 +52,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   }, [initialTab]);
 
   useEffect(() => {
-    if (activeTab === 'recursos' || activeTab === 'planificaciones') fetchResources();
+    if (activeTab === 'recursos' || activeTab === 'planificaciones' || activeTab === 'evaluaciones') fetchResources();
   }, [activeTab, fetchResources]);
 
   const allPlans = useMemo(() => {
@@ -124,6 +124,17 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   });
 
   const recommendedResource = filteredResources.length > 0 ? filteredResources[0] : null;
+
+  const EVALUATION_TYPES = new Set(['evaluacion', 'rubrica', 'pauta', 'ticket', 'ticket_salida', 'prueba', 'simce', 'retroalimentacion', 'banco_preguntas_evaluativos']);
+
+  const filteredEvaluations = useMemo(() => {
+    return resources.filter(r => {
+      const isEval = EVALUATION_TYPES.has(r.type) || r.source === 'mis_clases' && EVALUATION_TYPES.has(r.type);
+      if (!isEval) return false;
+      const matchesQuery = !query || r.title?.toLowerCase().includes(query.toLowerCase()) || r.subject?.toLowerCase().includes(query.toLowerCase()) || r.level?.toLowerCase().includes(query.toLowerCase());
+      return matchesQuery;
+    });
+  }, [resources, query]);
 
   const clearFilters = () => {
     setQuery('');
@@ -378,7 +389,10 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
 
           {filteredResources.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredResources.map(r => (
+              {filteredResources.map(r => {
+                let meta: Record<string, string> = {};
+                try { meta = JSON.parse(r.metadata_json || '{}'); } catch {}
+                return (
                 <Card
                   key={r.id}
                   variant="interactive"
@@ -389,7 +403,10 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   <div className="flex gap-1.5 flex-wrap mb-3">
                     {r.type === 'presentacion_clase_visual' && <Badge color="orange" size="sm">Presentación</Badge>}
                     {r.type === 'planificacion' && <Badge color="teal" size="sm">Planificación</Badge>}
+                    {r.type === 'planificacion_clase' && <Badge color="teal" size="sm">Planificación de clase</Badge>}
                     {r.type === 'parent_report' && <Badge color="violet" size="sm">Informe Apoderados</Badge>}
+                    {meta.sourceTab && <Badge color="green" size="sm">{meta.sourceTab === 'recursos_ia' ? 'Mis Clases' : meta.sourceTab === 'actividades' ? 'Actividades' : meta.sourceTab}</Badge>}
+                    {meta.classTitle && <Badge color="slate" size="sm">{meta.classTitle}</Badge>}
                     {r.subject && <Badge color="teal" size="sm">{r.subject}</Badge>}
                     {r.level && <Badge color="indigo" size="sm">{r.level}</Badge>}
                     {r.objective_code && <Badge color="amber" size="sm">{r.objective_code}</Badge>}
@@ -408,20 +425,57 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     </button>
                   </div>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
       )}
 
       {activeTab === 'evaluaciones' && (
-        <Card className="py-12">
-          <EmptyState
-            icon={ClipboardCheck}
-            title="Próximamente: gestión de evaluaciones"
-            description="Aquí podrás crear y gestionar rúbricas, listas de cotejo y pautas de evaluación."
-          />
-        </Card>
+        <>
+          {filteredEvaluations.length === 0 ? (
+            <Card className="py-12">
+              <EmptyState
+                icon={ClipboardCheck}
+                title={query ? 'No se encontraron evaluaciones' : 'Aún no hay evaluaciones guardadas'}
+                description={query ? 'Prueba con otros filtros.' : 'Genera evaluaciones desde Mis Clases para que aparezcan aquí.'}
+              />
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredEvaluations.map(r => {
+                let meta: Record<string, string> = {};
+                try { meta = JSON.parse(r.metadata_json || '{}'); } catch {}
+                return (
+                  <Card key={r.id} variant="interactive" className="p-5" onClick={() => setDetail(r)}>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
+                    <div className="flex gap-1.5 flex-wrap mb-3">
+                      <Badge color="violet" size="sm">{r.type}</Badge>
+                      {r.subject && <Badge color="teal" size="sm">{r.subject}</Badge>}
+                      {r.level && <Badge color="indigo" size="sm">{r.level}</Badge>}
+                      {r.objective_code && <Badge color="amber" size="sm">{r.objective_code}</Badge>}
+                      {meta.sourceTab && <Badge color="slate" size="sm">{meta.sourceTab === 'evaluacion' ? 'Evaluación' : meta.sourceTab}</Badge>}
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content}</p>
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                      <div className="flex items-center text-xs text-gray-400">
+                        <Clock size={11} strokeWidth={2.25} className="mr-1" />
+                        {formatDate(r.created_at)}
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-all"
+                      >
+                        Ver
+                      </button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {detail && (
