@@ -1,74 +1,68 @@
-import type { Env } from '../_middleware';
+import type { PedagogicalEngineEnv } from '../../core/types';
 
-interface Objective {
+interface ObjetivoRow {
   id: string;
-  code: string;
-  type: string;
-  description?: string;
-  official_text?: string;
-  bloom_level?: string;
-  competency?: string;
-  subject_name?: string;
-  axis_name?: string;
-  level_name?: string;
-  indicators?: any[];
-  skills?: any[];
-  attitudes?: any[];
-  course_name?: string;
+  unidad_id: string;
+  codigo_oa: string;
+  descripcion: string;
+  habilidades_csv: string;
+  unidad_titulo: string;
+  asignatura_nombre: string;
+  nivel_nombre: string;
 }
 
-export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
+export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
-    const course = url.searchParams.get('course') || '';
-    const subject = url.searchParams.get('subject') || '';
-    const level = url.searchParams.get('level') || '';
+    const nivel = url.searchParams.get('nivel') || '';
+    const asignatura = url.searchParams.get('asignatura') || url.searchParams.get('subject') || '';
+    const nivelId = url.searchParams.get('nivelId') || '';
+    const asignaturaId = url.searchParams.get('asignaturaId') || '';
     const q = url.searchParams.get('q')?.trim() || '';
     const limit = Math.max(1, Math.min(Number(url.searchParams.get('limit')) || 200, 500));
 
+    let query = `SELECT o.id, o.unidad_id, o.codigo_oa, o.descripcion, o.habilidades_csv,
+                        u.titulo AS unidad_titulo, a.nombre AS asignatura_nombre, n.nombre AS nivel_nombre
+                 FROM objetivos_aprendizaje o
+                 JOIN unidades u ON u.id = o.unidad_id
+                 JOIN asignaturas a ON a.id = u.asignatura_id
+                 JOIN niveles n ON n.id = a.nivel_id`;
     const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (course) {
-      conditions.push('(c.code LIKE ? OR c.name LIKE ? OR c.id=?)');
-      params.push(course, `%${course}%`, course);
+    if (nivelId) {
+      conditions.push('n.id = ?');
+      params.push(nivelId);
+    } else if (nivel) {
+      conditions.push('n.nombre LIKE ?');
+      params.push(`%${nivel}%`);
     }
 
-    if (subject) {
-      conditions.push('(s.id=? OR s.normalized_name=? OR s.name=?)');
-      params.push(subject, subject, subject);
-    }
-
-    if (level) {
-      conditions.push('e.name LIKE ?');
-      params.push(`%${level}%`);
+    if (asignaturaId) {
+      conditions.push('a.id = ?');
+      params.push(asignaturaId);
+    } else if (asignatura) {
+      conditions.push('a.nombre LIKE ?');
+      params.push(`%${asignatura}%`);
     }
 
     if (q) {
-      conditions.push('(o.code LIKE ? OR o.description LIKE ? OR o.official_text LIKE ?)');
-      params.push(`%${q.toUpperCase()}%`, `%${q}%`, `%${q}%`);
+      conditions.push('(o.codigo_oa LIKE ? OR o.descripcion LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`);
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
 
-    const { results } = await context.env.DB.prepare(
-      `SELECT o.id, o.code, o.type, o.description, o.official_text, o.bloom_level, o.competency,
-               s.name as subject_name, s.code as subject_code, a.name as axis_name,
-               e.name as level_name, c.name as course_name
-        FROM learning_objectives o
-        JOIN subjects s ON s.id = o.subject_id
-        JOIN curriculum_axes a ON a.id = o.axis_id
-        JOIN education_levels e ON s.education_level_id = e.id
-        JOIN courses c ON c.id = o.course_id
-        ${whereClause}
-        ORDER BY e.sort_order, s.name, o.code
-        LIMIT ?`
-    ).bind(...params, limit).all();
+    query += ` ORDER BY n.nombre, a.nombre, o.codigo_oa LIMIT ?`;
+
+    const { results } = await context.env.CORE_DB.prepare(query).bind(...params, limit).all<ObjetivoRow>();
 
     return Response.json({
       data: results,
       count: results.length,
-      filters: { inputCourse: course, inputSubject: subject, inputLevel: level, inputQuery: q },
+      filters: { nivel, asignatura, nivelId, asignaturaId, q },
       attribution: { name: 'Curriculo Nacional - MINEDUC Chile', url: 'https://www.curriculumnacional.cl/curriculum' },
     });
   } catch (err) {

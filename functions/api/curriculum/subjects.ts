@@ -1,50 +1,57 @@
-import type { Env } from '../_middleware';
+import type { PedagogicalEngineEnv } from '../../core/types';
 
-interface Subject {
+interface AsignaturaRow {
   id: string;
-  code: string;
-  name: string;
-  description?: string;
-  curriculum_source?: string;
-  level_name?: string;
-  level_code?: string;
+  nivel_id: string;
+  nombre: string;
+  nivel_nombre: string;
 }
 
-export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
+export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
     const level = url.searchParams.get('level') || '';
+    const nivelId = url.searchParams.get('nivelId') || '';
     const q = url.searchParams.get('q')?.trim() || '';
-    const subject_type = url.searchParams.get('subject_type') || '';
 
-    let query = '';
+    let query = `SELECT a.id, a.nivel_id, a.nombre, n.nombre AS nivel_nombre
+                 FROM asignaturas a
+                 JOIN niveles n ON n.id = a.nivel_id`;
+    const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (level) {
-      query = `SELECT s.id, s.code, s.name, s.description, s.curriculum_source, e.code as level_code, e.name as level_name 
-               FROM subjects s 
-               JOIN education_levels e ON s.education_level_id = e.id 
-               WHERE e.code LIKE ? OR e.name LIKE ? ORDER BY e.sort_order, s.name`;
-      params.push(`%${level}%`, `%${level}%`);
-    } else if (q) {
-      query = `SELECT s.id, s.code, s.name, s.description, s.curriculum_source, e.code as level_code, e.name as level_name 
-               FROM subjects s 
-               JOIN education_levels e ON s.education_level_id = e.id 
-               WHERE s.code LIKE ? OR s.name LIKE ? OR s.description LIKE ? OR e.name LIKE ? OR e.code LIKE ? 
-               ORDER BY e.sort_order, s.name`;
-      params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
-    } else {
-      query = `SELECT s.id, s.code, s.name, s.description, s.curriculum_source, e.code as level_code, e.name as level_name 
-               FROM subjects s 
-               JOIN education_levels e ON s.education_level_id = e.id 
-               ORDER BY e.sort_order, s.name`;
+    if (nivelId) {
+      conditions.push('a.nivel_id = ?');
+      params.push(nivelId);
+    } else if (level) {
+      conditions.push('n.nombre LIKE ?');
+      params.push(`%${level}%`);
     }
 
-    const { results } = await context.env.DB.prepare(query).bind(...params).all();
+    if (q) {
+      conditions.push('(a.nombre LIKE ? OR n.nombre LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    query += ' ORDER BY n.nombre, a.nombre';
+
+    const { results } = await context.env.CORE_DB.prepare(query).bind(...params).all<AsignaturaRow>();
+
+    const data = results.map((row) => ({
+      id: row.id,
+      code: row.id,
+      name: row.nombre,
+      level_name: row.nivel_nombre,
+      level_code: row.nivel_id,
+    }));
 
     return Response.json({
-      data: results,
-      count: results.length,
+      data,
+      count: data.length,
       attribution: 'Curriculo Nacional - MINEDUC Chile (Asignaturas)',
     });
   } catch (err) {

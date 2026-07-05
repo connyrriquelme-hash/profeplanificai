@@ -1,51 +1,43 @@
-import type { Env } from '../_middleware';
+import type { PedagogicalEngineEnv } from '../../core/types';
 
-interface Level {
+interface NivelRow {
   id: string;
-  code: string;
-  name: string;
-  description?: string;
-  cycle?: string;
-  sort_order?: number;
+  nombre: string;
+  descripcion: string;
 }
 
-interface CurriculumSubject {
-  id: string;
-  code: string;
-  name: string;
-  description?: string;
-  curriculum_source?: string;
-  level_name?: string;
-}
-
-export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
+export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
     const level = url.searchParams.get('level') || '';
-    const cycle = url.searchParams.get('cycle') || '';
     const q = url.searchParams.get('q')?.trim() || '';
 
-    let query = '';
+    let query = 'SELECT id, nombre, descripcion FROM niveles';
     const params: unknown[] = [];
 
     if (level) {
-      query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e WHERE e.code LIKE ? OR e.name LIKE ? ORDER BY e.sort_order, e.name`;
-      params.push(`%${level}%`, `%${level}%`);
-    } else if (cycle) {
-      query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e WHERE e.cycle LIKE ? ORDER BY e.sort_order, e.name`;
-      params.push(`%${cycle}%`);
+      query += ' WHERE nombre LIKE ?';
+      params.push(`%${level}%`);
     } else if (q) {
-      query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e WHERE e.code LIKE ? OR e.name LIKE ? OR e.description LIKE ? ORDER BY e.sort_order, e.name`;
-      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
-    } else {
-      query = `SELECT e.id, e.code, e.name, e.description, e.cycle, e.sort_order FROM education_levels e ORDER BY e.sort_order, e.name`;
+      query += ' WHERE nombre LIKE ? OR descripcion LIKE ?';
+      params.push(`%${q}%`, `%${q}%`);
     }
 
-    const { results } = await context.env.DB.prepare(query).bind(...params).all();
+    query += ' ORDER BY nombre';
+
+    const { results } = await context.env.CORE_DB.prepare(query).bind(...params).all<NivelRow>();
+
+    const data = results.map((row, i) => ({
+      id: row.id,
+      code: row.id,
+      name: row.nombre,
+      description: row.descripcion,
+      sort_order: i + 1,
+    }));
 
     return Response.json({
-      data: results,
-      count: results.length,
+      data,
+      count: data.length,
       attribution: 'Curriculo Nacional - MINEDUC Chile (Niveles Educativos)',
     });
   } catch (err) {

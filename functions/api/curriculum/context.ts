@@ -1,6 +1,16 @@
-interface Env { DB: D1Database }
+import type { PedagogicalEngineEnv } from '../../core/types';
 
-export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
+interface ObjetivoRow {
+  id: string;
+  codigo_oa: string;
+  descripcion: string;
+  habilidades_csv: string;
+  asignatura_nombre: string;
+  nivel_nombre: string;
+  unidad_titulo: string;
+}
+
+export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
     const objectiveId = url.searchParams.get('objective_id') || '';
@@ -11,63 +21,40 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     }
 
     const isId = Boolean(objectiveId);
-    const whereClause = isId ? 'o.id = ?' : 'o.code = ?';
+    const whereClause = isId ? 'o.id = ?' : 'o.codigo_oa = ?';
     const param = isId ? objectiveId : objectiveCode;
 
-    const { results } = await context.env.DB.prepare(`
-      SELECT o.id, o.code, o.official_text, o.normalized_text, o.bloom_level, o.axis_id,
-             c.name AS course_name, s.name AS subject_name, a.name AS axis_name
-      FROM objectives o
-      LEFT JOIN courses c ON c.id = o.course_id
-      LEFT JOIN subjects s ON s.id = o.subject_id
-      LEFT JOIN axes a ON a.id = o.axis_id
+    const { results } = await context.env.CORE_DB.prepare(`
+      SELECT o.id, o.codigo_oa, o.descripcion, o.habilidades_csv,
+             u.titulo AS unidad_titulo, a.nombre AS asignatura_nombre, n.nombre AS nivel_nombre
+      FROM objetivos_aprendizaje o
+      JOIN unidades u ON u.id = o.unidad_id
+      JOIN asignaturas a ON a.id = u.asignatura_id
+      JOIN niveles n ON n.id = a.nivel_id
       WHERE ${whereClause}
       LIMIT 1
-    `).bind(param).all();
+    `).bind(param).all<ObjetivoRow>();
 
     if (results.length === 0) {
       return Response.json({ ok: false, error: 'OA no encontrado en el Curriculo Nacional' }, { status: 404 });
     }
 
-    const obj = results[0] as any;
-
-    const indicators = await context.env.DB.prepare(
-      `SELECT id, indicator_text AS description FROM curriculum_indicators WHERE oa_code = ? LIMIT 30`
-    ).bind(obj.code).all();
-
-    const skills = await context.env.DB.prepare(`
-      SELECT sk.id, sk.official_text AS description
-      FROM skills sk
-      JOIN objective_skills os ON os.skill_id = sk.id
-      WHERE os.objective_id = ?
-      LIMIT 20
-    `).bind(obj.id).all();
-
-    const attitudes = await context.env.DB.prepare(`
-      SELECT att.id, att.official_text AS description
-      FROM attitudes att
-      JOIN objective_attitudes oa ON oa.attitude_id = att.id
-      WHERE oa.objective_id = ?
-      LIMIT 20
-    `).bind(obj.id).all();
-
-    const methodologies = await context.env.DB.prepare(
-      `SELECT id, name, description FROM methodologies WHERE status IS NULL OR status = 'active' ORDER BY name LIMIT 8`
-    ).all();
+    const obj = results[0];
 
     return Response.json({
       ok: true,
       data: {
         objective_id: obj.id,
-        objective_code: obj.code,
-        objective_description: obj.official_text || obj.normalized_text,
-        subject_name: obj.subject_name,
-        axis_name: obj.axis_name,
-        course_name: obj.course_name,
-        indicators: (indicators.results || []).map((i: any) => ({ id: i.id, description: i.description })),
-        skills: (skills.results || []).map((s: any) => ({ id: s.id, description: s.description })),
-        attitudes: (attitudes.results || []).map((a: any) => ({ id: a.id, description: a.description })),
-        methodologies: (methodologies.results || []).map((m: any) => ({ id: m.id, name: m.name, description: m.description })),
+        objective_code: obj.codigo_oa,
+        objective_description: obj.descripcion,
+        subject_name: obj.asignatura_nombre,
+        axis_name: null,
+        course_name: obj.unidad_titulo,
+        nivel_name: obj.nivel_nombre,
+        indicators: [],
+        skills: [],
+        attitudes: [],
+        methodologies: [],
       },
       attribution: 'Curriculo Nacional - MINEDUC Chile',
     });
