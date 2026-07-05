@@ -10,6 +10,8 @@ import { SearchInput } from './ui/SearchInput';
 import { EmptyState } from './ui/EmptyState';
 import { SectionHeader } from './ui/SectionHeader';
 import { SlideLessonPreview } from './SlideLessonPreview';
+import ProductPreview from './ProductPreview';
+import { buildNormalizedProduct } from '../utils/productNormalizer';
 import { deserializeSlidesFromSave, getLocalSlideDecks } from '../services/slideSaveService';
 import type { SlideLesson } from '../types/slideLesson';
 
@@ -538,7 +540,10 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   variant="primary"
                   size="sm"
                   iconLeft={FileDown}
-                  onClick={async () => { const { exportToPDF } = await import('../utils/exportPdf'); exportToPDF(detail.title, detail.content); }}
+                  onClick={async () => {
+                    const { exportResourceFromBank } = await import('../utils/productPdf');
+                    await exportResourceFromBank(detail);
+                  }}
                 >
                   PDF
                 </Button>
@@ -560,13 +565,22 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 return (
                   <SlideLessonPreview
                     lesson={slides}
-                    onExportPDF={async () => { const { exportToPDF } = await import('../utils/exportPdf'); exportToPDF(detail.title, detail.content); }}
+                    onExportPDF={async () => {
+                      const { exportResourceFromBank } = await import('../utils/productPdf');
+                      await exportResourceFromBank(detail);
+                    }}
                   />
                 );
               })() : (
-                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{color:'#000000'}}>
-                  {detail.content}
-                </div>
+                <ProductPreview
+                  product={buildNormalizedProduct(detail)}
+                  onExportPDF={async () => {
+                    const { exportResourceFromBank } = await import('../utils/productPdf');
+                    await exportResourceFromBank(detail);
+                  }}
+                  onCopy={() => handleCopy(detail.content, detail.id)}
+                  onPrint={() => window.print()}
+                />
               )}
             </div>
           </Card>

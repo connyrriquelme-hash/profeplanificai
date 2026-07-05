@@ -13,6 +13,7 @@ import {
   type GenerateActividadesResult, type LessonBundle, type LessonInstance, type NonTeachingBlock, type TeacherClass,
 } from '../services/misClasesService';
 import { saveToBank, resourceTypeLabel, isEvaluationType, type SourceTab } from '../services/bankService';
+import { normalizeProductContent } from '../utils/productNormalizer';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
 
@@ -387,7 +388,10 @@ export function MisClases() {
       const provider = providerLabel(result?.provider);
       const warnings = result?.warnings || [];
       const resourceData = result?.data;
-      const content = resourceData?.content ? (typeof resourceData.content === 'string' ? resourceData.content : JSON.stringify(resourceData.content, null, 2)) : '';
+      const rawContent = resourceData?.content
+        ? (typeof resourceData.content === 'string' ? resourceData.content : JSON.stringify(resourceData.content, null, 2))
+        : '';
+      const content = rawContent ? normalizeProductContent(rawContent, action).rawMarkdown : '';
 
       if (content && selectedLessonId) {
         const sourceTab: SourceTab = kind === 'evaluation' ? 'evaluacion' : 'recursos_ia';
