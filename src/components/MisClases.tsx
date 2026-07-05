@@ -363,13 +363,28 @@ export function MisClases() {
   const generate = async (action: string, kind: 'resource' | 'evaluation' | 'presentation' = 'resource') => {
     const ok = Boolean(selectedLessonId && lessonCurriculum.levelId && lessonCurriculum.subjectId);
     if (!ok) { setError('Selecciona nivel y asignatura antes de generar con IA'); setRightTab('clase'); setDetailTab('oa'); return; }
-    setLoading(true);
+    setLoading(true); setError('');
     try {
       const result = kind === 'evaluation' ? await generateLessonEvaluation(selectedLessonId, action) : await generateLessonResource(selectedLessonId, action);
       const provider = providerLabel(result?.provider);
-      setToast(provider === 'modo local' ? 'Modo local activo. Recurso guardado automáticamente.' : `Recurso guardado con ${provider}.`);
+      const warnings = result?.warnings || [];
+      let msg = '';
+      if (provider === 'modo local') {
+        msg = hasOA ? `Recurso generado con modo local (contexto D1: ${selectedObjective?.code || 'OA'}).` : 'Recurso generado con modo local. Selecciona un OA para mayor precision.';
+      } else {
+        msg = `Recurso guardado con ${provider}.`;
+      }
+      if (warnings.length) msg += ` Advertencias: ${warnings.slice(0, 2).join('; ')}`;
+      setToast(msg);
       const r = await getLesson(selectedLessonId); setSelectedBundle(r.data);
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo generar el recurso.'); } finally { setLoading(false); }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'No se pudo generar el recurso.';
+      if (msg.includes('HTML') || msg.includes('Worker')) {
+        setError('No se pudo generar el recurso. Verifica que la clase tenga nivel y asignatura configurados.');
+      } else {
+        setError(msg);
+      }
+    } finally { setLoading(false); }
   };
 
   const hasOA = Boolean(lessonCurriculum.objectiveId);
@@ -402,10 +417,11 @@ export function MisClases() {
         const providerLabel: Record<string, string> = { gemini: 'Gemini', 'workers-ai': 'Workers AI', openrouter: 'OpenRouter', huggingface: 'Hugging Face' };
         msg = `Generado con ${providerLabel[result.provider] || result.provider}.`;
       } else if (result?.usedFallback || result?.provider === 'local') {
-        msg = 'Modo local activo. Conecta una API IA para mejorar la calidad.';
+        msg = hasOA ? `Modo local activo (contexto D1: ${selectedObjective?.code || 'OA'}).` : 'Modo local activo. Conecta una API IA para mejorar la calidad.';
       }
+      if (hasOA) msg += ` Alineado al ${selectedObjective?.code || 'OA'}.`;
       setToast(msg);
-      setTimeout(() => setToast(''), 4000);
+      setTimeout(() => setToast(''), 5000);
     } catch { /* ignore */ }
   };
   const lessonsByDay = useMemo(() => WEEKDAYS.map((day, i) => { const date = addDays(week, i); return { ...day, date, lessons: calendar.filter((l) => l.lesson_date === date), nteaching: ntbBlocks.filter((b) => b.block_date === date) }; }), [calendar, ntbBlocks, week]);

@@ -262,6 +262,7 @@ export function buildLocalGeneration(kind: string, action: string, ctx: JsonReco
   const attitudes = (ctx.attitudes as JsonRecord[] || []).map((a) => a.description || a.official_text).filter(Boolean);
   const hasRealOA = objective?.code && objective.code !== 'OA pendiente';
   const title = `${labelForAction(action)} - ${hasRealOA ? (objective?.code || 'OA') : (lesson.course_name || 'Curso')}`;
+  const oaCtx = hasRealOA ? `OA: ${objective.code} — ${objective.official_text}. Indicadores: ${indicators.slice(0, 3).join('; ') || 'no especificados'}.` : '';
   const base = {
     title,
     action,
@@ -286,10 +287,11 @@ export function buildLocalGeneration(kind: string, action: string, ctx: JsonReco
     },
     content: [
       hasRealOA
-        ? `Propuesta para ${lesson.course_name || 'el curso'} alineada al ${objective?.code}.`
-        : `Propuesta para ${lesson.course_name || 'elcurso'} basada en curso y asignatura. Si no hay OA explicito, crea una actividad curricularmente plausible, indicando que el OA debe ser revisado y ajustado por el docente.`,
-      `Foco: ${objective?.official_text || plan.objective_text || 'objetivo curricular del curso y asignatura'}`,
-      indicators.length ? `Indicadores usados: ${indicators.slice(0, 3).join('; ')}` : hasRealOA ? 'Indicadores: revisar y ajustar segun evidencia de clase.' : 'Indicadores: a definir segun OA seleccionado por el docente.',
+        ? `Propuesta para ${lesson.course_name || 'el curso'} alineada al ${objective?.code}: ${objective?.official_text || ''}`
+        : `Propuesta para ${lesson.course_name || 'el curso'} basada en curso y asignatura. Si no hay OA explicito, crea una actividad curricularmente plausible, indicando que el OA debe ser revisado y ajustado por el docente.`,
+      oaCtx,
+      indicators.length ? `Indicadores: ${indicators.slice(0, 3).join('; ')}` : hasRealOA ? 'Indicadores: revisar y ajustar segun evidencia de clase.' : 'Indicadores: a definir segun OA seleccionado por el docente.',
+      skills.length ? `Habilidades: ${skills.slice(0, 3).join('; ')}` : '',
       `Accion docente sugerida: ${labelForAction(action)} con instrucciones claras, tiempos breves y cierre formativo.`,
       !hasRealOA ? 'Nota: El OA debe ser seleccionado y revisado por el docente para completar la alineacion curricular.' : '',
     ].filter(Boolean),
@@ -300,15 +302,15 @@ export function buildLocalGeneration(kind: string, action: string, ctx: JsonReco
     return {
       ...base,
       questions: [
-        { type: 'entrada', prompt: 'Explica con tus palabras la idea central del OA trabajado.' },
+        { type: 'entrada', prompt: hasRealOA ? `Explica con tus palabras la idea central del ${objective.code} trabajado.` : 'Explica con tus palabras la idea central del OA trabajado.' },
         { type: 'aplicacion', prompt: 'Resuelve o crea un ejemplo conectado al contexto chileno de la clase.' },
         { type: 'metacognicion', prompt: 'Que estrategia te ayudo mas y por que?' },
       ],
       rubric: [
-        { criterion: 'Comprension del OA', levels: ['Logrado', 'En desarrollo', 'Por reforzar'] },
+        { criterion: hasRealOA ? `Comprension del ${objective.code}` : 'Comprension del OA', levels: ['Logrado', 'En desarrollo', 'Por reforzar'] },
         { criterion: 'Uso de evidencia', levels: ['Clara y pertinente', 'Parcial', 'Insuficiente'] },
       ],
-      answerKey: ['Respuesta esperada alineada al texto oficial del OA y a indicadores seleccionados.'],
+      answerKey: [hasRealOA ? `Respuesta esperada alineada al texto oficial del ${objective.code} y a indicadores: ${indicators.slice(0, 2).join(', ')}.` : 'Respuesta esperada alineada al texto oficial del OA y a indicadores seleccionados.'],
     };
   }
 
@@ -347,11 +349,11 @@ const SUBJECT_TEMPLATES: Record<string, { inicio: string; desarrollo: string; ci
     cierre: 'Metacognicion: que aprendi y como puedo aplicarlo. Ticket de salida con una pregunta breve o reflexion personal.',
   },
   matematica: {
-    inicio: 'Problema contextualizado vinculado a la vida real del estudiante. Exploracion inicial con vật liệu concreto o situacion cotidiana.',
+    inicio: 'Problema contextualizado vinculado a la vida real del estudiante. Exploracion inicial con material concreto o situacion cotidiana.',
     desarrollo: 'Modelamiento matematico, practica guiada con ejemplos progresivos, aplicacion a situaciones nuevas. Trabajo en parejas o individual.',
     cierre: 'Estrategia matematica usada, error frecuente identificado y como evitarlo. Ticket de salida con un problema breve.',
   },
-  'ciencias': {
+  ciencias: {
     inicio: 'Pregunta investigable que despierte curiosidad. Observacion de un fenomeno, experimento breve o situacion del entorno.',
     desarrollo: 'Exploracion guiada, observacion sistematica, recoleccion de evidencias, discusion en grupo sobre hallazgos.',
     cierre: 'Conclusion con evidencia. Reflexion sobre lo observado y como se conecta con el objetivo de la clase.',
@@ -376,6 +378,16 @@ function getSubjectTemplate(subjectId: string, courseName: string) {
   return SUBJECT_TEMPLATES['comunicacion-integral'];
 }
 
+function oaContextBlock(hasRealOA: boolean, objective: JsonRecord, indicators: string[], skills: string[]): string {
+  if (!hasRealOA) return '';
+  const oaCode = String(objective.code || '');
+  const oaText = String(objective.official_text || '');
+  const parts = [`OA: ${oaCode} — ${oaText}`];
+  if (indicators.length) parts.push(`Indicadores: ${indicators.slice(0, 3).join('; ')}`);
+  if (skills.length) parts.push(`Habilidades: ${skills.slice(0, 3).join('; ')}`);
+  return parts.join('\n');
+}
+
 export function buildActividadesClase(ctx: JsonRecord, lesson: JsonRecord, plan: JsonRecord, instructions?: string) {
   const objective = ctx.objective as JsonRecord;
   const hasRealOA = objective?.code && objective.code !== 'OA pendiente';
@@ -383,6 +395,9 @@ export function buildActividadesClase(ctx: JsonRecord, lesson: JsonRecord, plan:
   const courseName = String(lesson.course_name || '');
   const lessonTitle = String(lesson.title || 'Clase');
   const tpl = getSubjectTemplate(subjectId, courseName);
+  const indicators = (ctx.indicators as JsonRecord[] || []).map((i) => String(i.description || i.indicator_text || '')).filter(Boolean);
+  const skills = (ctx.skills as JsonRecord[] || []).map((s) => String(s.description || s.official_text || '')).filter(Boolean);
+  const oaCtx = oaContextBlock(hasRealOA, objective, indicators, skills);
 
   const oaNote = hasRealOA
     ? `OA: ${objective.code} - ${objective.official_text}`
@@ -390,55 +405,73 @@ export function buildActividadesClase(ctx: JsonRecord, lesson: JsonRecord, plan:
 
   const instruccionExtra = instructions ? `\nInstrucciones adicionales del docente: ${instructions}` : '';
 
+  const oaDetail = hasRealOA
+    ? `\nContexto curricular: ${oaCtx}`
+    : '';
+
   const objetivoEspecifico = hasRealOA
-    ? `Que los estudiantes demuestren comprension y aplicacion del ${objective.code}: ${objective.official_text}`
+    ? `Que los estudiantes demuestren comprension y aplicacion del ${objective.code}: ${objective.official_text}${oaDetail}`
     : `Que los estudiantes demuestren comprension y aplicacion de los aprendizajes propios de ${courseName || 'la asignatura'} en el contexto de la clase "${lessonTitle}". ${oaNote}`;
 
   const proposito = hasRealOA
-    ? `Fortalecer las competencias asociadas al ${objective.code} mediante actividades significativas que conecten con la realidad de los estudiantes.${instruccionExtra}`
+    ? `Fortalecer las competencias asociadas al ${objective.code} mediante actividades significativas que conecten con la realidad de los estudiantes. Los indicadores a desarrollar incluyen: ${indicators.slice(0, 2).join(' y ') || 'comprension y aplicacion del objetivo'}.${instruccionExtra}`
     : `Fortalecer las competencias de ${courseName} mediante actividades significativas que conecten con la realidad de los estudiantes.${instruccionExtra}`;
 
-  const inicio = `Momento de activacion:\n${tpl.inicio}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
+  const inicio = hasRealOA
+    ? `Momento de activacion (10-15 min):\nActivar conocimientos previos con una situacion o ejemplo concreto del ${objective.code}. Por ejemplo: el docente presenta una breve situacion comunicativa o un texto que ilustre el tipo de articulo que los estudiantes escribiran. Pregunta desafiante: "Como organizarian una noticia para que sea clara y util para el lector?". Conectar con el contexto chileno cotidiano (noticias locales, eventos del curso). Consegna del docente: "Leamos juntos este titular y sus partes. Que creen que le falta para ser un articulo informativo completo?".`
+    : `Momento de activacion (10-15 min):\n${tpl.inicio}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
 
-  const desarrollo = `Momento de construccion:\n${tpl.desarrollo}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
+  const desarrollo = hasRealOA
+    ? `Momento de construccion (55-65 min):\n1. Modelamiento docente (15 min): El docente modela en la pizarra como transformar un dato en una oracion informativa, mostrando la estructura titular-subtitulos-cuerpo. Revisa con el curso: que elementos tiene un articulo informativo?\n2. Practica guiada (15 min): Los estudiantes escriben un titular y dos subtitulos para organizar su articulo en parejas. El docente circula y retroalimenta.\n3. Trabajo individual o colaborativo (20 min): Cada estudiante o grupo escribe un articulo breve sobre un tema propuesto, aplicando la estructura modelada. Andamiajes DUA: fichas con vocabulario clave, organizadores graficos, ejemplo resuelto.\n4. Revision entre pares (5-10 min): Intercambian articulos y evaluan usando criterios simples: tiene titular, tiene datos, se entiende el tema.`
+    : `Momento de construccion (55-65 min):\n${tpl.desarrollo}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
 
-  const cierre = `Momento de cierre:\n${tpl.cierre}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
+  const cierre = hasRealOA
+    ? `Momento de cierre (10-15 min):\nSintesis guiada: el docente recoge 2-3 ejemplos de titulares creados por los estudiantes y los proyecta. Pregunta metacognitiva: "Que parte del articulo les costo mas escribir y por que?". Ticket de salida con 3 preguntas. Criterio de logro: si el estudiante logro escribir un titular con idea clara y al menos 2 subtitulos, esta en nivel adecuado. Decision pedagogica: si la mayoria no logro la estructura, reforzar con otro ejemplo antes de avanzar.`
+    : `Momento de cierre (10-15 min):\n${tpl.cierre}${instruccionExtra ? '\n' + instruccionExtra : ''}`;
 
   const actividadesEstudiantes = [
-    { nombre: 'Activacion', momento: 'inicio', duracion: '10-15 min', modalidad: 'curso completo', instruccionesEstudiantes: tpl.inicio, rolDocente: 'Facilitar la situacion motivadora y guiar la reflexion inicial.', evidenciaEsperada: 'Participacion activa y formulacion de preguntas o hipotesis.' },
-    { nombre: 'Trabajo principal', momento: 'desarrollo', duracion: '25-35 min', modalidad: 'parejas', instruccionesEstudiantes: tpl.desarrollo, rolDocente: 'Observar, orientar y retroalimentar durante la actividad.', evidenciaEsperada: 'Producto observable: escrito, oral, diagrama o resolucion de problema.' },
-    { nombre: 'Cierre', momento: 'cierre', duracion: '10-15 min', modalidad: 'curso completo', instruccionesEstudiantes: tpl.cierre, rolDocente: 'Guiar la metacognicion y recoger evidencias.', evidenciaEsperada: 'Ticket de salida o reflexion escrita individual.' },
+    { nombre: 'Activacion', momento: 'inicio', duracion: '10-15 min', modalidad: 'curso completo', instruccionesEstudiantes: hasRealOA ? `Activar conocimientos previos con situacion concreta del ${objective.code}. Participar en discusion guiada.` : tpl.inicio, rolDocente: 'Facilitar la situacion motivadora y guiar la reflexion inicial.', evidenciaEsperada: 'Participacion activa y formulacion de preguntas o hipotesis.' },
+    { nombre: 'Trabajo principal', momento: 'desarrollo', duracion: '55-65 min', modalidad: 'individual/parejas', instruccionesEstudiantes: hasRealOA ? `Modelamiento, practica guiada y produccion individual aplicando la estructura del articulo informativo.` : tpl.desarrollo, rolDocente: 'Modelar, observar, orientar y retroalimentar durante la actividad.', evidenciaEsperada: hasRealOA ? 'Articulo informativo con titular, subtitulos y cuerpo coherente.' : 'Producto observable: escrito, oral, diagrama o resolucion de problema.' },
+    { nombre: 'Cierre', momento: 'cierre', duracion: '10-15 min', modalidad: 'curso completo', instruccionesEstudiantes: hasRealOA ? `Sintesis y metacognicion. Ticket de salida: titular creado, que parte costo mas, que mejoraria.` : tpl.cierre, rolDocente: 'Guiar la metacognicion y recoger evidencias.', evidenciaEsperada: 'Ticket de salida o reflexion escrita individual.' },
   ];
 
   const evaluacionFormativa = hasRealOA
-    ? `Evaluacion formativa durante la clase:\n- Observacion directa de participacion y comprension\n- Productos escritos o orales durante el desarrollo\n- Retroalimentacion entre pares\n- Ticket de salida para verificar aprendizajes clave del ${objective.code}`
+    ? `Evaluacion formativa durante la clase:\n- Observacion directa de participacion en modelamiento\n- Revision de titular y subtitulos durante la practica guiada\n- Producto final: articulo informativo con estructura correcta\n- Retroalimentacion entre pares usando criterios simples\n- Ticket de salida para verificar comprension del ${objective.code}`
     : `Evaluacion formativa durante la clase:\n- Observacion directa de participacion y comprension\n- Productos escritos o orales durante el desarrollo\n- Retroalimentacion entre pares\n- Ticket de salida para verificar aprendizajes clave`;
 
   const ticketSalida = hasRealOA
-    ? `Ticket de salida (${objective.code}):\n1. Que aprendi hoy sobre este objetivo?\n2. En que situacion puedo aplicar lo aprendido?\n3. Que me falta por aprender o practicar?`
+    ? `Ticket de salida (${objective.code}):\n1. Escribi un titular claro para mi articulo informativo.\n2. Que parte del proceso me costo mas y como puedo mejorarla?\n3. En que situacion real podria usar un articulo informativo?`
     : 'Ticket de salida:\n1. Que aprendi hoy?\n2. En que situacion puedo aplicar lo aprendido?\n3. Que me falta por aprender o practicar?';
 
   const recursosMateriales = [
     'Cuaderno o ficha de trabajo del estudiante',
-    'Textos, imagenes o materiales visuales segun la actividad',
-    'Pizarron o papelógrafo para modelamiento',
+    hasRealOA ? `Textos modelo de articulos informativos para analizar en clase` : 'Textos, imagenes o materiales visuales segun la actividad',
+    'Pizarron o papel grafo para modelamiento',
+    hasRealOA ? `Organizador grafico: estructura titular-subtitulos-cuerpo` : 'Pizarron o papel grafo para modelamiento',
     hasRealOA ? `Referente al ${objective.code} para orientar la actividad` : 'Referente curricular para orientar la actividad (seleccionar OA)',
   ];
 
-  const adecuacionesDUA = 'Representacion: ofrecer la informacion en multiples formatos (texto, audio, visual). Accion y expresion: permitir diversas formas de demostrar el aprendizaje (escrito, oral, grafico). Implicacion: conectar con intereses y experiencias de los estudiantes. Fornecer apoyos visuales y estructurados.';
+  const adecuacionesDUA = hasRealOA
+    ? `Representacion: ofrecer textos modelo en formato impreso y digital, con vocabulario clave resaltado y organizadores graficos. Accion y expresion: permitir diversas formas de producir el articulo (escrito, oral, dibujos con texto, maqueta de periodico). Implicacion: conectar con temas de interes de los estudiantes (deportes, musica, eventos del curso).`
+    : 'Representacion: ofrecer la informacion en multiples formatos (texto, audio, visual). Accion y expresion: permitir diversas formas de demostrar el aprendizaje (escrito, oral, grafico). Implicacion: conectar con intereses y experiencias de los estudiantes.';
 
-  const apoyoDescendidos = 'Trabajo en grupos heterogeneos con apoyo de pares avanzados. Instrucciones paso a paso con ejemplos concretos. Tiempo adicional si es necesario. Fichas de apoyo con vocabulario clave y estructuras guia. Retroalimentacion individual positiva y formativa.';
+  const apoyoDescendidos = hasRealOA
+    ? `Trabajo en grupos heterogeneos con apoyo de pares avanzados. Fichas con vocabulario clave y estructura guia (titular, subtitulos, cuerpo). Instrucciones paso a paso con ejemplos concretos de cada parte del articulo. Tiempo adicional para escritura. Retroalimentacion individual positiva y formativa.`
+    : 'Trabajo en grupos heterogeneos con apoyo de pares avanzados. Instrucciones paso a paso con ejemplos concretos. Tiempo adicional si es necesario. Fichas de apoyo con vocabulario clave y estructuras guia. Retroalimentacion individual positiva y formativa.';
 
-  const extensionAvanzados = 'Actividades de profundizacion: problemas de mayor complejidad, proyectos de investigacion breve, rol de tutores de pares, creacion de material didactico para el curso. Desafios que conecten con situaciones reales del entorno.';
+  const extensionAvanzados = hasRealOA
+    ? `Actividades de profundizacion: escribir un articulo de opinion sobre un tema del curso, investigar una noticia local y analizar su estructura, crear un periodico del curso con articulos de diferentes categorias, asumir rol de periodista y entrevistar a un companero para redactar una nota.`
+    : 'Actividades de profundizacion: problemas de mayor complejidad, proyectos de investigacion breve, rol de tutores de pares, creacion de material didactico para el curso. Desafios que conecten con situaciones reales del entorno.';
 
   const content = [
     oaNote,
     `Curso: ${courseName} | Duracion: ${lesson.start_time || ''}-${lesson.end_time || ''}`,
     `Objetivo: ${objetivoEspecifico.substring(0, 120)}...`,
-    `Inicio: ${tpl.inicio.substring(0, 100)}...`,
-    `Desarrollo: ${tpl.desarrollo.substring(0, 100)}...`,
-    `Cierre: ${tpl.cierre.substring(0, 100)}...`,
-    !hasRealOA ? 'Nota: Actividades generadas sin OA explícito. Puedes seleccionar un OA después para ajustar la alineacion curricular.' : '',
+    hasRealOA ? `Contexto curricular: ${oaCtx.substring(0, 150)}...` : '',
+    `Inicio: ${inicio.substring(0, 100)}...`,
+    `Desarrollo: ${desarrollo.substring(0, 100)}...`,
+    `Cierre: ${cierre.substring(0, 100)}...`,
+    !hasRealOA ? 'Nota: Actividades generadas sin OA explicito. Puedes seleccionar un OA despues para ajustar la alineacion curricular.' : '',
   ].filter(Boolean);
 
   return {

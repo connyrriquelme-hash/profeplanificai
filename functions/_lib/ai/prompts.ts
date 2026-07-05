@@ -30,25 +30,32 @@ const PROMPTS: Record<AgentType, Record<TaskType, (req: AIRequest) => string>> =
   actividades_clase: {
     generar: (req) => `${BASE_CONTEXT}
 
-TAREA: Genera actividades de clase completas.
+TAREA: Genera actividades de clase completas y detalladas.
 
 ${classBlock(req)}
 ${oaBlock(req)}
 
 INSTRUCCIONES ADICIONALES: ${req.instructions || 'Ninguna'}
 
-Campos obligatorios (todos en texto plano, sin saltos de linea excesivos):
-- objetivoEspecifico: 1-2 oraciones con el objetivo concreto.
-- proposito: 1 oracion con el proposito pedagogico.
-- inicio: 2-4 oraciones con la actividad de activacion (10-15 min).
-- desarrollo: 3-5 oraciones con la actividad principal (25-35 min).
-- cierre: 2-3 oraciones con la reflexion (10-15 min).
-- evaluacionFormativa: 2-3 oraciones con formas de evaluar.
-- ticketSalida: 3 preguntas breves separadas por salto de linea.
-- recursosMateriales: lista de 3-5 materiales.
-- adecuacionesDUA: 2-3 oraciones.
-- apoyoEstudiantesDescendidos: 2-3 oraciones.
-- extensionAvanzados: 2-3 oraciones.
+INSTRUCCIONES CRITICAS:
+- Cada momento debe ser ESPECIFICO al OA, no generico.
+- Incluye ejemplos concretos de actividades, no frases vagas.
+- Menciona el OA explicitamente en inicio, desarrollo y cierre.
+- Usa lenguaje accionable: que hace el docente, que hacen los estudiantes.
+- Duracion total: 90 min (10-15 inicio, 55-65 desarrollo, 10-15 cierre).
+
+Campos obligatorios:
+- objetivoEspecifico: 1-2 oraciones con el objetivo concreto alineado al OA.
+- proposito: 1 oracion con el proposito pedagogico al OA.
+- inicio: Parrafo detallado (10-15 min). Incluye: pregunta motivadora, situacion concreta, conexion con contexto chileno, consigna exacta del docente.
+- desarrollo: Parrafo detallado (55-65 min). Incluye: modelamiento docente, practica guiada, trabajo individual, revision entre pares. Andamiajes DUA.
+- cierre: Parrafo detallado (10-15 min). Incluye: sintesis guiada, pregunta metacognitiva, ticket de salida, criterio de logro, decision pedagogica.
+- evaluacionFormativa: 3-4 formas concretas de evaluar durante la clase.
+- ticketSalida: 3 preguntas especificas al OA.
+- recursosMateriales: 4-5 materiales concretos y especificos.
+- adecuacionesDUA: 3 oraciones con representacion, accion/expresion e implicacion.
+- apoyoEstudiantesDescendidos: 3 estrategias concretas.
+- extensionAvanzados: 2-3 actividades de profundizacion.
 
 Responde SOLO este JSON (sin markdown, sin explicaciones):
 {"objetivoEspecifico":"","proposito":"","inicio":"","desarrollo":"","cierre":"","evaluacionFormativa":"","ticketSalida":"","recursosMateriales":[],"adecuacionesDUA":"","apoyoEstudiantesDescendidos":"","extensionAvanzados":""}`,
@@ -116,41 +123,53 @@ TAREA: Genera recurso didactico.
 ${classBlock(req)}
 ${oaBlock(req)}
 INSTRUCCIONES: ${req.instructions || ''}
-JSON: {"titulo":"","tipo":"","contenido":"","materiales":[],"instruccionesDocente":"","instruccionesEstudiantes":""}`,
+El recurso debe ser especifico al OA y los indicadores. Incluye ejemplos concretos, no genericos.
+JSON: {"titulo":"","tipo":"","contenido":"Contenido detallado del recurso con ejemplos concretos alineados al OA.","secciones":[{"titulo":"","contenido":""}],"materiales":[],"instruccionesDocente":"","instruccionesEstudiantes":"","indicadores":[""],"habilidades":[""],"evaluacionSugerida":""}`,
     mejorar: (req) => `${BASE_CONTEXT}
-TAREA: Mejora recurso existente.
+TAREA: Mejora recurso didactico existente.
 ${classBlock(req)}
+${oaBlock(req)}
 CONTENIDO: ${req.existingContent || ''}
 INSTRUCCIONES: ${req.instructions || ''}
-JSON: con el recurso mejorado.`,
+Mejora: claridad, alineacion OA, ejemplos concretos, diferenciacion. Responde en formato JSON.`,
     adaptar: (req) => `${BASE_CONTEXT}
-TAREA: Adapta recurso.
+TAREA: Adapta recurso didactico.
 ${classBlock(req)}
-INSTRUCCIONES: ${req.instructions || ''}
-JSON: con el recurso adaptado.`,
+${oaBlock(req)}
+INSTRUCCIONES: ${req.instructions || 'Adapta para curso heterogeneo'}
+Responde en formato JSON con el recurso adaptado.`,
     evaluar: (req) => `${BASE_CONTEXT}
 TAREA: Evalua recurso didactico.
 CONTENIDO: ${req.existingContent || ''}
-JSON: {"puntuacion":0,"fortalezas":[],"mejoras":[]}`,
+Califica: alineacion OA, claridad, viabilidad, diferenciacion, tiempo estimado.
+JSON: {"puntuacion":0,"fortalezas":[],"mejoras":[],"recomendaciones":[]}`,
     crear_guia: (req) => `${BASE_CONTEXT}
-TAREA: Crea guia de uso del recurso.
+TAREA: Crea guia de aprendizaje para los estudiantes.
 ${classBlock(req)}
-JSON: {"titulo":"","pasos":[],"notas":""}`,
+${oaBlock(req)}
+La guia debe ser uso directo del estudiante. Incluye: proposito, actividades graduadas, ejercicios con ejemplos, espacio para respuestas, autoevaluacion.
+JSON: {"titulo":"","proposito":"","actividades":[{"nombre":"","instrucciones":"","tiempo":"","ejemplo":""}],"materiales":[],"evaluacion":"","autoevaluacion":""}`,
     crear_rubrica: (req) => `${BASE_CONTEXT}
-TAREA: Crea rubrica para evaluar el recurso.
+TAREA: Crea rubrica de evaluacion.
 ${classBlock(req)}
-JSON: {"titulo":"","criterios":[]}`,
+${oaBlock(req)}
+Los criterios deben ser especificos al OA y medibles.
+JSON: {"titulo":"","descripcion":"","criterios":[{"nombre":"","ponderacion":0,"niveles":[{"nivel":"Logrado","puntaje":4,"descripcion":""},{"nivel":"En desarrollo","puntaje":3,"descripcion":""},{"nivel":"Por reforzar","puntaje":2,"descripcion":""},{"nivel":"No logrado","puntaje":1,"descripcion":""}]}]}`,
     crear_ticket_salida: (req) => `${BASE_CONTEXT}
-TAREA: Crea ticket de salida basado en el recurso.
+TAREA: Crea ticket de salida.
 ${classBlock(req)}
-JSON: {"titulo":"","preguntas":[]}`,
+${oaBlock(req)}
+Preguntas especificas al OA. Incluye metacognicion.
+JSON: {"titulo":"","preguntas":[{"enunciado":"","tipo":"abierta/cerrada/multiple","respuestaEsperada":""}],"tiempoEstimado":"5 min","criterioLogro":""}`,
     crear_ppt: (req) => `${BASE_CONTEXT}
-TAREA: Crea presentacion del recurso.
+TAREA: Crea estructura de presentacion para la clase.
 ${classBlock(req)}
-JSON: {"titulo":"","diapositivas":[]}`,
+${oaBlock(req)}
+Cada diapositiva con titulo, contenido breve, sugerencia visual, actividad oral.
+JSON: {"titulo":"","diapositivas":[{"numero":1,"titulo":"","contenido":"","notasDocente":"","imagenSugerida":"","actividadOral":""}],"tiempoTotalMin":45}`,
     crear_reporte: (req) => `${BASE_CONTEXT}
-TAREA: Reporte del recurso.
-JSON: {"titulo":"","resumen":""}`,
+TAREA: Crea reporte de avance del recurso.
+JSON: {"titulo":"","resumen":"","avance":"","proximoPaso":"","observaciones":""}`,
   },
 
   evaluador: {
@@ -269,11 +288,12 @@ JSON: {"titulo":"","resumen":""}`,
 
   dua: {
     generar: (req) => `${BASE_CONTEXT}
-TAREA: Genera ajustes DUA para la clase.
+TAREA: Genera ajustes DUA detallados para la clase.
 ${classBlock(req)}
 ${oaBlock(req)}
 INSTRUCCIONES: ${req.instructions || ''}
-JSON: {"representacion":[""],"accionExpresion":[""],"implicacion":[""],"principios":[""],"recursosAdicionales":[""]}`,
+Cada ajuste debe ser especifico al OA y a la actividad. No generico.
+JSON: {"representacion":["Estrategia concreta 1","Estrategia concreta 2"],"accionExpresion":["Estrategia concreta 1","Estrategia concreta 2"],"implicacion":["Estrategia concreta 1","Estrategia concreta 2"],"principios":["Principio 1"],"recursosAdicionales":["Recurso 1"],"apoyoDescendidos":["Especifica 1"],"extensionAvanzados":["Especifica 1"]}`,
     mejorar: (req) => `${BASE_CONTEXT}
 TAREA: Mejora ajustes DUA.
 CONTENIDO: ${req.existingContent || ''}
@@ -309,7 +329,8 @@ TAREA: Crea estructura de presentacion para clase.
 ${classBlock(req)}
 ${oaBlock(req)}
 INSTRUCCIONES: ${req.instructions || ''}
-JSON: {"titulo":"","diapositivas":[{"numero":1,"titulo":"","contenido":"","notasDocente":"","imagenSugerida":""}],"tiempoTotalMin":45}`,
+Cada diapositiva debe ser especifica al OA. Incluye titulo, contenido breve, notas del docente, sugerencia visual y actividad oral.
+JSON: {"titulo":"","diapositivas":[{"numero":1,"titulo":"","contenido":"","notasDocente":"","imagenSugerida":"","actividadOral":""}],"tiempoTotalMin":45}`,
     mejorar: (req) => `${BASE_CONTEXT}
 TAREA: Mejora presentacion.
 CONTENIDO: ${req.existingContent || ''}
