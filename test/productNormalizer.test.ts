@@ -182,3 +182,135 @@ describe('buildNormalizedProduct', () => {
     expect(result.sourceTab).toBe('');
   });
 });
+
+describe('New structured resources', () => {
+  it('new resource with tables normalizes correctly', () => {
+    const input = JSON.stringify({
+      titulo: 'Material para apoderados',
+      proposito: 'Apoyar el aprendizaje en casa',
+      secciones: [
+        { titulo: 'Propósito', contenido: 'Que la familia comprenda porcentajes', tipo: 'explicacion' },
+      ],
+      tablas: [
+        { titulo: 'Cómo apoyar en casa', columnas: ['Momento', 'Acción', 'Tiempo'], filas: [['Antes de la clase', 'Preguntar sobre ofertas', '5 min']] },
+      ],
+      callouts: [
+        { tipo: 'familia', titulo: 'Para conversar', texto: 'Pregunte por descuentos en el supermercado' },
+      ],
+      checklist: ['Revisar tareas', 'Practicar porcentajes'],
+      graficos: [
+        { tipo: 'process', titulo: 'Proceso', datos: [{ label: 'Leer', value: 25 }, { label: 'Resolver', value: 25 }] },
+      ],
+    });
+
+    const result = normalizeProductContent(input, 'material_apoderados');
+    expect(result.tables.length).toBe(1);
+    expect(result.tables[0].title).toBe('Cómo apoyar en casa');
+    expect(result.callouts.length).toBe(1);
+    expect(result.callouts[0].type).toBe('familia');
+    expect(result.charts.length).toBe(1);
+    expect(result.checklist.length).toBe(2);
+  });
+
+  it('new resource with callouts normalizes correctly', () => {
+    const input = JSON.stringify({
+      titulo: 'Banco de preguntas',
+      tablas: [{ titulo: 'Preguntas', columnas: ['Nº', 'Pregunta', 'Tipo'], filas: [['1', '¿Qué es un porcentaje?', 'Conceptual']] }],
+      callouts: [{ tipo: 'docente', titulo: 'Uso sugerido', texto: 'Aplicar después del desarrollo' }],
+    });
+
+    const result = normalizeProductContent(input, 'banco_preguntas');
+    expect(result.tables.length).toBe(1);
+    expect(result.callouts.length).toBe(1);
+    expect(result.callouts[0].type).toBe('docente');
+  });
+
+  it('new resource with charts normalizes correctly', () => {
+    const input = JSON.stringify({
+      titulo: 'Ticket de salida',
+      graficos: [{ tipo: 'bar', titulo: 'Logro', datos: [{ label: 'Comprensión', value: 80 }, { label: 'Aplicación', value: 60 }] }],
+      tablas: [{ titulo: 'Criterios', columnas: ['Pregunta', 'Nivel'], filas: [['1', 'Logrado']] }],
+    });
+
+    const result = normalizeProductContent(input, 'ticket_salida');
+    expect(result.charts.length).toBe(1);
+    expect(result.charts[0].data.length).toBe(2);
+  });
+
+  it('new resource with checklist normalizes correctly', () => {
+    const input = JSON.stringify({
+      titulo: 'Guía de aprendizaje',
+      checklist: ['Leer la guía', 'Completar ejercicios', 'Autoevaluarse'],
+      tablas: [{ titulo: 'Etapas', columnas: ['Fase', 'Tiempo'], filas: [['Activación', '10 min']] }],
+    });
+
+    const result = normalizeProductContent(input, 'guia_aprendizaje');
+    expect(result.checklist.length).toBe(3);
+    expect(result.tables.length).toBe(1);
+  });
+
+  it('old resource without tables still exports clean', () => {
+    const input = JSON.stringify({
+      title: 'Material antiguo',
+      action: 'material_apoderados',
+      kind: 'resource',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      warnings: ['test'],
+      content: ['Contenido antiguo sin tablas'],
+    });
+
+    const result = normalizeProductContent(input, 'material_apoderados');
+    expect(result.tables.length).toBe(0);
+    expect(result.callouts.length).toBe(0);
+    expect(result.charts.length).toBe(0);
+    expect(result.checklist.length).toBe(0);
+    const allContent = result.sections.map(s => s.content).join(' ');
+    expect(allContent).toContain('Contenido antiguo sin tablas');
+  });
+
+  it('old resource does not receive backfill', () => {
+    const input = JSON.stringify({
+      title: 'Recurso viejo',
+      content: ['Texto simple'],
+    });
+
+    const result = normalizeProductContent(input, 'guia_aprendizaje');
+    expect(result.tables.length).toBe(0);
+    expect(result.callouts.length).toBe(0);
+    expect(result.charts.length).toBe(0);
+    expect(result.checklist.length).toBe(0);
+  });
+
+  it('no provider/model/warnings/metadata in normalized output', () => {
+    const input = JSON.stringify({
+      titulo: 'Test',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      warnings: ['test'],
+      aiGenerated: true,
+      detailed: {},
+      tablas: [{ titulo: 'T', columnas: ['A'], filas: [['1']] }],
+    });
+
+    const result = normalizeProductContent(input, 'guia_aprendizaje');
+    const md = result.rawMarkdown;
+    expect(md).not.toContain('provider');
+    expect(md).not.toContain('gemini');
+    expect(md).not.toContain('warnings');
+    expect(md).not.toContain('aiGenerated');
+  });
+
+  it('no JSON crudo in normalized output', () => {
+    const input = JSON.stringify({
+      titulo: 'Test',
+      tablas: [{ titulo: 'T', columnas: ['A'], filas: [['1']] }],
+    });
+
+    const result = normalizeProductContent(input, 'guia_aprendizaje');
+    const md = result.rawMarkdown;
+    expect(md).not.toContain('"provider"');
+    expect(md).not.toContain('"model"');
+    expect(md).not.toContain('"warnings"');
+  });
+});

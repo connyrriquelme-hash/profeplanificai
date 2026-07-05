@@ -119,12 +119,40 @@ JSON: {"titulo":"","resumen":"","avance":"","proximoPaso":"","observaciones":""}
 
   generador_recursos: {
     generar: (req) => `${BASE_CONTEXT}
-TAREA: Genera recurso didactico.
+TAREA: Genera recurso didactico con estructura visual completa.
 ${classBlock(req)}
 ${oaBlock(req)}
 INSTRUCCIONES: ${req.instructions || ''}
 El recurso debe ser especifico al OA y los indicadores. Incluye ejemplos concretos, no genericos.
-JSON: {"titulo":"","tipo":"","contenido":"Contenido detallado del recurso con ejemplos concretos alineados al OA.","secciones":[{"titulo":"","contenido":""}],"materiales":[],"instruccionesDocente":"","instruccionesEstudiantes":"","indicadores":[""],"habilidades":[""],"evaluacionSugerida":""}`,
+
+OBLIGATORIO: El recurso DEBE incluir:
+- Al menos 1 tabla con datos pedagogicos relevantes.
+- Al menos 1 callout (docente, familia, importante, dua o evaluacion).
+- Al menos 1 grafico o proceso visual (bar, timeline, process).
+- Checklist de verificacion cuando corresponda.
+- NO incluir provider, model, warnings, aiGenerated ni metadata tecnica.
+
+JSON con esta estructura EXACTA:
+{
+  "titulo": "...",
+  "proposito": "...",
+  "secciones": [
+    {"titulo": "...", "contenido": "...", "tipo": "explicacion|actividad|evaluacion|apoyo|cierre"}
+  ],
+  "tablas": [
+    {"titulo": "...", "columnas": ["...", "..."], "filas": [["...", "..."]]}
+  ],
+  "graficos": [
+    {"tipo": "bar|timeline|process", "titulo": "...", "datos": [{"label": "...", "value": 25}]}
+  ],
+  "callouts": [
+    {"tipo": "docente|familia|importante|dua|evaluacion", "titulo": "...", "texto": "..."}
+  ],
+  "checklist": ["...", "..."],
+  "materiales": [],
+  "instruccionesDocente": "",
+  "instruccionesEstudiantes": ""
+}`,
     mejorar: (req) => `${BASE_CONTEXT}
 TAREA: Mejora recurso didactico existente.
 ${classBlock(req)}
@@ -144,23 +172,75 @@ CONTENIDO: ${req.existingContent || ''}
 Califica: alineacion OA, claridad, viabilidad, diferenciacion, tiempo estimado.
 JSON: {"puntuacion":0,"fortalezas":[],"mejoras":[],"recomendaciones":[]}`,
     crear_guia: (req) => `${BASE_CONTEXT}
-TAREA: Crea guia de aprendizaje para los estudiantes.
+TAREA: Crea guia de aprendizaje para los estudiantes con estructura visual.
 ${classBlock(req)}
 ${oaBlock(req)}
 La guia debe ser uso directo del estudiante. Incluye: proposito, actividades graduadas, ejercicios con ejemplos, espacio para respuestas, autoevaluacion.
-JSON: {"titulo":"","proposito":"","actividades":[{"nombre":"","instrucciones":"","tiempo":"","ejemplo":""}],"materiales":[],"evaluacion":"","autoevaluacion":""}`,
+
+OBLIGATORIO: Incluir al menos 1 tabla, 1 callout, 1 grafico y checklist.
+
+JSON:
+{
+  "titulo": "...",
+  "proposito": "...",
+  "secciones": [
+    {"titulo": "...", "contenido": "...", "tipo": "explicacion|actividad|evaluacion|apoyo|cierre"}
+  ],
+  "tablas": [
+    {"titulo": "...", "columnas": ["...", "..."], "filas": [["...", "..."]]}
+  ],
+  "graficos": [
+    {"tipo": "bar|timeline|process", "titulo": "...", "datos": [{"label": "...", "value": 25}]}
+  ],
+  "callouts": [
+    {"tipo": "docente|familia|importante|dua|evaluacion", "titulo": "...", "texto": "..."}
+  ],
+  "checklist": ["...", "..."],
+  "autoevaluacion": "..."
+}`,
     crear_rubrica: (req) => `${BASE_CONTEXT}
-TAREA: Crea rubrica de evaluacion.
+TAREA: Crea rubrica de evaluacion con tabla visual.
 ${classBlock(req)}
 ${oaBlock(req)}
 Los criterios deben ser especificos al OA y medibles.
-JSON: {"titulo":"","descripcion":"","criterios":[{"nombre":"","ponderacion":0,"niveles":[{"nivel":"Logrado","puntaje":4,"descripcion":""},{"nivel":"En desarrollo","puntaje":3,"descripcion":""},{"nivel":"Por reforzar","puntaje":2,"descripcion":""},{"nivel":"No logrado","puntaje":1,"descripcion":""}]}]}`,
+
+OBLIGATORIO: Incluir tabla de criterios y niveles, checklist de revision, callout docente.
+
+JSON:
+{
+  "titulo": "...",
+  "descripcion": "...",
+  "tablas": [
+    {"titulo": "Rubrica de Evaluacion", "columnas": ["Criterio", "Inicial", "En desarrollo", "Logrado", "Destacado"], "filas": [["...", "...", "...", "...", "..."]]}
+  ],
+  "callouts": [
+    {"tipo": "docente", "titulo": "Instrucciones", "texto": "..."}
+  ],
+  "checklist": ["Revisar coherencia con OA", "Verificar claridad de criterios", "..."],
+  "criterios": [{"nombre": "", "ponderacion": 0, "niveles": [{"nivel": "Logrado", "puntaje": 4, "descripcion": ""}]}]
+}`,
     crear_ticket_salida: (req) => `${BASE_CONTEXT}
-TAREA: Crea ticket de salida.
+TAREA: Crea ticket de salida con estructura visual.
 ${classBlock(req)}
 ${oaBlock(req)}
 Preguntas especificas al OA. Incluye metacognicion.
-JSON: {"titulo":"","preguntas":[{"enunciado":"","tipo":"abierta/cerrada/multiple","respuestaEsperada":""}],"tiempoEstimado":"5 min","criterioLogro":""}`,
+
+OBLIGATORIO: Incluir tabla con pregunta, criterio y nivel esperado, checklist breve, callout de decision pedagogica.
+
+JSON:
+{
+  "titulo": "...",
+  "tablas": [
+    {"titulo": "Ticket de Salida", "columnas": ["Pregunta", "Criterio de logro", "Nivel esperado"], "filas": [["...", "...", "..."]]}
+  ],
+  "callouts": [
+    {"tipo": "docente", "titulo": "Decision pedagogica", "texto": "..."}
+  ],
+  "checklist": ["Revisar respuestas", "Identificar estudiantes que necesitan apoyo", "..."],
+  "preguntas": [{"enunciado": "", "tipo": "abierta/cerrada/multiple", "respuestaEsperada": ""}],
+  "tiempoEstimado": "5 min",
+  "criterioLogro": ""
+}`,
     crear_ppt: (req) => `${BASE_CONTEXT}
 TAREA: Crea estructura de presentacion para la clase.
 ${classBlock(req)}
@@ -174,11 +254,36 @@ JSON: {"titulo":"","resumen":"","avance":"","proximoPaso":"","observaciones":""}
 
   evaluador: {
     generar: (req) => `${BASE_CONTEXT}
-TAREA: Genera evaluacion.
+TAREA: Genera evaluacion con estructura visual completa.
 ${classBlock(req)}
 ${oaBlock(req)}
 INSTRUCCIONES: ${req.instructions || ''}
-JSON: {"titulo":"","tipo":"","preguntas":[{"enunciado":"","alternativas":[],"respuesta":"","puntaje":0}],"ronda":"","instrucciones":"","tiempoEstimado":""}`,
+
+OBLIGATORIO: La evaluacion DEBE incluir:
+- Tabla de especificaciones o de items.
+- Callout de instrucciones.
+- Grafico de habilidades cuando corresponda.
+- NO incluir provider, model, warnings ni metadata tecnica.
+
+JSON:
+{
+  "titulo": "...",
+  "tipo": "...",
+  "proposito": "...",
+  "tablas": [
+    {"titulo": "Especificaciones", "columnas": ["Item", "Puntaje", "Indicador", "Respuesta esperada"], "filas": [["1", "4", "...", "..."]]}
+  ],
+  "callouts": [
+    {"tipo": "evaluacion", "titulo": "Instrucciones", "texto": "..."}
+  ],
+  "graficos": [
+    {"tipo": "bar", "titulo": "Habilidades evaluadas", "datos": [{"label": "Comprension", "value": 40}, {"label": "Aplicacion", "value": 40}, {"label": "Analisis", "value": 20}]}
+  ],
+  "checklist": ["Revisar alineacion con OA", "Verificar claridad de preguntas", "..."],
+  "preguntas": [{"enunciado": "", "alternativas": [], "respuesta": "", "puntaje": 0}],
+  "instrucciones": "",
+  "tiempoEstimado": ""
+}`,
     mejorar: (req) => `${BASE_CONTEXT}
 TAREA: Mejora evaluacion existente.
 CONTENIDO: ${req.existingContent || ''}
@@ -252,11 +357,26 @@ JSON: {"titulo":"","resumen":""}`,
 
   rubrica: {
     generar: (req) => `${BASE_CONTEXT}
-TAREA: Crea rubrica de evaluacion.
+TAREA: Crea rubrica de evaluacion con estructura visual.
 ${classBlock(req)}
 ${oaBlock(req)}
 INSTRUCCIONES: ${req.instructions || ''}
-JSON: {"titulo":"","descripcion":"","criterios":[{"nombre":"","ponderacion":0,"niveles":[{"nivel":"Logrado","puntaje":4,"descripcion":""},{"nivel":"En desarrollo","puntaje":3,"descripcion":""},{"nivel":"Por reforzar","puntaje":2,"descripcion":""},{"nivel":"No logrado","puntaje":1,"descripcion":""}]}]}`,
+
+OBLIGATORIO: Incluir tabla de criterios y niveles, checklist de revision, callout docente.
+
+JSON:
+{
+  "titulo": "...",
+  "descripcion": "...",
+  "tablas": [
+    {"titulo": "Rubrica de Evaluacion", "columnas": ["Criterio", "Inicial", "En desarrollo", "Logrado", "Destacado"], "filas": [["...", "...", "...", "...", "..."]]}
+  ],
+  "callouts": [
+    {"tipo": "docente", "titulo": "Instrucciones de uso", "texto": "..."}
+  ],
+  "checklist": ["Verificar coherencia con OA", "Asegurar claridad de niveles", "..."],
+  "criterios": [{"nombre": "", "ponderacion": 0, "niveles": [{"nivel": "Logrado", "puntaje": 4, "descripcion": ""}]}]
+}`,
     mejorar: (req) => `${BASE_CONTEXT}
 TAREA: Mejora rubrica.
 CONTENIDO: ${req.existingContent || ''}
