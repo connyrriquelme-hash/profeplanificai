@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult, DuaGuide, PedagogicalPlan } from '../types/copilot';
 
 interface CurriculumNivel {
@@ -10,6 +11,25 @@ interface CurriculumResponse {
   ok: boolean;
   data: CurriculumNivel[];
 }
+
+const TOAST_ID = 'dua-guide-generate';
+
+const TOAST_STYLE = {
+  style: {
+    borderRadius: '16px',
+    background: '#1e1b4b',
+    color: '#f1f5f9',
+    fontSize: '14px',
+    fontWeight: 600,
+    padding: '12px 16px',
+  },
+  success: {
+    iconTheme: { primary: '#22c55e', secondary: '#f1f5f9' },
+  },
+  error: {
+    iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' },
+  },
+};
 
 const DEFAULT_FORM = {
   nivel: '',
@@ -42,6 +62,64 @@ function LevelCard({
         ))}
       </ol>
     </section>
+  );
+}
+
+function SkeletonCard({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className="rounded-3xl border-2 border-slate-200 bg-slate-50 p-5 shadow-sm">
+      <div className="h-5 w-40 rounded-lg bg-slate-200 animate-pulse" />
+      <div className="mt-4 space-y-2">
+        {Array.from({ length: lines }).map((_, i) => (
+          <div key={i} className="h-3 rounded bg-slate-200 animate-pulse" style={{ width: `${85 - i * 10}%` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SkeletonLoader() {
+  return (
+    <div className="space-y-5" aria-busy="true" aria-label="Generando guía DUA...">
+      <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="h-3 w-32 rounded bg-slate-200 animate-pulse" />
+            <div className="mt-2 h-7 w-72 rounded-lg bg-slate-200 animate-pulse" />
+          </div>
+          <div className="h-9 w-40 rounded-2xl bg-slate-200 animate-pulse" />
+        </div>
+        <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-5">
+          <div className="h-3 w-40 rounded bg-slate-200 animate-pulse" />
+          <div className="mt-2 h-4 w-full rounded bg-slate-200 animate-pulse" />
+          <div className="mt-1 h-4 w-3/4 rounded bg-slate-200 animate-pulse" />
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="h-3 w-24 rounded bg-slate-200 animate-pulse" />
+              <div className="mt-2 h-4 w-full rounded bg-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <SkeletonCard lines={4} />
+        <SkeletonCard lines={4} />
+        <SkeletonCard lines={4} />
+      </div>
+      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="h-5 w-48 rounded-lg bg-slate-200 animate-pulse" />
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="h-3 w-28 rounded bg-slate-200 animate-pulse" />
+              <div className="mt-2 h-3 w-full rounded bg-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -97,6 +175,8 @@ export function DuaGuideGenerator() {
     setError('');
     setResult(null);
 
+    toast.loading('Generando tu planificación...', { id: TOAST_ID });
+
     try {
       const response = await fetch('/api/generate-project', {
         method: 'POST',
@@ -110,8 +190,12 @@ export function DuaGuideGenerator() {
       }
 
       setResult(payload);
+      toast.dismiss(TOAST_ID);
+      toast.success('Planificación generada con éxito');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido.');
+      toast.dismiss(TOAST_ID);
+      toast.error('Ocurrió un error al generar la planificación. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -206,6 +290,8 @@ export function DuaGuideGenerator() {
         </div>
       )}
 
+      {loading && <SkeletonLoader />}
+
       {result && (
         <div id="copilot-print-area" className="space-y-5 print:w-full print:max-w-none print:space-y-4 print:bg-white print:text-black">
           <div className="hidden print:block print:break-inside-avoid print:border-b print:border-black print:pb-3">
@@ -298,6 +384,12 @@ export function DuaGuideGenerator() {
           </section>
         </div>
       )}
+
+      <Toaster
+        position="top-center"
+        toastOptions={TOAST_STYLE}
+        containerStyle={{ marginTop: 80 }}
+      />
     </div>
   );
 }
