@@ -48,11 +48,12 @@ function resourceActionLabel(action: string): string {
 }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
-  const teacherId = await getTeacherId(context);
-  if (!teacherId) return json({ error: 'No autorizado' }, 401);
+  try {
+    const teacherId = await getTeacherId(context);
+    if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
-  const lessonId = String(context.params.id || '');
-  const body = await readJson(context.request);
+    const lessonId = String(context.params.id || '');
+    const body = await readJson(context.request);
   const bundle = await getLessonBundle(context.env.DB, lessonId, teacherId);
   if (!bundle) return json({ error: 'Clase no encontrada' }, 404);
 
@@ -138,19 +139,28 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     warnings = [`IA no disponible; se usó generación local. ${err instanceof Error ? err.message : ''}`.trim()];
   }
   const id = randomId('lesson_resource');
-  await context.env.DB.prepare(`INSERT INTO lesson_generated_resources
-    (id, lesson_plan_id, resource_type, title, content_json, file_url, source_context_json, ai_provider, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
-    .bind(
-      id,
-      bundle.plan?.id,
-      action,
-      resourceActionLabel(action),
-      JSON.stringify(content),
-      null,
-      JSON.stringify({ ...curriculumContext, warnings }),
-      provider,
-    ).run();
+  try {
+    await context.env.DB.prepare(`INSERT INTO lesson_generated_resources
+      (id, lesson_plan_id, resource_type, title, content_json, file_url, source_context_json, ai_provider, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
+      .bind(
+        id,
+        bundle.plan?.id,
+        action,
+        resourceActionLabel(action),
+        JSON.stringify(content),
+        null,
+        JSON.stringify({ ...curriculumContext, warnings }),
+        provider,
+      ).run();
+  } catch (dbErr) {
+    console.error('[generate-resource] DB error:', dbErr);
+    warnings.push('El recurso se genero pero no se pudo guardar en la base de datos.');
+  }
 
   return json({ ok: true, provider, warnings, message: 'Recurso guardado automaticamente', data: { id, type: action, title: resourceActionLabel(action), content } }, 201);
+  } catch (err) {
+    console.error('[generate-resource] Error:', err);
+    return json({ error: 'Error al generar el recurso.' }, 500);
+  }
 }

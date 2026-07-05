@@ -1,3 +1,5 @@
+import { sanitizeApiError } from './apiError';
+
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface ApiOptions {
@@ -28,20 +30,26 @@ async function request<T = unknown>(endpoint: string, opts: ApiOptions = {}): Pr
   };
   if (token) h['Authorization'] = `Bearer ${token}`;
 
-  const r = await fetch(`${BASE_URL}${endpoint}`, {
-    method,
-    headers: h,
-    body: body ? JSON.stringify(body) : undefined,
-    signal,
-    credentials: 'include',
-  });
+  let r: Response;
+  try {
+    r = await fetch(`${BASE_URL}${endpoint}`, {
+      method,
+      headers: h,
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+      credentials: 'include',
+    });
+  } catch (networkErr) {
+    const msg = networkErr instanceof Error ? networkErr.message : '';
+    if (msg.includes('abort') || msg.includes('AbortError')) throw networkErr;
+    throw new Error('No se pudo conectar al servidor. Verifica tu conexion.');
+  }
 
-  const rawText = await r.text();
+  const rawText = await r.text().catch(() => '');
   let data: any = null;
   try { data = rawText ? JSON.parse(rawText) : null; } catch { data = rawText; }
 
   if (!r.ok) {
-    const msg = (data && typeof data === 'object' ? data.error || data.message : null) || rawText || `Error ${r.status}: ${r.statusText}`;
     if (r.status === 401) {
       localStorage.removeItem('planificaia_token');
       localStorage.removeItem('planificaia_user');
@@ -49,6 +57,12 @@ async function request<T = unknown>(endpoint: string, opts: ApiOptions = {}): Pr
         window.dispatchEvent(new Event('auth:invalid-session'));
       }
     }
+
+    const serverMsg = (data && typeof data === 'object')
+      ? (data.error || data.message || JSON.stringify(data))
+      : rawText;
+    const msg = sanitizeApiError(serverMsg, r.status);
+
     const error = new Error(msg) as Error & { status?: number };
     error.status = r.status;
     throw error;

@@ -24,13 +24,14 @@ function normalizeActividadesFromAI(aiStructured: Record<string, unknown>, fallb
 }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
-  const teacherId = await getTeacherId(context);
-  if (!teacherId) return json({ error: 'No autorizado' }, 401);
+  try {
+    const teacherId = await getTeacherId(context);
+    if (!teacherId) return json({ error: 'No autorizado' }, 401);
 
-  const lessonId = String(context.params.id || '');
-  const body = await readJson(context.request);
-  const bundle = await getLessonBundle(context.env.DB, lessonId, teacherId);
-  if (!bundle) return json({ error: 'Clase no encontrada' }, 404);
+    const lessonId = String(context.params.id || '');
+    const body = await readJson(context.request);
+    const bundle = await getLessonBundle(context.env.DB, lessonId, teacherId);
+    if (!bundle) return json({ error: 'Clase no encontrada' }, 404);
 
   const existingBeginning = text(bundle.plan?.beginning_text);
   const existingDevelopment = text(bundle.plan?.development_text);
@@ -176,8 +177,21 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   updates.push('updated_at = ?');
   values.push(now, planId, teacherId);
 
-  await context.env.DB.prepare(`UPDATE lesson_plans SET ${updates.join(', ')} WHERE id = ? AND teacher_id = ?`)
-    .bind(...values).run();
+  try {
+    await context.env.DB.prepare(`UPDATE lesson_plans SET ${updates.join(', ')} WHERE id = ? AND teacher_id = ?`)
+      .bind(...values).run();
+  } catch (dbErr) {
+    console.error('[generate-actividades-clase] DB error:', dbErr);
+    return json({
+      ok: true,
+      provider,
+      model,
+      usedFallback,
+      warnings: [...warnings, 'Las actividades se generaron pero no se guardaron en la base de datos. Intenta guardar manualmente.'],
+      message: 'Actividades generadas pero no guardadas. Intenta guardar manualmente.',
+      data: localActividades,
+    }, 201);
+  }
 
   return json({
     ok: true,
@@ -188,4 +202,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     message: 'Actividades de clase generadas. Recuerda guardar los cambios.',
     data: localActividades,
   }, 201);
+  } catch (err) {
+    console.error('[generate-actividades-clase] Error:', err);
+    return json({ error: 'Error al generar actividades de clase.' }, 500);
+  }
 }
