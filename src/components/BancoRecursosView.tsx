@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Archive, Search, Plus, BookOpen, Clock, Trash2, FileText, ClipboardCheck, Copy, FileDown, X, AlertCircle, Loader2, Sparkles, FolderOpen, BookMarked, GraduationCap, Presentation, FileSpreadsheet, Eye, Check } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useResources, type Resource } from '../hooks/useResources';
-import { exportToPDF } from '../utils/exportPdf';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
@@ -457,7 +456,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   variant="primary"
                   size="sm"
                   iconLeft={FileDown}
-                  onClick={() => exportToPDF(detail.title, detail.content)}
+                  onClick={async () => { const { exportToPDF } = await import('../utils/exportPdf'); exportToPDF(detail.title, detail.content); }}
                 >
                   PDF
                 </Button>
@@ -479,7 +478,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 return (
                   <SlideLessonPreview
                     lesson={slides}
-                    onExportPDF={() => exportToPDF(detail.title, detail.content)}
+                    onExportPDF={async () => { const { exportToPDF } = await import('../utils/exportPdf'); exportToPDF(detail.title, detail.content); }}
                   />
                 );
               })() : (

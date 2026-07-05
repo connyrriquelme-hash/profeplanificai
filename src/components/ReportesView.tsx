@@ -10,7 +10,6 @@ import { SectionHeader } from './ui/SectionHeader';
 import {
   SUBJECTS, COURSES, getIndicatorsForSubjectCourse, getMaxScore
 } from '../data/oaDatabase';
-import { exportStudentReportPDF, exportClassSummaryPDF } from '../utils/exportReportPdf';
 import { ParentReportPanel } from './ParentReportPanel';
 import type { ReportConfig, ReportIndicator, StudentData, StudentScore, NivelLogro, StudentReportResult } from '../types';
 
@@ -210,6 +209,7 @@ export function ReportesView() {
 
     setExportingPdf(studentId);
     try {
+      const { exportStudentReportPDF } = await import('../utils/exportReportPdf');
       await exportStudentReportPDF(fullConfig, student, indicators, studentScore, result);
     } catch (err) {
       console.error('Error exporting PDF:', err);
@@ -221,6 +221,7 @@ export function ReportesView() {
   const handleExportAllPDF = async () => {
     setExportingPdf('all');
     try {
+      const { exportClassSummaryPDF } = await import('../utils/exportReportPdf');
       await exportClassSummaryPDF(fullConfig, indicators, students, scores, results);
     } catch (err) {
       console.error('Error exporting summary PDF:', err);
