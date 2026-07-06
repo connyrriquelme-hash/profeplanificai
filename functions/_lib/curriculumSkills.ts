@@ -47,7 +47,7 @@ export async function getCurricularSkillsByLevelAndSubject(
              unidad_numero, keywords_json
       FROM habilidades
       WHERE curricular_skill_id = ?
-        AND (asignatura_id = (SELECT id FROM asignaturas WHERE name = ? LIMIT 1)
+        AND (asignatura_id = (SELECT id FROM asignaturas WHERE nombre = ? LIMIT 1)
              OR asignatura_id IS NULL)
       ORDER BY unidad_numero
     `).bind(skill.id, asignatura).all<Habilidad>();
@@ -112,7 +112,7 @@ export async function linkSkillsToObjectives(env: Env): Promise<number> {
   let linked = 0;
 
   const allSkills = await env.DB.prepare(`
-    SELECT h.id as habilidad_id, h.keywords_json, h.asignatura_id, a.name as asignatura_name
+    SELECT h.id as habilidad_id, h.keywords_json, h.asignatura_id, a.nombre as asignatura_name
     FROM habilidades h
     LEFT JOIN asignaturas a ON a.id = h.asignatura_id
     WHERE h.keywords_json IS NOT NULL
