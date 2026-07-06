@@ -3,6 +3,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult, DuaGuide, PedagogicalPlan } from '../types/copilot';
 import { saveToBank } from '../services/bankService';
 import { CurriculumSelector, type CurriculumSelection } from '../components/CurriculumSelector';
+import { useActiveLesson } from '../contexts/ActiveLessonContext';
 
 const TOAST_ID = 'dua-guide-generate';
 
@@ -110,6 +111,7 @@ function SkeletonLoader() {
 }
 
 export function DuaGuideGenerator() {
+  const { curriculum: activeLesson, hasCurriculum } = useActiveLesson();
   const [curriculumSelection, setCurriculumSelection] = useState<CurriculumSelection>({
     level: '',
     subject: '',
@@ -119,26 +121,25 @@ export function DuaGuideGenerator() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<CopilotProjectResult | null>(null);
 
+  // Pre-populate from ActiveLessonContext when navigating from MisClases
   useEffect(() => {
-    let cancelled = false;
-    async function fetchFirstLevel() {
-      try {
-        const res = await fetch('/api/curriculum');
-        const json = (await res.json()) as { ok: boolean; data: { nivel: string; asignaturas: string[] }[] };
-        if (!cancelled && json.ok && json.data.length > 0) {
-          const first = json.data[0];
-          setCurriculumSelection({
-            level: first.nivel,
-            subject: first.asignaturas[0] || '',
-            tema: '',
-          });
-        }
-      } catch {
-        // silent
-      }
+    if (hasCurriculum && activeLesson.level && activeLesson.subject) {
+      setCurriculumSelection({
+        level: activeLesson.level,
+        levelId: activeLesson.levelId,
+        subject: activeLesson.subject,
+        subjectId: activeLesson.subjectId,
+        objectiveId: activeLesson.objectiveId,
+        objectiveCode: activeLesson.objectiveCode,
+        objectiveText: activeLesson.objectiveText,
+        indicators: activeLesson.indicators,
+        skills: activeLesson.skills,
+        criteria: activeLesson.criteria,
+        curricularSkills: activeLesson.curricularSkills,
+        tema: '',
+      });
+      return;
     }
-    fetchFirstLevel();
-    return () => { cancelled = true; };
   }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -269,7 +270,7 @@ export function DuaGuideGenerator() {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={loading || !curriculumSelection.level || !curriculumSelection.subject || !curriculumSelection.tema}
+            disabled={loading || !curriculumSelection.level || !curriculumSelection.subject || !curriculumSelection.objectiveCode || !curriculumSelection.tema}
             className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Generando...' : 'Generar Guía DUA'}

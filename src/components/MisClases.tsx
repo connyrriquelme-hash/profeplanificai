@@ -16,6 +16,7 @@ import { saveToBank, resourceTypeLabel, isEvaluationType, type SourceTab } from 
 import { normalizeProductContent } from '../utils/productNormalizer';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
+import { useActiveLesson } from '../contexts/ActiveLessonContext';
 
 type RightTab = 'semana' | 'clase' | 'curriculum' | 'recursos' | 'evaluacion' | 'ntb';
 
@@ -140,6 +141,7 @@ export function MisClases() {
   const lastAutosave = useRef('');
   const [bankResources, setBankResources] = useState<any[]>([]);
   const [bankRefreshKey, setBankRefreshKey] = useState(0);
+  const { setCurriculum } = useActiveLesson();
 
   const selectedClass = useMemo(() => classes.find((c) => c.id === scheduleForm.class_id) || classes[0], [classes, scheduleForm.class_id]);
 
@@ -180,6 +182,13 @@ export function MisClases() {
       attitudeIds: parseJsonList(cur.attitude_ids_json || cur.attitudeIds),
       methodologyId: String(cur.methodology_id || ''),
     });
+    if (cur.objectiveInfo) {
+      setSelectedObjective(cur.objectiveInfo);
+    } else if (cur.objective_id) {
+      setSelectedObjective({ id: cur.objective_id, code: cur.objective_id, official_text: '' });
+    } else {
+      setSelectedObjective(null);
+    }
   }, [selectedLessonId]);
   useEffect(() => {
     if (!lessonCurriculum.levelId) { setLcSubjects([]); return; }
@@ -196,6 +205,41 @@ export function MisClases() {
     setLcContextLoading(true);
     fetch(`/api/curriculum/context?objective_id=${encodeURIComponent(lessonCurriculum.objectiveId)}`).then((r) => r.json()).then((d) => setLcContext(d?.data || null)).catch(() => setLcContext(null)).finally(() => setLcContextLoading(false));
   }, [lessonCurriculum.objectiveId]);
+  useEffect(() => {
+    if (!lessonCurriculum.objectiveId || !selectedObjective) return;
+    if (indicators.length > 0 && skills.length > 0) return;
+    const oaCode = selectedObjective.code || lessonCurriculum.objectiveId;
+    const objId = selectedObjective.id || lessonCurriculum.objectiveId;
+    Promise.all([
+      getIndicatorsByObjective(oaCode).catch(() => []),
+      getSkillsByObjective(objId).catch(() => []),
+    ]).then(([loadedInd, loadedSk]) => {
+      if (loadedInd.length > 0 && indicators.length === 0) setIndicators(loadedInd);
+      if (loadedSk.length > 0 && skills.length === 0) setSkills(loadedSk);
+    });
+  }, [lessonCurriculum.objectiveId, selectedObjective?.id]);
+
+  // Sync curriculum to ActiveLessonContext so Copilot/DUA can read it
+  useEffect(() => {
+    if (!lessonCurriculum.levelId) return;
+    const levelName = courses.find(c => c.id === lessonCurriculum.levelId)?.name || '';
+    const subjectName = lcSubjects.find(s => s.id === lessonCurriculum.subjectId)?.name || '';
+    const obj = selectedObjective;
+    setCurriculum({
+      level: levelName,
+      levelId: lessonCurriculum.levelId,
+      subject: subjectName,
+      subjectId: lessonCurriculum.subjectId,
+      objectiveId: obj?.id || lessonCurriculum.objectiveId || '',
+      objectiveCode: obj?.code || obj?.codigo_oa || lessonCurriculum.objectiveId || '',
+      objectiveText: obj?.official_text || obj?.descripcion || '',
+      indicators: indicators.map(i => typeof i === 'string' ? i : i.description || i.indicator_text || ''),
+      skills: skills.map(s => typeof s === 'string' ? s : s.official_text || s.description || ''),
+      criteria: [],
+      curricularSkills: [],
+    });
+  }, [lessonCurriculum.levelId, lessonCurriculum.subjectId, lessonCurriculum.objectiveId, selectedObjective, indicators, skills, courses, lcSubjects, setCurriculum]);
+
   useEffect(() => {
     if (!selectedLessonId) { setBankResources([]); return; }
     import('../services/apiClient').then(({ api }) => {

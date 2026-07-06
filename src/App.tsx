@@ -28,6 +28,7 @@ import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DuaGuideGenerator } from './pages/DuaGuideGenerator';
 import { ProjectCopilot } from './components/ProjectCopilot';
+import { ActiveLessonProvider } from './contexts/ActiveLessonContext';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -181,7 +182,9 @@ export default function App() {
   return (
     <ProjectProvider>
       <CurriculumProvider>
-        <AppContent />
+        <ActiveLessonProvider>
+          <AppContent />
+        </ActiveLessonProvider>
       </CurriculumProvider>
     </ProjectProvider>
   );

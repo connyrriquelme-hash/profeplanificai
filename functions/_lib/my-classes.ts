@@ -123,6 +123,18 @@ export async function getLessonBundle(db: D1Database, lessonId: string, teacherI
   const curriculum = await db.prepare('SELECT * FROM lesson_plan_curriculum WHERE lesson_plan_id = ?')
     .bind(planId)
     .first<JsonRecord>();
+
+  let objectiveInfo: JsonRecord | null = null;
+  if (curriculum?.objective_id) {
+    try {
+      objectiveInfo = await db.prepare(`
+        SELECT o.id, o.code, o.official_text, o.normalized_text, o.bloom_level
+        FROM objectives o WHERE o.id = ? OR o.code = ?
+        LIMIT 1
+      `).bind(String(curriculum.objective_id), String(curriculum.objective_id)).first<JsonRecord>();
+    } catch { /* ignore */ }
+  }
+
   const methodologies = await db.prepare(`
     SELECT lpm.*, m.name, m.description
     FROM lesson_plan_methodologies lpm
@@ -142,7 +154,7 @@ export async function getLessonBundle(db: D1Database, lessonId: string, teacherI
   return {
     lesson,
     plan,
-    curriculum,
+    curriculum: curriculum ? { ...curriculum, objectiveInfo } : null,
     methodologies: methodologies.results || [],
     resources: resources.results || [],
     evaluations: evaluations.results || [],
@@ -167,16 +179,18 @@ export async function getCurriculumContext(db: D1Database, objectiveId: string, 
 
   if (!objective) return null;
 
-  const indicators = await db.prepare('SELECT id, indicator_text AS description, observable_action, evaluation_type FROM curriculum_indicators WHERE oa_code = ? LIMIT 30')
+  let indicators = await db.prepare('SELECT id, indicator_text AS description, observable_action, evaluation_type FROM curriculum_indicators WHERE oa_code = ? LIMIT 30')
     .bind(objective.code)
     .all<JsonRecord>();
-  const skills = await db.prepare(`
+
+  let skills = await db.prepare(`
     SELECT sk.id, sk.official_text AS description
     FROM objective_skills os
     JOIN skills sk ON sk.id = os.skill_id
     WHERE os.objective_id = ?
     LIMIT 20
   `).bind(objective.id).all<JsonRecord>();
+
   const attitudes = await db.prepare(`
     SELECT att.id, att.official_text AS description
     FROM objective_attitudes oa
@@ -191,6 +205,21 @@ export async function getCurriculumContext(db: D1Database, objectiveId: string, 
     ORDER BY name
     LIMIT 8
   `).all<JsonRecord>();
+
+  if (skills.results && skills.results.length === 0) {
+    try {
+      const coreSkills = await db.prepare(`
+        SELECT sk.id, sk.official_text AS description
+        FROM skills sk
+        JOIN objective_skills os ON os.skill_id = sk.id
+        WHERE os.objective_id = ? OR os.objective_id IN (
+          SELECT id FROM objectives WHERE code = ?
+        )
+        LIMIT 20
+      `).bind(objective.id, objective.code).all<JsonRecord>();
+      if (coreSkills.results && coreSkills.results.length > 0) skills = coreSkills;
+    } catch { /* keep empty */ }
+  }
 
   return {
     level_id: levelId || objective.level_id,

@@ -27,6 +27,8 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
 
     const { results } = await context.env.CORE_DB.prepare(query).bind(...params).all<NivelRow>();
 
+    console.debug('[curriculum-api] levels', { count: results.length, source: 'CORE_DB' });
+
     const data = results.map((row, i) => ({
       id: row.id,
       code: row.id,
@@ -38,6 +40,7 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
     return Response.json({
       data,
       count: data.length,
+      source: 'CORE_DB',
       attribution: 'Curriculo Nacional - MINEDUC Chile (Niveles Educativos)',
     });
   } catch (err) {
