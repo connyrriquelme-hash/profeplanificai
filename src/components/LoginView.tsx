@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LogIn, Loader2, Shield, BookOpen, ClipboardCheck, Users, FolderOpen, Bot } from 'lucide-react';
 import TrialRequestForm from './TrialRequestForm';
 
-const SLOGAN = 'Gestión invisible, impacto infinito.';
+const SLOGAN = 'Gestión inteligente. Aprendizaje sin límites.';
 
 const BENEFITS = [
   { icon: BookOpen, text: 'Planificaciones alineadas a OA del currículum chileno' },
