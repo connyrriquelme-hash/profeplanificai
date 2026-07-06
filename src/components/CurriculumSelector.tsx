@@ -31,7 +31,7 @@ export function CurriculumSelector({
   const {
     levels, subjects, objectives, indicators, skills,
     levelObjects, subjectObjects,
-    selection, loading,
+    selection, loading, error,
     setLevel, setSubject, setObjective,
     setIndicatorsSelection, setSkillsSelection,
     addCriteria, removeCriteria,
@@ -69,7 +69,9 @@ export function CurriculumSelector({
 
   const handleObjectiveSelect = (codigo_oa: string, descripcion: string, objectiveId: string) => {
     setObjective(codigo_oa, descripcion, objectiveId);
-    handleChange({ objectiveId, objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: [], curricularSkills: [] });
+    const obj = objectives.find((o) => o.id === objectiveId || o.codigo_oa === codigo_oa);
+    const fallbackSkills = (obj?.habilidades_csv || '').split(',').map((item) => item.trim()).filter(Boolean);
+    handleChange({ objectiveId, objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: fallbackSkills, curricularSkills: [] });
   };
 
   const handleIndicatorToggle = (ind: string) => {
@@ -137,6 +139,12 @@ export function CurriculumSelector({
             <option value="">{selection.level ? 'Seleccionar asignatura' : 'Primero elige nivel'}</option>
             {subjects.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
+          {selection.level && !loading && subjects.length === 0 && (
+            <p className="mt-2 text-xs font-semibold text-red-600">No se encontraron asignaturas para este nivel</p>
+          )}
+          {error && (
+            <p className="mt-2 text-xs font-semibold text-red-600">{error}</p>
+          )}
         </div>
       </div>
 
@@ -234,6 +242,22 @@ export function CurriculumSelector({
         </div>
       )}
 
+      {showSkills && selection.objectiveCode && skills.length === 0 && (selection.skills || []).length > 0 && (
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1.5">Habilidades</label>
+          <div className="flex flex-wrap gap-1.5">
+            {(selection.skills || []).map((skillText) => (
+              <span
+                key={skillText}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-violet-100 border-violet-300 text-violet-700"
+              >
+                {skillText}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {showSkills && selection.objectiveCode && (selection.curricularSkills || []).length > 0 && (
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1.5">
@@ -264,7 +288,7 @@ export function CurriculumSelector({
         </div>
       )}
 
-      {showSkills && selection.objectiveCode && selection.indicators && selection.indicators.length === 0 && skills.length === 0 && (
+      {showSkills && selection.objectiveCode && selection.indicators && selection.indicators.length === 0 && skills.length === 0 && (selection.skills || []).length === 0 && (
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1.5">
             Habilidades {selection.skills && selection.skills.length > 0 && `(${selection.skills.length} seleccionadas)`}

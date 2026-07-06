@@ -56,6 +56,14 @@ interface CurriculumSkill {
   official_text: string;
 }
 
+interface CurriculumContextResponse {
+  ok: boolean;
+  data?: {
+    indicators?: Array<{ description?: string; indicator_text?: string }>;
+    skills?: Array<{ description?: string; official_text?: string }>;
+  };
+}
+
 interface UseCurriculumSelectionOptions {
   initialLevel?: string;
   initialLevelId?: string;
@@ -116,6 +124,10 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     }
   }, []);
 
+  const parseCsv = useCallback((value?: string): string[] => {
+    return (value || '').split(',').map((item) => item.trim()).filter(Boolean);
+  }, []);
+
   // Load levels
   useEffect(() => {
     let cancelled = false;
@@ -142,6 +154,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     let cancelled = false;
     (async () => {
       setLoadingSubjects(true);
+      setError('');
       const json = await fetchJSON<{ data: CurriculumSubject[] }>(
         `/api/curriculum/subjects?level_id=${encodeURIComponent(levelId)}`
       );
@@ -149,6 +162,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
         const data = json?.data || [];
         setSubjectObjects(data);
         setSubjects(data.map(s => s.name));
+        setError(data.length === 0 ? 'No se encontraron asignaturas para este nivel' : '');
         setLoadingSubjects(false);
       }
     })();
@@ -174,10 +188,29 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     return () => { cancelled = true; };
   }, [selection.levelId, selection.subjectId, selection.level, selection.subject, levelObjects, subjectObjects, fetchJSON]);
 
-  // Load indicators by oa_code
-  const loadIndicators = useCallback(async (oaCode: string) => {
+  // Load exact OA context first; fallback to oa_code indicators for older data.
+  const loadIndicators = useCallback(async (oaCode: string, objectiveId?: string) => {
     if (!oaCode) { setIndicators([]); return; }
     setLoadingIndicators(true);
+    if (objectiveId) {
+      const contextJson = await fetchJSON<CurriculumContextResponse>(
+        `/api/curriculum/context?objective_id=${encodeURIComponent(objectiveId)}`
+      );
+      const contextIndicators = contextJson?.data?.indicators
+        ?.map((i) => i.description || i.indicator_text || '')
+        .filter(Boolean) || [];
+      const contextSkills = contextJson?.data?.skills
+        ?.map((s) => s.description || s.official_text || '')
+        .filter(Boolean) || [];
+      if (contextSkills.length > 0) {
+        setSelection(prev => ({ ...prev, skills: contextSkills }));
+      }
+      if (contextIndicators.length > 0) {
+        setIndicators(contextIndicators);
+        setLoadingIndicators(false);
+        return;
+      }
+    }
     const json = await fetchJSON<{ indicators: CurriculumIndicator[] }>(
       `/api/curriculum/indicators?oa_code=${encodeURIComponent(oaCode)}`
     );
@@ -235,7 +268,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       skills: opts.initialSkills || [],
       criteria: opts.initialCriteria || [],
     }));
-    loadIndicators(code);
+    loadIndicators(code, obj.id);
     if (obj.id) {
       loadSkills(obj.id);
       loadCurricularSkills(obj.id);
@@ -283,16 +316,16 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       objectiveCode: codigo_oa,
       objectiveText: descripcion,
       indicators: [],
-      skills: [],
+      skills: parseCsv(obj?.habilidades_csv),
       criteria: [],
       curricularSkills: [],
     }));
-    loadIndicators(codigo_oa);
+    loadIndicators(codigo_oa, id);
     if (id) {
       loadSkills(id);
       loadCurricularSkills(id);
     }
-  }, [objectives, loadIndicators, loadSkills, loadCurricularSkills]);
+  }, [objectives, parseCsv, loadIndicators, loadSkills, loadCurricularSkills]);
 
   const setIndicatorsSelection = useCallback((inds: string[]) => {
     setSelection(prev => ({ ...prev, indicators: inds }));
@@ -328,6 +361,22 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
   }, []);
 
   const loading = loadingLevels || loadingSubjects || loadingObjectives || loadingIndicators || loadingSkills || loadingCurricular;
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const levelId = selection.levelId || levelObjects.find(l => l.name === selection.level)?.id || '';
+    const subjectId = selection.subjectId || subjectObjects.find(s => s.name === selection.subject)?.id || '';
+    console.debug('[dua-curriculum-debug]', {
+      level: selection.level,
+      levelId,
+      subjectsCount: subjects.length,
+      subject: selection.subject,
+      subjectId,
+      objectivesCount: objectives.length,
+      objectiveCode: selection.objectiveCode,
+      indicatorsCount: indicators.length,
+    });
+  }, [selection.level, selection.levelId, selection.subject, selection.subjectId, selection.objectiveCode, levelObjects, subjectObjects, subjects.length, objectives.length, indicators.length]);
 
   return {
     levels, subjects, objectives, indicators, skills,

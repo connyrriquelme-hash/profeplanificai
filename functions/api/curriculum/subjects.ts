@@ -7,6 +7,15 @@ interface AsignaturaRow {
   nivel_nombre: string;
 }
 
+function normalizeIdAliases(value: string): string[] {
+  const compact = value.trim().toLowerCase();
+  if (!compact) return [];
+  const dashed = compact.includes('-')
+    ? compact
+    : compact.replace(/^(\d+)(basico|medio)$/, '$1-$2');
+  return Array.from(new Set([compact, dashed]));
+}
+
 export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
@@ -23,8 +32,9 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
     const params: unknown[] = [];
 
     if (nivelId) {
-      conditions.push('a.nivel_id = ?');
-      params.push(nivelId);
+      const aliases = normalizeIdAliases(nivelId);
+      conditions.push(`a.nivel_id IN (${aliases.map(() => '?').join(', ')})`);
+      params.push(...aliases);
     } else if (level) {
       conditions.push('n.nombre LIKE ?');
       params.push(`%${level}%`);

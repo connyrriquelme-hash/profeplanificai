@@ -46,9 +46,14 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
 
     // Try DB first
     try {
-      const indResult = await context.env.DB.prepare(
-        'SELECT indicator_text AS description FROM curriculum_indicators WHERE oa_code = ? LIMIT 30'
-      ).bind(obj.codigo_oa).all<{ description: string }>();
+      let indResult = await context.env.DB.prepare(
+        'SELECT indicator_text AS description FROM curriculum_indicators WHERE objective_id = ? LIMIT 30'
+      ).bind(obj.id).all<{ description: string }>();
+      if (!indResult.results || indResult.results.length === 0) {
+        indResult = await context.env.DB.prepare(
+          'SELECT indicator_text AS description FROM curriculum_indicators WHERE oa_code = ? LIMIT 30'
+        ).bind(obj.codigo_oa).all<{ description: string }>();
+      }
       if (indResult.results && indResult.results.length > 0) {
         indicators = indResult.results;
         indicatorsSource = 'DB';
@@ -58,9 +63,14 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
     // Fallback to CORE_DB
     if (indicators.length === 0) {
       try {
-        const indResult = await context.env.CORE_DB.prepare(
-          'SELECT indicator_text AS description FROM curriculum_indicators WHERE oa_code = ? LIMIT 30'
-        ).bind(obj.codigo_oa).all<{ description: string }>();
+        let indResult = await context.env.CORE_DB.prepare(
+          'SELECT indicator_text AS description FROM curriculum_indicators WHERE objective_id = ? LIMIT 30'
+        ).bind(obj.id).all<{ description: string }>();
+        if (!indResult.results || indResult.results.length === 0) {
+          indResult = await context.env.CORE_DB.prepare(
+            'SELECT indicator_text AS description FROM curriculum_indicators WHERE oa_code = ? LIMIT 30'
+          ).bind(obj.codigo_oa).all<{ description: string }>();
+        }
         if (indResult.results && indResult.results.length > 0) {
           indicators = indResult.results;
           indicatorsSource = 'CORE_DB';
