@@ -83,7 +83,12 @@ const LEVELS_FALLBACK = [
   '1° Medio', '2° Medio', '3° Medio', '4° Medio',
 ];
 
+const _hookInstances = { current: 0 };
+
 export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {}) {
+  const instanceRef = useRef(++_hookInstances.current);
+  const INST = instanceRef.current;
+
   const [levels, setLevels] = useState<string[]>([]);
   const [levelObjects, setLevelObjects] = useState<CurriculumLevel[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
@@ -115,14 +120,20 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
 
   const fetchJSON = useCallback(async <T,>(url: string): Promise<T | null> => {
     try {
+      console.debug(`[CURR-DBG#${INST}] fetchJSON → ${url}`);
       const res = await fetch(url);
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.debug(`[CURR-DBG#${INST}] fetchJSON ✗ ${url} status=${res.status}`);
+        return null;
+      }
       const json = await res.json();
+      console.debug(`[CURR-DBG#${INST}] fetchJSON ✓ ${url} keys=${Object.keys(json || {})}`);
       return json;
-    } catch {
+    } catch (e) {
+      console.debug(`[CURR-DBG#${INST}] fetchJSON CATCH ${url}`, e);
       return null;
     }
-  }, []);
+  }, [INST]);
 
   const parseCsv = useCallback((value?: string): string[] => {
     return (value || '').split(',').map((item) => item.trim()).filter(Boolean);
@@ -136,30 +147,50 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       const json = await fetchJSON<{ data: CurriculumLevel[] }>('/api/curriculum/levels');
       if (!cancelled) {
         if (json?.data?.length) {
+          console.debug(`[CURR-DBG#${INST}] LEVELS_LOADED count=${json.data.length}`, json.data.map(l => `${l.id}:${l.name}`));
           setLevelObjects(json.data);
           setLevels(json.data.map(l => l.name));
         } else {
+          console.debug(`[CURR-DBG#${INST}] LEVELS_FALLBACK (API returned no data)`, json);
           setLevels(LEVELS_FALLBACK);
         }
         setLoadingLevels(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [fetchJSON]);
+  }, [fetchJSON, INST]);
 
   // Load subjects when level changes (use level_id for exact match)
   useEffect(() => {
     const levelId = selection.levelId || levelObjects.find(l => l.name === selection.level)?.id || '';
-    if (!levelId) { setSubjects([]); setSubjectObjects([]); return; }
+    console.debug(`[CURR-DBG#${INST}] SUBJECTS_EFFECT triggered`, {
+      selectionLevel: selection.level,
+      selectionLevelId: selection.levelId,
+      resolvedLevelId: levelId,
+      levelObjectsCount: levelObjects.length,
+    });
+    if (!levelId) {
+      console.debug(`[CURR-DBG#${INST}] SUBJECTS_EFFECT → BAIL: no levelId`);
+      setSubjects([]);
+      setSubjectObjects([]);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setLoadingSubjects(true);
       setError('');
-      const json = await fetchJSON<{ data: CurriculumSubject[] }>(
-        `/api/curriculum/subjects?level_id=${encodeURIComponent(levelId)}`
-      );
+      const url = `/api/curriculum/subjects?level_id=${encodeURIComponent(levelId)}`;
+      console.debug(`[CURR-DBG#${INST}] SUBJECTS_FETCH → ${url}`);
+      const json = await fetchJSON<{ data: CurriculumSubject[] }>(url);
       if (!cancelled) {
         const data = json?.data || [];
+        console.debug(`[CURR-DBG#${INST}] SUBJECTS_RECEIVED`, {
+          rawJsonKeys: Object.keys(json || {}),
+          hasDataField: !!json?.data,
+          dataLength: data.length,
+          names: data.map(s => s.name),
+          ids: data.map(s => s.id),
+        });
         setSubjectObjects(data);
         setSubjects(data.map(s => s.name));
         setError(data.length === 0 ? 'No se encontraron asignaturas para este nivel' : '');
@@ -167,30 +198,41 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       }
     })();
     return () => { cancelled = true; };
-  }, [selection.levelId, selection.level, levelObjects, fetchJSON]);
+  }, [selection.levelId, selection.level, levelObjects, fetchJSON, INST]);
 
   // Load objectives when subject changes (use level_id + subject_id for exact match)
   useEffect(() => {
     const levelId = selection.levelId || levelObjects.find(l => l.name === selection.level)?.id || '';
     const subjectId = selection.subjectId || subjectObjects.find(s => s.name === selection.subject)?.id || '';
-    if (!levelId || !subjectId) { setObjectives([]); return; }
+    console.debug(`[CURR-DBG#${INST}] OBJECTIVES_EFFECT triggered`, {
+      selectionLevel: selection.level, selectionLevelId: selection.levelId, resolvedLevelId: levelId,
+      selectionSubject: selection.subject, selectionSubjectId: selection.subjectId, resolvedSubjectId: subjectId,
+    });
+    if (!levelId || !subjectId) {
+      console.debug(`[CURR-DBG#${INST}] OBJECTIVES_EFFECT → BAIL: missing levelId=${!!levelId} subjectId=${!!subjectId}`);
+      setObjectives([]);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setLoadingObjectives(true);
-      const json = await fetchJSON<{ data: CurriculumObjective[] }>(
-        `/api/curriculum/objectives?level_id=${encodeURIComponent(levelId)}&subject_id=${encodeURIComponent(subjectId)}&limit=200`
-      );
+      const url = `/api/curriculum/objectives?level_id=${encodeURIComponent(levelId)}&subject_id=${encodeURIComponent(subjectId)}&limit=200`;
+      console.debug(`[CURR-DBG#${INST}] OBJECTIVES_FETCH → ${url}`);
+      const json = await fetchJSON<{ data: CurriculumObjective[] }>(url);
       if (!cancelled) {
-        setObjectives(json?.data || []);
+        const data = json?.data || [];
+        console.debug(`[CURR-DBG#${INST}] OBJECTIVES_RECEIVED count=${data.length}`);
+        setObjectives(data);
         setLoadingObjectives(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [selection.levelId, selection.subjectId, selection.level, selection.subject, levelObjects, subjectObjects, fetchJSON]);
+  }, [selection.levelId, selection.subjectId, selection.level, selection.subject, levelObjects, subjectObjects, fetchJSON, INST]);
 
   // Load exact OA context first; fallback to oa_code indicators for older data.
   const loadIndicators = useCallback(async (oaCode: string, objectiveId?: string) => {
     if (!oaCode) { setIndicators([]); return; }
+    console.debug(`[CURR-DBG#${INST}] loadIndicators oa=${oaCode} objId=${objectiveId}`);
     setLoadingIndicators(true);
     if (objectiveId) {
       const contextJson = await fetchJSON<CurriculumContextResponse>(
@@ -206,6 +248,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
         setSelection(prev => ({ ...prev, skills: contextSkills }));
       }
       if (contextIndicators.length > 0) {
+        console.debug(`[CURR-DBG#${INST}] loadIndicators from context: ${contextIndicators.length}`);
         setIndicators(contextIndicators);
         setLoadingIndicators(false);
         return;
@@ -214,9 +257,11 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     const json = await fetchJSON<{ indicators: CurriculumIndicator[] }>(
       `/api/curriculum/indicators?oa_code=${encodeURIComponent(oaCode)}`
     );
-    setIndicators(json?.indicators?.map(i => i.indicator_text) || []);
+    const result = json?.indicators?.map(i => i.indicator_text) || [];
+    console.debug(`[CURR-DBG#${INST}] loadIndicators from fallback: ${result.length}`);
+    setIndicators(result);
     setLoadingIndicators(false);
-  }, [fetchJSON]);
+  }, [fetchJSON, INST]);
 
   // Load skills by objective_id
   const loadSkills = useCallback(async (objectiveId: string) => {
@@ -277,6 +322,11 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
 
   const setLevel = useCallback((levelName: string) => {
     const obj = levelObjects.find(l => l.name === levelName);
+    console.debug(`[CURR-DBG#${INST}] setLevel("${levelName}")`, {
+      levelObjectsCount: levelObjects.length,
+      foundObject: obj ? `${obj.id}:${obj.name}` : 'NOT_FOUND',
+      resolvedId: obj?.id || '',
+    });
     setSelection(prev => ({
       ...prev,
       level: levelName,
@@ -290,10 +340,14 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       skills: [],
       criteria: [],
     }));
-  }, [levelObjects]);
+  }, [levelObjects, INST]);
 
   const setSubject = useCallback((subjectName: string) => {
     const obj = subjectObjects.find(s => s.name === subjectName);
+    console.debug(`[CURR-DBG#${INST}] setSubject("${subjectName}")`, {
+      subjectObjectsCount: subjectObjects.length,
+      foundObject: obj ? `${obj.id}:${obj.name}` : 'NOT_FOUND',
+    });
     setSelection(prev => ({
       ...prev,
       subject: subjectName,
@@ -305,11 +359,12 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       skills: [],
       criteria: [],
     }));
-  }, [subjectObjects]);
+  }, [subjectObjects, INST]);
 
   const setObjective = useCallback((codigo_oa: string, descripcion: string, objectiveId?: string) => {
     const obj = objectives.find(o => o.codigo_oa === codigo_oa);
     const id = objectiveId || obj?.id || '';
+    console.debug(`[CURR-DBG#${INST}] setObjective("${codigo_oa}")`, { id, objectivesCount: objectives.length });
     setSelection(prev => ({
       ...prev,
       objectiveId: id,
@@ -325,7 +380,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       loadSkills(id);
       loadCurricularSkills(id);
     }
-  }, [objectives, parseCsv, loadIndicators, loadSkills, loadCurricularSkills]);
+  }, [objectives, parseCsv, loadIndicators, loadSkills, loadCurricularSkills, INST]);
 
   const setIndicatorsSelection = useCallback((inds: string[]) => {
     setSelection(prev => ({ ...prev, indicators: inds }));
@@ -361,22 +416,6 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
   }, []);
 
   const loading = loadingLevels || loadingSubjects || loadingObjectives || loadingIndicators || loadingSkills || loadingCurricular;
-
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const levelId = selection.levelId || levelObjects.find(l => l.name === selection.level)?.id || '';
-    const subjectId = selection.subjectId || subjectObjects.find(s => s.name === selection.subject)?.id || '';
-    console.debug('[dua-curriculum-debug]', {
-      level: selection.level,
-      levelId,
-      subjectsCount: subjects.length,
-      subject: selection.subject,
-      subjectId,
-      objectivesCount: objectives.length,
-      objectiveCode: selection.objectiveCode,
-      indicatorsCount: indicators.length,
-    });
-  }, [selection.level, selection.levelId, selection.subject, selection.subjectId, selection.objectiveCode, levelObjects, subjectObjects, subjects.length, objectives.length, indicators.length]);
 
   return {
     levels, subjects, objectives, indicators, skills,

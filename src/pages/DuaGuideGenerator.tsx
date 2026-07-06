@@ -121,6 +121,15 @@ export function DuaGuideGenerator() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<CopilotProjectResult | null>(null);
 
+  console.debug('[DUA-DBG] RENDER', {
+    level: curriculumSelection.level,
+    levelId: curriculumSelection.levelId,
+    subject: curriculumSelection.subject,
+    subjectId: curriculumSelection.subjectId,
+    objectiveCode: curriculumSelection.objectiveCode,
+    hasCurriculum,
+  });
+
   // Pre-populate from ActiveLessonContext when navigating from MisClases
   useEffect(() => {
     if (hasCurriculum && activeLesson.level && activeLesson.subject) {
@@ -253,7 +262,10 @@ export function DuaGuideGenerator() {
       <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm space-y-4 print:hidden">
         <CurriculumSelector
           value={curriculumSelection}
-          onChange={setCurriculumSelection}
+          onChange={(s) => {
+            console.debug('[DUA-DBG] CurriculumSelector.onChange', { level: s.level, levelId: s.levelId, subject: s.subject, subjectId: s.subjectId, objectiveCode: s.objectiveCode });
+            setCurriculumSelection(s);
+          }}
           required
         />
 
