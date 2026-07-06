@@ -30,13 +30,22 @@ export function CurriculumSelector({
 }: CurriculumSelectorProps) {
   const {
     levels, subjects, objectives, indicators, skills,
+    levelObjects, subjectObjects,
     selection, loading,
     setLevel, setSubject, setObjective,
     setIndicatorsSelection, setSkillsSelection,
     addCriteria, removeCriteria,
   } = useCurriculumSelection({
     initialLevel: value.level,
+    initialLevelId: value.levelId,
     initialSubject: value.subject,
+    initialSubjectId: value.subjectId,
+    initialObjectiveId: value.objectiveId,
+    initialObjectiveCode: value.objectiveCode,
+    initialObjectiveText: value.objectiveText,
+    initialIndicators: value.indicators,
+    initialSkills: value.skills,
+    initialCriteria: value.criteria,
   });
 
   const [criteriaInput, setCriteriaInput] = useState('');
@@ -48,17 +57,19 @@ export function CurriculumSelector({
 
   const handleLevelChange = (level: string) => {
     setLevel(level);
-    handleChange({ level, subject: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
+    const obj = levelObjects.find(l => l.name === level);
+    handleChange({ level, levelId: obj?.id || '', subject: '', subjectId: '', objectiveId: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
   };
 
   const handleSubjectChange = (subject: string) => {
     setSubject(subject);
-    handleChange({ subject, objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
+    const obj = subjectObjects.find(s => s.name === subject);
+    handleChange({ subject, subjectId: obj?.id || '', objectiveId: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
   };
 
-  const handleObjectiveSelect = (codigo_oa: string, descripcion: string) => {
-    setObjective(codigo_oa, descripcion);
-    handleChange({ objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: [], curricularSkills: [] });
+  const handleObjectiveSelect = (codigo_oa: string, descripcion: string, objectiveId: string) => {
+    setObjective(codigo_oa, descripcion, objectiveId);
+    handleChange({ objectiveId, objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: [], curricularSkills: [] });
   };
 
   const handleIndicatorToggle = (ind: string) => {
@@ -142,7 +153,7 @@ export function CurriculumSelector({
                   <button
                     key={obj.id || obj.codigo_oa}
                     type="button"
-                    onClick={() => handleObjectiveSelect(obj.codigo_oa, obj.descripcion)}
+                    onClick={() => handleObjectiveSelect(obj.codigo_oa, obj.descripcion, obj.id)}
                     className={`w-full text-left px-3.5 py-2.5 border-b border-slate-100 last:border-b-0 transition text-sm ${
                       isSelected
                         ? 'bg-violet-50 border-l-2 border-l-violet-500'

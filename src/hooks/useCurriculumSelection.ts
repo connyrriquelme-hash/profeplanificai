@@ -1,8 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface CurriculumSelection {
   level?: string;
+  levelId?: string;
   subject?: string;
+  subjectId?: string;
+  objectiveId?: string;
   objectiveCode?: string;
   objectiveText?: string;
   indicators?: string[];
@@ -32,6 +35,7 @@ interface CurriculumSubject {
   code: string;
   name: string;
   level_name: string;
+  level_id: string;
 }
 
 interface CurriculumObjective {
@@ -54,7 +58,15 @@ interface CurriculumSkill {
 
 interface UseCurriculumSelectionOptions {
   initialLevel?: string;
+  initialLevelId?: string;
   initialSubject?: string;
+  initialSubjectId?: string;
+  initialObjectiveId?: string;
+  initialObjectiveCode?: string;
+  initialObjectiveText?: string;
+  initialIndicators?: string[];
+  initialSkills?: string[];
+  initialCriteria?: string[];
 }
 
 const LEVELS_FALLBACK = [
@@ -65,19 +77,24 @@ const LEVELS_FALLBACK = [
 
 export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {}) {
   const [levels, setLevels] = useState<string[]>([]);
+  const [levelObjects, setLevelObjects] = useState<CurriculumLevel[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [subjectObjects, setSubjectObjects] = useState<CurriculumSubject[]>([]);
   const [objectives, setObjectives] = useState<CurriculumObjective[]>([]);
   const [indicators, setIndicators] = useState<string[]>([]);
   const [skills, setSkills] = useState<CurriculumSkill[]>([]);
 
   const [selection, setSelection] = useState<CurriculumSelection>({
     level: opts.initialLevel || '',
+    levelId: opts.initialLevelId || '',
     subject: opts.initialSubject || '',
-    objectiveCode: '',
-    objectiveText: '',
-    indicators: [],
-    skills: [],
-    criteria: [],
+    subjectId: opts.initialSubjectId || '',
+    objectiveId: opts.initialObjectiveId || '',
+    objectiveCode: opts.initialObjectiveCode || '',
+    objectiveText: opts.initialObjectiveText || '',
+    indicators: opts.initialIndicators || [],
+    skills: opts.initialSkills || [],
+    criteria: opts.initialCriteria || [],
   });
 
   const [loadingLevels, setLoadingLevels] = useState(false);
@@ -99,6 +116,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     }
   }, []);
 
+  // Load levels
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -106,6 +124,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       const json = await fetchJSON<{ data: CurriculumLevel[] }>('/api/curriculum/levels');
       if (!cancelled) {
         if (json?.data?.length) {
+          setLevelObjects(json.data);
           setLevels(json.data.map(l => l.name));
         } else {
           setLevels(LEVELS_FALLBACK);
@@ -116,29 +135,36 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     return () => { cancelled = true; };
   }, [fetchJSON]);
 
+  // Load subjects when level changes (use level_id for exact match)
   useEffect(() => {
-    if (!selection.level) { setSubjects([]); return; }
+    const levelId = selection.levelId || levelObjects.find(l => l.name === selection.level)?.id || '';
+    if (!levelId) { setSubjects([]); setSubjectObjects([]); return; }
     let cancelled = false;
     (async () => {
       setLoadingSubjects(true);
       const json = await fetchJSON<{ data: CurriculumSubject[] }>(
-        `/api/curriculum/subjects?level=${encodeURIComponent(selection.level!)}`
+        `/api/curriculum/subjects?level_id=${encodeURIComponent(levelId)}`
       );
       if (!cancelled) {
-        setSubjects(json?.data?.map(s => s.name) || []);
+        const data = json?.data || [];
+        setSubjectObjects(data);
+        setSubjects(data.map(s => s.name));
         setLoadingSubjects(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [selection.level, fetchJSON]);
+  }, [selection.levelId, selection.level, levelObjects, fetchJSON]);
 
+  // Load objectives when subject changes (use level_id + subject_id for exact match)
   useEffect(() => {
-    if (!selection.level || !selection.subject) { setObjectives([]); return; }
+    const levelId = selection.levelId || levelObjects.find(l => l.name === selection.level)?.id || '';
+    const subjectId = selection.subjectId || subjectObjects.find(s => s.name === selection.subject)?.id || '';
+    if (!levelId || !subjectId) { setObjectives([]); return; }
     let cancelled = false;
     (async () => {
       setLoadingObjectives(true);
       const json = await fetchJSON<{ data: CurriculumObjective[] }>(
-        `/api/curriculum/objectives?nivel=${encodeURIComponent(selection.level!)}&asignatura=${encodeURIComponent(selection.subject!)}&limit=200`
+        `/api/curriculum/objectives?level_id=${encodeURIComponent(levelId)}&subject_id=${encodeURIComponent(subjectId)}&limit=200`
       );
       if (!cancelled) {
         setObjectives(json?.data || []);
@@ -146,8 +172,9 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       }
     })();
     return () => { cancelled = true; };
-  }, [selection.level, selection.subject, fetchJSON]);
+  }, [selection.levelId, selection.subjectId, selection.level, selection.subject, levelObjects, subjectObjects, fetchJSON]);
 
+  // Load indicators by oa_code
   const loadIndicators = useCallback(async (oaCode: string) => {
     if (!oaCode) { setIndicators([]); return; }
     setLoadingIndicators(true);
@@ -158,6 +185,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     setLoadingIndicators(false);
   }, [fetchJSON]);
 
+  // Load skills by objective_id
   const loadSkills = useCallback(async (objectiveId: string) => {
     if (!objectiveId) { setSkills([]); return; }
     setLoadingSkills(true);
@@ -189,34 +217,69 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     setLoadingCurricular(false);
   }, [fetchJSON, updateSelection]);
 
-  const setLevel = useCallback((level: string) => {
+  // Auto-select initial OA when objectives finish loading
+  const initialOaRef = useRef(opts.initialObjectiveCode);
+  useEffect(() => {
+    if (!initialOaRef.current || objectives.length === 0) return;
+    const code = initialOaRef.current;
+    if (selection.objectiveCode && selection.objectiveCode !== code) return;
+    const obj = objectives.find(o => o.codigo_oa === code);
+    if (!obj) return;
+    initialOaRef.current = undefined;
     setSelection(prev => ({
       ...prev,
-      level,
+      objectiveId: obj.id,
+      objectiveCode: code,
+      objectiveText: opts.initialObjectiveText || obj.descripcion,
+      indicators: opts.initialIndicators || [],
+      skills: opts.initialSkills || [],
+      criteria: opts.initialCriteria || [],
+    }));
+    loadIndicators(code);
+    if (obj.id) {
+      loadSkills(obj.id);
+      loadCurricularSkills(obj.id);
+    }
+  }, [objectives, opts.initialObjectiveText, opts.initialIndicators, opts.initialSkills, opts.initialCriteria, loadIndicators, loadSkills, loadCurricularSkills, selection.objectiveCode]);
+
+  const setLevel = useCallback((levelName: string) => {
+    const obj = levelObjects.find(l => l.name === levelName);
+    setSelection(prev => ({
+      ...prev,
+      level: levelName,
+      levelId: obj?.id || '',
       subject: '',
+      subjectId: '',
+      objectiveId: '',
       objectiveCode: '',
       objectiveText: '',
       indicators: [],
       skills: [],
       criteria: [],
     }));
-  }, []);
+  }, [levelObjects]);
 
-  const setSubject = useCallback((subject: string) => {
+  const setSubject = useCallback((subjectName: string) => {
+    const obj = subjectObjects.find(s => s.name === subjectName);
     setSelection(prev => ({
       ...prev,
-      subject,
+      subject: subjectName,
+      subjectId: obj?.id || '',
+      objectiveId: '',
       objectiveCode: '',
       objectiveText: '',
       indicators: [],
       skills: [],
       criteria: [],
     }));
-  }, []);
+  }, [subjectObjects]);
 
-  const setObjective = useCallback((codigo_oa: string, descripcion: string) => {
+  const setObjective = useCallback((codigo_oa: string, descripcion: string, objectiveId?: string) => {
+    const obj = objectives.find(o => o.codigo_oa === codigo_oa);
+    const id = objectiveId || obj?.id || '';
     setSelection(prev => ({
       ...prev,
+      objectiveId: id,
       objectiveCode: codigo_oa,
       objectiveText: descripcion,
       indicators: [],
@@ -225,10 +288,9 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       curricularSkills: [],
     }));
     loadIndicators(codigo_oa);
-    const obj = objectives.find(o => o.codigo_oa === codigo_oa);
-    if (obj?.id) {
-      loadSkills(obj.id);
-      loadCurricularSkills(obj.id);
+    if (id) {
+      loadSkills(id);
+      loadCurricularSkills(id);
     }
   }, [objectives, loadIndicators, loadSkills, loadCurricularSkills]);
 
@@ -260,7 +322,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
   }, []);
 
   const resetSelection = useCallback(() => {
-    setSelection({ level: '', subject: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [], curricularSkills: [] });
+    setSelection({ level: '', levelId: '', subject: '', subjectId: '', objectiveId: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [], curricularSkills: [] });
     setIndicators([]);
     setSkills([]);
   }, []);
@@ -269,6 +331,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
 
   return {
     levels, subjects, objectives, indicators, skills,
+    levelObjects, subjectObjects,
     selection, loading, error,
     setLevel, setSubject, setObjective,
     setIndicatorsSelection, setSkillsSelection,

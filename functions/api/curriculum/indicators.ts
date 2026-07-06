@@ -1,4 +1,4 @@
-interface Env { DB: D1Database }
+interface Env { DB: D1Database; CORE_DB?: D1Database }
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   const url = new URL(context.request.url);
@@ -12,6 +12,8 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
   const status = url.searchParams.get('status') || '';
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10), 500);
   const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+
+  console.debug('[curriculum-api] indicators', { level, grade, subject, oaCode, objectiveId, limit, offset });
 
   const conditions: string[] = [];
   const params: any[] = [];
@@ -27,6 +29,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
   const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
+  // Try DB first
   try {
     const countResult = await context.env.DB.prepare(`
       SELECT COUNT(*) as total FROM curriculum_indicators ci ${whereClause}
@@ -48,13 +51,64 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       LIMIT ? OFFSET ?
     `).bind(...params, limit, offset).all<any>();
 
-    return Response.json({
-      total: countResult?.total || 0,
-      limit,
-      offset,
-      indicators: results.results || [],
-    });
+    const rows = results.results || [];
+
+    console.debug('[curriculum-api] indicators result', { count: rows.length, source: 'DB' });
+
+    if (rows.length > 0) {
+      return Response.json({
+        total: countResult?.total || 0,
+        limit,
+        offset,
+        indicators: rows,
+        source: 'DB',
+      });
+    }
   } catch (err: any) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.warn('[curriculum/indicators] DB query failed, trying CORE_DB:', err.message);
   }
+
+  // Fallback to CORE_DB if DB returned empty
+  if (context.env.CORE_DB) {
+    try {
+      const countResult = await context.env.CORE_DB.prepare(`
+        SELECT COUNT(*) as total FROM curriculum_indicators ci ${whereClause}
+      `).bind(...params).first<{ total: number }>();
+
+      const results = await context.env.CORE_DB.prepare(`
+        SELECT ci.*,
+          CASE WHEN ci.objective_id IS NULL OR ci.objective_id = '' THEN 1 ELSE 0 END as missing_oa,
+          CASE WHEN ci.skill_id IS NULL OR ci.skill_id = '' THEN 1 ELSE 0 END as missing_skill
+        FROM curriculum_indicators ci
+        ${whereClause}
+        ORDER BY ci.track, ci.level, ci.grade, ci.subject, ci.oa_code
+        LIMIT ? OFFSET ?
+      `).bind(...params, limit, offset).all<any>();
+
+      const rows = results.results || [];
+
+      console.debug('[curriculum-api] indicators result', { count: rows.length, source: 'CORE_DB' });
+
+      return Response.json({
+        total: countResult?.total || 0,
+        limit,
+        offset,
+        indicators: rows,
+        source: 'CORE_DB',
+      });
+    } catch (err: any) {
+      console.warn('[curriculum/indicators] CORE_DB query also failed:', err.message);
+    }
+  }
+
+  // Both failed or empty
+  console.debug('[curriculum-api] indicators result', { count: 0, source: 'empty' });
+
+  return Response.json({
+    total: 0,
+    limit,
+    offset,
+    indicators: [],
+    source: 'empty',
+  });
 }

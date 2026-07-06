@@ -4,11 +4,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult } from '../types/copilot';
 import { saveToBank } from '../services/bankService';
 import { CurriculumSelector, type CurriculumSelection } from './CurriculumSelector';
-
-interface CurriculumNivel {
-  nivel: string;
-  asignaturas: string[];
-}
+import { useActiveLesson } from '../contexts/ActiveLessonContext';
 
 const TOAST_ID = 'project-copilot-save';
 
@@ -17,6 +13,7 @@ interface ProjectCopilotProps {
 }
 
 export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
+  const { curriculum: activeLesson, hasCurriculum } = useActiveLesson();
   const [tema, setTema] = useState('La célula');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,26 +23,23 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
     subject: '',
   });
 
+  // Pre-populate from ActiveLessonContext when navigating from MisClases
   useEffect(() => {
-    let cancelled = false;
-    async function fetchFirstLevel() {
-      try {
-        const res = await fetch('/api/curriculum');
-        const json = await res.json() as { ok: boolean; data: CurriculumNivel[] };
-        if (!cancelled && json.ok && json.data.length > 0) {
-          const first = json.data[0];
-          setCurriculumSelection(prev => ({
-            ...prev,
-            level: first.nivel,
-            subject: first.asignaturas[0] || '',
-          }));
-        }
-      } catch {
-        // silent — fallback
-      }
+    if (hasCurriculum && activeLesson.level && activeLesson.subject) {
+      setCurriculumSelection({
+        level: activeLesson.level,
+        levelId: activeLesson.levelId,
+        subject: activeLesson.subject,
+        subjectId: activeLesson.subjectId,
+        objectiveId: activeLesson.objectiveId,
+        objectiveCode: activeLesson.objectiveCode,
+        objectiveText: activeLesson.objectiveText,
+        indicators: activeLesson.indicators,
+        skills: activeLesson.skills,
+        criteria: activeLesson.criteria,
+        curricularSkills: activeLesson.curricularSkills,
+      });
     }
-    fetchFirstLevel();
-    return () => { cancelled = true; };
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -176,7 +170,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !curriculumSelection.level || !curriculumSelection.subject || !curriculumSelection.objectiveCode || !tema}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition"
         >
           {loading ? (
