@@ -25,49 +25,10 @@ export interface SessionInfo {
 }
 
 export async function loginAPI(email: string, password: string): Promise<{ user: User; token: string }> {
-  try {
-    const data = await api.post<AuthResponse>('/api/auth/login', { email, password });
-    localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: data.token }));
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    return data;
-  } catch (error) {
-    const status = (error as Error & { status?: number })?.status;
-    if (status && status < 500) throw error;
-    await new Promise((r) => setTimeout(r, 300));
-    const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-    const found = users.find((u) => u.email === email);
-    if (!found) throw new Error('Usuario no encontrado. Verifica tu email.');
-    const token = genId() + '.' + genId();
-    localStorage.setItem(USER_KEY, JSON.stringify(found));
-    localStorage.setItem(TOKEN_KEY, JSON.stringify({ token }));
-    return { user: found, token };
-  }
-}
-
-export async function registerAPI(
-  email: string,
-  password: string,
-  nombre: string
-): Promise<{ user: User; token: string }> {
-  try {
-    const data = await api.post<AuthResponse>('/api/auth/register', { email, password, nombre });
-    localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: data.token }));
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    return data;
-  } catch (error) {
-    const status = (error as Error & { status?: number })?.status;
-    if (status && status < 500) throw error;
-    await new Promise((r) => setTimeout(r, 300));
-    const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-    if (users.some((u) => u.email === email)) throw new Error('Este email ya está registrado.');
-    const newUser: User = { id: genId(), email, nombre, rol: 'docente' };
-    users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    const token = genId() + '.' + genId();
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-    localStorage.setItem(TOKEN_KEY, JSON.stringify({ token }));
-    return { user: newUser, token };
-  }
+  const data = await api.post<AuthResponse>('/api/auth/login', { email, password });
+  localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: data.token }));
+  localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data;
 }
 
 export async function verifySession(): Promise<User | null> {

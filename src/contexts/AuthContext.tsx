@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { loginAPI, registerAPI, verifySession, logoutAPI, refreshUser, getSessions, revokeSessionAPI, revokeOtherSessionsAPI, type SessionInfo } from '../services/authService';
+import { loginAPI, verifySession, logoutAPI, refreshUser, getSessions, revokeSessionAPI, revokeOtherSessionsAPI, type SessionInfo } from '../services/authService';
 
 export interface User {
   id: string;
   email: string;
   nombre: string;
   rol: 'docente' | 'admin';
+  active?: number;
 }
 
 interface AuthContextType {
@@ -13,7 +14,6 @@ interface AuthContextType {
   loading: boolean;
   online: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, nombre: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
@@ -55,12 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOnline(true);
   }, []);
 
-  const register = useCallback(async (email: string, password: string, nombre: string) => {
-    const result = await registerAPI(email, password, nombre);
-    setUser(result.user);
-    setOnline(true);
-  }, []);
-
   const logout = useCallback(async () => {
     await logoutAPI();
     setUser(null);
@@ -94,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadSessions]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, online, login, register, logout, refreshUser: refreshUserCallback, isAuthenticated: !!user, sessions, loadSessions, revokeSession, revokeOtherSessions }}>
+    <AuthContext.Provider value={{ user, loading, online, login, logout, refreshUser: refreshUserCallback, isAuthenticated: !!user, sessions, loadSessions, revokeSession, revokeOtherSessions }}>
       {children}
     </AuthContext.Provider>
   );

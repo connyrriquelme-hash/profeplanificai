@@ -15,11 +15,15 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     }
 
     const user = await context.env.DB.prepare(
-      'SELECT id, email, nombre, rol FROM usuarios WHERE id = ?'
-    ).bind(session.userId).first() as { id: string; email: string; nombre: string; rol: string } | null;
+      'SELECT id, email, nombre, rol, active FROM usuarios WHERE id = ?'
+    ).bind(session.userId).first() as { id: string; email: string; nombre: string; rol: string; active: number } | null;
 
     if (!user) {
       return Response.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    if (user.active === 0) {
+      return Response.json({ error: 'Tu cuenta está desactivada. Contacta al administrador.' }, { status: 403 });
     }
 
     let sessionMeta = null;

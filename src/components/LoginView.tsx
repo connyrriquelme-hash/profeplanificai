@@ -1,21 +1,19 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, UserPlus, Loader2, WifiOff } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
 
 export default function LoginView() {
-  const { login, register } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [nombre, setNombre] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!email || !password || (mode === 'register' && !nombre)) {
+    if (!email || !password) {
       setError('Completa todos los campos.');
       return;
     }
@@ -25,11 +23,7 @@ export default function LoginView() {
     }
     setBusy(true);
     try {
-      if (mode === 'login') {
-        await login(email, password);
-      } else {
-        await register(email, password, nombre);
-      }
+      await login(email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de conexión');
     } finally {
@@ -50,41 +44,13 @@ export default function LoginView() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                mode === 'login' ? 'bg-white shadow-sm text-indigo-700' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <LogIn className="inline w-4 h-4 mr-1.5" />
-              Iniciar sesión
-            </button>
-            <button
-              onClick={() => { setMode('register'); setError(''); }}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                mode === 'register' ? 'bg-white shadow-sm text-indigo-700' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <UserPlus className="inline w-4 h-4 mr-1.5" />
-              Registrarse
-            </button>
-          </div>
+          <h2 className="text-lg font-semibold text-gray-800 mb-1">
+            <LogIn className="inline w-5 h-5 mr-1.5 text-indigo-600" />
+            Iniciar sesión
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">Accede con la cuenta creada por el administrador de tu institución.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'register' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
-                  placeholder="María González"
-                />
-              </div>
-            )}
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
@@ -124,18 +90,14 @@ export default function LoginView() {
             >
               {busy ? (
                 <Loader2 className="inline w-5 h-5 animate-spin" />
-              ) : mode === 'login' ? (
-                'Iniciar sesión'
               ) : (
-                'Crear cuenta'
+                'Iniciar sesión'
               )}
             </button>
           </form>
 
           <p className="mt-6 text-xs text-gray-400 text-center leading-relaxed">
-            Al continuar, aceptas usar PlanificaIA bajo los términos de uso.
-            <br />
-            Los datos se almacenan localmente o en Cloudflare D1 según disponibilidad.
+            Si no tienes cuenta, solicita acceso al administrador de tu institución.
           </p>
         </div>
       </motion.div>

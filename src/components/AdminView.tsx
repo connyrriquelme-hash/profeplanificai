@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/apiClient';
 import { getPlans, getRecursosGuardados, getEvalsGuardadas, getCursos, getEstudiantes, getCollabPosts } from '../services/storageService';
-import { BarChart3, Users, Database, Wifi, WifiOff, UserCog, RefreshCw, Save, Monitor, Trash2, ShieldOff, Building2 } from 'lucide-react';
+import { BarChart3, Users, Database, Wifi, WifiOff, UserCog, RefreshCw, Save, Monitor, Trash2, ShieldOff, Building2, UserPlus, X } from 'lucide-react';
 
 interface DashboardStats {
   planes: number; recursos: number; evaluaciones: number;
@@ -11,7 +11,7 @@ interface DashboardStats {
 
 interface Usuario {
   id: string; email: string; nombre: string;
-  rol: string; created_at: string; updated_at: string;
+  rol: string; active: number; created_at: string; updated_at: string;
 }
 
 export default function AdminView({ onNavigate }: { onNavigate?: (view: string) => void }) {
@@ -28,6 +28,13 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
   const [resetPwd, setResetPwd] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState('docente');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -92,6 +99,46 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
     } catch (e) {
       setMsg('Error: ' + (e instanceof Error ? e.message : 'desconocido'));
     } finally { setSaving(false); }
+  };
+
+  const toggleActive = async (u: Usuario) => {
+    if (u.rol === 'admin' && u.active === 1) {
+      const adminCount = usuarios.filter(x => x.rol === 'admin' && x.active === 1).length;
+      if (adminCount <= 1) {
+        setMsg('No se puede desactivar: es el único administrador activo.');
+        return;
+      }
+    }
+    try {
+      await api.patch('/api/admin/usuarios', { userId: u.id, active: u.active === 1 ? false : true });
+      setMsg(u.active === 1 ? 'Usuario desactivado' : 'Usuario activado');
+      loadUsuarios();
+    } catch (e) {
+      setMsg('Error: ' + (e instanceof Error ? e.message : 'desconocido'));
+    }
+  };
+
+  const createUser = async () => {
+    if (!newName || !newEmail || !newPassword) {
+      setMsg('Completa todos los campos.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setMsg('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    setCreating(true); setMsg('');
+    try {
+      await api.post('/api/admin/usuarios', {
+        name: newName, email: newEmail, password: newPassword, role: newRole, active: true,
+      });
+      setMsg('Usuario creado correctamente');
+      setShowCreate(false);
+      setNewName(''); setNewEmail(''); setNewPassword(''); setNewRole('docente');
+      loadUsuarios();
+    } catch (e) {
+      setMsg('Error: ' + (e instanceof Error ? e.message : 'desconocido'));
+    } finally { setCreating(false); }
   };
 
   const items = stats ? [
@@ -170,9 +217,64 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
 
       {tab === 'usuarios' && (
         <div className="card">
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Users size={18} /> Gestión de Usuarios
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Users size={18} /> Gestión de Usuarios
+            </h3>
+            <button className="primary" onClick={() => { setShowCreate(!showCreate); setMsg(''); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, padding: '6px 14px' }}>
+              <UserPlus size={14} /> Crear usuario
+            </button>
+          </div>
+
+          {showCreate && (
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nuevo usuario</h4>
+                <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                  <X size={16} />
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Nombre</label>
+                  <input value={newName} onChange={e => setNewName(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '1px solid #d1d5db', borderRadius: 6 }}
+                    placeholder="María González" />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Email</label>
+                  <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '1px solid #d1d5db', borderRadius: 6 }}
+                    placeholder="docente@colegio.cl" />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Contraseña</label>
+                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '1px solid #d1d5db', borderRadius: 6 }}
+                    placeholder="mínimo 6 caracteres" />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>Rol</label>
+                  <select value={newRole} onChange={e => setNewRole(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '1px solid #d1d5db', borderRadius: 6 }}>
+                    <option value="docente">docente</option>
+                    <option value="admin">admin</option>
+                    <option value="user">user</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button className="primary" onClick={createUser} disabled={creating}
+                  style={{ padding: '6px 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Save size={13} /> {creating ? 'Creando...' : 'Crear usuario'}
+                </button>
+                <button className="secondary" onClick={() => setShowCreate(false)}
+                  style={{ padding: '6px 12px', fontSize: 13 }}>Cancelar</button>
+              </div>
+            </div>
+          )}
+
           {loadingUsers ? (
             <p className="muted">Cargando usuarios...</p>
           ) : (
@@ -183,6 +285,7 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
                     <th style={{ textAlign: 'left', padding: '8px 6px' }}>Nombre</th>
                     <th style={{ textAlign: 'left', padding: '8px 6px' }}>Email</th>
                     <th style={{ textAlign: 'center', padding: '8px 6px' }}>Rol</th>
+                    <th style={{ textAlign: 'center', padding: '8px 6px' }}>Estado</th>
                     <th style={{ textAlign: 'center', padding: '8px 6px' }}>Creado</th>
                     <th style={{ textAlign: 'center', padding: '8px 6px' }}>Acciones</th>
                   </tr>
@@ -203,6 +306,13 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
                               <option value="docente">docente</option>
                               <option value="admin">admin</option>
                             </select>
+                          </td>
+                          <td style={{ padding: '6px', textAlign: 'center', fontSize: 11 }}>
+                            <span style={{
+                              display: 'inline-block', padding: '1px 8px', borderRadius: 8, fontWeight: 600,
+                              background: u.active ? '#dcfce7' : '#fee2e2',
+                              color: u.active ? '#166534' : '#991b1b',
+                            }}>{u.active ? 'Activo' : 'Inactivo'}</span>
                           </td>
                           <td style={{ padding: '6px', textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>
                             {new Date(u.created_at).toLocaleDateString()}
@@ -236,6 +346,17 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
                               background: u.rol === 'admin' ? '#ede9fe' : '#e0f2fe',
                               color: u.rol === 'admin' ? '#6d28d9' : '#0369a1',
                             }}>{u.rol}</span>
+                          </td>
+                          <td style={{ padding: '8px 6px', textAlign: 'center' }}>
+                            <button onClick={() => toggleActive(u)}
+                              style={{
+                                display: 'inline-block', padding: '1px 8px', borderRadius: 8,
+                                fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
+                                background: u.active ? '#dcfce7' : '#fee2e2',
+                                color: u.active ? '#166534' : '#991b1b',
+                              }}>
+                              {u.active ? 'Activo' : 'Inactivo'}
+                            </button>
                           </td>
                           <td style={{ padding: '8px 6px', textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>
                             {new Date(u.created_at).toLocaleDateString()}

@@ -16,15 +16,19 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const user = await context.env.DB.prepare(
-      'SELECT id, email, nombre, password_hash, rol FROM usuarios WHERE email = ?'
-    ).bind(email).first() as { id: string; email: string; nombre: string; password_hash: string; rol: string } | null;
+      'SELECT id, email, nombre, password_hash, rol, active FROM usuarios WHERE email = ?'
+    ).bind(email).first() as { id: string; email: string; nombre: string; password_hash: string; rol: string; active: number } | null;
 
     if (!user) {
-      return Response.json({ error: 'Usuario no encontrado' }, { status: 401 });
+      return Response.json({ error: 'Usuario o contraseña incorrectos.' }, { status: 401 });
+    }
+
+    if (user.active === 0) {
+      return Response.json({ error: 'Tu cuenta está desactivada. Contacta al administrador.' }, { status: 403 });
     }
 
     if (!(await verifyPassword(password, user.password_hash))) {
-      return Response.json({ error: 'Contraseña incorrecta' }, { status: 401 });
+      return Response.json({ error: 'Usuario o contraseña incorrectos.' }, { status: 401 });
     }
 
     const env: SessionEnv = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
@@ -34,7 +38,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const cookie = serializeSessionCookie(sessionId, expiresAt);
 
     return new Response(JSON.stringify({
-      user: { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol },
+      user: { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol, active: user.active },
       token,
       session: { id: sessionId, createdAt: new Date().toISOString(), expiresAt: expiresAt.toISOString() },
     }), {
