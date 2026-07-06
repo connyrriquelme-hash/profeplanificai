@@ -9,6 +9,8 @@ interface EmailEnv {
   EMAIL?: { send: (msg: { from: string; to: string; subject: string; text: string; html?: string }) => Promise<unknown> };
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
+  TRIAL_REQUEST_TO?: string;
+  TRIAL_REQUEST_FROM?: string;
 }
 
 export function buildEmailContent(params: {
@@ -115,4 +117,73 @@ export async function sendEmail(params: EmailParams, env: EmailEnv): Promise<Ema
   }
 
   return { ok: false, code: 'provider_not_configured', message: 'No hay proveedor de correo configurado.' };
+}
+
+interface TrialRequestData {
+  name: string;
+  email: string;
+  institution: string;
+  role: string;
+  message: string;
+  source: string;
+  ip: string;
+}
+
+export async function sendTrialRequestEmail(env: EmailEnv, data: TrialRequestData): Promise<boolean> {
+  const apiKey = env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.log('[email] RESEND_API_KEY not configured — skipping email send');
+    return false;
+  }
+
+  const to = env.TRIAL_REQUEST_TO || 'connyrriquelme@gmail.com';
+  const from = env.TRIAL_REQUEST_FROM || 'notificaciones@profeplanificai.cl';
+
+  const html = `
+    <div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+      <div style="background:linear-gradient(135deg,#d946ef,#f97316);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px;">
+        <h1 style="color:white;margin:0;font-size:22px;">Nueva solicitud de prueba gratuita</h1>
+        <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">ProfePlanificAI</p>
+      </div>
+      <div style="background:#f9fafb;border-radius:12px;padding:20px;border:1px solid #e5e7eb;">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;width:120px;">Nombre</td><td style="padding:8px 0;color:#111827;">${escapeHtml(data.name)}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;">Email</td><td style="padding:8px 0;color:#111827;"><a href="mailto:${escapeHtml(data.email)}">${escapeHtml(data.email)}</a></td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;">Institución</td><td style="padding:8px 0;color:#111827;">${escapeHtml(data.institution || 'No especificada')}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;">Cargo</td><td style="padding:8px 0;color:#111827;">${escapeHtml(data.role || 'No especificado')}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;">Mensaje</td><td style="padding:8px 0;color:#111827;">${escapeHtml(data.message || 'Sin mensaje')}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;">Origen</td><td style="padding:8px 0;color:#111827;">${escapeHtml(data.source)}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:600;">Fecha</td><td style="padding:8px 0;color:#111827;">${new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago' })}</td></tr>
+        </table>
+      </div>
+      <p style="text-align:center;color:#9ca3af;font-size:12px;margin-top:20px;">Este correo fue generado automáticamente por ProfePlanificAI.</p>
+    </div>
+  `;
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject: `Nueva solicitud de prueba gratuita — ProfePlanificAI`,
+        html,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => 'unknown');
+      console.error('[email] Resend API error:', res.status, err);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[email] Failed to send trial request email:', err);
+    return false;
+  }
 }
