@@ -12,6 +12,7 @@ export interface PedagogicalPlan {
   taxonomia_bloom_sugerida: string;
   indicadores_seleccionados?: string[];
   criterios_seleccionados?: string[];
+  habilidades_curriculares?: string[];
   estructura_clase: {
     inicio: LessonStage;
     desarrollo: LessonStage;

@@ -13,6 +13,7 @@ interface GenerateProjectRequest {
   indicators?: string[];
   skills?: string[];
   criteria?: string[];
+  curricularSkills?: string[];
 }
 
 function jsonResponse(payload: unknown, status = 200): Response {
@@ -39,6 +40,7 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
       indicators: Array.isArray(body.indicators) ? body.indicators.filter(Boolean) : [],
       skills: Array.isArray(body.skills) ? body.skills.filter(Boolean) : [],
       criteria: Array.isArray(body.criteria) ? body.criteria.filter(Boolean) : [],
+      curricularSkills: Array.isArray(body.curricularSkills) ? body.curricularSkills.filter(Boolean) : [],
     };
 
     const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema, curriculumContext);

@@ -18,9 +18,13 @@ function oaBlock(req: AIRequest): string {
   const criteriaText = Array.isArray(criteria) && criteria.length > 0
     ? `\nCriterios de aprendizaje:\n${criteria.map((c: string) => `- ${c}`).join('\n')}`
     : '';
+  const curricularSkills = req.curricularSkills;
+  const curricularText = Array.isArray(curricularSkills) && curricularSkills.length > 0
+    ? `\nHabilidades curriculares (a desarrollar transversalmente):\n${curricularSkills.map((s: string) => `- ${s}`).join('\n')}`
+    : '';
   return `OA: ${req.oaCode} — ${req.oaText || 'Texto no disponible'}
 Habilidades: ${req.skills?.join('; ') || 'No especificadas'}
-Indicadores: ${req.indicators?.join('; ') || 'No especificados'}${criteriaText}`;
+Indicadores: ${req.indicators?.join('; ') || 'No especificados'}${criteriaText}${curricularText}`;
 }
 
 function classBlock(req: AIRequest): string {

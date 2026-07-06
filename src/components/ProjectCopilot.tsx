@@ -76,6 +76,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
           indicators: curriculumSelection.indicators || [],
           skills: curriculumSelection.skills || [],
           criteria: curriculumSelection.criteria || [],
+          curricularSkills: (curriculumSelection.curricularSkills || []).map((s: any) => s.title || s.name || s),
         }),
       });
 
@@ -126,6 +127,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         skill: curriculumSelection.skills?.join(', ') || result.plan.habilidades,
         indicators: curriculumSelection.indicators,
         criteria: curriculumSelection.criteria,
+        curricularSkills: (curriculumSelection.curricularSkills || []).map((s: any) => s.title || s.name || s),
       });
       toast.dismiss(TOAST_ID);
       toast.success('Guardado en Banco de Recursos');

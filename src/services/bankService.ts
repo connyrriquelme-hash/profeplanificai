@@ -35,6 +35,7 @@ interface SaveToBankParams {
   skill?: string;
   indicators?: string[];
   criteria?: string[];
+  curricularSkills?: string[];
   generatedWith?: string;
   warnings?: string[];
 }
@@ -50,6 +51,7 @@ export async function saveToBank(params: SaveToBankParams): Promise<BankResource
     if (params.warnings?.length) metadata.warnings = params.warnings.join('; ');
     if (params.indicators?.length) metadata.indicators = params.indicators.join(' | ');
     if (params.criteria?.length) metadata.criteria = params.criteria.join(' | ');
+    if (params.curricularSkills?.length) metadata.curricularSkills = params.curricularSkills.join(' | ');
     if (params.level) metadata.level = params.level;
     if (params.subject) metadata.subject = params.subject;
     if (params.objectiveCode) metadata.objectiveCode = params.objectiveCode;

@@ -41,6 +41,8 @@ export interface AIRequest {
   outputFormat?: 'text' | 'json' | 'markdown';
   existingContent?: string;
   pedagogicalContext?: string;
+  curricularSkills?: string[];
+  criteria?: string[];
 }
 
 export interface AIResponse {

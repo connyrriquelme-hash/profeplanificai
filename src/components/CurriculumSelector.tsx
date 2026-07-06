@@ -58,7 +58,7 @@ export function CurriculumSelector({
 
   const handleObjectiveSelect = (codigo_oa: string, descripcion: string) => {
     setObjective(codigo_oa, descripcion);
-    handleChange({ objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: [] });
+    handleChange({ objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: [], curricularSkills: [] });
   };
 
   const handleIndicatorToggle = (ind: string) => {
@@ -216,6 +216,36 @@ export function CurriculumSelector({
                 >
                   {sk.code && <span className="font-mono opacity-60">{sk.code}</span>}
                   {sk.official_text}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {showSkills && selection.objectiveCode && (selection.curricularSkills || []).length > 0 && (
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+            Habilidades curriculares sugeridas
+            <span className="text-slate-400 font-normal ml-1">(del currículum por OA)</span>
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {(selection.curricularSkills || []).map((cs) => {
+              const active = (selection.skills || []).includes(cs.title);
+              return (
+                <button
+                  key={cs.id}
+                  type="button"
+                  onClick={() => handleSkillToggle(cs.title)}
+                  className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition ${
+                    active
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  {active ? <CheckCircle2 size={10} className="text-emerald-500" /> : null}
+                  {cs.title}
+                  {cs.unidadNombre && <span className="text-slate-400 font-normal ml-0.5">({cs.unidadNombre})</span>}
                 </button>
               );
             })}

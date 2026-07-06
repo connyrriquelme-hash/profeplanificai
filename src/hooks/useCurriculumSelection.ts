@@ -9,6 +9,15 @@ export interface CurriculumSelection {
   skills?: string[];
   criteria?: string[];
   tema?: string;
+  curricularSkills?: CurricularSkillItem[];
+}
+
+export interface CurricularSkillItem {
+  id: string;
+  title: string;
+  source: string;
+  unidadId?: string;
+  unidadNombre?: string;
 }
 
 interface CurriculumLevel {
@@ -76,6 +85,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
   const [loadingObjectives, setLoadingObjectives] = useState(false);
   const [loadingIndicators, setLoadingIndicators] = useState(false);
   const [loadingSkills, setLoadingSkills] = useState(false);
+  const [loadingCurricular, setLoadingCurricular] = useState(false);
   const [error, setError] = useState('');
 
   const fetchJSON = useCallback(async <T,>(url: string): Promise<T | null> => {
@@ -162,6 +172,23 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     setSelection(prev => ({ ...prev, ...patch }));
   }, []);
 
+  const loadCurricularSkills = useCallback(async (objectiveId: string) => {
+    if (!objectiveId) { updateSelection({ curricularSkills: [] }); return; }
+    setLoadingCurricular(true);
+    const json = await fetchJSON<{ data: any[] }>(
+      `/api/curriculum/skills?objective_id=${encodeURIComponent(objectiveId)}&include=curricular`
+    );
+    const items: CurricularSkillItem[] = (json?.data || []).map((row: any) => ({
+      id: row.id,
+      title: row.title || row.name,
+      source: row.source || 'curricular_skill',
+      unidadId: row.unidad_id,
+      unidadNombre: row.unidad_nombre,
+    }));
+    updateSelection({ curricularSkills: items });
+    setLoadingCurricular(false);
+  }, [fetchJSON, updateSelection]);
+
   const setLevel = useCallback((level: string) => {
     setSelection(prev => ({
       ...prev,
@@ -195,11 +222,15 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
       indicators: [],
       skills: [],
       criteria: [],
+      curricularSkills: [],
     }));
     loadIndicators(codigo_oa);
     const obj = objectives.find(o => o.codigo_oa === codigo_oa);
-    if (obj?.id) loadSkills(obj.id);
-  }, [objectives, loadIndicators, loadSkills]);
+    if (obj?.id) {
+      loadSkills(obj.id);
+      loadCurricularSkills(obj.id);
+    }
+  }, [objectives, loadIndicators, loadSkills, loadCurricularSkills]);
 
   const setIndicatorsSelection = useCallback((inds: string[]) => {
     setSelection(prev => ({ ...prev, indicators: inds }));
@@ -229,12 +260,12 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
   }, []);
 
   const resetSelection = useCallback(() => {
-    setSelection({ level: '', subject: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
+    setSelection({ level: '', subject: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [], curricularSkills: [] });
     setIndicators([]);
     setSkills([]);
   }, []);
 
-  const loading = loadingLevels || loadingSubjects || loadingObjectives || loadingIndicators || loadingSkills;
+  const loading = loadingLevels || loadingSubjects || loadingObjectives || loadingIndicators || loadingSkills || loadingCurricular;
 
   return {
     levels, subjects, objectives, indicators, skills,
@@ -243,7 +274,7 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     setIndicatorsSelection, setSkillsSelection,
     setCriteria, addCriteria, removeCriteria,
     resetSelection,
-    loadIndicators, loadSkills,
+    loadIndicators, loadSkills, loadCurricularSkills,
     updateSelection,
   };
 }

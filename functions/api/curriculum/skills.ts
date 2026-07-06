@@ -11,20 +11,65 @@ function unwrapD1(response: any): any[] {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   const url = new URL(context.request.url);
   const objectiveId = url.searchParams.get('objective_id') || '';
+  const objectiveCode = url.searchParams.get('objective_code') || '';
   const subject = url.searchParams.get('subject') || '';
+  const level = url.searchParams.get('level') || '';
   const course = url.searchParams.get('course') || '';
+  const include = url.searchParams.get('include') || '';
 
   try {
     let raw: any;
 
-    if (objectiveId) {
+    if (objectiveId || objectiveCode) {
+      const oid = objectiveId || objectiveCode;
+
+      const linkedSkills = await context.env.DB.prepare(`
+        SELECT DISTINCT cs.id, cs.code, cs.name as title, cs.description,
+               cs.nivel_desde as levelRange, cs.actividades_principales_json as activities,
+               cs.source_type as source, h.id as unidad_id, h.nombre as unidad_nombre,
+               h.descripcion as unidad_descripcion, h.unidad_numero, h.keywords_json
+        FROM curricular_skills cs
+        JOIN habilidades h ON h.curricular_skill_id = cs.id
+        JOIN oa_habilidades_curriculares oac ON oac.habilidad_id = h.id
+        WHERE oac.objetivo_id = ?
+        ORDER BY cs.code, h.unidad_numero
+      `).bind(oid).all();
+
+      const results = unwrapD1(linkedSkills);
+
+      if (results.length > 0) {
+        return Response.json({
+          ok: true,
+          data: results,
+          count: results.length,
+          source: 'curricular_skills_linked',
+        });
+      }
+
+      const obj = await context.env.DB.prepare(
+        'SELECT nivel, asignatura FROM objetivos_aprendizaje WHERE id = ? OR codigo = ?'
+      ).bind(oid, oid).first<{ nivel: string; asignatura: string }>();
+
+      if (obj) {
+        raw = await context.env.DB.prepare(`
+          SELECT sk.id, sk.code, sk.official_text, sk.subject_id
+          FROM skills sk
+          JOIN objective_skills os ON os.skill_id = sk.id
+          WHERE os.objective_id = ?
+          ORDER BY sk.code
+        `).bind(oid).all();
+      } else {
+        raw = { results: [] };
+      }
+    } else if (level && subject) {
       raw = await context.env.DB.prepare(`
-        SELECT sk.id, sk.code, sk.official_text, sk.subject_id
-        FROM skills sk
-        JOIN objective_skills os ON os.skill_id = sk.id
-        WHERE os.objective_id = ?
-        ORDER BY sk.code
-      `).bind(objectiveId).all();
+        SELECT cs.id, cs.code, cs.name as title, cs.description,
+               cs.nivel_desde as levelRange, cs.actividades_principales_json as activities,
+               cs.source_type as source
+        FROM curricular_skills cs
+        WHERE cs.nivel_desde <= ? AND cs.nivel_hasta >= ?
+        ORDER BY cs.code
+      `).bind(level, level).all();
     } else if (subject) {
       raw = await context.env.DB.prepare(`
         SELECT sk.id, sk.code, sk.official_text, sk.subject_id
@@ -45,10 +90,10 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       `).bind(course, course).all();
     } else {
       raw = await context.env.DB.prepare(`
-        SELECT sk.id, sk.code, sk.official_text, sk.subject_id
-        FROM skills sk
-        ORDER BY sk.code
-        LIMIT 100
+        SELECT id, code, name as title, description, nivel_desde as levelRange,
+               actividades_principales_json as activities, source_type as source
+        FROM curricular_skills
+        ORDER BY code
       `).all();
     }
 
@@ -59,7 +104,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       data: results,
       count: results.length,
       source: 'D1',
-      message: results.length === 0 ? 'No hay habilidades oficiales vinculadas' : undefined,
+      message: results.length === 0 ? 'No hay habilidades curriculares vinculadas' : undefined,
     });
   } catch (err: any) {
     return Response.json({ ok: false, error: err.message, data: [], count: 0 }, { status: 500 });

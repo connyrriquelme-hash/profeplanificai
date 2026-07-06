@@ -6,6 +6,7 @@ export interface CurriculumContext {
   indicators?: string[];
   skills?: string[];
   criteria?: string[];
+  curricularSkills?: string[];
 }
 
 export interface PedagogicalEngineInput {
@@ -164,15 +165,22 @@ export class PedagogicalEngine {
       ? `\nCriterios de aprendizaje:\n${curriculumContext.criteria.map(c => `- ${c}`).join('\n')}`
       : '';
 
+    const curricularSkillsText = curriculumContext?.curricularSkills?.length
+      ? curriculumContext.curricularSkills.join(', ')
+      : '';
+
+    const allSkills = [skills, curricularSkillsText].filter(Boolean).join(', ');
+
     return {
       tema: normalizedTema,
       curso: normalizedNivel,
       asignatura: normalizedAsignatura,
       objetivo_aprendizaje: `${objective.codigo_oa}: ${objective.descripcion}`,
-      habilidades: skills,
+      habilidades: allSkills || skills,
       taxonomia_bloom_sugerida: bloom,
       ...(indicatorsText ? { indicadores_seleccionados: curriculumContext!.indicators } : {}),
       ...(criteriaText ? { criterios_seleccionados: curriculumContext!.criteria } : {}),
+      ...(curricularSkillsText ? { habilidades_curriculares: curriculumContext!.curricularSkills } : {}),
       estructura_clase: {
         inicio: {
           tiempo_minutos: 15,
