@@ -51,6 +51,37 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       ).bind(oid, oid).first<{ nivel: string; asignatura: string }>();
 
       if (obj) {
+        const nivel = obj.nivel || '';
+        const asignatura = obj.asignatura || '';
+
+        const fallbackSkills = await context.env.DB.prepare(`
+          SELECT DISTINCT h.id, h.nombre as title, h.descripcion as description,
+                 h.unidad_numero, h.keywords_json,
+                 cs.id as group_id, cs.name as group_name
+          FROM habilidades h
+          JOIN curricular_skills cs ON cs.id = h.curricular_skill_id
+          JOIN asignaturas a ON a.id = h.asignatura_id
+          JOIN niveles n ON n.id = a.nivel_id
+          WHERE a.nombre = ?
+            AND (
+              (cs.nivel_desde = 'Prekínder' AND n.nombre IN ('Prekínder', 'Kínder'))
+              OR (cs.nivel_desde = '1° Básico' AND cs.nivel_hasta = '2° Medio'
+                  AND n.nombre IN ('1° Básico','2° Básico','3° Básico','4° Básico','5° Básico','6° Básico','7° Básico','8° Básico','1° Medio','2° Medio'))
+              OR (cs.nivel_desde = '3° Medio' AND n.nombre IN ('3° Medio', '4° Medio'))
+            )
+          ORDER BY cs.code, h.unidad_numero
+        `).bind(asignatura).all();
+
+        const fallbackResults = unwrapD1(fallbackSkills);
+        if (fallbackResults.length > 0) {
+          return Response.json({
+            ok: true,
+            data: fallbackResults,
+            count: fallbackResults.length,
+            source: 'curricular_skills_by_level_subject',
+          });
+        }
+
         raw = await context.env.DB.prepare(`
           SELECT sk.id, sk.code, sk.official_text, sk.subject_id
           FROM skills sk
@@ -63,13 +94,22 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       }
     } else if (level && subject) {
       raw = await context.env.DB.prepare(`
-        SELECT cs.id, cs.code, cs.name as title, cs.description,
+        SELECT DISTINCT cs.id, cs.code, cs.name as title, cs.description,
                cs.nivel_desde as levelRange, cs.actividades_principales_json as activities,
                cs.source_type as source
         FROM curricular_skills cs
-        WHERE cs.nivel_desde <= ? AND cs.nivel_hasta >= ?
+        JOIN habilidades h ON h.curricular_skill_id = cs.id
+        JOIN asignaturas a ON a.id = h.asignatura_id
+        JOIN niveles n ON n.id = a.nivel_id
+        WHERE a.nombre = ?
+          AND (
+            (cs.nivel_desde = 'Prekínder' AND n.nombre IN ('Prekínder', 'Kínder'))
+            OR (cs.nivel_desde = '1° Básico' AND cs.nivel_hasta = '2° Medio'
+                AND n.nombre IN ('1° Básico','2° Básico','3° Básico','4° Básico','5° Básico','6° Básico','7° Básico','8° Básico','1° Medio','2° Medio'))
+            OR (cs.nivel_desde = '3° Medio' AND n.nombre IN ('3° Medio', '4° Medio'))
+          )
         ORDER BY cs.code
-      `).bind(level, level).all();
+      `).bind(subject).all();
     } else if (subject) {
       raw = await context.env.DB.prepare(`
         SELECT sk.id, sk.code, sk.official_text, sk.subject_id
