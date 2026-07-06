@@ -8,6 +8,11 @@ interface GenerateProjectRequest {
   nivel?: string;
   asignatura?: string;
   tema?: string;
+  objectiveCode?: string;
+  objectiveText?: string;
+  indicators?: string[];
+  skills?: string[];
+  criteria?: string[];
 }
 
 function jsonResponse(payload: unknown, status = 200): Response {
@@ -28,7 +33,15 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
       return jsonResponse({ ok: false, error: 'nivel, asignatura y tema son obligatorios.' }, 400);
     }
 
-    const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema);
+    const curriculumContext = {
+      objectiveCode: String(body.objectiveCode || '').trim(),
+      objectiveText: String(body.objectiveText || '').trim(),
+      indicators: Array.isArray(body.indicators) ? body.indicators.filter(Boolean) : [],
+      skills: Array.isArray(body.skills) ? body.skills.filter(Boolean) : [],
+      criteria: Array.isArray(body.criteria) ? body.criteria.filter(Boolean) : [],
+    };
+
+    const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema, curriculumContext);
     const duaGuide = await AIEngine.generateDuaGuide(context.env, plan);
 
     return jsonResponse({

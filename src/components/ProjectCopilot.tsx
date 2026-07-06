@@ -3,6 +3,7 @@ import { Bot, Loader2, AlertCircle, Clock, CheckCircle2, Printer, Save } from 'l
 import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult } from '../types/copilot';
 import { saveToBank } from '../services/bankService';
+import { CurriculumSelector, type CurriculumSelection } from './CurriculumSelector';
 
 interface CurriculumNivel {
   nivel: string;
@@ -15,68 +16,45 @@ interface ProjectCopilotProps {
   onNavigate?: (view: string) => void;
 }
 
-const CURSOS_FALLBACK = [
-  '1° Básico', '2° Básico', '3° Básico', '4° Básico',
-  '5° Básico', '6° Básico', '7° Básico', '8° Básico',
-  '1° Medio', '2° Medio', '3° Medio', '4° Medio',
-];
-
-const ASIGNATURAS_FALLBACK = [
-  'Lenguaje y Comunicación', 'Lengua y Literatura', 'Matemática',
-  'Ciencias Naturales', 'Historia, Geografía y Ciencias Sociales',
-  'Educación Ciudadana', 'Inglés', 'Filosofía',
-  'Física', 'Química', 'Biología',
-];
-
 export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
-  const [curriculum, setCurriculum] = useState<CurriculumNivel[]>([]);
-  const [loadingCurriculum, setLoadingCurriculum] = useState(true);
   const [tema, setTema] = useState('La célula');
-  const [curso, setCurso] = useState('5° Básico');
-  const [asignatura, setAsignatura] = useState('Ciencias Naturales');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CopilotProjectResult | null>(null);
+  const [curriculumSelection, setCurriculumSelection] = useState<CurriculumSelection>({
+    level: '',
+    subject: '',
+  });
 
   useEffect(() => {
     let cancelled = false;
-    async function fetchCurriculum() {
+    async function fetchFirstLevel() {
       try {
         const res = await fetch('/api/curriculum');
         const json = await res.json() as { ok: boolean; data: CurriculumNivel[] };
         if (!cancelled && json.ok && json.data.length > 0) {
-          setCurriculum(json.data);
           const first = json.data[0];
-          setCurso(first.nivel);
-          setAsignatura(first.asignaturas[0] || '');
+          setCurriculumSelection(prev => ({
+            ...prev,
+            level: first.nivel,
+            subject: first.asignaturas[0] || '',
+          }));
         }
       } catch {
-        // silent — fallback lists remain
-      } finally {
-        if (!cancelled) setLoadingCurriculum(false);
+        // silent — fallback
       }
     }
-    fetchCurriculum();
+    fetchFirstLevel();
     return () => { cancelled = true; };
   }, []);
-
-  const cursos = curriculum.length > 0 ? curriculum.map((c) => c.nivel) : CURSOS_FALLBACK;
-  const selectedNivel = curriculum.find((n) => n.nivel === curso);
-  const asignaturas = selectedNivel?.asignaturas || ASIGNATURAS_FALLBACK;
-
-  const handleCursoChange = (value: string) => {
-    setCurso(value);
-    const nivel = curriculum.find((n) => n.nivel === value);
-    if (nivel?.asignaturas[0]) setAsignatura(nivel.asignaturas[0]);
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const trimmedTema = tema.trim();
-    const trimmedCurso = curso.trim();
-    const trimmedAsignatura = asignatura.trim();
+    const trimmedLevel = (curriculumSelection.level || '').trim();
+    const trimmedAsignatura = (curriculumSelection.subject || '').trim();
 
-    if (!trimmedTema || !trimmedCurso || !trimmedAsignatura) {
+    if (!trimmedTema || !trimmedLevel || !trimmedAsignatura) {
       setError('Todos los campos son obligatorios.');
       return;
     }
@@ -89,7 +67,16 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
       const res = await fetch('/api/generate-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tema: trimmedTema, nivel: trimmedCurso, asignatura: trimmedAsignatura }),
+        body: JSON.stringify({
+          tema: trimmedTema,
+          nivel: trimmedLevel,
+          asignatura: trimmedAsignatura,
+          objectiveCode: curriculumSelection.objectiveCode || '',
+          objectiveText: curriculumSelection.objectiveText || '',
+          indicators: curriculumSelection.indicators || [],
+          skills: curriculumSelection.skills || [],
+          criteria: curriculumSelection.criteria || [],
+        }),
       });
 
       const json = await res.json();
@@ -97,7 +84,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
       if (!json.ok) {
         const msg = json.error || 'Error desconocido al generar.';
         if (res.status === 404) {
-          setError(`No se encontró OA para ${trimmedCurso} / ${trimmedAsignatura}.`);
+          setError(`No se encontró OA para ${trimmedLevel} / ${trimmedAsignatura}.`);
         } else if (res.status === 400) {
           setError(msg);
         } else {
@@ -125,6 +112,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         generatedAt: new Date().toISOString(),
         plan: result.plan,
         duaGuide: result.duaGuide || null,
+        curriculumSelection,
       });
       await saveToBank({
         title: `Planificación: ${result.plan.tema}`,
@@ -133,9 +121,11 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         source: 'project_copilot',
         level: result.plan.curso,
         subject: result.plan.asignatura,
-        objectiveCode: result.plan.objetivo_aprendizaje,
-        objectiveText: result.plan.objetivo_aprendizaje,
-        skill: result.plan.habilidades,
+        objectiveCode: curriculumSelection.objectiveCode || result.plan.objetivo_aprendizaje,
+        objectiveText: curriculumSelection.objectiveText || result.plan.objetivo_aprendizaje,
+        skill: curriculumSelection.skills?.join(', ') || result.plan.habilidades,
+        indicators: curriculumSelection.indicators,
+        criteria: curriculumSelection.criteria,
       });
       toast.dismiss(TOAST_ID);
       toast.success('Guardado en Banco de Recursos');
@@ -153,43 +143,27 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         </div>
         <h1 className="text-2xl font-bold text-slate-900">Generador de Planificación</h1>
         <p className="text-sm text-slate-500 max-w-md mx-auto">
-          Ingresa tema, curso y asignatura para generar una planificación completa con IA.
+          Ingresa tema, nivel, asignatura y objetivo para generar una planificación completa con IA.
         </p>
       </header>
 
       <form onSubmit={handleSubmit} className="no-print bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tema</label>
-            <input
-              type="text"
-              value={tema}
-              onChange={(e) => setTema(e.target.value)}
-              placeholder="Ej: La célula"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Curso</label>
-            <select
-              value={curso}
-              onChange={(e) => handleCursoChange(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
-            >
-              {cursos.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Asignatura</label>
-            <select
-              value={asignatura}
-              onChange={(e) => setAsignatura(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
-            >
-              {asignaturas.map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
-          </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tema</label>
+          <input
+            type="text"
+            value={tema}
+            onChange={(e) => setTema(e.target.value)}
+            placeholder="Ej: La célula"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
+          />
         </div>
+
+        <CurriculumSelector
+          value={curriculumSelection}
+          onChange={setCurriculumSelection}
+          required
+        />
 
         {error && (
           <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">

@@ -33,6 +33,8 @@ interface SaveToBankParams {
   objectiveCode?: string;
   objectiveText?: string;
   skill?: string;
+  indicators?: string[];
+  criteria?: string[];
   generatedWith?: string;
   warnings?: string[];
 }
@@ -46,6 +48,12 @@ export async function saveToBank(params: SaveToBankParams): Promise<BankResource
     if (params.classTitle) metadata.classTitle = params.classTitle;
     if (params.generatedWith) metadata.generatedWith = params.generatedWith;
     if (params.warnings?.length) metadata.warnings = params.warnings.join('; ');
+    if (params.indicators?.length) metadata.indicators = params.indicators.join(' | ');
+    if (params.criteria?.length) metadata.criteria = params.criteria.join(' | ');
+    if (params.level) metadata.level = params.level;
+    if (params.subject) metadata.subject = params.subject;
+    if (params.objectiveCode) metadata.objectiveCode = params.objectiveCode;
+    if (params.objectiveText) metadata.objectiveText = params.objectiveText;
 
     const result = await api.post<{ data: BankResource }>('/api/resources', {
       title: params.title,

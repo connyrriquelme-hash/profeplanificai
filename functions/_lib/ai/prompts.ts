@@ -14,9 +14,13 @@ Reglas generales:
 
 function oaBlock(req: AIRequest): string {
   if (!req.oaCode) return 'OA: No especificado. El docente debe seleccionar un OA del Curriculo Nacional.';
+  const criteria = (req as any).criteria;
+  const criteriaText = Array.isArray(criteria) && criteria.length > 0
+    ? `\nCriterios de aprendizaje:\n${criteria.map((c: string) => `- ${c}`).join('\n')}`
+    : '';
   return `OA: ${req.oaCode} — ${req.oaText || 'Texto no disponible'}
 Habilidades: ${req.skills?.join('; ') || 'No especificadas'}
-Indicadores: ${req.indicators?.join('; ') || 'No especificados'}`;
+Indicadores: ${req.indicators?.join('; ') || 'No especificados'}${criteriaText}`;
 }
 
 function classBlock(req: AIRequest): string {

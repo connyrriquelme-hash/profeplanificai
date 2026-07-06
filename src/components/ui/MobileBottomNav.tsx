@@ -1,11 +1,13 @@
 import { LayoutDashboard, Sparkles, FolderKanban, ClipboardCheck, LibraryBig, BookOpen, BarChart2 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../../utils/roles';
 
 interface MobileBottomNavProps {
   activeView: string;
   onViewChange: (view: string) => void;
 }
 
-const bottomNavItems = [
+const allBottomNavItems = [
   { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
   { id: 'mis-clases', label: 'Clases', icon: Sparkles },
   { id: 'unidades-didacticas', label: 'Unidades', icon: BookOpen },
@@ -14,6 +16,10 @@ const bottomNavItems = [
 ];
 
 export function MobileBottomNav({ activeView, onViewChange }: MobileBottomNavProps) {
+  const { user } = useAuth();
+  const isAdmin = isAdminUser(user);
+  const bottomNavItems = allBottomNavItems.filter(item => !ADMIN_ONLY_VIEW_IDS.has(item.id) || isAdmin);
+
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200/60 safe-area-bottom no-print">
       <div className="flex items-center justify-around px-1 py-1">

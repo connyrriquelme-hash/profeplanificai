@@ -10,6 +10,8 @@ export interface PedagogicalPlan {
   objetivo_aprendizaje: string;
   habilidades: string;
   taxonomia_bloom_sugerida: string;
+  indicadores_seleccionados?: string[];
+  criterios_seleccionados?: string[];
   estructura_clase: {
     inicio: LessonStage;
     desarrollo: LessonStage;

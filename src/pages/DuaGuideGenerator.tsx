@@ -2,16 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult, DuaGuide, PedagogicalPlan } from '../types/copilot';
 import { saveToBank } from '../services/bankService';
-
-interface CurriculumNivel {
-  nivel: string;
-  asignaturas: string[];
-}
-
-interface CurriculumResponse {
-  ok: boolean;
-  data: CurriculumNivel[];
-}
+import { CurriculumSelector, type CurriculumSelection } from '../components/CurriculumSelector';
 
 const TOAST_ID = 'dua-guide-generate';
 
@@ -30,12 +21,6 @@ const TOAST_STYLE = {
   error: {
     iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' },
   },
-};
-
-const DEFAULT_FORM = {
-  nivel: '',
-  asignatura: '',
-  tema: '',
 };
 
 function LevelCard({ 
@@ -125,50 +110,36 @@ function SkeletonLoader() {
 }
 
 export function DuaGuideGenerator() {
-  const [curriculum, setCurriculum] = useState<CurriculumNivel[]>([]);
-  const [loadingCurriculum, setLoadingCurriculum] = useState(true);
-  const [form, setForm] = useState(DEFAULT_FORM);
+  const [curriculumSelection, setCurriculumSelection] = useState<CurriculumSelection>({
+    level: '',
+    subject: '',
+    tema: '',
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<CopilotProjectResult | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-
-    async function fetchCurriculum() {
+    async function fetchFirstLevel() {
       try {
         const res = await fetch('/api/curriculum');
-        const json = (await res.json()) as CurriculumResponse;
+        const json = (await res.json()) as { ok: boolean; data: { nivel: string; asignaturas: string[] }[] };
         if (!cancelled && json.ok && json.data.length > 0) {
-          setCurriculum(json.data);
-          setForm({
-            nivel: json.data[0].nivel,
-            asignatura: json.data[0].asignaturas[0] || '',
+          const first = json.data[0];
+          setCurriculumSelection({
+            level: first.nivel,
+            subject: first.asignaturas[0] || '',
             tema: '',
           });
         }
       } catch {
-        // silent — form stays empty
-      } finally {
-        if (!cancelled) setLoadingCurriculum(false);
+        // silent
       }
     }
-
-    fetchCurriculum();
+    fetchFirstLevel();
     return () => { cancelled = true; };
   }, []);
-
-  const selectedNivel = curriculum.find((n) => n.nivel === form.nivel);
-  const asignaturas = selectedNivel?.asignaturas || [];
-
-  const handleNivelChange = (value: string) => {
-    const nivel = curriculum.find((n) => n.nivel === value);
-    setForm((prev) => ({
-      ...prev,
-      nivel: value,
-      asignatura: nivel?.asignaturas[0] || '',
-    }));
-  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -182,7 +153,16 @@ export function DuaGuideGenerator() {
       const response = await fetch('/api/generate-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          nivel: curriculumSelection.level,
+          asignatura: curriculumSelection.subject,
+          tema: curriculumSelection.tema || '',
+          objectiveCode: curriculumSelection.objectiveCode || '',
+          objectiveText: curriculumSelection.objectiveText || '',
+          indicators: curriculumSelection.indicators || [],
+          skills: curriculumSelection.skills || [],
+          criteria: curriculumSelection.criteria || [],
+        }),
       });
 
       const payload = await response.json() as CopilotProjectResult & { error?: string; details?: string };
@@ -215,6 +195,7 @@ export function DuaGuideGenerator() {
         generatedAt: new Date().toISOString(),
         plan: result.plan,
         duaGuide,
+        curriculumSelection,
       });
       await saveToBank({
         title: duaGuide.titulo_guia || 'Guía DUA Multinivel',
@@ -223,9 +204,11 @@ export function DuaGuideGenerator() {
         source: 'guia_dua',
         level: result.plan.curso,
         subject: result.plan.asignatura,
-        objectiveCode: result.plan.objetivo_aprendizaje,
-        objectiveText: result.plan.objetivo_aprendizaje,
-        skill: result.plan.habilidades,
+        objectiveCode: curriculumSelection.objectiveCode || result.plan.objetivo_aprendizaje,
+        objectiveText: curriculumSelection.objectiveText || result.plan.objetivo_aprendizaje,
+        skill: curriculumSelection.skills?.join(', ') || result.plan.habilidades,
+        indicators: curriculumSelection.indicators,
+        criteria: curriculumSelection.criteria,
       });
       toast.dismiss(TOAST_ID);
       toast.success('Guardado en Banco de Recursos');
@@ -260,56 +243,32 @@ export function DuaGuideGenerator() {
         <p className="text-sm font-bold uppercase tracking-[0.24em] text-white/75">Copilot pedagógico</p>
         <h1 className="mt-2 text-3xl font-black">Generador de Guía DUA</h1>
         <p className="mt-2 max-w-3xl text-sm text-white/85">
-          Prueba la orquestación CORE_DB → PedagogicalEngine → Workers AI → Guía DUA Multinivel.
+          Selecciona nivel, asignatura y OA para generar una guía DUA multinivel completa con IA.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm md:grid-cols-4 print:hidden">
-        <label className="space-y-2 md:col-span-1">
-          <span className="text-xs font-black uppercase text-slate-500">Nivel</span>
-          <select
-            value={form.nivel}
-            onChange={(e) => handleNivelChange(e.target.value)}
-            disabled={loadingCurriculum}
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:opacity-60"
-          >
-            {loadingCurriculum && <option>Cargando niveles...</option>}
-            {!loadingCurriculum && curriculum.length === 0 && <option>Sin datos disponibles</option>}
-            {curriculum.map((n) => (
-              <option key={n.nivel} value={n.nivel}>{n.nivel}</option>
-            ))}
-          </select>
-        </label>
+      <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm space-y-4 print:hidden">
+        <CurriculumSelector
+          value={curriculumSelection}
+          onChange={setCurriculumSelection}
+          required
+        />
 
-        <label className="space-y-2 md:col-span-1">
-          <span className="text-xs font-black uppercase text-slate-500">Asignatura</span>
-          <select
-            value={form.asignatura}
-            onChange={(e) => setForm((prev) => ({ ...prev, asignatura: e.target.value }))}
-            disabled={loadingCurriculum || asignaturas.length === 0}
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:opacity-60"
-          >
-            {asignaturas.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="space-y-2 md:col-span-1">
-          <span className="text-xs font-black uppercase text-slate-500">Tema</span>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tema</label>
           <input
-            value={form.tema}
-            onChange={(event) => setForm((prev) => ({ ...prev, tema: event.target.value }))}
+            value={curriculumSelection.tema || ''}
+            onChange={(event) => setCurriculumSelection(prev => ({ ...prev, tema: event.target.value }))}
             className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             placeholder="Ej: La célula"
           />
-        </label>
+        </div>
 
-        <div className="flex items-end">
+        <div className="flex justify-end">
           <button
             type="submit"
-            disabled={loading || loadingCurriculum || !form.nivel || !form.asignatura || !form.tema}
-            className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={loading || !curriculumSelection.level || !curriculumSelection.subject || !curriculumSelection.tema}
+            className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Generando...' : 'Generar Guía DUA'}
           </button>

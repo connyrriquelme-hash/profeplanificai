@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { CurriculumProvider } from './contexts/CurriculumContext';
 import type { ViewType } from './types';
+import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from './utils/roles';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { AppShell } from './components/ui/AppShell';
@@ -71,7 +72,35 @@ function AppContent() {
     }
   }, []);
 
+  const isAdmin = isAdminUser(user);
+  const blockedView = ADMIN_ONLY_VIEW_IDS.has(activeView) && !isAdmin;
+
   const renderView = () => {
+    if (blockedView) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-slate-900">Acceso restringido</h2>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              No tienes acceso a esta sección. Esta herramienta está disponible solo para administradores.
+            </p>
+            <button
+              onClick={() => handleViewChange('dashboard')}
+              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeView) {
       case 'dashboard':
         return <DashboardView onNavigate={handleViewChange} />;

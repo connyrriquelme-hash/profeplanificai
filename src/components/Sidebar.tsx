@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../utils/roles';
 
 interface SidebarProps {
   activeView: string;
@@ -62,38 +63,44 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     ? user.nombre.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'P';
 
+  const isAdmin = isAdminUser(user);
+
   const navItems = (collapsed = false) => (
     <nav className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2 space-y-3' : 'px-3 space-y-5'}`}>
-      {menuSections.map((section) => (
-        <div key={section.label}>
-          {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{section.label}</p>}
-          <div className="space-y-0.5">
-            {section.items.map((item) => {
-              const isActive = activeView === item.id;
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3.5'} py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'bg-violet-50 text-slate-900 font-semibold shadow-sm border border-violet-100'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                  onClick={() => handleNavigate(item.id)}
-                >
-                  <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200 ${
-                    isActive ? 'text-violet-600' : 'text-slate-400 group-hover:text-slate-600'
-                  }`}>
-                    <Icon size={18} strokeWidth={2} />
-                  </span>
-                  {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
-                </button>
-              );
-            })}
+      {menuSections.map((section) => {
+        const visibleItems = section.items.filter(item => !ADMIN_ONLY_VIEW_IDS.has(item.id) || isAdmin);
+        if (visibleItems.length === 0) return null;
+        return (
+          <div key={section.label}>
+            {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{section.label}</p>}
+            <div className="space-y-0.5">
+              {visibleItems.map((item) => {
+                const isActive = activeView === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    title={collapsed ? item.label : undefined}
+                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3.5'} py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
+                      isActive
+                        ? 'bg-violet-50 text-slate-900 font-semibold shadow-sm border border-violet-100'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                    onClick={() => handleNavigate(item.id)}
+                  >
+                    <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200 ${
+                      isActive ? 'text-violet-600' : 'text-slate-400 group-hover:text-slate-600'
+                    }`}>
+                      <Icon size={18} strokeWidth={2} />
+                    </span>
+                    {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       {user?.rol === 'admin' && (
         <div>
           {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-amber-500 uppercase">Administración</p>}

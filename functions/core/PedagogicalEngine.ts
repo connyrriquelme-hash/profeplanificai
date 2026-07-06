@@ -1,5 +1,13 @@
 import type { CurriculumObjectiveRow, PedagogicalEngineEnv, PedagogicalPlan } from './types';
 
+export interface CurriculumContext {
+  objectiveCode?: string;
+  objectiveText?: string;
+  indicators?: string[];
+  skills?: string[];
+  criteria?: string[];
+}
+
 export interface PedagogicalEngineInput {
   nivel: string;
   asignatura: string;
@@ -37,6 +45,7 @@ export class PedagogicalEngine {
     nivel: string,
     asignatura: string,
     tema: string,
+    curriculumContext?: CurriculumContext,
   ): Promise<PedagogicalPlan> {
     if (!env.CORE_DB) {
       throw new Error('CORE_DB no está configurado en el entorno.');
@@ -52,16 +61,8 @@ export class PedagogicalEngine {
 
     let objective: CurriculumObjectiveRow | null = null;
 
-    try {
-      const keywords = normalizedTema
-        .toLowerCase()
-        .split(/\s+/)
-        .filter((w) => w.length > 3);
-
-      if (keywords.length > 0) {
-        const likeClauses = keywords.map(() => 'LOWER(oa.descripcion) LIKE ?').join(' OR ');
-        const likeBindings = keywords.map((kw) => `%${kw}%`);
-
+    if (curriculumContext?.objectiveCode) {
+      try {
         objective = await env.CORE_DB.prepare(
           `SELECT
             oa.codigo_oa,
@@ -74,15 +75,49 @@ export class PedagogicalEngine {
           INNER JOIN niveles n ON n.id = a.nivel_id
           WHERE TRIM(n.nombre) = ?
             AND TRIM(a.nombre) = ?
-            AND (${likeClauses})
-          ORDER BY u.numero ASC, oa.codigo_oa ASC
+            AND oa.codigo_oa = ?
           LIMIT 1`,
         )
-          .bind(normalizedNivel, normalizedAsignatura, ...likeBindings)
+          .bind(normalizedNivel, normalizedAsignatura, curriculumContext.objectiveCode)
           .first<CurriculumObjectiveRow>();
+      } catch {
+        // Fall through to auto-detect
       }
-    } catch {
-      // If keyword search fails, fall through to default query
+    }
+
+    if (!objective) {
+      try {
+        const keywords = normalizedTema
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 3);
+
+        if (keywords.length > 0) {
+          const likeClauses = keywords.map(() => 'LOWER(oa.descripcion) LIKE ?').join(' OR ');
+          const likeBindings = keywords.map((kw) => `%${kw}%`);
+
+          objective = await env.CORE_DB.prepare(
+            `SELECT
+              oa.codigo_oa,
+              oa.descripcion,
+              oa.habilidades_csv,
+              u.titulo AS unidad_titulo
+            FROM objetivos_aprendizaje oa
+            INNER JOIN unidades u ON u.id = oa.unidad_id
+            INNER JOIN asignaturas a ON a.id = u.asignatura_id
+            INNER JOIN niveles n ON n.id = a.nivel_id
+            WHERE TRIM(n.nombre) = ?
+              AND TRIM(a.nombre) = ?
+              AND (${likeClauses})
+            ORDER BY u.numero ASC, oa.codigo_oa ASC
+            LIMIT 1`,
+          )
+            .bind(normalizedNivel, normalizedAsignatura, ...likeBindings)
+            .first<CurriculumObjectiveRow>();
+        }
+      } catch {
+        // If keyword search fails, fall through to default query
+      }
     }
 
     if (!objective) {
@@ -117,21 +152,35 @@ export class PedagogicalEngine {
 
     const bloom = inferBloomLevel(objective.habilidades_csv, objective.descripcion);
 
+    const skills = curriculumContext?.skills?.length
+      ? curriculumContext.skills.join(', ')
+      : objective.habilidades_csv;
+
+    const indicatorsText = curriculumContext?.indicators?.length
+      ? `\nIndicadores de evaluación:\n${curriculumContext.indicators.map(i => `- ${i}`).join('\n')}`
+      : '';
+
+    const criteriaText = curriculumContext?.criteria?.length
+      ? `\nCriterios de aprendizaje:\n${curriculumContext.criteria.map(c => `- ${c}`).join('\n')}`
+      : '';
+
     return {
       tema: normalizedTema,
       curso: normalizedNivel,
       asignatura: normalizedAsignatura,
       objetivo_aprendizaje: `${objective.codigo_oa}: ${objective.descripcion}`,
-      habilidades: objective.habilidades_csv,
+      habilidades: skills,
       taxonomia_bloom_sugerida: bloom,
+      ...(indicatorsText ? { indicadores_seleccionados: curriculumContext!.indicators } : {}),
+      ...(criteriaText ? { criterios_seleccionados: curriculumContext!.criteria } : {}),
       estructura_clase: {
         inicio: {
           tiempo_minutos: 15,
-          descripcion: `Activar conocimientos previos sobre ${normalizedTema} y conectar con la unidad "${objective.unidad_titulo}".`,
+          descripcion: `Activar conocimientos previos sobre ${normalizedTema} y conectar con la unidad "${objective.unidad_titulo}".${indicatorsText}${criteriaText}`,
         },
         desarrollo: {
           tiempo_minutos: 60,
-          descripcion: `Desarrollar actividades guiadas y colaborativas para abordar ${objective.codigo_oa}, usando observación, modelos y preguntas de análisis.`,
+          descripcion: `Desarrollar actividades guiadas y colaborativas para abordar ${objective.codigo_oa}, usando observación, modelos y preguntas de análisis.${skills ? ` Incorporar habilidades: ${skills}.` : ''}`,
         },
         cierre: {
           tiempo_minutos: 15,
