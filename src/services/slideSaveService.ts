@@ -1,6 +1,7 @@
 import type { SlideLesson } from '../types/slideLesson';
 import type { VisualLessonDeck } from '../types/presentation';
 import { api } from './apiClient';
+import { shareFromWorkspace } from './sharedDocumentService';
 
 const SLIDE_DECKS_LOCAL_KEY = 'slide_decks_local';
 
@@ -168,7 +169,6 @@ export async function shareSlideDeck(
   metadata: SlideSaveMetadata,
 ): Promise<ShareSlideResult> {
   try {
-    const { shareFromWorkspace } = await import('./sharedDocumentService');
     const slidesJson = serializeSlidesForSave(slideLesson);
     const result = shareFromWorkspace({
       title: slideLesson.title || `Lección: ${slideLesson.objectiveCode}`,

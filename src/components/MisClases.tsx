@@ -14,6 +14,7 @@ import {
   type GenerateActividadesResult, type LessonBundle, type LessonInstance, type NonTeachingBlock, type TeacherClass,
 } from '../services/misClasesService';
 import { saveToBank, resourceTypeLabel, isEvaluationType, type SourceTab } from '../services/bankService';
+import { api } from '../services/apiClient';
 import { normalizeProductContent } from '../utils/productNormalizer';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
@@ -248,18 +249,16 @@ export function MisClases() {
 
   useEffect(() => {
     if (!selectedLessonId) { setBankResources([]); return; }
-    import('../services/apiClient').then(({ api }) => {
-      api.get<{ data: any[] }>('/api/resources').then((res) => {
-        const all = res.data || [];
-        const filtered = all.filter((r: any) => {
-          try {
-            const meta = JSON.parse(r.metadata_json || '{}');
-            return meta.lessonId === selectedLessonId;
-          } catch { return false; }
-        });
-        setBankResources(filtered);
-      }).catch(() => setBankResources([]));
-    });
+    api.get<{ data: any[] }>('/api/resources').then((res) => {
+      const all = res.data || [];
+      const filtered = all.filter((r: any) => {
+        try {
+          const meta = JSON.parse(r.metadata_json || '{}');
+          return meta.lessonId === selectedLessonId;
+        } catch { return false; }
+      });
+      setBankResources(filtered);
+    }).catch(() => setBankResources([]));
   }, [selectedLessonId, bankRefreshKey]);
 
   const openLesson = async (lesson: LessonInstance) => {
