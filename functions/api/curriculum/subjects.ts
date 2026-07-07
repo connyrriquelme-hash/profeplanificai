@@ -1,5 +1,7 @@
 import type { PedagogicalEngineEnv } from '../../core/types';
 
+interface Env { DB: D1Database; CORE_DB: D1Database }
+
 interface AsignaturaRow {
   id: string;
   nivel_id: string;
@@ -16,7 +18,19 @@ function normalizeIdAliases(value: string): string[] {
   return Array.from(new Set([compact, dashed]));
 }
 
-export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
+async function resolveNivelNameFromCORE(cORE_DB: D1Database, nivelId: string): Promise<string | null> {
+  try {
+    const aliases = normalizeIdAliases(nivelId);
+    const { results } = await cORE_DB.prepare(
+      `SELECT nombre FROM niveles WHERE id IN (${aliases.map(() => '?').join(', ')})`
+    ).bind(...aliases).all<{ nombre: string }>();
+    return results.length > 0 ? results[0].nombre : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
     const level = url.searchParams.get('level') || '';
@@ -24,6 +38,54 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
     const q = url.searchParams.get('q')?.trim() || '';
 
     console.debug('[curriculum-api] subjects', { level, nivelId, q });
+
+    if (nivelId || level) {
+      let nivelName = level;
+      if (nivelId && !level) {
+        nivelName = await resolveNivelNameFromCORE(context.env.CORE_DB, nivelId) || nivelId;
+      }
+
+      const conditions: string[] = [];
+      const params: unknown[] = [];
+
+      if (nivelName) {
+        conditions.push('c.name LIKE ?');
+        params.push(`%${nivelName}%`);
+      }
+
+      if (q) {
+        conditions.push('(s.name LIKE ? OR c.name LIKE ?)');
+        params.push(`%${q}%`, `%${q}%`);
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      try {
+        const { results: dbResults } = await context.env.DB.prepare(`
+          SELECT s.id, s.name, s.normalized_name,
+                 c.id AS level_id, c.name AS level_name,
+                 COUNT(DISTINCT o.id) AS objective_count
+          FROM subjects s
+          JOIN objectives o ON o.subject_id = s.id
+          JOIN courses c ON c.id = o.course_id
+          ${whereClause}
+          GROUP BY s.id, c.id
+          ORDER BY s.name
+        `).bind(...params).all();
+
+        if (dbResults.length > 0) {
+          console.debug('[curriculum-api] subjects from DB', { count: dbResults.length, nivelName });
+          return Response.json({
+            data: dbResults,
+            count: dbResults.length,
+            source: 'DB',
+            attribution: 'Curriculo Nacional - MINEDUC Chile (Asignaturas)',
+          });
+        }
+      } catch (e) {
+        console.debug('[curriculum-api] subjects DB query failed, falling back to CORE_DB', e);
+      }
+    }
 
     let query = `SELECT a.id, a.nivel_id, a.nombre, n.nombre AS nivel_nombre
                  FROM asignaturas a

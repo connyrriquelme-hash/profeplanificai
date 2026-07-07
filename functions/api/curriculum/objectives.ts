@@ -1,5 +1,7 @@
 import type { PedagogicalEngineEnv } from '../../core/types';
 
+interface Env { DB: D1Database; CORE_DB: D1Database }
+
 interface ObjetivoRow {
   id: string;
   unidad_id: string;
@@ -20,7 +22,19 @@ function normalizeIdAliases(value: string): string[] {
   return Array.from(new Set([compact, dashed]));
 }
 
-export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>): Promise<Response> {
+async function resolveNivelNameFromCORE(cORE_DB: D1Database, nivelId: string): Promise<string | null> {
+  try {
+    const aliases = normalizeIdAliases(nivelId);
+    const { results } = await cORE_DB.prepare(
+      `SELECT nombre FROM niveles WHERE id IN (${aliases.map(() => '?').join(', ')})`
+    ).bind(...aliases).all<{ nombre: string }>();
+    return results.length > 0 ? results[0].nombre : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const url = new URL(context.request.url);
     const nivel = url.searchParams.get('nivel') || '';
@@ -31,6 +45,60 @@ export async function onRequestGet(context: EventContext<PedagogicalEngineEnv>):
     const limit = Math.max(1, Math.min(Number(url.searchParams.get('limit')) || 200, 500));
 
     console.debug('[curriculum-api] objectives', { nivel, asignatura, nivelId, asignaturaId, q, limit });
+
+    if (nivelId || asignaturaId) {
+      let nivelName = nivel;
+      if (nivelId && !nivel) {
+        nivelName = await resolveNivelNameFromCORE(context.env.CORE_DB, nivelId) || nivelId;
+      }
+
+      const conditions: string[] = [];
+      const params: unknown[] = [];
+
+      if (nivelName) {
+        conditions.push('c.name LIKE ?');
+        params.push(`%${nivelName}%`);
+      }
+      if (asignaturaId || asignatura) {
+        const subjectName = asignatura || asignaturaId;
+        conditions.push('s.name LIKE ?');
+        params.push(`%${subjectName}%`);
+      }
+      if (q) {
+        conditions.push('(o.code LIKE ? OR o.official_text LIKE ?)');
+        params.push(`%${q.toUpperCase()}%`, `%${q}%`);
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      try {
+        const { results: dbResults } = await context.env.DB.prepare(`
+          SELECT o.id, o.code AS codigo_oa, o.official_text AS descripcion,
+                 NULL AS habilidades_csv,
+                 c.id AS nivel_id, c.name AS nivel_nombre,
+                 s.name AS asignatura_nombre
+          FROM objectives o
+          JOIN courses c ON c.id = o.course_id
+          JOIN subjects s ON s.id = o.subject_id
+          ${whereClause}
+          ORDER BY s.name, o.code
+          LIMIT ?
+        `).bind(...params, limit).all();
+
+        if (dbResults.length > 0) {
+          console.debug('[curriculum-api] objectives from DB', { count: dbResults.length, nivelName });
+          return Response.json({
+            data: dbResults,
+            count: dbResults.length,
+            source: 'DB',
+            filters: { nivel, asignatura, nivelId, asignaturaId, q },
+            attribution: { name: 'Curriculo Nacional - MINEDUC Chile', url: 'https://www.curriculumnacional.cl/curriculum' },
+          });
+        }
+      } catch (e) {
+        console.debug('[curriculum-api] objectives DB query failed, falling back to CORE_DB', e);
+      }
+    }
 
     let query = `SELECT o.id, o.unidad_id, o.codigo_oa, o.descripcion, o.habilidades_csv,
                         u.titulo AS unidad_titulo, a.nombre AS asignatura_nombre, n.nombre AS nivel_nombre
