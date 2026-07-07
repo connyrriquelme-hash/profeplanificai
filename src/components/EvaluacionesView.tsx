@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { MaterialSaved } from '../types';
 import { EVAL_TIPOS, DIFICULTADES, HABILIDADES } from '../types';
+import { useConfigOptions } from '../hooks/useConfigOptions';
 import { getMaterials, saveMaterial, deleteMaterial, saveDriveItem, generateId } from '../services/storageService';
 import type { CurriculumItem } from '../data/curriculumData';
 import { fetchObjectives, fetchCourses, fetchSubjects, type CourseRow, type SubjectRow } from '../services/objectiveService';
@@ -32,6 +33,10 @@ const selectClass =
   'w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer';
 
 export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
+  const { getOptions } = useConfigOptions();
+  const cfgEvalTypes = getOptions('evaluation_types');
+  const cfgDifficulty = getOptions('difficulty_levels');
+  const cfgSkills = getOptions('cognitive_skills');
   const [step, setStep] = useState(1);
   const [tipo, setTipo] = useState('formativa');
   const [selectedNivel, setSelectedNivel] = useState('');
@@ -643,7 +648,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 Tipo de evaluación
               </label>
               <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={selectClass}>
-                {EVAL_TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+                {(cfgEvalTypes.length > 0 ? cfgEvalTypes : EVAL_TIPOS.map(t => ({ id: t.v, value: t.v, label: t.l }))).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div>
@@ -710,7 +715,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               <select value={habilidad} onChange={(e) => setHabilidad(e.target.value)} className={selectClass}>
                 {curricularContext?.skills && curricularContext.skills.length > 0
                   ? curricularContext.skills.map((s: any) => <option key={s.code || s.text} value={s.text}>{s.text}</option>)
-                  : HABILIDADES.map((h) => <option key={h}>{h}</option>)
+                  : (cfgSkills.length > 0 ? cfgSkills : HABILIDADES.map(h => ({ id: h, value: h, label: h }))).map((h) => <option key={h.value} value={h.value}>{h.label}</option>)
                 }
               </select>
             </div>
@@ -863,7 +868,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 Dificultad
               </label>
               <select value={dificultad} onChange={(e) => setDificultad(e.target.value)} className={selectClass}>
-                {DIFICULTADES.map((d) => <option key={d}>{d}</option>)}
+                {(cfgDifficulty.length > 0 ? cfgDifficulty : DIFICULTADES.map(d => ({ id: d, value: d, label: d }))).map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </select>
             </div>
             {isSIMCE && (

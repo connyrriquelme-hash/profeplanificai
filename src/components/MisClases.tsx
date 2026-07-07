@@ -5,6 +5,7 @@ import {
   Save, Sparkles, Trash2, X,
 } from 'lucide-react';
 import { getCourses, getIndicatorsByObjective, getObjectives, getSkillsByObjective, getSubjectsByCourse } from '../services/curriculumD1Service';
+import { useConfigOptions } from '../hooks/useConfigOptions';
 import {
   autosaveLesson, createLesson, createNonTeachingBlock, createSchedule, createTeacherClass,
   deleteNonTeachingBlock, deleteTeacherClass, generateActividadesClase,
@@ -96,6 +97,11 @@ const LC = 'block text-[11px] font-black tracking-wide uppercase text-slate-500 
 const IC = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all';
 
 export function MisClases() {
+  const { getOptions } = useConfigOptions();
+  const cfgMethodologies = getOptions('methodologies');
+  const cfgNtbTypes = getOptions('non_teaching_types');
+  const cfgPriorities = getOptions('priorities');
+  const cfgWeekdays = getOptions('weekdays');
   const [schoolYear, setSchoolYear] = useState(String(new Date().getFullYear()));
   const [levelId, setLevelId] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -606,13 +612,13 @@ export function MisClases() {
             <label className={LC}>Nivel educativo<select value={lessonCurriculum.levelId} onChange={(e) => updateLessonCurriculum({ levelId: e.target.value })} className={IC}><option value="">Selecciona nivel</option>{courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
             <label className={LC}>Asignatura<select value={lessonCurriculum.subjectId} onChange={(e) => updateLessonCurriculum({ subjectId: e.target.value })} disabled={!lessonCurriculum.levelId || lcSubjectsLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcSubjectsLoading ? 'Cargando...' : 'Selecciona asignatura'}</option>{lcSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
             <label className={LC}>Objetivo Curricular OA (opcional)<select value={lessonCurriculum.objectiveId} onChange={(e) => updateLessonCurriculum({ objectiveId: e.target.value })} disabled={!lessonCurriculum.subjectId || lcObjectivesLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcObjectivesLoading ? 'Cargando...' : 'Selecciona OA (opcional)'}</option>{lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}</select></label>
-            <label className={LC}>Metodologia<select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></label>
+            <label className={LC}>Metodologia<select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{(cfgMethodologies.length > 0 ? cfgMethodologies : METHODOLOGY_OPTIONS).map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></label>
           </div>
 
           {blockType === 'no_lectivo' && (<div className="border-t border-slate-100 pt-4 space-y-3">
             <p className="text-[11px] font-black tracking-wide uppercase text-amber-600">Bloque no lectivo</p>
-            <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{NON_TEACHING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
-            <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{PRIORITY_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
+            <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{(cfgNtbTypes.length > 0 ? cfgNtbTypes : NON_TEACHING_TYPES).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
+            <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{(cfgPriorities.length > 0 ? cfgPriorities : PRIORITY_OPTIONS).map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
             <label className="flex items-center gap-2 text-xs font-bold text-slate-600"><input type="checkbox" checked={ntbForm.reminder_enabled} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_enabled: e.target.checked }))} className="rounded" /> Activar recordatorio futuro</label>
             {ntbForm.reminder_enabled && (<><label className={LC}>Minutos antes<input type="number" min={5} max={1440} value={ntbForm.reminder_minutes_before} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_minutes_before: Number(e.target.value) }))} className={IC} /></label><label className={LC}>Correo destinatario<input type="email" value={ntbForm.reminder_email} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_email: e.target.value }))} placeholder="profesor@correo.cl" className={IC} /></label></>)}
             <label className={LC}>Notas<textarea value={ntbForm.follow_up_notes} onChange={(e) => setNtbForm((p) => ({ ...p, follow_up_notes: e.target.value }))} rows={2} className={IC} /></label>
@@ -740,7 +746,7 @@ export function MisClases() {
                     <textarea value={selectedBundle.plan?.purpose_text || ''} onChange={(e) => updatePlanField('purpose_text', e.target.value)} placeholder="Proposito de la clase" className="w-full min-h-[90px] rounded-2xl border border-slate-200 p-3 text-sm" />
                   </div>)}
                   {detailTab === 'metodologia' && (<div className="space-y-3"><h3 className="font-black text-slate-900">Metodologia sugerida</h3>
-                    <select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{METHODOLOGY_OPTIONS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select>
+                    <select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{(cfgMethodologies.length > 0 ? cfgMethodologies : METHODOLOGY_OPTIONS).map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select>
                     <p className="text-xs text-slate-500">Selecciona una metodologia del curriculo chileno.</p></div>)}
                   {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100" placeholder={`Escribe o genera contenido para ${detailTab}`} />)}
                 </div>
@@ -887,7 +893,7 @@ export function MisClases() {
           <button onClick={() => setShowScheduleForm(false)} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"><X size={18} /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className={LC}>Dia de la semana<select value={scheduleForm.weekday} onChange={(e) => setScheduleForm((p) => ({ ...p, weekday: e.target.value }))} className={IC}>{WEEKDAYS.map((d) => <option key={d.n} value={d.n}>{d.label}</option>)}</select></label>
+          <label className={LC}>Dia de la semana<select value={scheduleForm.weekday} onChange={(e) => setScheduleForm((p) => ({ ...p, weekday: e.target.value }))} className={IC}>{(cfgWeekdays.length > 0 ? cfgWeekdays : WEEKDAYS.map(d => ({ id: String(d.n), value: String(d.n), label: d.label }))).map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}</select></label>
           <label className={LC}>Sala / Lugar<input value={scheduleForm.room} onChange={(e) => setScheduleForm((p) => ({ ...p, room: e.target.value }))} placeholder="Sala opcional" className={IC} /></label>
           <label className={LC}>Hora inicio<input type="time" value={scheduleForm.start_time} onChange={(e) => setScheduleForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label>
           <label className={LC}>Hora termino<input type="time" value={scheduleForm.end_time} onChange={(e) => setScheduleForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label>
@@ -910,13 +916,13 @@ export function MisClases() {
           <button onClick={() => { setShowNtbForm(false); setEditingNtb(null); }} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"><X size={18} /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{NON_TEACHING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
+          <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{(cfgNtbTypes.length > 0 ? cfgNtbTypes : NON_TEACHING_TYPES).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
           <label className={LC}>Titulo<input value={ntbForm.title} onChange={(e) => setNtbForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Reunion de departamento" className={IC} /></label>
           <label className={LC}>Lugar<input value={ntbForm.location} onChange={(e) => setNtbForm((p) => ({ ...p, location: e.target.value }))} placeholder="Sala, online, etc." className={IC} /></label>
           <label className={`${LC} sm:col-span-2 lg:col-span-3`}>Descripcion<textarea value={ntbForm.description} onChange={(e) => setNtbForm((p) => ({ ...p, description: e.target.value }))} rows={2} className={IC} /></label>
           <label className={LC}>Fecha<input type="date" value={ntbForm.block_date} onChange={(e) => setNtbForm((p) => ({ ...p, block_date: e.target.value }))} className={IC} /></label>
           <div className="grid grid-cols-2 gap-2"><label className={LC}>Inicio<input type="time" value={ntbForm.start_time} onChange={(e) => setNtbForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label><label className={LC}>Termino<input type="time" value={ntbForm.end_time} onChange={(e) => setNtbForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label></div>
-          <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{PRIORITY_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
+          <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{(cfgPriorities.length > 0 ? cfgPriorities : PRIORITY_OPTIONS).map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
           <label className="flex items-center gap-2 text-sm font-bold text-slate-600 mt-5"><input type="checkbox" checked={ntbForm.reminder_enabled} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_enabled: e.target.checked }))} /> Activar recordatorio</label>
           {ntbForm.reminder_enabled && (<><label className={LC}>Minutos antes<input type="number" min={5} max={1440} value={ntbForm.reminder_minutes_before} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_minutes_before: Number(e.target.value) }))} className={IC} /></label><label className={LC}>Correo destinatario<input type="email" value={ntbForm.reminder_email} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_email: e.target.value }))} placeholder="profesor@correo.cl" className={IC} /></label></>)}
           <label className={`${LC} sm:col-span-2 lg:col-span-3`}>Notas de seguimiento<textarea value={ntbForm.follow_up_notes} onChange={(e) => setNtbForm((p) => ({ ...p, follow_up_notes: e.target.value }))} rows={2} className={IC} /></label>

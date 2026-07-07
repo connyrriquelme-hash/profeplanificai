@@ -1,4 +1,4 @@
-interface Env { DB: D1Database }
+interface Env { DB: D1Database; CORE_DB: D1Database }
 
 const COURSE_ALIASES: Record<string, string[]> = {
   '1° básico': ['1 basico', '1b', '1ro basico', 'primero basico', '1° basico'],
@@ -85,6 +85,60 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     ORDER BY c.sort_order, s.name, o.code
     LIMIT ?
   `).bind(...params, limit).all();
+
+  if (results.length > 0) {
+    return Response.json({
+      data: results,
+      count: results.length,
+      filters: { inputCourse: course, inputSubject: subject, inputLevel: level, inputQuery: q },
+      attribution: { name: 'Currículum Nacional — MINEDUC Chile', url: 'https://www.curriculumnacional.cl/curriculum' },
+    });
+  }
+
+  try {
+    const coreConditions: string[] = [];
+    const coreParams: unknown[] = [];
+
+    if (course) {
+      coreConditions.push('(n.id LIKE ? OR n.nombre LIKE ?)');
+      coreParams.push(`%${normalize(course)}%`, `%${course}%`);
+    }
+    if (subject) {
+      coreConditions.push('(a.nombre LIKE ? OR a.id LIKE ?)');
+      coreParams.push(`%${subject}%`, `%${normalize(subject)}%`);
+    }
+    if (q) {
+      coreConditions.push('(oa.codigo_oa LIKE ? OR oa.descripcion LIKE ?)');
+      coreParams.push(`%${q.toUpperCase()}%`, `%${q}%`);
+    }
+
+    const whereClause = coreConditions.length > 0 ? `WHERE ${coreConditions.join(' AND ')}` : '';
+    const { results: coreResults } = await context.env.CORE_DB.prepare(`
+      SELECT oa.id, oa.codigo_oa AS code, 'OA' AS type, oa.descripcion AS official_text,
+             oa.descripcion AS normalized_text, NULL AS bloom_level,
+             oa.habilidades_csv AS skill_tags_json, NULL AS attitude_tags_json,
+             NULL AS priority_label, NULL AS source_url, 'MINEDUC' AS source_name,
+             u.id AS unit_id, u.asignatura_id AS subject_id,
+             n.nombre AS course_name, a.nombre AS subject_name,
+             NULL AS axis_name
+      FROM objetivos_aprendizaje oa
+      JOIN unidades u ON u.id = oa.unidad_id
+      JOIN asignaturas a ON a.id = u.asignatura_id
+      JOIN niveles n ON n.id = a.nivel_id
+      ${whereClause}
+      ORDER BY n.id, a.nombre, oa.codigo_oa
+      LIMIT ?
+    `).bind(...coreParams, limit).all();
+
+    if (coreResults.length > 0) {
+      return Response.json({
+        data: coreResults,
+        count: coreResults.length,
+        filters: { inputCourse: course, inputSubject: subject, inputLevel: level, inputQuery: q },
+        attribution: { name: 'Currículum Nacional — MINEDUC Chile', url: 'https://www.curriculumnacional.cl/curriculum' },
+      });
+    }
+  } catch {}
 
   return Response.json({
     data: results,

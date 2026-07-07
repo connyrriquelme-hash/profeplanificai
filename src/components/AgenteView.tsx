@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bot, Copy, Sparkles, Loader2 } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { md } from '../utils/htmlUtils';
-import { NIVELES, ASIGNATURAS } from '../types';
-import { getCourses, getSubjects, getObjectives } from '../services/curriculumD1Service';
+import { getCourses, getSubjectsByCourse, getObjectives } from '../services/curriculumD1Service';
 
 type Mode = 'chat' | 'secuencia' | 'unidad' | 'diferenciacion' | 'evaluacion';
 type Message = { role: 'user' | 'assistant'; content: string };
@@ -42,7 +41,7 @@ export function AgenteView() {
 
   useEffect(() => {
     if (!selectedCourseId) { setD1Subjects([]); return; }
-    getSubjects().then(subs => setD1Subjects(subs.filter((s: any) => (s.objective_count || 0) > 0))).catch(() => {});
+    getSubjectsByCourse(selectedCourseId).then(setD1Subjects).catch(() => {});
   }, [selectedCourseId]);
 
   useEffect(() => {
@@ -80,22 +79,14 @@ export function AgenteView() {
           <div><label>Proceso</label><select value={mode} onChange={e => setMode(e.target.value as Mode)}>{MODES.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}</select></div>
           <div><label>Nivel/Curso</label>
             <select value={selectedCourseId} onChange={e => { setSelectedCourseId(e.target.value); const c = d1Courses.find((c: any) => c.id === e.target.value); if (c) setNivel(c.name); }}>
-              <option value="">D1: Seleccionar curso</option>
+              <option value="">Seleccionar curso</option>
               {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count})</option>)}
-            </select>
-            <select value={nivel} onChange={e => setNivel(e.target.value)} style={{ marginTop: 4 }}>
-              <option value="">Fallback local</option>
-              {NIVELES.map(x => <option key={x}>{x}</option>)}
             </select>
           </div>
           <div><label>Asignatura</label>
             <select value={selectedSubjectId} onChange={e => { setSelectedSubjectId(e.target.value); const s = d1Subjects.find((s: any) => s.id === e.target.value); if (s) setAsignatura(s.name); }}>
-              <option value="">D1: Seleccionar asignatura</option>
+              <option value="">Seleccionar asignatura</option>
               {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
-            </select>
-            <select value={asignatura} onChange={e => setAsignatura(e.target.value)} style={{ marginTop: 4 }}>
-              <option value="">Fallback local</option>
-              {ASIGNATURAS.map(x => <option key={x}>{x}</option>)}
             </select>
           </div>
         </div>

@@ -9,8 +9,8 @@ import {
   addComment,
   generateId,
 } from '../services/storageService';
-import { NIVELES, ASIGNATURAS } from '../types';
 import { getCourses, getSubjects } from '../services/curriculumD1Service';
+import { useConfigOptions } from '../hooks/useConfigOptions';
 import { mdToHtml } from '../utils/htmlUtils';
 
 const TIPOS_PUBLICACION = [
@@ -18,6 +18,8 @@ const TIPOS_PUBLICACION = [
 ];
 
 export function ColaboracionView() {
+  const { getOptions } = useConfigOptions();
+  const cfgPubTypes = getOptions('publication_types');
   const [posts, setPosts] = useState<CollaborationPost[]>([]);
   const [filter, setFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -119,7 +121,7 @@ export function ColaboracionView() {
                 value={newPost.tipo}
                 onChange={(e) => setNewPost((p) => ({ ...p, tipo: e.target.value }))}
               >
-                {TIPOS_PUBLICACION.map((t) => <option key={t}>{t}</option>)}
+                {(cfgPubTypes.length > 0 ? cfgPubTypes : TIPOS_PUBLICACION.map(t => ({ id: t, value: t, label: t }))).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div>
@@ -130,7 +132,6 @@ export function ColaboracionView() {
               >
                 <option value="">Seleccionar</option>
                 {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.name}>{c.name} ({c.objective_count} OA)</option>)}
-                {NIVELES.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div>
@@ -141,7 +142,6 @@ export function ColaboracionView() {
               >
                 <option value="">Seleccionar</option>
                 {d1Subjects.map((s: any) => <option key={s.id} value={s.name}>{s.name} ({s.objective_count})</option>)}
-                {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
           </div>

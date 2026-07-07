@@ -8,7 +8,6 @@ import {
   getMaterials,
   generateId,
 } from '../services/storageService';
-import { NIVELES, ASIGNATURAS } from '../types';
 import { getCourses, getSubjects } from '../services/curriculumD1Service';
 
 export function DriveView() {
@@ -133,7 +132,6 @@ export function DriveView() {
               <select value={uploadNivel} onChange={(e) => setUploadNivel(e.target.value)}>
                 <option value="">Seleccionar</option>
                 {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.name}>{c.name} ({c.objective_count} OA)</option>)}
-                {NIVELES.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div>
@@ -141,7 +139,6 @@ export function DriveView() {
               <select value={uploadAsig} onChange={(e) => setUploadAsig(e.target.value)}>
                 <option value="">Seleccionar</option>
                 {d1Subjects.map((s: any) => <option key={s.id} value={s.name}>{s.name} ({s.objective_count})</option>)}
-                {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
           </div>

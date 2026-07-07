@@ -53,47 +53,33 @@ export function CurriculumSelector({
   const [criteriaInput, setCriteriaInput] = useState('');
   const [expandedOa, setExpandedOa] = useState(false);
 
-  console.debug('[CURRSEL-DBG] RENDER', {
-    valueLevel: value.level,
-    valueLevelId: value.levelId,
-    selLevel: selection.level,
-    selLevelId: selection.levelId,
-    levelsCount: levels.length,
-    levelsSample: levels.slice(0, 3),
-    levelObjectsCount: levelObjects.length,
-    subjectsCount: subjects.length,
-    subjectsNames: subjects,
-    subjectObjectsCount: subjectObjects.length,
-    selSubject: selection.subject,
-    selSubjectId: selection.subjectId,
-    objectivesCount: objectives.length,
-    error,
-    loading,
-  });
+
 
   const handleChange = (patch: Partial<CurriculumSelection>) => {
-    console.debug('[CURRSEL-DBG] handleChange', { patch });
-    onChange({ ...selection, ...patch });
+
+    hook.updateSelection(patch);
+    const merged = { ...selection, ...patch };
+    onChange(merged);
   };
 
   const handleLevelChange = (level: string) => {
-    console.debug('[CURRSEL-DBG] handleLevelChange →', { level, levelObjectsCount: levelObjects.length });
+
     setLevel(level);
     const obj = levelObjects.find(l => l.name === level);
-    console.debug('[CURRSEL-DBG] handleLevelChange → resolved obj', obj ? `${obj.id}:${obj.name}` : 'NOT_FOUND');
+
     handleChange({ level, levelId: obj?.id || '', subject: '', subjectId: '', objectiveId: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
   };
 
   const handleSubjectChange = (subject: string) => {
-    console.debug('[CURRSEL-DBG] handleSubjectChange →', { subject, subjectObjectsCount: subjectObjects.length });
+
     setSubject(subject);
     const obj = subjectObjects.find(s => s.name === subject);
-    console.debug('[CURRSEL-DBG] handleSubjectChange → resolved obj', obj ? `${obj.id}:${obj.name}` : 'NOT_FOUND');
+
     handleChange({ subject, subjectId: obj?.id || '', objectiveId: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [] });
   };
 
   const handleObjectiveSelect = (codigo_oa: string, descripcion: string, objectiveId: string) => {
-    console.debug('[CURRSEL-DBG] handleObjectiveSelect →', { codigo_oa, objectiveId });
+
     setObjective(codigo_oa, descripcion, objectiveId);
     const obj = objectives.find((o) => o.id === objectiveId || o.codigo_oa === codigo_oa);
     const fallbackSkills = (obj?.habilidades_csv || '').split(',').map((item) => item.trim()).filter(Boolean);

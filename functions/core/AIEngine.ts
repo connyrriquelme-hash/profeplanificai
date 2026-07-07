@@ -2,8 +2,18 @@ import type { AIEngineEnv, DuaGuide, LessonContent, PedagogicalPlan } from './ty
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
-const SYSTEM_PROMPT_DUA =
-  "Eres un especialista en Inclusión Educativa y diseño DUA, experto en el currículo nacional chileno. Tu tarea es tomar un plan pedagógico y diseñar una Guía de Aprendizaje Multinivel que siga los principios DUA. Debes responder ÚNICAMENTE con un objeto JSON válido que respete esta estructura: { titulo_guia, contexto_motivacional, nivel_apoyo, nivel_estandar, nivel_desafio }. No incluyas explicaciones, saludos, ni texto adicional. Es esencial que la guía incluya especificaciones de accesibilidad y apoyo diferenciado para estudiantes diversos.";
+const SYSTEM_PROMPT_DUA = `Eres un especialista en Inclusión Educativa y diseño DUA (Representación, Acción/Expresión, Implicación), experto en el currículo nacional chileno MINEDUC.
+
+REGLAS OBLIGATORIAS:
+1. Usa el OA (Objetivo de Aprendizaje) proporcionado como eje central. Cada actividad debe estar directamente alineada al OA.
+2. Usa los indicadores y habilidades del plan para definir criterios de logro observables.
+3. Contexto chileno: conecta con realidades locales (comunas, escuelas, estudiantes chilenos).
+4. Prohibido usar frases genéricas como: "analizar y comprender", "realizar actividades", "trabajar colaborativamente", "reflexionar sobre el tema" SIN especificar QUÉ se analiza, QUÉ actividades, QUÉ se colabora, QUÉ se reflexiona.
+5. Cada nivel (apoyo, estándar, desafío) debe incluir actividades concretas y observables.
+6. Incluye materiales específicos y recursos contextualizados.
+7. Responde ÚNICAMENTE con un objeto JSON válido: { titulo_guia, contexto_motivacional, nivel_apoyo, nivel_estandar, nivel_desafio }.
+8. Cada nivel debe ser un arreglo de strings con al menos 3 actividades específicas.
+9. Prohibido incluir explicaciones, saludos, ni texto adicional fuera del JSON.`;
 
 const SYSTEM_PROMPT_LESSON =
   "Eres un profesor experto en el currículo nacional chileno. Recibirás un plan pedagógico y debes generar el contenido completo de la clase. Responde ÚNICAMENTE con un objeto JSON válido con esta estructura: { titulo, curso, asignatura, objetivoAprendizaje, habilidadBloom, inicio, desarrollo, cierre, recursos, evaluacionFormativa, adecuacionesDUA }. 'inicio', 'desarrollo' y 'cierre' deben ser strings con la descripción detallada de cada fase. 'recursos' debe ser un arreglo de strings. No incluyas explicaciones ni texto adicional.";
@@ -86,23 +96,26 @@ function validateLessonContent(value: unknown): LessonContent {
 }
 
 function buildFallbackDuaGuide(plan: PedagogicalPlan): DuaGuide {
+  const oa = plan.objetivo_aprendizaje || plan.tema;
+  const indicadores = (plan.indicadores_seleccionados || []).join('; ');
+  const habilidades = (plan.habilidades_curriculares || []).join('; ');
   return {
-    titulo_guia: `Guía Multinivel: ${plan.tema}`,
-    contexto_motivacional: `Conectar el tema "${plan.tema}" con la vida real de los estudiantes para despertar su interés y relevancia.`,
+    titulo_guia: `Guía Multinivel DUA: ${plan.tema} — ${plan.asignatura} (${plan.curso})`,
+    contexto_motivacional: `El Objetivo de Aprendizaje "${oa}" se abordará mediante una guía multinivel que respeta los principios DUA: representación múltiple, acción y expresión flexible, e implicación motivadora. ${indicadores ? `Indicadores: ${indicadores}.` : ''} ${habilidades ? `Habilidades: ${habilidades}.` : ''}`,
     nivel_apoyo: [
-      `Fichas paso a paso con vocabulario clave y ejemplos concretos para resolver actividades básicas.`,
-      `Esquemas visuales y organizadores gráficos para entender el tema principal.`,
-      `Temporizador visible y apoyos físicos (tarjetas, paletas) para indicar el paso a paso.`,
+      `Fichas paso a paso con vocabulario clave del OA "${oa}" y ejemplos concretos del contexto chileno.`,
+      `Esquemas visuales y organizadores gráficos que representen las ideas principales del OA.`,
+      `Actividad guiada con apoyo físico (tarjetas, imágenes) donde el estudiante complete el OA con andamiaje.`,
     ],
     nivel_estandar: [
-      `Realizar una explicación guiada del tema con imágenes y analogías relevantes.`,
-      `Actividad colaborativa de intercambio de ideas y retroalimentación entre pares.`,
-      `Discusión grupal y escritura reflexiva sobre el tema en contexto.`,
+      `Explicación guiada del OA "${oa}" utilizando imágenes y analogías del contexto local chileno.`,
+      `Actividad colaborativa donde los estudiantes apliquen el OA en un problema o situación real.`,
+      `Evaluación formativa: el estudiante demuestra comprensión del OA mediante una producción escrita o oral.`,
     ],
     nivel_desafio: [
-      `Análisis crítico del tema con propuestas de solución para desafíos reales.`,
-      `Generar un producto de creación construyendo algo que muestre comprensión profunda y originalidad.`,
-      `Presentar un debate o simulación de roles mostrando aplicación a contextos alternativos.`,
+      `Análisis crítico del OA "${oa}" proponiendo soluciones a desafíos reales del entorno chileno.`,
+      `Producto de creación: el estudiante diseña un recurso o presentación que demuestre comprensión profunda del OA.`,
+      `Investigación breve con exposición donde el estudiante conecte el OA con aplicaciones profesionales o comunitarias.`,
     ],
   };
 }

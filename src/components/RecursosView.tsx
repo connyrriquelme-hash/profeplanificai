@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { WandSparkles, Copy, Check, Loader2, ChevronDown, Plus, Trash2, Save, FolderOpen, BookOpen, Sparkles, Send, ClipboardEdit, FileText, Printer, Download } from 'lucide-react';
 import type { MaterialSaved } from '../types';
-import { NIVELES, ASIGNATURAS, RECURSOS_TIPOS } from '../types';
+import { RECURSOS_TIPOS } from '../types';
+import { useConfigOptions } from '../hooks/useConfigOptions';
 import { generarConIA } from '../services/aiService';
 import { getMaterials, saveMaterial, deleteMaterial, saveDriveItem, generateId } from '../services/storageService';
 import { getSelectedCurriculumItem, setSelectedCurriculumItem, getAutoSuggestions } from '../services/curriculumService';
@@ -9,7 +10,7 @@ import { generateRecursoAvanzado, generatePrompts } from '../services/localGener
 import type { CurriculumItem } from '../types';
 import { buildCurriculumHeaderFromItem } from '../utils/curriculum';
 import { StatusBar } from './shared/StatusBar';
-import { getCourses, getSubjects, getObjectives } from '../services/curriculumD1Service';
+import { getCourses, getSubjectsByCourse, getObjectives } from '../services/curriculumD1Service';
 import { generateChileanCurriculumIndicators, generateChileanCurriculumSkills } from '../utils/chileanCurriculumFallback';
 import { ResultActions } from './shared/ResultActions';
 import { MaterialList } from './shared/MaterialList';
@@ -33,6 +34,9 @@ const MODOS = [
 ];
 
 export function RecursosView({ onNavigate }: RecursosViewProps) {
+  const { getOptions } = useConfigOptions();
+  const cfgResourceTypes = getOptions('resource_types');
+  const cfgDifficulty = getOptions('difficulty_levels');
   const [selectedItem, setSelectedItem] = useState<CurriculumItem | null>(null);
   const [modo, setModo] = useState('oa_seleccionado');
   const [tipoRecurso, setTipoRecurso] = useState('Guía imprimible');
@@ -70,10 +74,7 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
   // Load D1 subjects when course changes
   useEffect(() => {
     if (!selectedCourseId) { setD1Subjects([]); return; }
-    getSubjects().then(subs => {
-      const filtered = subs.filter((s: any) => (s.objective_count || 0) > 0);
-      setD1Subjects(filtered);
-    }).catch(() => {});
+    getSubjectsByCourse(selectedCourseId).then(setD1Subjects).catch(() => {});
   }, [selectedCourseId]);
 
   // Load D1 objectives when course+subject change
@@ -350,7 +351,7 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
             <div>
               <label>Tipo de recurso</label>
               <select value={tipoRecurso} onChange={(e) => setTipoRecurso(e.target.value)}>
-                {RECURSOS_TIPOS.map((t) => <option key={t.v}>{t.l}</option>)}
+                {(cfgResourceTypes.length > 0 ? cfgResourceTypes : RECURSOS_TIPOS.map(t => ({ id: t.v, value: t.v, label: t.l }))).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div>
@@ -360,12 +361,8 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
                 const c = d1Courses.find((c: any) => c.id === e.target.value);
                 if (c) setNivel(c.name);
               }}>
-                <option value="">Seleccionar curso D1</option>
+                <option value="">Seleccionar curso</option>
                 {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
-              </select>
-              <select value={nivel} onChange={(e) => setNivel(e.target.value)} style={{ marginTop: 4 }}>
-                <option value="">Fallback local</option>
-                {NIVELES.map((n) => <option key={n}>{n}</option>)}
               </select>
             </div>
             <div>
@@ -375,12 +372,8 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
                 const s = d1Subjects.find((s: any) => s.id === e.target.value);
                 if (s) setAsignatura(s.name);
               }}>
-                <option value="">Seleccionar asignatura D1</option>
+                <option value="">Seleccionar asignatura</option>
                 {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
-              </select>
-              <select value={asignatura} onChange={(e) => setAsignatura(e.target.value)} style={{ marginTop: 4 }}>
-                <option value="">Fallback local</option>
-                {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
             <div>
@@ -390,7 +383,7 @@ export function RecursosView({ onNavigate }: RecursosViewProps) {
             <div>
               <label>Dificultad</label>
               <select value={dificultad} onChange={(e) => setDificultad(e.target.value)}>
-                {['Progresiva', 'Básica', 'Intermedia', 'Avanzada'].map((d) => <option key={d}>{d}</option>)}
+                {(cfgDifficulty.length > 0 ? cfgDifficulty : [{ id: 'Progresiva', value: 'Progresiva', label: 'Progresiva' }, { id: 'Básica', value: 'Básica', label: 'Básica' }, { id: 'Intermedia', value: 'Intermedia', label: 'Intermedia' }, { id: 'Avanzada', value: 'Avanzada', label: 'Avanzada' }]).map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </select>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useProject } from '../contexts/ProjectContext';
 import { useCurriculum } from '../contexts/CurriculumContext';
 import type { LearningObjective } from '../data/libraryMockData';
 import { generateResource, generateSlideLesson, type GenerateResourceRequest } from '../services/libraryGenerationService';
-import { getCourses, getSubjects as getD1Subjects, getObjectives, getIndicatorsByObjective, getSkillsByObjective } from '../services/curriculumD1Service';
+import { getCourses, getSubjectsByCourse as getD1SubjectsByCourse, getObjectives, getIndicatorsByObjective, getSkillsByObjective } from '../services/curriculumD1Service';
 import { generateChileanCurriculumIndicators, generateChileanCurriculumSkills } from '../utils/chileanCurriculumFallback';
 import type { SlideLesson } from '../types/slideLesson';
 import { GeneratedResourcePanel } from './GeneratedResourcePanel';
@@ -130,7 +130,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   // Load D1 subjects when course changes
   useEffect(() => {
     if (!selectedCourseId) { setD1Subjects([]); return; }
-    getD1Subjects().then(subs => setD1Subjects(subs.filter((s: any) => (s.objective_count || 0) > 0))).catch(() => {});
+    getD1SubjectsByCourse(selectedCourseId).then(setD1Subjects).catch(() => {});
   }, [selectedCourseId]);
 
   // Load D1 objectives when course+subject change
@@ -470,8 +470,6 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                 }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                   <option value="">Seleccionar nivel...</option>
                   {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
-                  <optgroup label="Fallback local" />
-                  {levels.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
               </div>
               {level && (
@@ -496,8 +494,6 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                   }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                     <option value="">Seleccionar asignatura...</option>
                     {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
-                    <optgroup label="Fallback local" />
-                    {subjects.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               )}

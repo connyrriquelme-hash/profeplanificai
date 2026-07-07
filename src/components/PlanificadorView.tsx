@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { PlanFormData, MaterialSaved, CurriculumItem } from '../types';
-import { NIVELES, ASIGNATURAS, DURACIONES, ENFOQUES, SUGERENCIAS_OA } from '../types';
+import { DURACIONES, ENFOQUES, SUGERENCIAS_OA } from '../types';
+import { useConfigOptions } from '../hooks/useConfigOptions';
 import { generatePlan } from '../services/localGenerator';
 import { generarConIA } from '../services/aiService';
 import { getMaterials, saveMaterial, deleteMaterial, generateId, saveDriveItem } from '../services/storageService';
@@ -14,7 +15,7 @@ import { Stepper } from './shared/Stepper';
 import { WorkspaceView } from './WorkspaceView';
 import { BookOpen, Send, ArrowLeft, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { getSelectedCurriculumItem } from '../services/curriculumService';
-import { getCourses, getSubjects, getObjectives } from '../services/curriculumD1Service';
+import { getCourses, getSubjectsByCourse, getObjectives } from '../services/curriculumD1Service';
 
 interface PlanificadorViewProps {
   onNavigate?: (view: string) => void;
@@ -27,6 +28,9 @@ const TABS = [
 ];
 
 export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
+  const { getOptions } = useConfigOptions();
+  const cfgDurations = getOptions('durations');
+  const cfgApproaches = getOptions('approaches');
   const [tab, setTab] = useState(1);
   const [currentKind, setCurrentKind] = useState<'plan' | 'secuencia'>('plan');
 
@@ -90,6 +94,7 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   const [selectedObjectiveId, setSelectedObjectiveId] = useState('');
   const [selectedD1Objective, setSelectedD1Objective] = useState<any | null>(null);
   const [loadingD1, setLoadingD1] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
 
   // Load D1 courses on mount
   useEffect(() => {
@@ -99,10 +104,10 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   // Load D1 subjects when course changes
   useEffect(() => {
     if (!selectedCourseId) { setD1Subjects([]); return; }
-    getSubjects().then(subs => {
-      const filtered = subs.filter((s: any) => (s.objective_count || 0) > 0);
-      setD1Subjects(filtered);
-    }).catch(() => {});
+    setLoadingSubjects(true);
+    getSubjectsByCourse(selectedCourseId).then(subs => {
+      setD1Subjects(subs);
+    }).catch(() => setD1Subjects([])).finally(() => setLoadingSubjects(false));
   }, [selectedCourseId]);
 
   // Load D1 objectives when course+subject change
@@ -152,6 +157,16 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   };
 
   const handleGenerar = async (kind: 'plan' | 'secuencia') => {
+    if (!form.nivel || !form.asignatura) {
+      setStatus('Selecciona un nivel y una asignatura antes de generar.');
+      setStatusType('warn');
+      return;
+    }
+    if (!form.oa || !form.oa.trim()) {
+      setStatus('Selecciona un Objetivo de Aprendizaje para generar una planificación alineada al currículum.');
+      setStatusType('warn');
+      return;
+    }
     setCurrentKind(kind);
     setStatus('Generando...');
     setStatusType('');
@@ -305,12 +320,8 @@ Solo escribe tu solicitud y generaré una versión mejorada para ti.`;
                 const c = d1Courses.find((c: any) => c.id === e.target.value);
                 if (c) updateField('nivel', c.name);
               }}>
-                <option value="">Seleccionar curso D1</option>
-                {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
-              </select>
-              <select value={form.nivel} onChange={(e) => updateField('nivel', e.target.value)} style={{ marginTop: 4 }}>
-                <option value="">Fallback local</option>
-                {NIVELES.map((n) => <option key={n}>{n}</option>)}
+                <option value="">Seleccionar curso</option>
+                {d1Courses.map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
               </select>
             </div>
             <div>
@@ -320,24 +331,23 @@ Solo escribe tu solicitud y generaré una versión mejorada para ti.`;
                 const s = d1Subjects.find((s: any) => s.id === e.target.value);
                 if (s) updateField('asignatura', s.name);
               }}>
-                <option value="">Seleccionar asignatura D1</option>
+                <option value="">{loadingSubjects ? 'Cargando asignaturas...' : selectedCourseId ? 'Seleccionar asignatura' : 'Primero selecciona un curso'}</option>
                 {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
               </select>
-              <select value={form.asignatura} onChange={(e) => updateField('asignatura', e.target.value)} style={{ marginTop: 4 }}>
-                <option value="">Fallback local</option>
-                {ASIGNATURAS.map((a) => <option key={a}>{a}</option>)}
-              </select>
+              {selectedCourseId && !loadingSubjects && d1Subjects.length === 0 && (
+                <p className="text-xs text-slate-500 mt-1">No hay asignaturas cargadas en la base de datos para este nivel.</p>
+              )}
             </div>
             <div>
               <label>Duración</label>
               <select value={form.duracion} onChange={(e) => updateField('duracion', e.target.value)}>
-                {DURACIONES.map((d) => <option key={d}>{d}</option>)}
+                {(cfgDurations.length > 0 ? cfgDurations : DURACIONES.map(d => ({ id: d, value: d, label: d }))).map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </select>
             </div>
             <div>
               <label>Enfoque pedagógico</label>
               <select value={form.enfoque} onChange={(e) => updateField('enfoque', e.target.value)}>
-                {ENFOQUES.map((e) => <option key={e}>{e}</option>)}
+                {(cfgApproaches.length > 0 ? cfgApproaches : ENFOQUES.map(e => ({ id: e, value: e, label: e }))).map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
               </select>
             </div>
           </div>

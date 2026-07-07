@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import type { AdaptacionConfig, AdaptacionResult, CurriculumItem, NivelApoyo, FocoApoyo, FormatoApoyo } from '../types';
 import { generarAdaptacionLocal, generarAdaptacionConIA } from '../services/adaptacionService';
+import { useConfigOptions } from '../hooks/useConfigOptions';
 import { StatusBar } from './shared/StatusBar';
-import { BookOpen, Sparkles, Copy, Check, ChevronDown, ChevronUp, Printer, Download } from 'lucide-react';
+import { Sparkles, Copy, Check, ChevronDown, ChevronUp, Printer, Download } from 'lucide-react';
 
 interface AdaptarPanelProps {
   item: CurriculumItem | null;
@@ -46,6 +47,10 @@ const SECCIONES: { key: keyof AdaptacionResult; label: string; icon: string }[] 
 ];
 
 export function AdaptarPanel({ item, contenidoOriginal, onStatus }: AdaptarPanelProps) {
+  const { getOptions } = useConfigOptions();
+  const cfgSupportLevels = getOptions('support_levels');
+  const cfgSupportFocus = getOptions('support_focus');
+  const cfgSupportFormats = getOptions('support_formats');
   const [nivelApoyo, setNivelApoyo] = useState<NivelApoyo>('medio');
   const [focoApoyo, setFocoApoyo] = useState<FocoApoyo>('comprensión');
   const [formato, setFormato] = useState<FormatoApoyo>('visual');
@@ -195,19 +200,19 @@ export function AdaptarPanel({ item, contenidoOriginal, onStatus }: AdaptarPanel
         <div>
           <label style={{ fontSize: 12 }}>Nivel de apoyo</label>
           <select value={nivelApoyo} onChange={(e) => setNivelApoyo(e.target.value as NivelApoyo)} style={{ fontSize: 12 }}>
-            {NIVELES_APOYO.map((n) => <option key={n.v} value={n.v}>{n.l}</option>)}
+            {(cfgSupportLevels.length > 0 ? cfgSupportLevels : NIVELES_APOYO.map(n => ({ id: n.v, value: n.v, label: n.l }))).map((n) => <option key={n.value} value={n.value}>{n.label}</option>)}
           </select>
         </div>
         <div>
           <label style={{ fontSize: 12 }}>Foco de apoyo</label>
           <select value={focoApoyo} onChange={(e) => setFocoApoyo(e.target.value as FocoApoyo)} style={{ fontSize: 12 }}>
-            {FOCOS_APOYO.map((f) => <option key={f.v} value={f.v}>{f.l}</option>)}
+            {(cfgSupportFocus.length > 0 ? cfgSupportFocus : FOCOS_APOYO.map(f => ({ id: f.v, value: f.v, label: f.l }))).map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
         </div>
         <div>
           <label style={{ fontSize: 12 }}>Formato</label>
           <select value={formato} onChange={(e) => setFormato(e.target.value as FormatoApoyo)} style={{ fontSize: 12 }}>
-            {FORMATOS.map((f) => <option key={f.v} value={f.v}>{f.l}</option>)}
+            {(cfgSupportFormats.length > 0 ? cfgSupportFormats : FORMATOS.map(f => ({ id: f.v, value: f.v, label: f.l }))).map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
         </div>
       </div>
