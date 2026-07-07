@@ -317,6 +317,10 @@ Solo escribe tu solicitud y generaré una versión mejorada para ti.`;
               <label>Nivel/Curso</label>
               <select value={selectedCourseId} onChange={(e) => {
                 setSelectedCourseId(e.target.value);
+                setSelectedSubjectId('');
+                setSelectedObjectiveId('');
+                setSelectedD1Objective(null);
+                setD1Objectives([]);
                 const c = d1Courses.find((c: any) => c.id === e.target.value);
                 if (c) updateField('nivel', c.name);
               }}>
