@@ -1,19 +1,17 @@
-import { useState, useEffect } from 'react';
-import type { PlanFormData, MaterialSaved, CurriculumItem } from '../types';
+import { useState, useEffect, useRef } from 'react';
+import type { PlanFormData, MaterialSaved } from '../types';
 import { useConfigOptions } from '../hooks/useConfigOptions';
 import { generatePlan } from '../services/localGenerator';
 import { generarConIA } from '../services/aiService';
-import { getMaterials, saveMaterial, deleteMaterial, generateId, saveDriveItem } from '../services/storageService';
+import { getMaterials, saveMaterial, deleteMaterial, generateId } from '../services/storageService';
 import { buildOAContext, buildCurriculumHeaderFromItem } from '../utils/curriculum';
+import { exportarDocumento } from '../utils/exportUtils';
 import { StatusBar } from './shared/StatusBar';
-import { OutputEditor } from './shared/OutputEditor';
-import { ResultActions } from './shared/ResultActions';
 import { MaterialList } from './shared/MaterialList';
-import { AdaptarPanel } from './AdaptarPanel';
-import { WorkspaceView } from './WorkspaceView';
-import { Sparkles, Loader2, Clipboard } from 'lucide-react';
+import { Sparkles, Loader2, Clipboard, Download, FileText } from 'lucide-react';
 import { getSelectedCurriculumItem } from '../services/curriculumService';
 import { getCourses, getSubjectsByCourse, getObjectives } from '../services/curriculumD1Service';
+import ReactMarkdown from 'react-markdown';
 
 interface PlanificadorViewProps {
   onNavigate?: (view: string) => void;
@@ -21,9 +19,8 @@ interface PlanificadorViewProps {
 
 export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   const { getOptions } = useConfigOptions();
-  const [currentKind, setCurrentKind] = useState<'plan' | 'secuencia'>('plan');
 
-  const [selectedItem, setSelectedItem] = useState<CurriculumItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [tema, setTema] = useState('');
   const [form, setForm] = useState<PlanFormData>(() => {
     const selected = getSelectedCurriculumItem();
@@ -50,6 +47,7 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   });
 
   const [output, setOutput] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState('Completa los campos y presiona generar.');
   const [statusType, setStatusType] = useState('');
   const [savedMaterials, setSavedMaterials] = useState<MaterialSaved[]>([]);
@@ -63,6 +61,8 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   const [selectedObjectiveIds, setSelectedObjectiveIds] = useState<Set<string>>(new Set());
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingObjectives, setLoadingObjectives] = useState(false);
+
+  const paperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getCourses().then(courses => {
@@ -125,29 +125,51 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
     });
   };
 
-  const withHeader = (texto: string): string => {
-    if (!selectedItem) return texto;
-    return buildCurriculumHeaderFromItem(selectedItem) + '\n' + texto;
-  };
-
   const canGenerate = tema.trim() && form.nivel && form.asignatura && selectedObjectiveIds.size > 0;
 
-  const handleGenerar = async (kind: 'plan' | 'secuencia') => {
+  const buildDUAPrompt = (): string => {
+    const oasSeleccionados = d1Objectives
+      .filter(o => selectedObjectiveIds.has(o.id))
+      .map(o => `${o.code} — ${o.official_text || ''}`)
+      .join('\n');
+
+    return `Eres un profesor experto en Diseño Universal para el Aprendizaje (DUA). Crea una 'Guía DUA Multinivel' para Nivel: ${form.nivel}, Asignatura: ${form.asignatura}, Tema: ${tema}, OAs: ${oasSeleccionados}.
+Estructura obligatoria:
+
+1. Encabezado institucional (nombre del establecimiento, asignatura, nivel, fecha).
+2. Título motivador del tema.
+3. Activación de conocimientos con múltiples formas de representación (ej. sugiere una imagen o lectura breve).
+4. Actividades divididas en 3 niveles de complejidad:
+   - Nivel 1 (Concreto/Exploratorio): actividades concretas, manipulativas, exploratorias.
+   - Nivel 2 (Aplicación/Desarrollo): actividades de aplicación, práctica guiada, desarrollo de habilidades.
+   - Nivel 3 (Desafío/Abstracción): actividades de抽象思维, análisis crítico, creación independiente.
+5. Opciones de expresión (ej. escribe, dibuja o comenta).
+6. Evaluación formativa sugerida.
+7. Recursos y materiales complementarios.
+8. Adaptaciones DUA explícitas para cada nivel.
+
+${form.contexto ? `Contexto del curso: ${form.contexto}` : ''}
+${form.extra ? `Instrucciones especiales: ${form.extra}` : ''}
+
+Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin saludos ni texto introductorio.`;
+  };
+
+  const handleGenerar = async () => {
     if (!canGenerate) {
       setStatus('Completa tema, nivel, asignatura y selecciona al menos un OA.');
       setStatusType('warn');
       return;
     }
-    setCurrentKind(kind);
-    setStatus('Generando...');
+    setIsGenerating(true);
+    setStatus('Generando guía DUA...');
     setStatusType('');
     setOutput('');
 
-    const prompt = buildPrompt(kind, { ...form, oa: form.oa });
+    const prompt = buildDUAPrompt();
 
     try {
       const result = await generarConIA({
-        tipo: kind === 'plan' ? 'planificacion' : 'secuencia',
+        tipo: 'planificacion',
         nivel: form.nivel,
         asignatura: form.asignatura,
         oa: form.oa,
@@ -156,18 +178,21 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
       });
 
       if (result.ok && result.texto) {
-        setOutput(withHeader(result.texto));
+        setOutput(result.texto);
       } else {
-        setOutput(withHeader(generatePlan(kind, form)));
+        const local = generatePlan('plan', form);
+        setOutput(local);
         setStatus('Generado en modo local.');
         setStatusType('ok');
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido';
-      const local = generatePlan(kind, form);
-      setOutput(withHeader(local));
+      const local = generatePlan('plan', form);
+      setOutput(local);
       setStatus('Error de IA: ' + msg + '. Generado en modo local.');
       setStatusType('warn');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -176,7 +201,7 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
     const material: MaterialSaved = {
       id: generateId(),
       tipo: 'planificacion',
-      titulo: `Planificación - ${form.nivel} ${form.asignatura}`,
+      titulo: `Guía DUA - ${form.nivel} ${form.asignatura} - ${tema}`,
       contenido: output,
       nivel: form.nivel,
       asignatura: form.asignatura,
@@ -186,12 +211,12 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
     };
     saveMaterial(material);
     setSavedMaterials(getMaterials().filter((m) => m.tipo === 'planificacion'));
-    setStatus('Planificación guardada en Mis materiales.');
+    setStatus('Guía DUA guardada en Mis materiales.');
     setStatusType('ok');
   };
 
   const handleEliminar = (id: string) => {
-    if (!confirm('¿Eliminar esta planificación?')) return;
+    if (!confirm('¿Eliminar esta guía DUA?')) return;
     deleteMaterial(id);
     setSavedMaterials(getMaterials().filter((m) => m.tipo === 'planificacion'));
   };
@@ -208,13 +233,26 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
     setShowSaved(false);
   };
 
+  const handleDescargarPDF = () => {
+    if (!output) return;
+    exportarDocumento({
+      contenido: output,
+      action: 'print',
+      titulo: `Guía DUA - ${form.nivel} ${form.asignatura} - ${tema}`,
+      nivel: form.nivel,
+      asignatura: form.asignatura,
+      oa: form.oa,
+      tipo: 'guia-dua',
+    });
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 p-6 text-white shadow-lg">
         <p className="text-sm font-bold uppercase tracking-widest text-white/75">PROJECT COPILOT</p>
-        <h1 className="mt-2 text-3xl font-black">Generador de Planificación</h1>
+        <h1 className="mt-2 text-3xl font-black">Generador de Guía DUA Multinivel</h1>
         <p className="mt-2 max-w-2xl text-sm text-white/85">
-          Ingresa tema, nivel, asignatura y objetivo para generar una planificación completa con IA.
+          Ingresa tema, nivel, asignatura y objetivos para generar una guía DUA completa con 3 niveles de complejidad.
         </p>
         <div className="mt-3 flex gap-2">
           <button
@@ -352,14 +390,23 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex justify-end gap-3 pt-2 no-print">
           <button
-            onClick={() => handleGenerar('plan')}
-            disabled={!canGenerate}
+            onClick={handleGenerar}
+            disabled={!canGenerate || isGenerating}
             className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Clipboard size={16} />
-            Generar planificación
+            {isGenerating ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Generando guía DUA...
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                Generar guía DUA
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -369,9 +416,9 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
       )}
 
       {output && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800">Planificación generada</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between no-print">
+            <h3 className="text-sm font-bold text-slate-800">Guía DUA generada</h3>
             <div className="flex gap-2">
               <button
                 onClick={handleGuardar}
@@ -379,52 +426,51 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
               >
                 Guardar
               </button>
+              <button
+                onClick={handleDescargarPDF}
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 transition"
+              >
+                <FileText size={14} />
+                Descargar Guía DUA en PDF
+              </button>
             </div>
           </div>
-          <OutputEditor contenido={output} onChange={setOutput} />
-          <ResultActions
-            contenido={output}
-            titulo={`Planificación - ${form.nivel} ${form.asignatura}`}
-            nivel={form.nivel}
-            asignatura={form.asignatura}
-            oa={form.oa}
-            tipo="planificacion"
-            onGuardar={handleGuardar}
-          />
+
+          <div
+            ref={paperRef}
+            className="rounded-2xl border border-slate-200 bg-white px-12 py-10 shadow-lg"
+            style={{ maxWidth: '816px', margin: '0 auto' }}
+          >
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 border-b-2 border-violet-500 pb-2">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-xl font-bold text-slate-800 mt-6 mb-3 text-violet-700">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-lg font-semibold text-slate-700 mt-4 mb-2">{children}</h3>,
+                p: ({ children }) => <p className="text-sm text-slate-700 leading-relaxed mb-3">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ol>,
+                li: ({ children }) => <li className="text-sm text-slate-700">{children}</li>,
+                strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
+                em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-violet-300 pl-4 italic text-slate-600 my-3">{children}</blockquote>
+                ),
+                table: ({ children }) => (
+                  <table className="w-full text-sm border-collapse my-3">{children}</table>
+                ),
+                th: ({ children }) => (
+                  <th className="border border-slate-300 bg-violet-50 px-3 py-2 text-left font-bold text-slate-700">{children}</th>
+                ),
+                td: ({ children }) => (
+                  <td className="border border-slate-200 px-3 py-2 text-slate-700">{children}</td>
+                ),
+              }}
+            >
+              {output}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
-
-      <AdaptarPanel
-        item={selectedItem}
-        contenidoOriginal={output}
-        onStatus={(msg, type) => { setStatus(msg); setStatusType(type || ''); }}
-      />
     </div>
   );
-}
-
-function buildPrompt(kind: string, d: PlanFormData): string {
-  const nivel = d.nivel;
-  const esParvularia = nivel === 'Prekinder' || nivel === 'Kinder';
-  const oaContext = buildOAContext(nivel, d.asignatura, d.oa);
-  const formato = esParvularia
-    ? 'Debe incluir: objetivo de aprendizaje, ámbito/s, experiencia de aprendizaje en tres momentos (inicio, desarrollo, cierre), estrategias de juego, DUA con apoyos concretos, evaluación formativa mediante observación y registro, y sugerencias para el hogar.'
-    : 'Debe incluir: objetivo claro, habilidades, inicio-desarrollo-cierre con tiempos sugeridos, actividad colaborativa, DUA con apoyos explícitos, evaluación formativa con indicador y retroalimentación, recursos y adecuaciones curriculares.';
-  const tipo = kind === 'plan' ? 'planificación de clase' : 'secuencia de unidad';
-  const partes = [
-    `Eres un docente experto del currículum chileno. Crea una ${tipo} completa y contextualizada.`,
-    `Nivel: ${nivel}`,
-    `Asignatura/Ámbito: ${d.asignatura}`,
-    `Duración: ${d.duracion}`,
-    `Enfoque pedagógico: ${d.enfoque}`,
-    `Objetivo de Aprendizaje (OA): ${d.oa}`,
-    `Contexto del curso: ${d.contexto || 'No especificado. Usa un contexto genérico realista.'}`,
-    `Instrucciones adicionales: ${d.extra || 'Ninguna.'}`,
-    formato,
-    'Estructura la respuesta en secciones claras con encabezados (##). Usa **negritas** para énfasis. Sé específico, práctico y aplicable al aula chilena actual.',
-  ];
-  if (oaContext) {
-    partes.unshift('', oaContext, '', '---', '');
-  }
-  return partes.join('\n');
 }
