@@ -58,7 +58,7 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   const [d1Objectives, setD1Objectives] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [selectedObjectiveIds, setSelectedObjectiveIds] = useState<Set<string>>(new Set());
+  const [selectedOas, setSelectedOas] = useState<string[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingObjectives, setLoadingObjectives] = useState(false);
 
@@ -79,7 +79,7 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
     if (!selectedCourseId) { setD1Subjects([]); return; }
     setLoadingSubjects(true);
     setSelectedSubjectId('');
-    setSelectedObjectiveIds(new Set());
+    setSelectedOas([]);
     getSubjectsByCourse(selectedCourseId).then(subs => {
       setD1Subjects(subs);
       if (subs.length > 0) {
@@ -93,7 +93,7 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   useEffect(() => {
     if (!selectedCourseId || !selectedSubjectId) { setD1Objectives([]); return; }
     setLoadingObjectives(true);
-    setSelectedObjectiveIds(new Set());
+    setSelectedOas([]);
     getObjectives(selectedCourseId, selectedSubjectId)
       .then(setD1Objectives)
       .catch(() => setD1Objectives([]))
@@ -107,29 +107,28 @@ export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   }, []);
 
   useEffect(() => {
-    const selected = d1Objectives.filter(o => selectedObjectiveIds.has(o.id));
+    const selected = d1Objectives.filter(o => selectedOas.includes(o.id));
     const oaText = selected.map(o => `${o.code} — ${o.official_text || ''}`).join('\n');
     setForm(prev => ({ ...prev, oa: oaText }));
-  }, [selectedObjectiveIds, d1Objectives]);
+  }, [selectedOas, d1Objectives]);
 
   const updateField = (field: keyof PlanFormData, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
   const toggleObjective = (id: string) => {
-    setSelectedObjectiveIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setSelectedOas((prev) =>
+      prev.includes(id)
+        ? prev.filter((oaId) => oaId !== id)
+        : [...prev, id]
+    );
   };
 
-  const canGenerate = tema.trim() && form.nivel && form.asignatura && selectedObjectiveIds.size > 0;
+  const canGenerate = tema.trim() && form.nivel && form.asignatura && selectedOas.length > 0;
 
   const buildDUAPrompt = (): string => {
     const oasSeleccionados = d1Objectives
-      .filter(o => selectedObjectiveIds.has(o.id))
+      .filter(o => selectedOas.includes(o.id))
       .map(o => `${o.code} — ${o.official_text || ''}`)
       .join('\n');
 
@@ -343,14 +342,14 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
                 <label
                   key={obj.id}
                   className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition ${
-                    selectedObjectiveIds.has(obj.id)
+                    selectedOas.includes(obj.id)
                       ? 'bg-violet-50 border-l-2 border-l-violet-500'
                       : 'hover:bg-slate-50'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={selectedObjectiveIds.has(obj.id)}
+                    checked={selectedOas.includes(obj.id)}
                     onChange={() => toggleObjective(obj.id)}
                     className="mt-0.5 accent-violet-600"
                   />
@@ -362,8 +361,8 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
               ))}
             </div>
           )}
-          {selectedObjectiveIds.size > 0 && (
-            <p className="mt-1.5 text-xs text-slate-400">{selectedObjectiveIds.size} objetivo(s) seleccionado(s)</p>
+          {selectedOas.length > 0 && (
+            <p className="mt-1.5 text-xs text-slate-400">{selectedOas.length} objetivo(s) seleccionado(s)</p>
           )}
         </div>
 
