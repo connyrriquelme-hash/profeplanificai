@@ -53,6 +53,26 @@ describe('PedagogicalEngine', () => {
     ).rejects.toThrow('No se encontró OA para 1° Básico / Lenguaje y Comunicación.');
   });
 
+  it('should build a plan from explicitly selected OA context when CORE_DB does not contain that OA', async () => {
+    const env = mockEnv(null);
+
+    const plan = await PedagogicalEngine.buildPlan(
+      env,
+      '2° Básico',
+      'Lenguaje',
+      'Lectura comprensiva',
+      {
+        objectiveCode: 'LE02 OA 05',
+        objectiveText: 'Demostrar comprensión de las narraciones leídas.',
+        skills: ['Comprender', 'Comunicar'],
+      },
+    );
+
+    expect(plan.objetivo_aprendizaje).toBe('LE02 OA 05: Demostrar comprensión de las narraciones leídas.');
+    expect(plan.habilidades).toContain('Comprender');
+    expect(plan.estructura_clase.desarrollo.descripcion).toContain('LE02 OA 05');
+  });
+
   it('should throw when CORE_DB is not configured', async () => {
     const env = { CORE_DB: undefined } as unknown as PedagogicalEngineEnv;
 

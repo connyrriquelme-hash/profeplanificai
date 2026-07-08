@@ -41,6 +41,28 @@ function inferBloomLevel(habilidades: string, descripcion: string): string {
   return second ? `${top} y ${second}` : top;
 }
 
+function buildObjectiveFromSelectedContext(
+  curriculumContext: CurriculumContext | undefined,
+  tema: string,
+): CurriculumObjectiveRow | null {
+  const objectiveCode = curriculumContext?.objectiveCode?.trim();
+  const objectiveText = curriculumContext?.objectiveText?.trim();
+
+  if (!objectiveCode || !objectiveText) return null;
+
+  const selectedSkills = [
+    ...(curriculumContext?.skills || []),
+    ...(curriculumContext?.curricularSkills || []),
+  ].map((skill) => skill.trim()).filter(Boolean);
+
+  return {
+    codigo_oa: objectiveCode,
+    descripcion: objectiveText,
+    habilidades_csv: selectedSkills.length ? selectedSkills.join(', ') : 'Habilidades asociadas al OA seleccionado',
+    unidad_titulo: `Unidad relacionada con ${tema}`,
+  };
+}
+
 export class PedagogicalEngine {
   static async buildPlan(
     env: PedagogicalEngineEnv,
@@ -83,13 +105,19 @@ export class PedagogicalEngine {
           .bind(normalizedNivel, normalizedAsignatura, curriculumContext.objectiveCode)
           .first<CurriculumObjectiveRow>();
       } catch (err) {
-        throw new Error(
-          `Error al consultar el OA seleccionado en CORE_DB: ${err instanceof Error ? err.message : String(err)}`,
-        );
+        objective = buildObjectiveFromSelectedContext(curriculumContext, normalizedTema);
+        if (!objective) {
+          throw new Error(
+            `Error al consultar el OA seleccionado en CORE_DB: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
       }
 
       if (!objective) {
-        throw new Error(`No se encontró el OA seleccionado ${curriculumContext.objectiveCode} para ${normalizedNivel} / ${normalizedAsignatura}.`);
+        objective = buildObjectiveFromSelectedContext(curriculumContext, normalizedTema);
+        if (!objective) {
+          throw new Error(`No se encontró el OA seleccionado ${curriculumContext.objectiveCode} para ${normalizedNivel} / ${normalizedAsignatura}.`);
+        }
       }
     }
 

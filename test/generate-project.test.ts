@@ -85,6 +85,29 @@ describe('POST /api/generate-project', () => {
     expect(data.error).toContain('objetivo de aprendizaje');
   });
 
+  it('should return 200 using selected OA text when CORE_DB does not contain that OA', async () => {
+    const { onRequestPost } = await import('../functions/api/generate-project');
+    const ctx = mockContext({
+      tema: 'Lectura comprensiva',
+      nivel: '2° Básico',
+      asignatura: 'Lenguaje',
+      objectiveCode: 'LE02 OA 05',
+      objectiveText: 'Demostrar comprensión de las narraciones leídas.',
+    });
+    const bindMock = vi.fn().mockReturnValue({
+      first: vi.fn().mockResolvedValue(null),
+    });
+    ctx.env.CORE_DB = { prepare: vi.fn().mockReturnValue({ bind: bindMock }) } as any;
+
+    const response = await onRequestPost(ctx as any);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.ok).toBe(true);
+    expect(data.plan.objetivo_aprendizaje).toContain('LE02 OA 05');
+    expect(data.duaGuide).toBeDefined();
+  });
+
   it('should return 404 when no OA is found', async () => {
     const { onRequestPost } = await import('../functions/api/generate-project');
     const ctx = mockContext({ tema: 'Tema inexistente', nivel: '99° Básico', asignatura: 'Fantasía', objectiveCode: 'OA X' });
