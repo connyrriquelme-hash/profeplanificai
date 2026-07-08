@@ -48,6 +48,7 @@ export function CurriculumSelector({
   } = hook;
 
   const [criteriaInput, setCriteriaInput] = useState('');
+  const [skillDraft, setSkillDraft] = useState('');
   const [expandedOa, setExpandedOa] = useState(false);
 
 
@@ -318,14 +319,59 @@ export function CurriculumSelector({
             Habilidades {selection.skills && selection.skills.length > 0 && `(${selection.skills.length} seleccionadas)`}
           </label>
           <p className="text-[11px] text-slate-400 italic mb-1">No hay habilidades en la base. Puedes agregarlas manualmente:</p>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {(selection.skills || []).map((skillText) => (
+              <span
+                key={skillText}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-violet-100 border-violet-300 text-violet-700"
+              >
+                {skillText}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = (selection.skills || []).filter(s => s !== skillText);
+                    handleChange({ skills: next });
+                  }}
+                  className="text-violet-400 hover:text-red-500 transition ml-0.5"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
+          </div>
           <div className="flex gap-2">
             <input
               type="text"
-              value={(selection.skills || []).join(', ')}
-              onChange={(e) => handleChange({ skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-              placeholder="Separadas por coma: Inferir, Analizar, Comunicar"
+              value={skillDraft}
+              onChange={(e) => setSkillDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const value = skillDraft.trim();
+                  if (value.length > 1 && value !== '-' && value.toLowerCase() !== 'n/a') {
+                    handleChange({ skills: [...(selection.skills || []), value] });
+                    setSkillDraft('');
+                  }
+                }
+              }}
+              placeholder="Escribir habilidad y presionar Enter o Agregar"
               className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
             />
+            <button
+              type="button"
+              onClick={() => {
+                const value = skillDraft.trim();
+                if (value.length > 1 && value !== '-' && value.toLowerCase() !== 'n/a') {
+                  handleChange({ skills: [...(selection.skills || []), value] });
+                  setSkillDraft('');
+                }
+              }}
+              disabled={skillDraft.trim().length < 2 || skillDraft.trim() === '-'}
+              className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-xl transition disabled:opacity-50"
+            >
+              <Plus size={12} />
+              Agregar
+            </button>
           </div>
         </div>
       )}

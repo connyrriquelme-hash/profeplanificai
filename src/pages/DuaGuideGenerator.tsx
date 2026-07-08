@@ -414,7 +414,7 @@ export function DuaGuideGenerator() {
           <div className="grid gap-4 md:grid-cols-2 print:grid-cols-1">
             <DetailCard title="Contexto pedagógico inclusivo" text={duaGuide?.contexto_pedagogico_inclusivo} />
             <DetailCard title="Interpretación pedagógica del OA" text={duaGuide?.interpretacion_pedagogica} />
-            <DetailCard title="Habilidades" items={[...(duaGuide?.habilidades || []), ...(duaGuide?.habilidades_sugeridas || []).map((item) => `${item} (sugerida)`)]} />
+            <DetailCard title="Habilidades" items={[...(duaGuide?.habilidades || []).filter(s => s && s.trim().length > 1), ...(duaGuide?.habilidades_sugeridas || []).map((item) => `${item} (sugerida)`)]} />
             <DetailCard title="Criterios de aprendizaje" items={duaGuide?.criterios_aprendizaje} />
             <DetailCard title="Barreras posibles" items={duaGuide?.barreras_posibles} />
             <DetailCard title="Adecuaciones y apoyos" items={duaGuide?.adecuaciones_apoyos} />

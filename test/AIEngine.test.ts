@@ -156,6 +156,32 @@ describe('AIEngine.generateDuaGuide', () => {
     }
   });
 
+  it('should replace dash "-" skill with suggested skills', async () => {
+    const dashPlan: PedagogicalPlan = {
+      ...ART_FIRST_GRADE_PLAN,
+      habilidades: '-',
+    };
+    const env = mockAINoAI();
+    const result = await AIEngine.generateDuaGuide(env, dashPlan);
+
+    expect(result.habilidades).toEqual([]);
+    expect(result.habilidades_sugeridas?.length).toBeGreaterThan(0);
+    expect(result.habilidades_sugeridas?.join(' ')).not.toContain('-');
+  });
+
+  it('should preserve valid skills and not add suggested ones', async () => {
+    const validPlan: PedagogicalPlan = {
+      ...ART_FIRST_GRADE_PLAN,
+      habilidades: 'observar elementos visuales, expresar preferencias',
+    };
+    const env = mockAINoAI();
+    const result = await AIEngine.generateDuaGuide(env, validPlan);
+
+    expect(result.habilidades.length).toBe(2);
+    expect(result.habilidades).toContain('observar elementos visuales');
+    expect(result.habilidades).toContain('expresar preferencias');
+  });
+
   it('should include concrete learning barriers in Spanish, not generic phrases', async () => {
     const env = mockAINoAI();
     const result = await AIEngine.generateDuaGuide(env, ART_FIRST_GRADE_PLAN);
