@@ -299,6 +299,91 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
                     </ul>
                   </div>
                 </div>
+                {result.duaGuide.contexto_pedagogico_inclusivo && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Contexto pedagógico inclusivo</h3>
+                    <p className="print-body">{result.duaGuide.contexto_pedagogico_inclusivo}</p>
+                  </div>
+                )}
+                {result.duaGuide.interpretacion_pedagogica && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Interpretación pedagógica del OA</h3>
+                    <p className="print-body">{result.duaGuide.interpretacion_pedagogica}</p>
+                  </div>
+                )}
+                {((result.duaGuide.habilidades || []).length > 0 || (result.duaGuide.habilidades_sugeridas || []).length > 0) && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Habilidades</h3>
+                    <ul className="print-list">
+                      {[...(result.duaGuide.habilidades || []).filter(s => s && s.trim().length > 1), ...(result.duaGuide.habilidades_sugeridas || []).map(s => `${s} (sugerida)`)].map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {(result.duaGuide.criterios_aprendizaje || []).length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Criterios de aprendizaje</h3>
+                    <ul className="print-list">
+                      {(result.duaGuide.criterios_aprendizaje || []).map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {(result.duaGuide.barreras_posibles || []).length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Barreras posibles</h3>
+                    <ul className="print-list">
+                      {(result.duaGuide.barreras_posibles || []).map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {result.duaGuide.principios_dua && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Principios DUA aplicados</h3>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <div>
+                        <p className="text-xs font-bold text-slate-700 mb-1">Representación</p>
+                        <ul className="print-list">{(result.duaGuide.principios_dua.representacion || []).map((item, i) => <li key={i}>{item}</li>)}</ul>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-700 mb-1">Acción y Expresión</p>
+                        <ul className="print-list">{(result.duaGuide.principios_dua.accion_expresion || []).map((item, i) => <li key={i}>{item}</li>)}</ul>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-700 mb-1">Implicación</p>
+                        <ul className="print-list">{(result.duaGuide.principios_dua.implicacion || []).map((item, i) => <li key={i}>{item}</li>)}</ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {result.duaGuide.evaluacion_formativa_inclusiva && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Evaluación formativa inclusiva</h3>
+                    <ul className="print-list">
+                      {[
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.evidencias || []),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.preguntas_retroalimentacion || []),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.lista_cotejo || []),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.opciones_respuesta || []).map(s => `Opción de respuesta: ${s}`),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.retroalimentacion_docente || []),
+                      ].map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {(result.duaGuide.adecuaciones_apoyos || []).length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Adecuaciones y apoyos</h3>
+                    <ul className="print-list">
+                      {(result.duaGuide.adecuaciones_apoyos || []).map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {(result.duaGuide.cierre_inclusivo || []).length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="print-dua-level">Cierre de clase inclusivo</h3>
+                    <ul className="print-list">
+                      {(result.duaGuide.cierre_inclusivo || []).map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -347,6 +432,82 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
                   <DuaLevelCard title="Nivel Estándar" items={result.duaGuide.nivel_estandar} color="sky" />
                   <DuaLevelCard title="Nivel Desafío" items={result.duaGuide.nivel_desafio} color="violet" />
                 </div>
+                {result.duaGuide.contexto_pedagogico_inclusivo && (
+                  <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-4">
+                    <p className="text-xs font-bold text-slate-700 mb-1">Contexto pedagógico inclusivo</p>
+                    <p className="text-sm text-slate-600 leading-relaxed">{result.duaGuide.contexto_pedagogico_inclusivo}</p>
+                  </div>
+                )}
+                {result.duaGuide.interpretacion_pedagogica && (
+                  <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-4">
+                    <p className="text-xs font-bold text-slate-700 mb-1">Interpretación pedagógica del OA</p>
+                    <p className="text-sm text-slate-600 leading-relaxed">{result.duaGuide.interpretacion_pedagogica}</p>
+                  </div>
+                )}
+                {((result.duaGuide.habilidades || []).length > 0 || (result.duaGuide.habilidades_sugeridas || []).length > 0) && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Habilidades</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...(result.duaGuide.habilidades || []).filter(s => s && s.trim().length > 1), ...(result.duaGuide.habilidades_sugeridas || []).map(s => `${s} (sugerida)`)].map((item, i) => (
+                        <span key={i} className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-violet-100 border-violet-300 text-violet-700">{item}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(result.duaGuide.criterios_aprendizaje || []).length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Criterios de aprendizaje</p>
+                    <ul className="space-y-1">{(result.duaGuide.criterios_aprendizaje || []).map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><CheckCircle2 size={10} className="mt-0.5 flex-shrink-0 text-green-500" />{item}</li>)}</ul>
+                  </div>
+                )}
+                {(result.duaGuide.barreras_posibles || []).length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Barreras posibles</p>
+                    <ul className="space-y-1">{(result.duaGuide.barreras_posibles || []).map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><AlertCircle size={10} className="mt-0.5 flex-shrink-0 text-amber-500" />{item}</li>)}</ul>
+                  </div>
+                )}
+                {result.duaGuide.principios_dua && (
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-xl bg-blue-50 border border-blue-200 p-3">
+                      <p className="text-xs font-bold text-blue-700 mb-1">Representación</p>
+                      <ul className="space-y-1">{(result.duaGuide.principios_dua.representacion || []).map((item, i) => <li key={i} className="text-[11px] text-slate-600">{item}</li>)}</ul>
+                    </div>
+                    <div className="rounded-xl bg-green-50 border border-green-200 p-3">
+                      <p className="text-xs font-bold text-green-700 mb-1">Acción y Expresión</p>
+                      <ul className="space-y-1">{(result.duaGuide.principios_dua.accion_expresion || []).map((item, i) => <li key={i} className="text-[11px] text-slate-600">{item}</li>)}</ul>
+                    </div>
+                    <div className="rounded-xl bg-orange-50 border border-orange-200 p-3">
+                      <p className="text-xs font-bold text-orange-700 mb-1">Implicación</p>
+                      <ul className="space-y-1">{(result.duaGuide.principios_dua.implicacion || []).map((item, i) => <li key={i} className="text-[11px] text-slate-600">{item}</li>)}</ul>
+                    </div>
+                  </div>
+                )}
+                {result.duaGuide.evaluacion_formativa_inclusiva && (
+                  <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Evaluación formativa inclusiva</p>
+                    <ul className="space-y-1">
+                      {[
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.evidencias || []),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.preguntas_retroalimentacion || []),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.lista_cotejo || []),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.opciones_respuesta || []).map(s => `Opción de respuesta: ${s}`),
+                        ...(result.duaGuide.evaluacion_formativa_inclusiva.retroalimentacion_docente || []),
+                      ].map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><CheckCircle2 size={10} className="mt-0.5 flex-shrink-0 text-green-500" />{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {(result.duaGuide.adecuaciones_apoyos || []).length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Adecuaciones y apoyos</p>
+                    <ul className="space-y-1">{(result.duaGuide.adecuaciones_apoyos || []).map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><CheckCircle2 size={10} className="mt-0.5 flex-shrink-0 text-violet-500" />{item}</li>)}</ul>
+                  </div>
+                )}
+                {(result.duaGuide.cierre_inclusivo || []).length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Cierre de clase inclusivo</p>
+                    <ul className="space-y-1">{(result.duaGuide.cierre_inclusivo || []).map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><CheckCircle2 size={10} className="mt-0.5 flex-shrink-0 text-emerald-500" />{item}</li>)}</ul>
+                  </div>
+                )}
               </div>
             )}
           </div>
