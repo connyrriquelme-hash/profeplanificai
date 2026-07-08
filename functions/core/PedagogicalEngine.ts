@@ -1,6 +1,7 @@
 import type { CurriculumObjectiveRow, PedagogicalEngineEnv, PedagogicalPlan } from './types';
 
 export interface CurriculumContext {
+  objectiveId?: string;
   objectiveCode?: string;
   objectiveText?: string;
   indicators?: string[];
@@ -81,8 +82,14 @@ export class PedagogicalEngine {
         )
           .bind(normalizedNivel, normalizedAsignatura, curriculumContext.objectiveCode)
           .first<CurriculumObjectiveRow>();
-      } catch {
-        // Fall through to auto-detect
+      } catch (err) {
+        throw new Error(
+          `Error al consultar el OA seleccionado en CORE_DB: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+
+      if (!objective) {
+        throw new Error(`No se encontró el OA seleccionado ${curriculumContext.objectiveCode} para ${normalizedNivel} / ${normalizedAsignatura}.`);
       }
     }
 

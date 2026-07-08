@@ -8,6 +8,7 @@ interface GenerateProjectRequest {
   nivel?: string;
   asignatura?: string;
   tema?: string;
+  objectiveId?: string;
   objectiveCode?: string;
   objectiveText?: string;
   indicators?: string[];
@@ -34,8 +35,15 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
       return jsonResponse({ ok: false, error: 'nivel, asignatura y tema son obligatorios.' }, 400);
     }
 
+    const selectedObjectiveCode = String(body.objectiveCode || '').trim();
+
+    if (!selectedObjectiveCode) {
+      return jsonResponse({ ok: false, error: 'Selecciona un objetivo de aprendizaje antes de generar' }, 400);
+    }
+
     const curriculumContext = {
-      objectiveCode: String(body.objectiveCode || '').trim(),
+      objectiveId: String(body.objectiveId || '').trim(),
+      objectiveCode: selectedObjectiveCode,
       objectiveText: String(body.objectiveText || '').trim(),
       indicators: Array.isArray(body.indicators) ? body.indicators.filter(Boolean) : [],
       skills: Array.isArray(body.skills) ? body.skills.filter(Boolean) : [],
@@ -59,7 +67,7 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
     console.error('[generate-project] Error:', error);
     const message = error instanceof Error ? error.message : String(error);
 
-    if (message.includes('No se encontró OA')) {
+    if (message.includes('No se encontró OA') || message.includes('No se encontró el OA seleccionado')) {
       return jsonResponse({ ok: false, error: 'No se encontró un objetivo de aprendizaje para los parámetros indicados.' }, 404);
     }
 

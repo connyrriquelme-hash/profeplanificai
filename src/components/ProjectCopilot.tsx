@@ -23,7 +23,8 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
     subject: '',
   });
 
-  // Pre-populate from ActiveLessonContext when navigating from MisClases
+  // Pre-populate only level/subject from ActiveLessonContext.
+  // OA must be selected manually before generating.
   useEffect(() => {
     if (hasCurriculum && activeLesson.level && activeLesson.subject) {
       setCurriculumSelection({
@@ -31,13 +32,13 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         levelId: activeLesson.levelId,
         subject: activeLesson.subject,
         subjectId: activeLesson.subjectId,
-        objectiveId: activeLesson.objectiveId,
-        objectiveCode: activeLesson.objectiveCode,
-        objectiveText: activeLesson.objectiveText,
-        indicators: activeLesson.indicators,
-        skills: activeLesson.skills,
-        criteria: activeLesson.criteria,
-        curricularSkills: activeLesson.curricularSkills,
+        objectiveId: '',
+        objectiveCode: '',
+        objectiveText: '',
+        indicators: [],
+        skills: [],
+        criteria: [],
+        curricularSkills: [],
       });
     }
   }, []);
@@ -47,9 +48,15 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
     const trimmedTema = tema.trim();
     const trimmedLevel = (curriculumSelection.level || '').trim();
     const trimmedAsignatura = (curriculumSelection.subject || '').trim();
+    const selectedObjectiveCode = (curriculumSelection.objectiveCode || '').trim();
 
     if (!trimmedTema || !trimmedLevel || !trimmedAsignatura) {
       setError('Todos los campos son obligatorios.');
+      return;
+    }
+
+    if (!selectedObjectiveCode) {
+      setError('Selecciona un objetivo de aprendizaje antes de generar');
       return;
     }
 
@@ -65,7 +72,8 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
           tema: trimmedTema,
           nivel: trimmedLevel,
           asignatura: trimmedAsignatura,
-          objectiveCode: curriculumSelection.objectiveCode || '',
+          objectiveId: curriculumSelection.objectiveId || '',
+          objectiveCode: selectedObjectiveCode,
           objectiveText: curriculumSelection.objectiveText || '',
           indicators: curriculumSelection.indicators || [],
           skills: curriculumSelection.skills || [],
@@ -116,8 +124,8 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         source: 'project_copilot',
         level: result.plan.curso,
         subject: result.plan.asignatura,
-        objectiveCode: curriculumSelection.objectiveCode || result.plan.objetivo_aprendizaje,
-        objectiveText: curriculumSelection.objectiveText || result.plan.objetivo_aprendizaje,
+        objectiveCode: curriculumSelection.objectiveCode || '',
+        objectiveText: curriculumSelection.objectiveText || '',
         skill: curriculumSelection.skills?.join(', ') || result.plan.habilidades,
         indicators: curriculumSelection.indicators,
         criteria: curriculumSelection.criteria,
@@ -160,6 +168,12 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
           onChange={setCurriculumSelection}
           required
         />
+
+        {curriculumSelection.level && curriculumSelection.subject && !curriculumSelection.objectiveCode && (
+          <p className="text-xs font-semibold text-amber-600">
+            Selecciona un objetivo de aprendizaje antes de generar
+          </p>
+        )}
 
         {error && (
           <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">

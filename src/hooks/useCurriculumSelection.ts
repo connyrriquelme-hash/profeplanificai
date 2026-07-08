@@ -69,9 +69,6 @@ interface UseCurriculumSelectionOptions {
   initialLevelId?: string;
   initialSubject?: string;
   initialSubjectId?: string;
-  initialObjectiveId?: string;
-  initialObjectiveCode?: string;
-  initialObjectiveText?: string;
   initialIndicators?: string[];
   initialSkills?: string[];
   initialCriteria?: string[];
@@ -102,11 +99,11 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     levelId: opts.initialLevelId || '',
     subject: opts.initialSubject || '',
     subjectId: opts.initialSubjectId || '',
-    objectiveId: opts.initialObjectiveId || '',
-    objectiveCode: opts.initialObjectiveCode || '',
-    objectiveText: opts.initialObjectiveText || '',
-    indicators: opts.initialIndicators || [],
-    skills: opts.initialSkills || [],
+    objectiveId: '',
+    objectiveCode: '',
+    objectiveText: '',
+    indicators: [],
+    skills: [],
     criteria: opts.initialCriteria || [],
   });
 
@@ -294,31 +291,6 @@ export function useCurriculumSelection(opts: UseCurriculumSelectionOptions = {})
     updateSelection({ curricularSkills: items });
     setLoadingCurricular(false);
   }, [fetchJSON, updateSelection]);
-
-  // Auto-select initial OA when objectives finish loading
-  const initialOaRef = useRef(opts.initialObjectiveCode);
-  useEffect(() => {
-    if (!initialOaRef.current || objectives.length === 0) return;
-    const code = initialOaRef.current;
-    if (selection.objectiveCode && selection.objectiveCode !== code) return;
-    const obj = objectives.find(o => o.codigo_oa === code);
-    if (!obj) return;
-    initialOaRef.current = undefined;
-    setSelection(prev => ({
-      ...prev,
-      objectiveId: obj.id,
-      objectiveCode: code,
-      objectiveText: opts.initialObjectiveText || obj.descripcion,
-      indicators: opts.initialIndicators || [],
-      skills: opts.initialSkills || [],
-      criteria: opts.initialCriteria || [],
-    }));
-    loadIndicators(code, obj.id);
-    if (obj.id) {
-      loadSkills(obj.id);
-      loadCurricularSkills(obj.id);
-    }
-  }, [objectives, opts.initialObjectiveText, opts.initialIndicators, opts.initialSkills, opts.initialCriteria, loadIndicators, loadSkills, loadCurricularSkills, selection.objectiveCode]);
 
   const setLevel = useCallback((levelName: string) => {
     const obj = levelObjects.find(l => l.name === levelName);

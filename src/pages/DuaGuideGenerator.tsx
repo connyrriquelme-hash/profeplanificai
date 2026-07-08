@@ -130,7 +130,8 @@ export function DuaGuideGenerator() {
     hasCurriculum,
   });
 
-  // Pre-populate from ActiveLessonContext when navigating from MisClases
+  // Pre-populate only level/subject from ActiveLessonContext.
+  // OA must be selected manually before generating.
   useEffect(() => {
     if (hasCurriculum && activeLesson.level && activeLesson.subject) {
       setCurriculumSelection({
@@ -138,13 +139,13 @@ export function DuaGuideGenerator() {
         levelId: activeLesson.levelId,
         subject: activeLesson.subject,
         subjectId: activeLesson.subjectId,
-        objectiveId: activeLesson.objectiveId,
-        objectiveCode: activeLesson.objectiveCode,
-        objectiveText: activeLesson.objectiveText,
-        indicators: activeLesson.indicators,
-        skills: activeLesson.skills,
-        criteria: activeLesson.criteria,
-        curricularSkills: activeLesson.curricularSkills,
+        objectiveId: '',
+        objectiveCode: '',
+        objectiveText: '',
+        indicators: [],
+        skills: [],
+        criteria: [],
+        curricularSkills: [],
         tema: '',
       });
       return;
@@ -153,6 +154,14 @@ export function DuaGuideGenerator() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const selectedObjectiveCode = (curriculumSelection.objectiveCode || '').trim();
+
+    if (!selectedObjectiveCode) {
+      setError('Selecciona un objetivo de aprendizaje antes de generar');
+      toast.error('Selecciona un objetivo de aprendizaje antes de generar');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setResult(null);
@@ -167,7 +176,8 @@ export function DuaGuideGenerator() {
           nivel: curriculumSelection.level,
           asignatura: curriculumSelection.subject,
           tema: curriculumSelection.tema || '',
-          objectiveCode: curriculumSelection.objectiveCode || '',
+          objectiveId: curriculumSelection.objectiveId || '',
+          objectiveCode: selectedObjectiveCode,
           objectiveText: curriculumSelection.objectiveText || '',
           indicators: curriculumSelection.indicators || [],
           skills: curriculumSelection.skills || [],
@@ -215,8 +225,8 @@ export function DuaGuideGenerator() {
         source: 'guia_dua',
         level: result.plan.curso,
         subject: result.plan.asignatura,
-        objectiveCode: curriculumSelection.objectiveCode || result.plan.objetivo_aprendizaje,
-        objectiveText: curriculumSelection.objectiveText || result.plan.objetivo_aprendizaje,
+        objectiveCode: curriculumSelection.objectiveCode || '',
+        objectiveText: curriculumSelection.objectiveText || '',
         skill: curriculumSelection.skills?.join(', ') || result.plan.habilidades,
         indicators: curriculumSelection.indicators,
         criteria: curriculumSelection.criteria,
@@ -268,6 +278,12 @@ export function DuaGuideGenerator() {
           }}
           required
         />
+
+        {curriculumSelection.level && curriculumSelection.subject && !curriculumSelection.objectiveCode && (
+          <p className="text-xs font-semibold text-amber-600">
+            Selecciona un objetivo de aprendizaje antes de generar
+          </p>
+        )}
 
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tema</label>

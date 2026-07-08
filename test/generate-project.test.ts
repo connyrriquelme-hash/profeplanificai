@@ -40,7 +40,7 @@ function mockContext(body?: unknown, method = 'POST') {
 describe('POST /api/generate-project', () => {
   it('should return 200 with plan and duaGuide for valid request', async () => {
     const { onRequestPost } = await import('../functions/api/generate-project');
-    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales' });
+    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales', objectiveCode: 'OA 1' });
     const response = await onRequestPost(ctx as any);
     const data = await response.json();
 
@@ -74,9 +74,20 @@ describe('POST /api/generate-project', () => {
     expect(data.ok).toBe(false);
   });
 
+  it('should return 400 when objectiveCode is missing', async () => {
+    const { onRequestPost } = await import('../functions/api/generate-project');
+    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales' });
+    const response = await onRequestPost(ctx as any);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.ok).toBe(false);
+    expect(data.error).toContain('objetivo de aprendizaje');
+  });
+
   it('should return 404 when no OA is found', async () => {
     const { onRequestPost } = await import('../functions/api/generate-project');
-    const ctx = mockContext({ tema: 'Tema inexistente', nivel: '99° Básico', asignatura: 'Fantasía' });
+    const ctx = mockContext({ tema: 'Tema inexistente', nivel: '99° Básico', asignatura: 'Fantasía', objectiveCode: 'OA X' });
     const bindMock = vi.fn().mockReturnValue({
       first: vi.fn().mockResolvedValue(null),
     });
@@ -91,7 +102,7 @@ describe('POST /api/generate-project', () => {
 
   it('should return 500 when CORE_DB is not configured', async () => {
     const { onRequestPost } = await import('../functions/api/generate-project');
-    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales' });
+    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales', objectiveCode: 'OA 1' });
     ctx.env.CORE_DB = undefined as any;
     const response = await onRequestPost(ctx as any);
     const data = await response.json();
@@ -112,7 +123,7 @@ describe('POST /api/generate-project', () => {
 
   it('should not expose stack traces in error response', async () => {
     const { onRequestPost } = await import('../functions/api/generate-project');
-    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales' });
+    const ctx = mockContext({ tema: 'La célula', nivel: '5° Básico', asignatura: 'Ciencias Naturales', objectiveCode: 'OA 1' });
     ctx.env.CORE_DB = undefined as any;
     const response = await onRequestPost(ctx as any);
     const data = await response.json();
