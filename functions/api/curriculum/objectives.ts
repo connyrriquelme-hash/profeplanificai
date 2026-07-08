@@ -59,10 +59,12 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
         conditions.push('c.name LIKE ?');
         params.push(`%${nivelName}%`);
       }
-      if (asignaturaId || asignatura) {
-        const subjectName = asignatura || asignaturaId;
+      if (asignaturaId) {
+        conditions.push('s.id = ?');
+        params.push(asignaturaId);
+      } else if (asignatura) {
         conditions.push('s.name LIKE ?');
-        params.push(`%${subjectName}%`);
+        params.push(`%${asignatura}%`);
       }
       if (q) {
         conditions.push('(o.code LIKE ? OR o.official_text LIKE ?)');

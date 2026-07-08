@@ -83,6 +83,17 @@ export function CurriculumSelector({
     handleChange({ objectiveId, objectiveCode: codigo_oa, objectiveText: descripcion, indicators: [], skills: fallbackSkills, curricularSkills: [] });
   };
 
+  const handleObjectiveChange = (objectiveId: string) => {
+    if (!objectiveId) {
+      handleChange({ objectiveId: '', objectiveCode: '', objectiveText: '', indicators: [], skills: [], criteria: [], curricularSkills: [] });
+      return;
+    }
+
+    const obj = objectives.find((item) => item.id === objectiveId);
+    if (!obj) return;
+    handleObjectiveSelect(obj.codigo_oa, obj.descripcion, obj.id);
+  };
+
   const handleIndicatorToggle = (ind: string) => {
     const current = selection.indicators || [];
     const next = current.includes(ind) ? current.filter(i => i !== ind) : [...current, ind];
@@ -163,31 +174,35 @@ export function CurriculumSelector({
             Objetivo de Aprendizaje {required && <span className="text-red-400">*</span>}
           </label>
           {objectives.length > 0 ? (
-            <div className="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
-              {objectives.map((obj) => {
-                const isSelected = selection.objectiveCode === obj.codigo_oa;
-                return (
-                  <button
-                    key={obj.id || obj.codigo_oa}
-                    type="button"
-                    onClick={() => handleObjectiveSelect(obj.codigo_oa, obj.descripcion, obj.id)}
-                    className={`w-full text-left px-3.5 py-2.5 border-b border-slate-100 last:border-b-0 transition text-sm ${
-                      isSelected
-                        ? 'bg-violet-50 border-l-2 border-l-violet-500'
-                        : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <span className="font-mono text-xs font-bold text-violet-600 mt-0.5 flex-shrink-0">{obj.codigo_oa}</span>
-                      <span className="text-slate-700 leading-relaxed">{obj.descripcion}</span>
-                      {isSelected && <CheckCircle2 size={14} className="text-violet-500 mt-0.5 flex-shrink-0 ml-auto" />}
+            <div className="space-y-2">
+              <select
+                value={selection.objectiveId || ''}
+                onChange={(event) => handleObjectiveChange(event.target.value)}
+                className={selectClass}
+              >
+                <option value="">Seleccionar objetivo de aprendizaje</option>
+                {objectives.map((obj) => (
+                  <option key={obj.id || obj.codigo_oa} value={obj.id}>
+                    {obj.codigo_oa} — {obj.descripcion}
+                  </option>
+                ))}
+              </select>
+
+              {selection.objectiveCode && (
+                <div className="rounded-xl border border-violet-100 bg-violet-50 px-3.5 py-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 size={14} className="mt-0.5 flex-shrink-0 text-violet-500" />
+                    <div>
+                      <p className="font-mono text-xs font-bold text-violet-700">{selection.objectiveCode}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-700">{selection.objectiveText}</p>
                     </div>
-                    {obj.habilidades_csv && (
-                      <p className="text-[10px] text-slate-400 mt-1 ml-6">Habilidades: {obj.habilidades_csv}</p>
-                    )}
-                  </button>
-                );
-              })}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[11px] text-slate-400">
+                {objectives.length} objetivo(s) disponible(s) para esta combinación.
+              </p>
             </div>
           ) : (
             <p className="text-xs text-slate-400 italic py-3 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
