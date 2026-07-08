@@ -45,9 +45,30 @@ export interface LessonContent {
 export interface DuaGuide {
   titulo_guia: string;
   contexto_motivacional: string;
+  contexto_pedagogico_inclusivo?: string;
+  oa_a_trabajar?: string;
+  interpretacion_pedagogica?: string;
+  habilidades?: string[];
+  habilidades_sugeridas?: string[];
+  criterios_aprendizaje?: string[];
+  barreras_posibles?: string[];
   nivel_apoyo: string[];
   nivel_estandar: string[];
   nivel_desafio: string[];
+  principios_dua?: {
+    representacion: string[];
+    accion_expresion: string[];
+    implicacion: string[];
+  };
+  evaluacion_formativa_inclusiva?: {
+    evidencias: string[];
+    preguntas_retroalimentacion: string[];
+    lista_cotejo: string[];
+    opciones_respuesta: string[];
+    retroalimentacion_docente: string[];
+  };
+  adecuaciones_apoyos?: string[];
+  cierre_inclusivo?: string[];
 }
 
 export interface CurriculumObjectiveRow {

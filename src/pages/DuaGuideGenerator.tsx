@@ -52,6 +52,23 @@ function LevelCard({
   );
 }
 
+function DetailCard({ title, text, items }: { title: string; text?: string; items?: string[] }) {
+  const safeItems = (items || []).filter(Boolean);
+  if (!text && safeItems.length === 0) return null;
+
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-4 print:shadow-none">
+      <h3 className="text-sm font-black uppercase tracking-[0.14em] text-violet-600 print:text-black">{title}</h3>
+      {text && <p className="mt-2 text-sm leading-relaxed text-slate-700 print:text-black">{text}</p>}
+      {safeItems.length > 0 && (
+        <ul className="mt-3 space-y-2 list-disc pl-5 text-sm leading-relaxed text-slate-700 print:text-black">
+          {safeItems.map((item, index) => <li key={`${title}-${index}`}>{item}</li>)}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
     <div className="rounded-3xl border-2 border-slate-200 bg-slate-50 p-5 shadow-sm">
@@ -394,23 +411,52 @@ export function DuaGuideGenerator() {
             />
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2 print:grid-cols-1">
+            <DetailCard title="Contexto pedagógico inclusivo" text={duaGuide?.contexto_pedagogico_inclusivo} />
+            <DetailCard title="Interpretación pedagógica del OA" text={duaGuide?.interpretacion_pedagogica} />
+            <DetailCard title="Habilidades" items={[...(duaGuide?.habilidades || []), ...(duaGuide?.habilidades_sugeridas || []).map((item) => `${item} (sugerida)`)]} />
+            <DetailCard title="Criterios de aprendizaje" items={duaGuide?.criterios_aprendizaje} />
+            <DetailCard title="Barreras posibles" items={duaGuide?.barreras_posibles} />
+            <DetailCard title="Adecuaciones y apoyos" items={duaGuide?.adecuaciones_apoyos} />
+          </div>
+
           <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm print:break-before-page print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-4 print:shadow-none">
             <h3 className="text-lg font-black text-slate-900 print:text-black">Principios DUA aplicados</h3>
             <div className="mt-3 grid gap-2 md:grid-cols-3">
               <div className="rounded-xl bg-blue-50 p-3 border border-blue-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
                 <p className="text-xs font-black uppercase text-blue-600 print:text-black">Representación</p>
-                <p className="mt-1 text-xs text-slate-700 print:text-black">Múltiples medios: texto, imágenes, esquemas visuales, organizadores gráficos</p>
+                <ul className="mt-1 list-disc pl-4 text-xs text-slate-700 print:text-black">
+                  {(duaGuide?.principios_dua?.representacion || ['Múltiples medios: texto, imágenes, esquemas visuales y organizadores gráficos']).map((item, index) => <li key={`representacion-${index}`}>{item}</li>)}
+                </ul>
               </div>
               <div className="rounded-xl bg-green-50 p-3 border border-green-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
                 <p className="text-xs font-black uppercase text-green-600 print:text-black">Acción y Expresión</p>
-                <p className="mt-1 text-xs text-slate-700 print:text-black">Diversas formas: escritura, oralidad, esquemas, modelos, debate</p>
+                <ul className="mt-1 list-disc pl-4 text-xs text-slate-700 print:text-black">
+                  {(duaGuide?.principios_dua?.accion_expresion || ['Diversas formas: escritura, oralidad, esquemas, modelos y debate']).map((item, index) => <li key={`accion-${index}`}>{item}</li>)}
+                </ul>
               </div>
               <div className="rounded-xl bg-orange-50 p-3 border border-orange-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
                 <p className="text-xs font-black uppercase text-orange-600 print:text-black">Implicación</p>
-                <p className="mt-1 text-xs text-slate-700 print:text-black">Intereses reales, autonomía, desafío progresivo, retroalimentación formativa</p>
+                <ul className="mt-1 list-disc pl-4 text-xs text-slate-700 print:text-black">
+                  {(duaGuide?.principios_dua?.implicacion || ['Intereses reales, autonomía, desafío progresivo y retroalimentación formativa']).map((item, index) => <li key={`implicacion-${index}`}>{item}</li>)}
+                </ul>
               </div>
             </div>
           </section>
+
+          <div className="grid gap-4 md:grid-cols-2 print:grid-cols-1">
+            <DetailCard
+              title="Evaluación formativa inclusiva"
+              items={[
+                ...(duaGuide?.evaluacion_formativa_inclusiva?.evidencias || []),
+                ...(duaGuide?.evaluacion_formativa_inclusiva?.preguntas_retroalimentacion || []),
+                ...(duaGuide?.evaluacion_formativa_inclusiva?.lista_cotejo || []),
+                ...(duaGuide?.evaluacion_formativa_inclusiva?.opciones_respuesta || []).map((item) => `Opción de respuesta: ${item}`),
+                ...(duaGuide?.evaluacion_formativa_inclusiva?.retroalimentacion_docente || []),
+              ]}
+            />
+            <DetailCard title="Cierre de clase inclusivo" items={duaGuide?.cierre_inclusivo} />
+          </div>
         </div>
       )}
 
