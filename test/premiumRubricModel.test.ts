@@ -246,4 +246,47 @@ describe('buildPremiumRubricModel', () => {
     const result = buildPremiumRubricModel(UPPER_INPUT);
     expect(result.studentSelfAssessment.prompts.length).toBeGreaterThanOrEqual(4);
   });
+
+  it('no contiene caracteres chinos en la salida', () => {
+    const result = buildPremiumRubricModel(BASE_INPUT);
+    const output = JSON.stringify(result);
+    expect(output).not.toMatch(/[\u4e00-\u9fff]/);
+  });
+
+  it('no contiene palabras en inglés en descriptores', () => {
+    const result = buildPremiumRubricModel(BASE_INPUT);
+    const output = JSON.stringify(result);
+    expect(output).not.toMatch(/\bappropriate\b/i);
+    expect(output).not.toMatch(/\bdiverse\b/i);
+  });
+
+  it('no contiene "Necesica" (typo) en descriptores', () => {
+    const result = buildPremiumRubricModel(BASE_INPUT);
+    const output = JSON.stringify(result);
+    expect(output).not.toMatch(/\bNecesica\b/);
+  });
+
+  it('tecnología genera criterios de programación/construcción', () => {
+    const techInput = { ...BASE_INPUT, subject: 'Tecnología' };
+    const result = buildPremiumRubricModel(techInput);
+    expect(result.criteria.some(c => c.name.includes('programación') || c.name.includes('Construcción'))).toBe(true);
+  });
+
+  it('formación ciudadana genera criterios de normas y participación', () => {
+    const fcInput = { ...BASE_INPUT, subject: 'Formación Ciudadana' };
+    const result = buildPremiumRubricModel(fcInput);
+    expect(result.criteria.some(c => c.name.includes('normas') || c.name.includes('Participación'))).toBe(true);
+  });
+
+  it('orientación genera criterios de reconocimiento personal', () => {
+    const oriInput = { ...BASE_INPUT, subject: 'Orientación' };
+    const result = buildPremiumRubricModel(oriInput);
+    expect(result.criteria.some(c => c.name.includes('personal') || c.name.includes('Reconocimiento'))).toBe(true);
+  });
+
+  it('inglés genera criterios de vocabulario y comunicación', () => {
+    const engInput = { ...BASE_INPUT, subject: 'Inglés' };
+    const result = buildPremiumRubricModel(engInput);
+    expect(result.criteria.some(c => c.name.includes('vocabulario') || c.name.includes('comunicativo'))).toBe(true);
+  });
 });

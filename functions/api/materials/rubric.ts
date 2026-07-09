@@ -94,6 +94,10 @@ function detectSubjectCategory(subject: string): string {
   if (s.includes('matemática') || s.includes('matematica') || s.includes('mate')) return 'matematica';
   if (s.includes('historia') || s.includes('geografía') || s.includes('geografia') || s.includes('sociales')) return 'historia';
   if (s.includes('arte') || s.includes('visual') || s.includes('música') || s.includes('musica')) return 'artes';
+  if (s.includes('tecnología') || s.includes('tecnologia') || s.includes('programación') || s.includes('programacion')) return 'tecnologia';
+  if (s.includes('formación ciudadana') || s.includes('formacion ciudadana') || s.includes('ciudadanía') || s.includes('ciudadania')) return 'formacion_ciudadana';
+  if (s.includes('orientación') || s.includes('orientacion')) return 'orientacion';
+  if (s.includes('inglés') || s.includes('ingles') || s.includes('english')) return 'ingles';
   return 'general';
 }
 
@@ -465,6 +469,170 @@ function buildGeneralCriteria(): RubricCriterion[] {
   ];
 }
 
+function buildTecnologiaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Comprensión del problema', description: 'Identifica la necesidad o problema tecnológico a resolver', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Analiza el problema desde múltiples perspectivas y define requisitos claros', evidence: 'Análisis con requisitos especificados', feedbackSuggestion: 'Análisis completo del problema.' },
+        { levelId: 'adecuado', descriptor: 'Identifica el problema y menciona algunos requisitos', evidence: 'Descripción del problema', feedbackSuggestion: 'Identificaste bien el problema.' },
+        { levelId: 'en_desarrollo', descriptor: 'Describe el problema de forma general', evidence: 'Descripción básica', feedbackSuggestion: 'Describe más detalles del problema.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para identificar el problema', evidence: 'Descripción con guía', feedbackSuggestion: 'Vamos a definir juntos el problema.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Diseño de la solución', description: 'Diseña una solución tecnológica adecuada', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Diseña una solución innovadora, considerando materiales, herramientas y pasos', evidence: 'Plano, boceto o plan detallado', feedbackSuggestion: 'Tu diseño es innovador y bien planificado.' },
+        { levelId: 'adecuado', descriptor: 'Propone una solución viable con algunos detalles', evidence: 'Propuesta con materiales y pasos', feedbackSuggestion: 'Buena propuesta. Agrega más detalles.' },
+        { levelId: 'en_desarrollo', descriptor: 'Propone una idea general sin detalles técnicos', evidence: 'Idea general', feedbackSuggestion: 'Tu idea es buena. Ahora define los pasos.' },
+        { levelId: 'inicial', descriptor: 'Requiere guía para diseñar la solución', evidence: 'Diseño con apoyo', feedbackSuggestion: 'Vamos a diseñar juntos.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Construcción o programación', description: 'Construye o programa la solución siguiendo el diseño', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Construye o programa con precisión, resolviendo problemas durante el proceso', evidence: 'Prototipo o programa funcional', feedbackSuggestion: 'Construiste con precisión y resolviste problemas.' },
+        { levelId: 'adecuado', descriptor: 'Construye o programa la solución con resultados funcionales', evidence: 'Prototipo o programa que funciona', feedbackSuggestion: 'Funciona bien. ¿Cómo podrías mejorarlo?' },
+        { levelId: 'en_desarrollo', descriptor: 'Intenta construir o programar con apoyo significativo', evidence: 'Prototipo parcial con ayuda', feedbackSuggestion: 'Estás avanzando. Sigue con el apoyo.' },
+        { levelId: 'inicial', descriptor: 'Necesita asistencia directa para construir o programar', evidence: 'Construcción con guía paso a paso', feedbackSuggestion: 'Vamos a construir juntos.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Evaluación y mejora', description: 'Evalúa el resultado y propone mejoras', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Evalúa críticamente el producto y propone mejoras concretas y creativas', evidence: 'Evaluación con propuestas de mejora', feedbackSuggestion: 'Tu capacidad de mejora es excelente.' },
+        { levelId: 'adecuado', descriptor: 'Evalúa el resultado e identifica al menos una mejora', evidence: 'Evaluación con una mejora propuesta', feedbackSuggestion: 'Bien evaluaste. ¿Qué más podrías mejorar?' },
+        { levelId: 'en_desarrollo', descriptor: 'Evalúa con apoyo y reconoce si funciona', evidence: 'Evaluación guiada', feedbackSuggestion: 'Estás aprendiendo a evaluar.' },
+        { levelId: 'inicial', descriptor: 'Necesita guía para evaluar el resultado', evidence: 'Evaluación con asistencia', feedbackSuggestion: 'Vamos a evaluar juntos el resultado.' },
+      ],
+    },
+  ];
+}
+
+function buildFormacionCiudadanaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Comprensión de normas y valores', description: 'Comprende normas, valores y principios ciudadanos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Explica normas y valores, conectándolos con situaciones reales y su importancia social', evidence: 'Análisis con ejemplos reales', feedbackSuggestion: 'Comprendes la importancia de las normas en la sociedad.' },
+        { levelId: 'adecuado', descriptor: 'Identifica al menos 2 normas o valores y menciona su importancia', evidence: 'Lista de normas/valores con explicación', feedbackSuggestion: 'Identificaste bien las normas.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce algunas normas pero sin explicar su importancia', evidence: 'Mención de normas', feedbackSuggestion: '¿Por qué es importante esta norma?' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para identificar normas y valores', evidence: 'Selección con guía', feedbackSuggestion: 'Vamos a identificar juntos las normas.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Participación responsable', description: 'Participa de forma respetuosa y responsable en contextos ciudadanos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Participa activamente, respeta diversas opiniones y aporta construyendo consensos', evidence: 'Registro de participación en debates o actividades', feedbackSuggestion: 'Participas de forma ejemplar y constructiva.' },
+        { levelId: 'adecuado', descriptor: 'Participa y respeta las opiniones de otros', evidence: 'Participación en actividad grupal', feedbackSuggestion: 'Participaste bien. Intenta también aportar ideas propias.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa con apoyo y a veces tiene dificultad para respetar diversas opiniones', evidence: 'Participación guiada', feedbackSuggestion: 'Estás aprendiendo a participar. Recuerda escuchar antes de hablar.' },
+        { levelId: 'inicial', descriptor: 'Necesita acompañamiento significativo para participar', evidence: 'Participación con apoyo directo', feedbackSuggestion: 'Vamos a participar juntos de forma respetuosa.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Análisis de situaciones ciudadanas', description: 'Analiza situaciones que requieren tomar postura o decidir como ciudadano', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Analiza situaciones complejas, considera diversas perspectivas y propone acciones responsables', evidence: 'Análisis con propuestas fundamentadas', feedbackSuggestion: 'Tu análisis ciudadano es profundo y maduro.' },
+        { levelId: 'adecuado', descriptor: 'Analiza la situación y menciona al menos una opción de acción', evidence: 'Análisis con opción propuesta', feedbackSuggestion: 'Bien analizaste. ¿Qué pasaría si eliges esa opción?' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce el problema pero no propone acciones', evidence: 'Reconocimiento del problema', feedbackSuggestion: 'Ahora piensa: ¿qué podemos hacer al respecto?' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para comprender la situación', evidence: 'Comprensión con guía', feedbackSuggestion: 'Vamos a analizar juntos la situación.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Propuesta de acciones', description: 'Propone acciones responsables para mejorar la convivencia o comunidad', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Propone acciones viables, creativas y concretas que involucran a la comunidad', evidence: 'Plan de acciones con pasos y responsables', feedbackSuggestion: 'Tus propuestas pueden generar cambios reales.' },
+        { levelId: 'adecuado', descriptor: 'Propone al menos una acción viable para mejorar la situación', evidence: 'Propuesta con un paso concreto', feedbackSuggestion: 'Buena propuesta. ¿Cómo la harías realidad?' },
+        { levelId: 'en_desarrollo', descriptor: 'Menciona ideas generales sin plan concreto', evidence: 'Ideas generales', feedbackSuggestion: 'Tus ideas son buenas. Ahora define los pasos.' },
+        { levelId: 'inicial', descriptor: 'Necesita guía para proponer acciones', evidence: 'Propuesta con asistencia', feedbackSuggestion: 'Vamos a proponer juntos una acción.' },
+      ],
+    },
+  ];
+}
+
+function buildOrientacionCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Reconocimiento personal y social', description: 'Reconoce sus cualidades, emociones y relación con otros', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Identifica sus emociones, cualidades y cómo influyen en su relación con otros', evidence: 'Reflexión personal completa', feedbackSuggestion: 'Te conoces muy bien y eso es una fortaleza.' },
+        { levelId: 'adecuado', descriptor: 'Identifica al menos 2 emociones o cualidades personales', evidence: 'Autoconocimiento básico', feedbackSuggestion: 'Bien te identificaste. ¿Cómo te hace sentir eso?' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce algunas emociones con apoyo', evidence: 'Reconocimiento con guía', feedbackSuggestion: 'Estás aprendiendo a conocerte.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo significativo para reconocer sus emociones', evidence: 'Reconocimiento con asistencia directa', feedbackSuggestion: 'Vamos a explorar juntos cómo te sientes.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Convivencia y autocuidado', description: 'Practica hábitos de convivencia, autocuidado y bienestar', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Demuestra hábitos de convivencia y autocuidado de forma autónoma y proactiva', evidence: 'Registro de hábitos y participación en acuerdos', feedbackSuggestion: 'Tus hábitos de convivencia son ejemplares.' },
+        { levelId: 'adecuado', descriptor: 'Cumple acuerdos de convivencia y muestra algunos hábitos de autocuidado', evidence: 'Participación en acuerdos', feedbackSuggestion: 'Bien cumples los acuerdos. Sigue fortaleciendo tus hábitos.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa en acuerdos con Recordatorio y apoyo del docente', evidence: 'Participación con recordatorios', feedbackSuggestion: 'Estás aprendiendo a convivir mejor.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo constante para convivir y cuidarse', evidence: 'Convivencia con apoyo directo', feedbackSuggestion: 'Vamos a establecer juntos hábitos de convivencia.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Toma de decisiones', description: 'Toma decisiones considerando sus necesidades, las de otros y consecuencias', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Toma decisiones reflexivas, considerando sus necesidades, las de otros y las consecuencias', evidence: 'Registro de decisiones y justificación', feedbackSuggestion: 'Tomas decisiones de forma madura y responsable.' },
+        { levelId: 'adecuado', descriptor: 'Toma decisiones considerando al menos dos factores', evidence: 'Decisión con justificación', feedbackSuggestion: 'Bien consideraste los factores.' },
+        { levelId: 'en_desarrollo', descriptor: 'Toma decisiones impulsivas o sin considerar consecuencias', evidence: 'Decisión con reflexión guiada', feedbackSuggestion: 'Piensa antes de decidir: ¿qué consecuencias tiene?' },
+        { levelId: 'inicial', descriptor: 'Requiere guía para tomar decisiones', evidence: 'Decisiones con apoyo', feedbackSuggestion: 'Vamos a analizar juntos las opciones.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Participación respetuosa', description: 'Participa de forma respetuosa en actividades de orientación y bienestar', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Participa activamente, aporta ideas y demuestra empatía y respeto por los demás', evidence: 'Participación constructiva y empática', feedbackSuggestion: 'Tu participación es respetuosa y empática.' },
+        { levelId: 'adecuado', descriptor: 'Participa y respeta a los demás en las actividades', evidence: 'Participación respetuosa', feedbackSuggestion: 'Participaste bien. Sigue manteniendo el respeto.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa con Recordatorio del docente para mantener el respeto', evidence: 'Participación con recordatorio', feedbackSuggestion: 'Estás aprendiendo a participar respetuosamente.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo constante para participar de forma respetuosa', evidence: 'Participación con apoyo directo', feedbackSuggestion: 'Vamos a participar juntos de forma respetuosa.' },
+      ],
+    },
+  ];
+}
+
+function buildInglesCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Comprensión de vocabulario', description: 'Reconoce y comprende vocabulario y expresiones en inglés', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Comprende vocabulario variado y lo usa en contexto, demostrando dominio del significado', evidence: 'Uso correcto de vocabulario en oraciones', feedbackSuggestion: 'Tu comprensión de vocabulario es excelente.' },
+        { levelId: 'adecuado', descriptor: 'Comprende al menos 5 palabras o expresiones y las usa en contexto simple', evidence: 'Identificación y uso de vocabulario', feedbackSuggestion: 'Bien comprendes el vocabulario. Sigue practicando.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce algunas palabras con apoyo visual o del docente', evidence: 'Reconocimiento con apoyo', feedbackSuggestion: 'Estás aprendiendo nuevas palabras. Muy bien.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo constante para comprender vocabulario', evidence: 'Comprensión con asistencia directa', feedbackSuggestion: 'Vamos a aprender juntos nuevas palabras.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Uso comunicativo', description: 'Usa el inglés para comunicar ideas de forma básica', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Se comunica con fluidez, usando estructuras variadas y vocabulario preciso', evidence: 'Comunicación oral o escrita fluida', feedbackSuggestion: 'Te comunicas en inglés con gran fluidez.' },
+        { levelId: 'adecuado', descriptor: 'Se comunica en frases simples y comprende respuestas básicas', evidence: 'Comunicación en frases simples', feedbackSuggestion: 'Te comunicas bien. Intenta usar frases más largas.' },
+        { levelId: 'en_desarrollo', descriptor: 'Usa palabras sueltas o frases muy cortas con apoyo', evidence: 'Comunicación con apoyo', feedbackSuggestion: 'Estás construyendo tu capacidad de comunicación.' },
+        { levelId: 'inicial', descriptor: 'Necesita guía directa para comunicar en inglés', evidence: 'Comunicación con asistencia', feedbackSuggestion: 'Vamos a comunicarnos juntos en inglés.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Producción oral y escrita', description: 'Produce textos o expresiones orales en inglés', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Produce textos o discursos coherentes con vocabulario variado y estructura correcta', evidence: 'Producción escrita u oral completa', feedbackSuggestion: 'Tu producción en inglés es sobresaliente.' },
+        { levelId: 'adecuado', descriptor: 'Produce textos o expresiones orales con estructura básica y algunos errores menores', evidence: 'Producción con errores menores', feedbackSuggestion: 'Buena producción. Revisa la ortografía o pronunciación.' },
+        { levelId: 'en_desarrollo', descriptor: 'Produce con apoyo significativo, usando frases memorizadas', evidence: 'Producción con apoyo', feedbackSuggestion: 'Estás avanzando en tu producción.' },
+        { levelId: 'inicial', descriptor: 'Necesita asistencia directa para producir en inglés', evidence: 'Producción con guía paso a paso', feedbackSuggestion: 'Vamos a producir juntos en inglés.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Participación en tareas comunicativas', description: 'Participa en actividades que requieren uso funcional del inglés', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Participa con entusiasmo, demuestra confianza y usa el inglés de forma autónoma en las tareas', evidence: 'Participación autónoma y confiada', feedbackSuggestion: 'Tu participación en inglés es ejemplar.' },
+        { levelId: 'adecuado', descriptor: 'Participa en las tareas y usa el inglés con apoyo ocasional', evidence: 'Participación con apoyo mínimo', feedbackSuggestion: 'Participaste bien. Sigue ganando confianza.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa con apoyo constante del docente o compañeros', evidence: 'Participación con apoyo', feedbackSuggestion: 'Estás participando cada vez más. ¡Sigue así!' },
+        { levelId: 'inicial', descriptor: 'Necesite apoyo directo para participar en actividades en inglés', evidence: 'Participación con asistencia', feedbackSuggestion: 'Vamos a participar juntos en la actividad.' },
+      ],
+    },
+  ];
+}
+
 function buildInclusiveAdjustments(category: string, isLower: boolean): string[] {
   if (isLower) {
     return [
@@ -517,6 +685,10 @@ function buildPremiumRubric(input: {
     case 'matematica': criteriaBank = buildMatematicaCriteria(); break;
     case 'historia': criteriaBank = buildHistoriaCriteria(); break;
     case 'artes': criteriaBank = buildArtesCriteria(); break;
+    case 'tecnologia': criteriaBank = buildTecnologiaCriteria(); break;
+    case 'formacion_ciudadana': criteriaBank = buildFormacionCiudadanaCriteria(); break;
+    case 'orientacion': criteriaBank = buildOrientacionCriteria(); break;
+    case 'ingles': criteriaBank = buildInglesCriteria(); break;
     default: criteriaBank = buildGeneralCriteria(); break;
   }
 

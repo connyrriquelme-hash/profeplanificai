@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Maximize2, X, Printer, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import type { PremiumRubric, RubricCriterion, RubricPerformanceLevel } from '../utils/premiumRubricModel';
 
-const hexToCss = (hex: string) => `#${hex}`;
+const hexToCss = (hex: string) => hex.startsWith('#') ? hex : `#${hex}`;
 
 function RubricTable({ criteria, levels }: { criteria: RubricCriterion[]; levels: RubricPerformanceLevel[] }) {
   return (
