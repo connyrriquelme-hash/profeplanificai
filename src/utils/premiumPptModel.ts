@@ -92,6 +92,16 @@ const SUBJECT_THEMES: Record<string, SubjectTheme> = {
   'Inglés': { primary: '7C3AED', secondary: '06B6D4', accent: 'FDE68A', background: 'F5F3FF', text: '2E1065' },
   'Tecnología': { primary: '475569', secondary: '0EA5E9', accent: 'A3E635', background: 'F8FAFC', text: '1E293B' },
   'Orientación': { primary: 'D97706', secondary: '059669', accent: 'FCA5A5', background: 'FFFBEB', text: '78350F' },
+  'Música': { primary: 'DB2777', secondary: 'F472B6', accent: 'FDE68A', background: 'FDF2F8', text: '831843' },
+  'Educación Física': { primary: '059669', secondary: '34D399', accent: 'FEF3C7', background: 'ECFDF5', text: '064E3B' },
+  'Filosofía': { primary: '6D28D9', secondary: 'A78BFA', accent: 'DDD6FE', background: 'F5F3FF', text: '3B0764' },
+  'Lengua y Literatura': { primary: '1D4ED8', secondary: '60A5FA', accent: 'BFDBFE', background: 'EFF6FF', text: '1E3A8A' },
+  'Biología': { primary: '15803D', secondary: '4ADE80', background: 'F0FDF4', accent: 'BBF7D0', text: '14532D' },
+  'Física': { primary: '0369A1', secondary: '38BDF8', accent: 'E0F2FE', background: 'F0F9FF', text: '0C4A6E' },
+  'Química': { primary: 'B45309', secondary: 'F59E0B', accent: 'FEF3C7', background: 'FFFBEB', text: '78350F' },
+  'Ciencias para la Ciudadanía': { primary: '0F766E', secondary: '2DD4BF', accent: 'CCFBF1', background: 'F0FDFA', text: '134E4A' },
+  'Educación Ciudadana': { primary: 'DC2626', secondary: 'F87171', accent: 'FEE2E2', background: 'FEF2F2', text: '991B1B' },
+  'Educación Parvularia': { primary: 'EA580C', secondary: 'FB923C', accent: 'FED7AA', background: 'FFF7ED', text: '7C2D12' },
 };
 
 const DEFAULT_THEME: SubjectTheme = { primary: '7C3AED', secondary: '818CF8', accent: 'C4B5FD', background: 'F5F3FF', text: '1E1B4B' };
@@ -111,9 +121,11 @@ const ICONS: Record<PremiumSlideLayout, string> = {
 
 function isLowerLevel(level: string): boolean {
   const lower = level.toLowerCase();
+  if (lower.includes('sala cuna') || lower.includes('transición') || lower.includes('transicion') || lower.includes('pre-kinder') || lower.includes('prekinder') || lower.includes('kinder') || lower.includes('parvularia')) {
+    return true;
+  }
   const isBasic = lower.includes('básico') || lower.includes('basico') || lower.endsWith('b');
-  return lower.includes('sala cuna') || lower.includes('transición') ||
-    (isBasic && (lower.includes('1°') || lower.includes('2°') || lower.includes('3°') || lower.includes('4°'))) ||
+  return (isBasic && (lower.includes('1°') || lower.includes('2°') || lower.includes('3°') || lower.includes('4°'))) ||
     lower.includes('1b') || lower.includes('2b') || lower.includes('3b') || lower.includes('4b');
 }
 
@@ -307,7 +319,7 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
         headers: ['Representación', 'Ejemplo', 'Lo explico'],
         rows: [
           ['Un número', 'Lo escribo y lo cuento', 'Lo muestro con dedos o fichas'],
-          ['Una suma', '3 + 2 = 5', 'Lo resuelvo con MATERIAL'],
+          ['Una suma', '3 + 2 = 5', 'Lo resuelvo con fichas o dedos'],
           ['Un problema', 'Leo y dibuyo', 'Lo explico con mis palabras'],
         ],
         caption: 'Lo que puedo hacer con los números',
@@ -371,34 +383,278 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
     };
   }
 
+  if (subLower.includes('música') || subLower.includes('musica')) {
+    if (isLower) {
+      return {
+        headers: ['Sonido', 'Lo escucho', 'Lo expreso'],
+        rows: [
+          ['Ritmo', 'Palmas o golpes', 'Lo siento en mi cuerpo'],
+          ['Melodía', 'Una canción', 'La tarareo'],
+          ['Instrumento', 'Un tambor o flauta', 'Lo toco con cuidado'],
+        ],
+        caption: 'Los sonidos que exploramos',
+      };
+    }
+    return {
+      headers: ['Elemento musical', 'Descripción', 'Ejemplo o actividad'],
+      rows: [
+        ['Ritmo', 'Organización temporal de sonidos', 'Compás, pulso, síncopa'],
+        ['Melodía', 'Sucesión de notas con sentido', 'Canción, frase musical'],
+        ['Armonía', 'Combinación de notas simultáneas', 'Acordes, accompany'],
+        ['Timbre', 'Calidad del sonido por instrumento', 'Piano, guitarra, voz'],
+      ],
+      caption: 'Elementos del lenguaje musical',
+    };
+  }
+
+  if (subLower.includes('educación física') || subLower.includes('educacion fisica') || subLower.includes('ed. físico') || subLower.includes('física y salud')) {
+    if (isLower) {
+      return {
+        headers: ['Habilidad', 'Cómo la hago', 'Cuidado importante'],
+        rows: [
+          ['Correr', 'Rápido y con control', 'Caliento antes'],
+          ['Lanzar', 'Con puntería', 'Espacio libre'],
+          ['Saltar', 'Con equilibrio', 'Suelo seguro'],
+        ],
+        caption: 'Movimientos que practicamos',
+      };
+    }
+    return {
+      headers: ['Habilidad motriz', 'Regla o técnica', 'Seguridad y autocuidado'],
+      rows: [
+        ['Desplazamiento', 'Coordinación y velocidad', 'Calentamiento previo'],
+        ['Lanzamiento y recepción', 'Puntería y control', 'Espacio despejado'],
+        ['Equilibrio', 'Control postural', 'Superficie estable'],
+        ['Cooperación', 'Trabajo en equipo', 'Respeto por compañeros'],
+      ],
+      caption: 'Habilidades motrices y normas',
+    };
+  }
+
+  if (subLower.includes('tecnología') || subLower.includes('tecnologia') || subLower.includes('informática') || subLower.includes('informatica')) {
+    if (isLower) {
+      return {
+        headers: ['Problema', 'Qué necesito', 'Mi solución'],
+        rows: [
+          ['No tengo un organizador', 'Papel y colores', 'Hago uno con dibujos'],
+          ['Quiero medir tiempo', 'Reloj o temporizador', 'Uso un cronómetro'],
+          ['Necesito guardar cosas', 'Caja o bolsa', 'Armo un container'],
+        ],
+        caption: 'Resolvemos problemas del día a día',
+      };
+    }
+    return {
+      headers: ['Problema', 'Solución propuesta', 'Material o herramienta', 'Mejora posible'],
+      rows: [
+        ['Identificación del problema', 'Análisis de necesidad', 'Recursos disponibles', 'Criterios de mejora'],
+        ['Diseño de la solución', 'Plan y boceto', 'Herramientas básicas', 'Retroalimentación'],
+        ['Construcción del prototipo', 'Ensamblaje o programación', 'Materiales o software', 'Iteración'],
+        ['Prueba y evaluación', 'Verificación de resultado', 'Criterios de éxito', 'Documentación'],
+      ],
+      caption: 'Proceso tecnológico de resolución',
+    };
+  }
+
+  if (subLower.includes('orientación') || subLower.includes('orientacion')) {
+    if (isLower) {
+      return {
+        headers: ['Situación', 'Qué siento', 'Qué puedo hacer'],
+        rows: [
+          ['Cuando me siento triste', 'Tristeza o enojo', 'Hablar con alguien'],
+          ['Cuando tengo un problema', 'Preocupación', 'Pedir ayuda'],
+          ['Cuando me siento bien', 'Alegría', 'Compartir'],
+        ],
+        caption: 'Mis emociones y decisiones',
+      };
+    }
+    return {
+      headers: ['Situación', 'Reconocimiento personal', 'Acción responsable'],
+      rows: [
+        ['Conflicto con compañero', 'Identificar mi emoción', 'Dialogar y escuchar'],
+        ['Decisión difícil', 'Evaluar opciones', 'Elegir con responsabilidad'],
+        ['Meta personal', 'Reconocer mis fortalezas', 'Planificar pasos concretos'],
+      ],
+      caption: 'Situaciones y decisiones de convivencia',
+    };
+  }
+
+  if (subLower.includes('formación ciudadana') || subLower.includes('formacion ciudadana') || subLower.includes('educación ciudadana') || subLower.includes('educacion ciudadana') || subLower.includes('ciudadana')) {
+    if (isLower) {
+      return {
+        headers: ['Regla o derecho', 'Por qué existe', 'Cómo lo cumple'],
+        rows: [
+          ['Respetar a los demás', 'Para convivir bien', 'Escucho y no interrumpo'],
+          ['Cuidar el espacio', 'Es de todos', 'Recibo y ordeno'],
+          ['Participar en clase', 'Para aprender junto a otros', 'Levanto la mano'],
+        ],
+        caption: 'Nuestras normas de convivencia',
+      };
+    }
+    return {
+      headers: ['Derecho o deber', 'Situación ciudadana', 'Acción responsable'],
+      rows: [
+        ['Derecho a la educación', 'Acceso equitativo', 'Promover inclusión'],
+        ['Deber de respeto', 'Convivencia escolar', 'Dialogar y mediar'],
+        ['Participación ciudadana', 'Iniciativa comunitaria', 'Propuestas concretas'],
+      ],
+      caption: 'Derechos, deberes y participación',
+    };
+  }
+
+  if (subLower.includes('inglés') || subLower.includes('ingles') || subLower.includes('english')) {
+    if (isLower) {
+      return {
+        headers: ['Vocabulario', 'En inglés', 'Lo uso en'],
+        rows: [
+          ['Colores', 'Red, blue, green', 'Mi cuaderno de arte'],
+          ['Animales', 'Cat, dog, bird', 'Una canción'],
+          ['Saludos', 'Hello, goodbye', 'Mi clase de inglés'],
+        ],
+        caption: 'Palabras que aprendemos',
+      };
+    }
+    return {
+      headers: ['Vocabulario', 'Expresión', 'Uso en contexto'],
+      rows: [
+        ['Palabras clave', 'Expresiones comunes', 'Situación comunicativa'],
+        ['Estructura gramatical', 'Ejemplo de uso', 'Práctica'],
+        ['Comprensión auditiva', 'Texto hablado', 'Respuesta oral o escrita'],
+      ],
+      caption: 'Vocabulario y uso comunicativo',
+    };
+  }
+
+  if (subLower.includes('filosofía') || subLower.includes('filosofia')) {
+    return {
+      headers: ['Pregunta filosófica', 'Postura', 'Argumento', 'Ejemplo'],
+      rows: [
+        ['¿Qué es justo?', 'Postura 1', 'Razón 1', 'Situación real'],
+        ['¿Qué es conocer?', 'Postura 2', 'Razón 2', 'Caso filosófico'],
+        ['¿Cómo debemos vivir?', 'Postura 3', 'Razón 3', 'Reflexión personal'],
+      ],
+      caption: 'Preguntas, posturas y argumentos',
+    };
+  }
+
+  if (subLower.includes('biología') || subLower.includes('biologia')) {
+    if (isLower) {
+      return {
+        headers: ['Ser vivo', 'Lo que observo', 'Lo que quiero saber'],
+        rows: [
+          ['Una planta', 'Tallo, hojas, raíz', 'Cómo crece'],
+          ['Un animal', 'Cuerpo, patas, alas', 'Qué come'],
+          ['Un insecto', 'Pequeño, movible', 'Dónde vive'],
+        ],
+        caption: 'Exploramos seres vivos',
+      };
+    }
+    return {
+      headers: ['Organismo', 'Característica clave', 'Función biológica'],
+      rows: [
+        ['Especie A', 'Adaptación', 'Supervivencia'],
+        ['Especie B', 'Interacción', 'Ecosistema'],
+        ['Especie C', 'Reproducción', 'Continuidad'],
+      ],
+      caption: 'Análisis biológico',
+    };
+  }
+
+  if (subLower.includes('física') || subLower.includes('fisica') && !subLower.includes('educación física')) {
+    return {
+      headers: ['Fenómeno', 'Variable', 'Ley o principio', 'Aplicación'],
+      rows: [
+        ['Movimiento', 'Velocidad, aceleración', 'Newton', 'Transporte'],
+        ['Energía', 'Trabajo, potencia', 'Conservación', 'Máquinas'],
+        ['Ondas', 'Frecuencia, amplitud', 'Doppler', 'Sonido, luz'],
+      ],
+      caption: 'Fenómenos físicos y sus leyes',
+    };
+  }
+
+  if (subLower.includes('química') || subLower.includes('quimica')) {
+    return {
+      headers: ['Sustancia', 'Propiedad', 'Reacción', 'Aplicación'],
+      rows: [
+        ['Agua', 'H2O, líquido polar', 'Disolvente universal', 'Vida diaria'],
+        ['Sal', 'NaCl, cristalino', 'Disociación iónica', 'Conservación'],
+        ['Ácido', 'HCl, corrosivo', 'Neutralización', 'Industria'],
+      ],
+      caption: 'Sustancias, propiedades y reacciones',
+    };
+  }
+
+  if (subLower.includes('ciencias para la ciudadanía') || subLower.includes('ciencias para la ciudadania')) {
+    return {
+      headers: ['Problema social', 'Evidencia científica', 'Impacto', 'Decisión informada'],
+      rows: [
+        ['Cambio climático', 'Datos de temperatura', 'Medio ambiente', 'Reducir huella'],
+        ['Contaminación', 'Análisis de aire', 'Salud pública', 'Políticas ambientales'],
+        ['Biodiversidad', 'Estudios ecológicos', 'Ecosistemas', 'Conservación'],
+      ],
+      caption: 'Ciencia y ciudadanía: decisiones informadas',
+    };
+  }
+
+  if (subLower.includes('educación parvularia') || subLower.includes('educacion parvularia') || subLower.includes('parvularia') || subLower.includes('identidad') || subLower.includes('convivencia') || subLower.includes('corporalidad')) {
+    return {
+      headers: ['Experiencia', 'Qué hago', 'Lo que aprendo'],
+      rows: [
+        ['Juego libre', 'Exploro y creo', 'Mi identidad'],
+        ['Canción', 'Canto y muevo', 'Expresión'],
+        ['Cuento', 'Escucho y dibujo', 'Imaginación'],
+      ],
+      caption: 'Nuestras experiencias de aprendizaje',
+    };
+  }
+
   return undefined;
 }
 
 function generateSlideImagePrompt(layout: PremiumSlideLayout, oaText: string, subject: string, isLower: boolean): string | undefined {
   const oaLower = oaText.toLowerCase();
+  const subLower = subject.toLowerCase();
   const isPlant = oaLower.includes('planta') || oaLower.includes('flor') || oaLower.includes('semilla') || oaLower.includes('polinización');
   const isAnimal = oaLower.includes('animal') || oaLower.includes('alimentación') || oaLower.includes('hábitat');
-  const base = isPlant ? 'plants flowers seeds pollination Chilean educational' : isAnimal ? 'animals habitat Chilean educational' : `${subject} educational Chilean`;
+
+  let domain = `${subject} educational Chilean`;
+  if (isPlant) domain = 'plants flowers seeds pollination Chilean educational';
+  else if (isAnimal) domain = 'animals habitat Chilean educational';
+  else if (subLower.includes('música') || subLower.includes('musica')) domain = 'music rhythm instruments melody Chilean classroom';
+  else if (subLower.includes('educación física') || subLower.includes('educacion fisica') || subLower.includes('ed. físico')) domain = 'physical education movement sports health Chilean';
+  else if (subLower.includes('tecnología') || subLower.includes('tecnologia') || subLower.includes('informática')) domain = 'technology design construction prototype Chilean classroom';
+  else if (subLower.includes('filosofía') || subLower.includes('filosofia')) domain = 'philosophy thinking reflection ethics debate Chilean';
+  else if (subLower.includes('física') || subLower.includes('fisica')) domain = 'physics energy forces motion laboratory Chilean';
+  else if (subLower.includes('química') || subLower.includes('quimica')) domain = 'chemistry elements molecules reactions laboratory Chilean';
+  else if (subLower.includes('biología') || subLower.includes('biologia')) domain = 'biology organisms nature ecology Chilean';
+  else if (subLower.includes('orientación') || subLower.includes('orientacion')) domain = 'counseling emotions wellbeing social emotional learning Chilean';
+  else if (subLower.includes('formación ciudadana') || subLower.includes('formacion ciudadana') || subLower.includes('ciudadana')) domain = 'citizenship rights community participation Chilean';
+  else if (subLower.includes('inglés') || subLower.includes('ingles') || subLower.includes('english')) domain = 'english language learning vocabulary bilingual Chilean classroom';
+  else if (subLower.includes('artes') || subLower.includes('visual')) domain = 'visual arts color form texture creativity Chilean';
+  else if (subLower.includes('historia') || subLower.includes('geografía') || subLower.includes('geografia')) domain = 'history geography maps sources community Chilean';
+  else if (subLower.includes('matemática') || subLower.includes('matematica')) domain = 'mathematics numbers geometry patterns problem solving Chilean';
+  else if (subLower.includes('lenguaje') || subLower.includes('comunicación') || subLower.includes('comunicacion')) domain = 'language reading writing comprehension texts Chilean';
+  else if (subLower.includes('parvularia') || subLower.includes('kinder') || subLower.includes('prekinder')) domain = 'preschool children play exploration learning Chilean';
+  else if (subLower.includes('ciencias') || subLower.includes('natural')) domain = 'science nature observation experiment Chilean';
 
   switch (layout) {
     case 'cover':
-      return `Educational presentation cover for ${subject}, ${base}, professional colorful illustration, wide format`;
+      return `Educational presentation cover for ${subject}, ${domain}, professional colorful illustration, wide format`;
     case 'hook':
-      return `Engaging motivational image, ${base} for ${isLower ? 'young children' : 'students'}, thought-provoking`;
+      return `Engaging motivational image, ${domain} for ${isLower ? 'young children' : 'students'}, thought-provoking`;
     case 'visual_explanation':
-      return `Detailed educational diagram, ${base}, infographic style with clear labels, professional illustration`;
+      return `Detailed educational diagram, ${domain}, infographic style with clear labels, professional illustration`;
     case 'guided_activity':
-      return `${isLower ? 'Children' : 'Students'} hands-on activity, ${base}, classroom setting, collaborative`;
+      return `${isLower ? 'Children' : 'Students'} hands-on activity, ${domain}, classroom setting, collaborative`;
     case 'concept_cards':
-      return `Visual concept map, ${base}, clean educational infographic design`;
+      return `Visual concept map, ${domain}, clean educational infographic design`;
     case 'collaborative_activity':
-      return `${isLower ? 'Children' : 'Students'} teamwork activity, ${base}, classroom engaged`;
+      return `${isLower ? 'Children' : 'Students'} teamwork activity, ${domain}, classroom engaged`;
     case 'dua_supports':
-      return `Universal Design for Learning, inclusive classroom, diverse learners, ${base}`;
+      return `Universal Design for Learning, inclusive classroom, diverse learners, ${domain}`;
     case 'closure':
-      return `Reflection learning summary, ${base}, inspiring educational achievement`;
+      return `Reflection learning summary, ${domain}, inspiring educational achievement`;
     default:
-      return `Educational illustration, ${base}, professional engaging`;
+      return `Educational illustration, ${domain}, professional engaging`;
   }
 }
 
@@ -630,11 +886,25 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'dua_supports',
       title: 'Apoyos DUA',
       subtitle: 'Diseño Universal para el Aprendizaje',
-      bullets: [
-        'Representación: información en múltiples formatos',
-        'Acción y expresión: opciones para demostrar aprendizaje',
-        'Implicación: motivación y relevancia personal',
-      ],
+      bullets: (() => {
+        const subLower = input.subject.toLowerCase();
+        if (subLower.includes('música') || subLower.includes('musica')) {
+          return ['Representación: escuchar, ver partitura, sentir ritmo', 'Acción y expresión: cantar, tocar, bailar, componer', 'Implicación: elegir canciones, crear ritmos, expresar emociones'];
+        }
+        if (subLower.includes('educación física') || subLower.includes('educacion fisica') || subLower.includes('ed. físico')) {
+          return ['Representación: ver demostraciones, escuchar reglas, observar videos', 'Acción y expresión: realizar variaciones, adaptar movimientos, elegir intensidad', 'Implicación: juego libre, metas personales, trabajo colaborativo'];
+        }
+        if (subLower.includes('tecnología') || subLower.includes('tecnologia') || subLower.includes('informática')) {
+          return ['Representación: instrucciones visuales, demostraciones, materiales concretos', 'Acción y expresión: elegir herramientas, documentar proceso, presentar prototipo', 'Implicación: problemas reales, innovación, impacto social'];
+        }
+        if (subLower.includes('filosofía') || subLower.includes('filosofia')) {
+          return ['Representación: textos filosóficos adaptados, imágenes, diálogos', 'Acción y expresión: debate, ensayo, reflexión escrita, drama', 'Implicación: preguntas existenciales, ética personal, dilemas reales'];
+        }
+        if (isLower) {
+          return ['Representación: imágenes, pictogramas, objetos concretos, modelado docente', 'Acción y expresión: dibujo, señalamiento, expresión oral, juego de roles', 'Implicación: elección entre actividades, relevancia personal, juego'];
+        }
+        return ['Representación: información en múltiples formatos', 'Acción y expresión: opciones para demostrar aprendizaje', 'Implicación: motivación y relevancia personal'];
+      })(),
       visualKeyword: 'DUA inclusión',
       icon: ICONS.dua_supports,
       colorTheme: theme.primary,
@@ -645,23 +915,31 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       title: 'Evaluación formativa',
       subtitle: isLower ? '¿Qué aprendimos?' : 'Monitoreo del aprendizaje',
       bullets: adaptBulletsForLevel(buildFormativeBullets(oaText, isLower), nivelLabel),
-      table: isLower ? {
-        headers: ['¿Qué puedo hacer?', 'Lo intenté', 'Lo logré'],
-        rows: [
-          ['Observar y dibujar partes del tema', '⬜', '✅'],
-          ['Nombrar lo que aprendí', '⬜', '✅'],
-          ['Compartir con mi curso', '⬜', '✅'],
-        ],
-        caption: 'Mi autoevaluación',
-      } : {
-        headers: ['Criterio', 'Logrado', 'Por mejorar'],
-        rows: [
-          ['Comprensión del concepto principal del OA', '—', '—'],
-          ['Aplicación del conocimiento en contexto real', '—', '—'],
-          ['Participación en actividades y trabajo en equipo', '—', '—'],
-        ],
-        caption: 'Autoevaluación del aprendizaje',
-      },
+      table: (() => {
+        const subLower = input.subject.toLowerCase();
+        if (isLower) {
+          if (subLower.includes('música') || subLower.includes('musica')) {
+            return { headers: ['¿Qué puedo hacer?', 'Lo intenté', 'Lo logré'], rows: [['Cantar o tararear la canción', '⬜', '✅'], ['Identificar ritmos o sonidos', '⬜', '✅'], ['Expresar con el cuerpo lo que escucho', '⬜', '✅']], caption: 'Mi autoevaluación musical' };
+          }
+          if (subLower.includes('educación física') || subLower.includes('educacion fisica') || subLower.includes('ed. físico')) {
+            return { headers: ['¿Qué puedo hacer?', 'Lo intenté', 'Lo logré'], rows: [['Realizar el movimiento correctamente', '⬜', '✅'], ['Respetar las reglas del juego', '⬜', '✅'], ['Cuidarme y cuidar a mis compañeros', '⬜', '✅']], caption: 'Mi autoevaluación física' };
+          }
+          if (subLower.includes('artes') || subLower.includes('visual')) {
+            return { headers: ['¿Qué puedo hacer?', 'Lo intenté', 'Lo logré'], rows: [['Usar colores y formas en mi obra', '⬜', '✅'], ['Expresar lo que siento al crear', '⬜', '✅'], ['Explorar diferentes materiales', '⬜', '✅']], caption: 'Mi autoevaluación artística' };
+          }
+          return { headers: ['¿Qué puedo hacer?', 'Lo intenté', 'Lo logré'], rows: [['Observar y dibujar partes del tema', '⬜', '✅'], ['Nombrar lo que aprendí', '⬜', '✅'], ['Compartir con mi curso', '⬜', '✅']], caption: 'Mi autoevaluación' };
+        }
+        if (subLower.includes('música') || subLower.includes('musica')) {
+          return { headers: ['Criterio', 'Logrado', 'Por mejorar'], rows: [['Comprensión de elementos musicales', '—', '—'], ['Interpretación o creación musical', '—', '—'], ['Expresión y reflexión musical', '—', '—']], caption: 'Autoevaluación musical' };
+        }
+        if (subLower.includes('educación física') || subLower.includes('educacion fisica') || subLower.includes('ed. físico')) {
+          return { headers: ['Criterio', 'Logrado', 'Por mejorar'], rows: [['Ejecución de habilidad motriz', '—', '—'], ['Respeto de reglas y seguridad', '—', '—'], ['Trabajo colaborativo y autocuidado', '—', '—']], caption: 'Autoevaluación física' };
+        }
+        if (subLower.includes('filosofía') || subLower.includes('filosofia')) {
+          return { headers: ['Criterio', 'Logrado', 'Por mejorar'], rows: [['Formulación de preguntas filosóficas', '—', '—'], ['Argumentación con razones', '—', '—'], ['Análisis de perspectivas diversas', '—', '—']], caption: 'Autoevaluación filosófica' };
+        }
+        return { headers: ['Criterio', 'Logrado', 'Por mejorar'], rows: [['Comprensión del concepto principal del OA', '—', '—'], ['Aplicación del conocimiento en contexto real', '—', '—'], ['Participación en actividades y trabajo en equipo', '—', '—']], caption: 'Autoevaluación del aprendizaje' };
+      })(),
       studentPrompt: isLower
         ? 'Responde con una imagen o una palabra'
         : 'Completa el ticket de salida antes de terminar',
