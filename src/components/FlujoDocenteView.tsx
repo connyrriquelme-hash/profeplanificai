@@ -9,8 +9,10 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { generateGuide, generateEvaluation, generateRubric, generatePresentation, generateMaterial, type MaterialRequest } from '../services/materialGeneratorService';
-import { buildPremiumPptModel } from '../utils/premiumPptModel';
+import { buildPremiumPptModel, type PremiumPresentation } from '../utils/premiumPptModel';
 import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
+import PremiumPptPreview from './PremiumPptPreview';
+import { enrichPresentationWithImages } from '../services/premiumPptAiService';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -49,7 +51,9 @@ export function FlujoDocenteView() {
   const [resourceId, setResourceId] = useState('');
   const [pptxBlob, setPptxBlob] = useState<Blob | null>(null);
   const [pptxLoading, setPptxLoading] = useState(false);
-  const [premiumModel, setPremiumModel] = useState<any>(null);
+  const [premiumModel, setPremiumModel] = useState<PremiumPresentation | null>(null);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [imageProgress, setImageProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Load courses
   useEffect(() => {
@@ -194,6 +198,32 @@ export function FlujoDocenteView() {
       setLoading(false);
     }
   }, [selectedOA, selectedProducto, indicators, skills, topic, additionalContext, selectedMethodology]);
+
+  const handleGenerateImages = useCallback(async () => {
+    if (!premiumModel) return;
+    setIsGeneratingImages(true);
+    setImageProgress({ current: 0, total: premiumModel.slides.length });
+    try {
+      const result = await enrichPresentationWithImages(
+        premiumModel,
+        (current, total) => setImageProgress({ current, total }),
+      );
+      setPremiumModel(result.presentation);
+      setPptxLoading(true);
+      generatePremiumPptx(result.presentation).then(blob => {
+        setPptxBlob(blob);
+      }).catch(() => {
+        setPptxBlob(null);
+      }).finally(() => {
+        setPptxLoading(false);
+      });
+    } catch (err) {
+      console.error('Error generating images:', err);
+    } finally {
+      setIsGeneratingImages(false);
+      setImageProgress(null);
+    }
+  }, [premiumModel]);
 
   const handleSave = useCallback(async () => {
     if (!resourceId) return;
@@ -570,26 +600,44 @@ export function FlujoDocenteView() {
           )}
 
           <div className="prose prose-sm max-w-none">
-            <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-xl overflow-auto max-h-[500px]">
-              {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-            </pre>
+            {selectedProducto === 'presentacion' && premiumModel ? (
+              <PremiumPptPreview
+                presentation={premiumModel}
+                isGeneratingImages={isGeneratingImages}
+                imageProgress={imageProgress || undefined}
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-xl overflow-auto max-h-[500px]">
+                {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
+              </pre>
+            )}
           </div>
 
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <Button variant="primary" iconLeft={Save} onClick={handleSave}>Guardar en Biblioteca</Button>
             {selectedProducto === 'presentacion' && (
-              <Button
-                variant="primary"
-                iconLeft={Download}
-                disabled={pptxLoading || !pptxBlob}
-                onClick={() => {
-                  if (pptxBlob && premiumModel) {
-                    downloadPremiumPptx(premiumModel, pptxBlob);
-                  }
-                }}
-              >
-                {pptxLoading ? 'Generando PPTX...' : 'Descargar PPTX'}
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  iconLeft={Sparkles}
+                  onClick={handleGenerateImages}
+                  disabled={isGeneratingImages}
+                >
+                  {isGeneratingImages ? `Generando imágenes ${imageProgress?.current || 0}/${imageProgress?.total || 0}...` : 'Generar imágenes IA'}
+                </Button>
+                <Button
+                  variant="primary"
+                  iconLeft={Download}
+                  disabled={pptxLoading || !pptxBlob}
+                  onClick={() => {
+                    if (pptxBlob && premiumModel) {
+                      downloadPremiumPptx(premiumModel, pptxBlob);
+                    }
+                  }}
+                >
+                  {pptxLoading ? 'Generando PPTX...' : 'Descargar PPTX'}
+                </Button>
+              </>
             )}
             <Button variant="secondary" iconLeft={Download} onClick={() => {
               const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });

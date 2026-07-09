@@ -107,12 +107,75 @@ function addVisualPlaceholder(slide: PptxGenJS.Slide, keyword: string, theme: Su
     italic: true,
   });
 
-  slide.addText('[ Imagen futura ]', {
+  slide.addText('[ Imagen generada por IA ]', {
     x: pos.x, y: pos.y + pos.h - 0.5, w: pos.w, h: 0.4,
     fontSize: 9, align: 'center', valign: 'middle',
     color: theme.text, fontFace: 'Arial',
     transparency: 50,
   });
+}
+
+function addImageOrPlaceholder(slide: PptxGenJS.Slide, imageUrl: string | undefined, keyword: string, theme: SubjectTheme, layout: 'left' | 'right' | 'center') {
+  const positions: Record<string, { x: number; y: number; w: number; h: number }> = {
+    left: { x: 0.4, y: 1.2, w: 5.5, h: 5.5 },
+    right: { x: 7.4, y: 1.2, w: 5.5, h: 5.5 },
+    center: { x: 3.5, y: 1.0, w: 6.3, h: 4.0 },
+  };
+  const pos = positions[layout];
+
+  if (imageUrl) {
+    try {
+      slide.addImage({
+        data: imageUrl,
+        x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+        rounding: true,
+        sizing: { type: 'contain', w: pos.w, h: pos.h },
+      });
+      return;
+    } catch {
+      // fallback to placeholder
+    }
+  }
+
+  addVisualPlaceholder(slide, keyword, theme, layout);
+}
+
+function addTable(slide: PptxGenJS.Slide, headers: string[], rows: string[][], opts: { x: number; y: number; w: number; h: number }, theme: SubjectTheme, caption?: string) {
+  const headerRow = headers.map(h => ({
+    text: h,
+    options: {
+      bold: true, fontSize: 11, color: 'FFFFFF', fontFace: 'Arial',
+      fill: { color: theme.primary },
+      align: 'center' as const,
+      valign: 'middle' as const,
+    },
+  }));
+
+  const dataRows = rows.map(row =>
+    row.map(cell => ({
+      text: cell,
+      options: {
+        fontSize: 10, color: theme.text, fontFace: 'Arial',
+        valign: 'middle' as const,
+      },
+    }))
+  );
+
+  slide.addTable([headerRow, ...dataRows], {
+    x: opts.x, y: opts.y, w: opts.w,
+    border: { type: 'solid', pt: 0.5, color: theme.accent },
+    colW: headers.map(() => opts.w / headers.length),
+    rowH: 0.4,
+    autoPage: false,
+  });
+
+  if (caption) {
+    slide.addText(caption, {
+      x: opts.x, y: opts.y + rows.length * 0.4 + 0.6, w: opts.w, h: 0.3,
+      fontSize: 9, italic: true, color: theme.text, fontFace: 'Arial',
+      align: 'center',
+    });
+  }
 }
 
 function addSlideTitle(slide: PptxGenJS.Slide, title: string, theme: SubjectTheme, opts?: { x?: number; y?: number; w?: number; color?: string }) {
@@ -182,7 +245,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
     italic: true,
   });
 
-  addVisualPlaceholder(s, slide.visualKeyword || pres.tema, theme, 'center');
+  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'center');
   addFooter(s, pres.nivel, pres.asignatura);
 }
 
@@ -197,7 +260,7 @@ function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPrese
     addBullets(s, slide.bullets, { x: 0.6, y: 1.6, w: 6.5, h: 4.5, color: 'FFFFFF' });
   }
 
-  addVisualPlaceholder(s, slide.visualKeyword || 'activación', theme, 'right');
+  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || 'activación', theme, 'right');
 
   if (slide.studentPrompt) {
     s.addText(slide.studentPrompt, {
@@ -273,45 +336,49 @@ function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Prem
     });
   }
 
-  const items = slide.bullets || [];
-  const cols = items.length <= 3 ? items.length : 3;
-  const rows = Math.ceil(items.length / cols);
-  const cardW = (12.1 - (cols - 1) * 0.3) / cols;
-  const cardH = rows <= 1 ? 4.5 : (5.0 - (rows - 1) * 0.3) / rows;
+  if (slide.table) {
+    addTable(s, slide.table.headers, slide.table.rows, { x: 0.6, y: 1.7, w: 12.1, h: 4.5 }, theme, slide.table.caption);
+  } else {
+    const items = slide.bullets || [];
+    const cols = items.length <= 3 ? items.length : 3;
+    const rows = Math.ceil(items.length / cols);
+    const cardW = (12.1 - (cols - 1) * 0.3) / cols;
+    const cardH = rows <= 1 ? 4.5 : (5.0 - (rows - 1) * 0.3) / rows;
 
-  items.forEach((item, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = 0.6 + col * (cardW + 0.3);
-    const y = 1.7 + row * (cardH + 0.3);
+    items.forEach((item, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = 0.6 + col * (cardW + 0.3);
+      const y = 1.7 + row * (cardH + 0.3);
 
-    const card: PptxGenJS.ShapeProps = {
-      x, y, w: cardW, h: cardH,
-      fill: { color: 'FFFFFF' },
-      rectRadius: 0.15,
-      shadow: { type: 'outer', blur: 4, offset: 1, color: '000000', opacity: 0.08 },
-      line: { color: theme.accent, width: 1 },
-    };
-    s.addShape('rect', card);
+      const card: PptxGenJS.ShapeProps = {
+        x, y, w: cardW, h: cardH,
+        fill: { color: 'FFFFFF' },
+        rectRadius: 0.15,
+        shadow: { type: 'outer', blur: 4, offset: 1, color: '000000', opacity: 0.08 },
+        line: { color: theme.accent, width: 1 },
+      };
+      s.addShape('rect', card);
 
-    const accentBar: PptxGenJS.ShapeProps = {
-      x, y, w: cardW, h: 0.08,
-      fill: { color: theme.primary },
-      rectRadius: 0,
-    };
-    s.addShape('rect', accentBar);
+      const accentBar: PptxGenJS.ShapeProps = {
+        x, y, w: cardW, h: 0.08,
+        fill: { color: theme.primary },
+        rectRadius: 0,
+      };
+      s.addShape('rect', accentBar);
 
-    s.addText(`0${i + 1}`, {
-      x: x + 0.15, y: y + 0.2, w: 0.6, h: 0.5,
-      fontSize: 22, bold: true, color: theme.primary, fontFace: 'Arial',
+      s.addText(`0${i + 1}`, {
+        x: x + 0.15, y: y + 0.2, w: 0.6, h: 0.5,
+        fontSize: 22, bold: true, color: theme.primary, fontFace: 'Arial',
+      });
+
+      s.addText(item, {
+        x: x + 0.15, y: y + 0.7, w: cardW - 0.3, h: cardH - 0.9,
+        fontSize: 13, color: theme.text, fontFace: 'Arial',
+        valign: 'top',
+      });
     });
-
-    s.addText(item, {
-      x: x + 0.15, y: y + 0.7, w: cardW - 0.3, h: cardH - 0.9,
-      fontSize: 13, color: theme.text, fontFace: 'Arial',
-      valign: 'top',
-    });
-  });
+  }
 
   addFooter(s, pres.nivel, pres.asignatura);
 }
@@ -333,7 +400,7 @@ function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres:
     addBullets(s, slide.bullets, { x: 7.0, y: 1.6, w: 5.8, h: 4.5, color: 'FFFFFF' });
   }
 
-  addVisualPlaceholder(s, slide.visualKeyword || pres.tema, theme, 'left');
+  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'left');
   addFooter(s, pres.nivel, pres.asignatura);
 }
 
@@ -366,7 +433,7 @@ function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Pr
     s.addText(stepTexts, { x: 0.9, y: 1.5, w: 7.0, h: 4.5, valign: 'top' });
   }
 
-  addVisualPlaceholder(s, slide.visualKeyword || 'paso a paso', theme, 'right');
+  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || 'paso a paso', theme, 'right');
 
   if (slide.studentPrompt) {
     s.addText(slide.studentPrompt, {
@@ -488,7 +555,9 @@ function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pre
     });
   }
 
-  if (slide.bullets?.length) {
+  if (slide.table) {
+    addTable(s, slide.table.headers, slide.table.rows, { x: 0.8, y: 1.7, w: 11.5, h: 3.0 }, theme, slide.table.caption);
+  } else if (slide.bullets?.length) {
     const bulletTexts = slide.bullets.map((b, i) => ({
       text: `✅  ${b}`,
       options: {

@@ -18,6 +18,30 @@ export type SubjectTheme = {
   text: string;
 };
 
+export type PremiumImageBlock = {
+  type: 'image';
+  url?: string;
+  alt?: string;
+  prompt?: string;
+  status?: 'pending' | 'generating' | 'generated' | 'failed';
+  layout?: 'left' | 'right' | 'center';
+};
+
+export type PremiumTableBlock = {
+  type: 'table';
+  headers: string[];
+  rows: string[][];
+  caption?: string;
+};
+
+export type PremiumTextBlock = {
+  type: 'text';
+  content: string;
+  variant?: 'paragraph' | 'quote' | 'callout' | 'highlight';
+};
+
+export type PremiumContentBlock = PremiumImageBlock | PremiumTableBlock | PremiumTextBlock;
+
 export type PremiumSlide = {
   slideNumber: number;
   layout: PremiumSlideLayout;
@@ -30,6 +54,10 @@ export type PremiumSlide = {
   visualPrompt?: string;
   icon?: string;
   colorTheme?: string;
+  imageUrl?: string;
+  imageStatus?: 'pending' | 'generating' | 'generated' | 'failed';
+  contentBlocks?: PremiumContentBlock[];
+  table?: { headers: string[]; rows: string[][]; caption?: string };
 };
 
 export type PremiumPresentation = {
@@ -82,8 +110,9 @@ const ICONS: Record<PremiumSlideLayout, string> = {
 
 function isLowerLevel(level: string): boolean {
   const lower = level.toLowerCase();
-  return lower.includes('sala cuna') || lower.includes('medio') || lower.includes('transición') ||
-    lower.includes('1°') || lower.includes('2°') || lower.includes('3°') || lower.includes('4°') ||
+  const isBasic = lower.includes('básico') || lower.includes('basico') || lower.endsWith('b');
+  return lower.includes('sala cuna') || lower.includes('transición') ||
+    (isBasic && (lower.includes('1°') || lower.includes('2°') || lower.includes('3°') || lower.includes('4°'))) ||
     lower.includes('1b') || lower.includes('2b') || lower.includes('3b') || lower.includes('4b');
 }
 
@@ -110,6 +139,57 @@ export function getSubjectTheme(subject: string): SubjectTheme {
   return DEFAULT_THEME;
 }
 
+function buildTableForSlide(layout: PremiumSlideLayout, input: PremiumInput, isLower: boolean): { headers: string[]; rows: string[][]; caption?: string } | undefined {
+  if (layout === 'concept_cards' && !isLower && input.skills && input.skills.length >= 2) {
+    return {
+      headers: ['Concepto', 'Descripción', 'Ejemplo'],
+      rows: input.skills.slice(0, 4).map(s => {
+        const parts = s.split(':');
+        const name = (parts[0] || s).trim();
+        const desc = (parts[1] || '').trim();
+        return [truncate(name, 30), truncate(desc || 'Relacionado con ' + input.topic, 40), input.topic];
+      }),
+      caption: 'Mapa de conceptos clave',
+    };
+  }
+  if (layout === 'formative_assessment' && !isLower) {
+    return {
+      headers: ['Criterio', 'Logrado', 'Por mejorar'],
+      rows: [
+        ['Comprensión del concepto principal', '✅', '—'],
+        ['Aplicación en contexto real', '—', '—'],
+        ['Participación en actividades', '✅', '—'],
+      ],
+      caption: 'Rúbrica rápida de autoevaluación',
+    };
+  }
+  return undefined;
+}
+
+function generateSlideImagePrompt(layout: PremiumSlideLayout, input: PremiumInput, isLower: boolean): string | undefined {
+  const base = input.topic || input.subject;
+  switch (layout) {
+    case 'cover':
+      return `Educational presentation cover illustration for ${input.subject} about ${base}, Chilean classroom context, professional, colorful, wide format`;
+    case 'hook':
+      return `Engaging motivational image about ${base} for ${isLower ? 'young children' : 'students'}, Chilean context, thought-provoking, colorful`;
+    case 'visual_explanation':
+      return `Detailed educational diagram explaining ${base}, infographic style, clear labels, ${input.subject} context, professional illustration`;
+    case 'guided_activity':
+      return `${isLower ? 'Children' : 'Students'} doing hands-on activity about ${base}, classroom setting, collaborative, colorful`;
+    case 'concept_cards':
+      return `Visual concept map or cards showing key ideas about ${base}, clean design, educational infographic`;
+    case 'collaborative_activity':
+      return `${isLower ? 'Children' : 'Students'} working together on ${base} activity, teamwork, classroom, engaged`;
+    case 'dua_supports':
+      return `Universal Design for Learning symbols, inclusive classroom, diverse learners, ${base} theme`;
+    case 'closure':
+      return `Reflection and learning summary about ${base}, inspiring, educational, achievement`;
+    default:
+      return `Educational illustration about ${base}, ${input.subject}, professional, engaging`;
+  }
+}
+
 export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
   const theme = getSubjectTheme(input.subject);
   const nivelLabel = input.level;
@@ -128,7 +208,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       title: topicLabel,
       subtitle: `${nivelLabel} — ${input.subject} — ${oaShort}`,
       visualKeyword: input.topic || input.subject,
-      visualPrompt: `Ilustración educativa de ${input.topic} para estudiantes de ${nivelLabel}`,
+      visualPrompt: generateSlideImagePrompt('cover', input, isLower),
       icon: ICONS.cover,
       colorTheme: theme.primary,
     },
@@ -144,7 +224,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         isLower ? 'Dibuja lo que piensas' : 'Escribe una idea que tengas sobre el tema',
       ], nivelLabel),
       visualKeyword: input.topic || 'activación',
-      visualPrompt: `Imagen motivadora de ${input.topic} en contexto chileno`,
+      visualPrompt: generateSlideImagePrompt('hook', input, isLower),
       icon: ICONS.hook,
       colorTheme: theme.secondary,
     },
@@ -179,7 +259,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         nivelLabel
       ),
       visualKeyword: skillSlice[0] || input.topic,
-      visualPrompt: `Tarjetas visuales de conceptos de ${input.topic}`,
+      visualPrompt: generateSlideImagePrompt('concept_cards', input, isLower),
+      table: buildTableForSlide('concept_cards', input, isLower),
       icon: ICONS.concept_cards,
       colorTheme: theme.accent,
     },
@@ -194,7 +275,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         isLower ? 'Comparte lo que ves' : 'Conecta con los conceptos previos',
       ], nivelLabel),
       visualKeyword: input.topic,
-      visualPrompt: `Esquema visual explicativo de ${topicLabel}`,
+      visualPrompt: generateSlideImagePrompt('visual_explanation', input, isLower),
       icon: ICONS.visual_explanation,
       colorTheme: theme.secondary,
     },
@@ -208,6 +289,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         isLower ? 'Usa los materiales de la mesa' : 'Completa cada paso con tu compañero/a',
         isLower ? 'Pide ayuda si la necesitas' : 'Registra tus observaciones',
       ], nivelLabel),
+      visualKeyword: input.topic,
+      visualPrompt: generateSlideImagePrompt('guided_activity', input, isLower),
       studentPrompt: isLower
         ? 'Vamos a hacer una actividad divertida'
         : 'Trabaja con tu grupo para resolver la actividad propuesta',
@@ -224,6 +307,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         isLower ? 'Comparte lo que hiciste' : 'Presenta los resultados al curso',
         isLower ? 'Escucha las ideas de otros' : 'Retroalimenta con respeto',
       ], nivelLabel),
+      visualPrompt: generateSlideImagePrompt('collaborative_activity', input, isLower),
       icon: ICONS.collaborative_activity,
       colorTheme: theme.secondary,
     },
@@ -238,7 +322,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         'Implicación: motivación y relevancia personal',
       ],
       visualKeyword: 'DUA inclusión',
-      visualPrompt: 'Representación visual de los principios DUA',
+      visualPrompt: generateSlideImagePrompt('dua_supports', input, isLower),
       icon: ICONS.dua_supports,
       colorTheme: theme.primary,
     },
@@ -252,6 +336,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         isLower ? 'Dibuja algo que aprendiste' : 'Escribe un ejemplo que demuestre tu comprensión',
         isLower ? 'Levanta la mano si tienes dudas' : '¿Qué dudas te quedan sobre el tema?',
       ], nivelLabel),
+      table: buildTableForSlide('formative_assessment', input, isLower),
       studentPrompt: isLower
         ? 'Responde con una imagen o una palabra'
         : 'Completa el ticket de salida antes de terminar',

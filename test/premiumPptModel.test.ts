@@ -187,3 +187,83 @@ describe('getSubjectTheme', () => {
     expect(theme.primary).toBe('8B5CF6');
   });
 });
+
+describe('premiumPptModel v1.5.5 - Tables & Image Prompts', () => {
+  it('genera tabla en concept_cards para 3° Medio con skills', () => {
+    const result = buildPremiumPptModel(UPPER_INPUT);
+    const concepts = result.slides.find(s => s.layout === 'concept_cards');
+    expect(concepts).toBeDefined();
+    expect(concepts!.table).toBeDefined();
+    expect(concepts!.table!.headers.length).toBe(3);
+    expect(concepts!.table!.rows.length).toBeGreaterThan(0);
+    expect(concepts!.table!.caption).toBeDefined();
+  });
+
+  it('no genera tabla en concept_cards para 1° Básico', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const concepts = result.slides.find(s => s.layout === 'concept_cards');
+    expect(concepts).toBeDefined();
+    expect(concepts!.table).toBeUndefined();
+  });
+
+  it('genera tabla en formative_assessment para 3° Medio', () => {
+    const result = buildPremiumPptModel(UPPER_INPUT);
+    const assessment = result.slides.find(s => s.layout === 'formative_assessment');
+    expect(assessment).toBeDefined();
+    expect(assessment!.table).toBeDefined();
+    expect(assessment!.table!.headers).toContain('Criterio');
+  });
+
+  it('no genera tabla en formative_assessment para 1° Básico', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const assessment = result.slides.find(s => s.layout === 'formative_assessment');
+    expect(assessment).toBeDefined();
+    expect(assessment!.table).toBeUndefined();
+  });
+
+  it('genera visualPrompt descriptivo en portada', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const cover = result.slides.find(s => s.layout === 'cover');
+    expect(cover).toBeDefined();
+    expect(cover!.visualPrompt).toBeDefined();
+    expect(cover!.visualPrompt!.length).toBeGreaterThan(10);
+    expect(cover!.visualPrompt!.toLowerCase()).toContain('plantas');
+  });
+
+  it('genera visualPrompt en hook slide', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const hook = result.slides.find(s => s.layout === 'hook');
+    expect(hook).toBeDefined();
+    expect(hook!.visualPrompt).toBeDefined();
+    expect(hook!.visualPrompt!.length).toBeGreaterThan(10);
+  });
+
+  it('genera visualPrompt en visual_explanation slide', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const ve = result.slides.find(s => s.layout === 'visual_explanation');
+    expect(ve).toBeDefined();
+    expect(ve!.visualPrompt).toBeDefined();
+    expect(ve!.visualPrompt!.length).toBeGreaterThan(10);
+  });
+
+  it('no genera visualPrompt en objective slide', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const obj = result.slides.find(s => s.layout === 'objective');
+    expect(obj).toBeDefined();
+    expect(obj!.visualPrompt).toBeUndefined();
+  });
+
+  it('no genera visualPrompt en dua_supports slide', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const dua = result.slides.find(s => s.layout === 'dua_supports');
+    expect(dua).toBeDefined();
+    expect(dua!.visualKeyword).toBeDefined();
+  });
+
+  it('tabla tiene estructura válida para renderizado', () => {
+    const result = buildPremiumPptModel(UPPER_INPUT);
+    const concepts = result.slides.find(s => s.layout === 'concept_cards');
+    expect(concepts!.table!.headers.every(h => typeof h === 'string')).toBe(true);
+    expect(concepts!.table!.rows.every(r => Array.isArray(r) && r.length === concepts!.table!.headers.length)).toBe(true);
+  });
+});
