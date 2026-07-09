@@ -9,6 +9,8 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { generateGuide, generateEvaluation, generateRubric, generatePresentation, generateMaterial, type MaterialRequest } from '../services/materialGeneratorService';
+import { buildPremiumPptModel } from '../utils/premiumPptModel';
+import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -45,6 +47,8 @@ export function FlujoDocenteView() {
   const [additionalContext, setAdditionalContext] = useState('');
   const [result, setResult] = useState<any>(null);
   const [resourceId, setResourceId] = useState('');
+  const [pptxBlob, setPptxBlob] = useState<Blob | null>(null);
+  const [pptxLoading, setPptxLoading] = useState(false);
 
   // Load courses
   useEffect(() => {
@@ -110,9 +114,12 @@ export function FlujoDocenteView() {
 
   const handleGenerate = useCallback(async () => {
     if (!selectedOA || !selectedProducto) return;
-    setLoading(true);
-    setError('');
-    setStep('generando');
+      setLoading(true);
+      setError('');
+      setResult(null);
+      setPptxBlob(null);
+      setPptxLoading(false);
+      setStep('generando');
 
     const req: MaterialRequest = {
       level: selectedOA.course_name,
@@ -149,6 +156,27 @@ export function FlujoDocenteView() {
       if (res?.ok) {
         setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         setResourceId(res.resourceId || '');
+        if (selectedProducto === 'presentacion') {
+          try {
+            setPptxLoading(true);
+            const model = buildPremiumPptModel({
+              level: selectedOA?.course_name || '',
+              subject: selectedOA?.subject_name || '',
+              objectiveCode: selectedOA?.code || '',
+              objectiveText: selectedOA?.official_text || '',
+              topic,
+              indicators,
+              skills,
+              additionalContext,
+            });
+            const blob = await generatePremiumPptx(model);
+            setPptxBlob(blob);
+          } catch {
+            setPptxBlob(null);
+          } finally {
+            setPptxLoading(false);
+          }
+        }
         setStep('resultado');
       } else {
         setError(res?.error || 'Error al generar');
@@ -544,6 +572,30 @@ export function FlujoDocenteView() {
 
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <Button variant="primary" iconLeft={Save} onClick={handleSave}>Guardar en Biblioteca</Button>
+            {selectedProducto === 'presentacion' && (
+              <Button
+                variant="primary"
+                iconLeft={Download}
+                disabled={pptxLoading || !pptxBlob}
+                onClick={() => {
+                  if (pptxBlob && selectedOA) {
+                    const model = buildPremiumPptModel({
+                      level: selectedOA.course_name,
+                      subject: selectedOA.subject_name,
+                      objectiveCode: selectedOA.code,
+                      objectiveText: selectedOA.official_text,
+                      topic,
+                      indicators,
+                      skills,
+                      additionalContext,
+                    });
+                    downloadPremiumPptx(model, pptxBlob);
+                  }
+                }}
+              >
+                {pptxLoading ? 'Generando PPTX...' : 'Descargar PPTX'}
+              </Button>
+            )}
             <Button variant="secondary" iconLeft={Download} onClick={() => {
               const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
               const url = URL.createObjectURL(blob);
