@@ -128,7 +128,12 @@ function adaptBulletsForLevel(bullets: string[], level: string): string[] {
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
-  return text.slice(0, max - 3).trim() + '...';
+  const sliced = text.slice(0, max - 3);
+  const lastSpace = sliced.lastIndexOf(' ');
+  if (lastSpace > max * 0.5) {
+    return sliced.slice(0, lastSpace).trim() + '...';
+  }
+  return sliced.trim() + '...';
 }
 
 export function getSubjectTheme(subject: string): SubjectTheme {
@@ -640,15 +645,23 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       title: 'Evaluación formativa',
       subtitle: isLower ? '¿Qué aprendimos?' : 'Monitoreo del aprendizaje',
       bullets: adaptBulletsForLevel(buildFormativeBullets(oaText, isLower), nivelLabel),
-      table: buildOaTable(oaText, input.subject, isLower) || (isLower ? undefined : {
+      table: isLower ? {
+        headers: ['¿Qué puedo hacer?', 'Lo intenté', 'Lo logré'],
+        rows: [
+          ['Observar y dibujar partes del tema', '⬜', '✅'],
+          ['Nombrar lo que aprendí', '⬜', '✅'],
+          ['Compartir con mi curso', '⬜', '✅'],
+        ],
+        caption: 'Mi autoevaluación',
+      } : {
         headers: ['Criterio', 'Logrado', 'Por mejorar'],
         rows: [
-          ['Comprensión del concepto principal', '—', '—'],
-          ['Aplicación en contexto real', '—', '—'],
-          ['Participación en actividades', '—', '—'],
+          ['Comprensión del concepto principal del OA', '—', '—'],
+          ['Aplicación del conocimiento en contexto real', '—', '—'],
+          ['Participación en actividades y trabajo en equipo', '—', '—'],
         ],
         caption: 'Autoevaluación del aprendizaje',
-      }),
+      },
       studentPrompt: isLower
         ? 'Responde con una imagen o una palabra'
         : 'Completa el ticket de salida antes de terminar',
