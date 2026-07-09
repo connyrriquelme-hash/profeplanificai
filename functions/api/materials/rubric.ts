@@ -87,15 +87,23 @@ function isLowerLevel(level: string): boolean {
     lower.includes('1b') || lower.includes('2b') || lower.includes('3b') || lower.includes('4b');
 }
 
-function detectSubjectCategory(subject: string): string {
+export function detectSubjectCategory(subject: string): string {
   const s = subject.toLowerCase();
+  if (s.includes('música') || s.includes('musica')) return 'musica';
+  if (s.includes('educación física') || s.includes('educacion fisica') || s.includes('ed. físico') || s.includes('ed. fisico') || s.includes('física y salud') || s.includes('fisica y salud')) return 'educacion_fisica';
+  if (s.includes('filosofía') || s.includes('filosofia')) return 'filosofia';
+  if (s.includes('biología') || s.includes('biologia')) return 'biologia';
+  if (s.includes('física') && !s.includes('educación física') && !s.includes('física y salud')) return 'fisica';
+  if (s.includes('química') || s.includes('quimica')) return 'quimica';
+  if (s.includes('ciencias para la ciudadanía') || s.includes('ciencias para la ciudadania') || s.includes('ciudadanía científica')) return 'ciencias_ciudadania';
+  if (s.includes('educación parvularia') || s.includes('educacion parvularia') || s.includes('parvularia') || s.includes('pre-kinder') || s.includes('prekinder') || s.includes('kinder')) return 'parvularia';
   if (s.includes('ciencias') || s.includes('natural')) return 'ciencias';
   if (s.includes('lenguaje') || s.includes('comunicación') || s.includes('comunicacion') || s.includes('castellano')) return 'lenguaje';
   if (s.includes('matemática') || s.includes('matematica') || s.includes('mate')) return 'matematica';
   if (s.includes('historia') || s.includes('geografía') || s.includes('geografia') || s.includes('sociales')) return 'historia';
-  if (s.includes('arte') || s.includes('visual') || s.includes('música') || s.includes('musica')) return 'artes';
+  if (s.includes('arte') || s.includes('visual')) return 'artes';
   if (s.includes('tecnología') || s.includes('tecnologia') || s.includes('programación') || s.includes('programacion')) return 'tecnologia';
-  if (s.includes('formación ciudadana') || s.includes('formacion ciudadana') || s.includes('ciudadanía') || s.includes('ciudadania')) return 'formacion_ciudadana';
+  if (s.includes('formación ciudadana') || s.includes('formacion ciudadana') || s.includes('educación ciudadana') || s.includes('educacion ciudadana')) return 'formacion_ciudadana';
   if (s.includes('orientación') || s.includes('orientacion')) return 'orientacion';
   if (s.includes('inglés') || s.includes('ingles') || s.includes('english')) return 'ingles';
   return 'general';
@@ -428,6 +436,334 @@ function buildArtesCriteria(): RubricCriterion[] {
   ];
 }
 
+function buildMusicaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Escucha activa', description: 'Escucha con atención y reconoce elementos sonoros', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Identifica ritmo, melodía, timbre y dinámica con precisión', evidence: 'Análisis musical detallado', feedbackSuggestion: 'Tu escucha es muy atenta y precisa.' },
+        { levelId: 'adecuado', descriptor: 'Reconoce al menos 3 elementos del sonido', evidence: 'Identificación de elementos musicales', feedbackSuggestion: 'Bien identificas los sonidos. Profundiza en el análisis.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce algunos elementos con apoyo', evidence: 'Reconocimiento con guía', feedbackSuggestion: 'Estás desarrollando tu oído musical.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo significativo para escuchar activamente', evidence: 'Escucha con asistencia', feedbackSuggestion: 'Vamos a escuchar juntos con atención.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Interpretación rítmica y melódica', description: 'Interpreta ritmos y melodías de forma personal', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Interpreta con precisión rítmica y melódica, añadiendo expresión personal', evidence: 'Interpretación completa y expresiva', feedbackSuggestion: 'Tu interpretación es expresiva y precisa.' },
+        { levelId: 'adecuado', descriptor: 'Interpreta la pieza con ritmo y melodía correctos', evidence: 'Interpretación correcta', feedbackSuggestion: 'Buena interpretación. Agrega más expresión.' },
+        { levelId: 'en_desarrollo', descriptor: 'Interpreta con apoyo del docente o compañeros', evidence: 'Interpretación con guía', feedbackSuggestion: 'Estás mejorando tu interpretación. Sigue practicando.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado directo para interpretar', evidence: 'Interpretación con asistencia', feedbackSuggestion: 'Vamos a interpretar juntos.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Creación sonora', description: 'Crea sonidos, ritmos o pequeñas composiciones', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Crea composiciones originales con intención y estructura', evidence: 'Composición original documentada', feedbackSuggestion: 'Tu creación es original y bien estructurada.' },
+        { levelId: 'adecuado', descriptor: 'Crea ritmos o sonidos con variaciones', evidence: 'Creación con variaciones', feedbackSuggestion: 'Buena creación. Prueba nuevas combinaciones.' },
+        { levelId: 'en_desarrollo', descriptor: 'Crea con apoyo y usando modelos', evidence: 'Creación con modelado', feedbackSuggestion: 'Estás creando con más confianza.' },
+        { levelId: 'inicial', descriptor: 'Requiere guía para crear sonidos', evidence: 'Creación con asistencia', feedbackSuggestion: 'Vamos a crear juntos algo nuevo.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Expresión y reflexión musical', description: 'Expresa emociones a través de la música y reflexiona sobre ella', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Expresa emociones con intención y reflexiona críticamente sobre la música', evidence: 'Reflexión profunda y expresión', feedbackSuggestion: 'Tu expresión y reflexión musical son sobresalientes.' },
+        { levelId: 'adecuado', descriptor: 'Expresa emociones y menciona por qué le gusta la música', evidence: 'Expresión con reflexión', feedbackSuggestion: 'Bien expresas lo que sientes. Profundiza tu reflexión.' },
+        { levelId: 'en_desarrollo', descriptor: 'Expresa emociones con apoyo y participa en reflexiones', evidence: 'Expresión con guía', feedbackSuggestion: 'Estás aprendiendo a expresarte musicalmente.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para expresar emociones a través de la música', evidence: 'Expresión con asistencia', feedbackSuggestion: 'Vamos a expresar juntos lo que sentimos.' },
+      ],
+    },
+  ];
+}
+
+function buildEducacionFisicaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Ejecución motriz', description: 'Ejecuta habilidades motrices con coordinación y control', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Ejecuta habilidades con coordinación, control y precisión, adaptándose a diferentes contextos', evidence: 'Demostración de habilidad motriz', feedbackSuggestion: 'Tu ejecución motriz es excelente y fluida.' },
+        { levelId: 'adecuado', descriptor: 'Ejecuta la habilidad con control básico', evidence: 'Ejecución correcta', feedbackSuggestion: 'Buena ejecución. Sigue perfeccionando la técnica.' },
+        { levelId: 'en_desarrollo', descriptor: 'Ejecuta con apoyo y modelado del docente', evidence: 'Ejecución con guía', feedbackSuggestion: 'Estás mejorando tu coordinación. Practica más.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado directo para ejecutar', evidence: 'Ejecución con asistencia', feedbackSuggestion: 'Vamos a practicar juntos el movimiento.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Respeto de reglas y normas', description: 'Participa respetando las reglas del juego o actividad', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Participa respetando todas las reglas y ayuda a otros a cumplirlas', evidence: 'Participación respetuosa y colaborativa', feedbackSuggestion: 'Eres un ejemplo de respeto por las reglas.' },
+        { levelId: 'adecuado', descriptor: 'Cumple la mayoría de las reglas del juego', evidence: 'Participación con cumplimiento', feedbackSuggestion: 'Bien respetas las reglas. Recuerda todas.' },
+        { levelId: 'en_desarrollo', descriptor: 'Cumple reglas con recordatorio del docente', evidence: 'Participación con recordatorio', feedbackSuggestion: 'Estás aprendiendo a jugar con reglas.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo constante para respetar reglas', evidence: 'Participación con apoyo', feedbackSuggestion: 'Vamos a recordar las reglas juntos.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Autocuidado y seguridad', description: 'Aplica hábitos de autocuidado durante la actividad física', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Aplica autocuidado de forma autónoma: calienta, se hidrata, cuida su cuerpo y el de otros', evidence: 'Registro de hábitos de autocuidado', feedbackSuggestion: 'Tus hábitos de autocuidado son ejemplares.' },
+        { levelId: 'adecuado', descriptor: 'Realiza calentamiento y cuida su seguridad', evidence: 'Participación con autocuidado', feedbackSuggestion: 'Bien cuidas tu seguridad. Sigue así.' },
+        { levelId: 'en_desarrollo', descriptor: 'Aplica autocuidado con recordatorio', evidence: 'Autocuidado con guía', feedbackSuggestion: 'Estás aprendiendo a cuidarte durante la actividad.' },
+        { levelId: 'inicial', descriptor: 'Necesita recordatorios constantes de seguridad', evidence: 'Autocuidado con apoyo', feedbackSuggestion: 'Vamos a cuidarnos juntos.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Trabajo colaborativo', description: 'Participa en actividades grupales de forma respetuosa', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Colabora activamente, apoya a compañeros y contribuye al logro del equipo', evidence: 'Participación colaborativa destacada', feedbackSuggestion: 'Tu trabajo en equipo es excelente.' },
+        { levelId: 'adecuado', descriptor: 'Participa en grupo y respeta los turnos', evidence: 'Colaboración básica', feedbackSuggestion: 'Bien trabajas en equipo. Sigue colaborando.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa con apoyo del docente para colaborar', evidence: 'Colaboración con guía', feedbackSuggestion: 'Estás aprendiendo a trabajar en equipo.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para participar en grupo', evidence: 'Colaboración con asistencia', feedbackSuggestion: 'Vamos a participar juntos en el grupo.' },
+      ],
+    },
+  ];
+}
+
+function buildFilosofiaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Formulación de preguntas', description: 'Formula preguntas filosóficas relevantes y profundas', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Formula preguntas abiertas, profundas que generan reflexión múltiple', evidence: 'Preguntas filosóficas formuladas', feedbackSuggestion: 'Tus preguntas generan debate profundo.' },
+        { levelId: 'adecuado', descriptor: 'Formula al menos 2 preguntas relevantes al tema', evidence: 'Preguntas relevantes', feedbackSuggestion: 'Buenas preguntas. Profundiza más.' },
+        { levelId: 'en_desarrollo', descriptor: 'Formula preguntas con apoyo del docente', evidence: 'Preguntas con guía', feedbackSuggestion: 'Estás aprendiendo a formular preguntas filosóficas.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para formular preguntas', evidence: 'Preguntas con asistencia', feedbackSuggestion: 'Vamos a formular juntos preguntas profundas.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Argumentación', description: 'Argumenta sus posturas con razones y ejemplos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Argumenta con razones sólidas, ejemplos claros y anticipa objeciones', evidence: 'Argumentación completa y fundamentada', feedbackSuggestion: 'Tu argumentación es sólida y clara.' },
+        { levelId: 'adecuado', descriptor: 'Argumenta con al menos 2 razones y un ejemplo', evidence: 'Argumentación con razones', feedbackSuggestion: 'Bien argumentas. Agrega más ejemplos.' },
+        { levelId: 'en_desarrollo', descriptor: 'Argumenta con apoyo y razones simples', evidence: 'Argumentación con guía', feedbackSuggestion: 'Estás desarrollando tu capacidad argumentativa.' },
+        { levelId: 'inicial', descriptor: 'Requiere guía para argumentar', evidence: 'Argumentación con asistencia', feedbackSuggestion: 'Vamos a argumentar juntos con razones.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Análisis de perspectivas', description: 'Analiza diferentes posturas sobre una cuestión filosófica', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Analiza múltiples perspectivas con profundidad y las relaciona entre sí', evidence: 'Análisis de perspectivas múltiples', feedbackSuggestion: 'Tu capacidad de análisis es sobresaliente.' },
+        { levelId: 'adecuado', descriptor: 'Identifica al menos 2 perspectivas diferentes', evidence: 'Identificación de perspectivas', feedbackSuggestion: 'Bien identificas las perspectivas. Relaciona más.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce que existen diferentes posturas con apoyo', evidence: 'Reconocimiento con guía', feedbackSuggestion: 'Estás aprendiendo a ver diferentes posturas.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para reconocer perspectivas', evidence: 'Reconocimiento con asistencia', feedbackSuggestion: 'Vamos a explorar juntos las diferentes posturas.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Uso de ejemplos y diálogo respetuoso', description: 'Usa ejemplos para fundamentar y dialoga con respeto', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Usa ejemplos variados y relevantes, y mantiene diálogo respetuoso y productivo', evidence: 'Uso de ejemplos y diálogo ejemplar', feedbackSuggestion: 'Tu diálogo y uso de ejemplos son excelentes.' },
+        { levelId: 'adecuado', descriptor: 'Usa al menos 1 ejemplo y respeta opiniones distintas', evidence: 'Uso de ejemplo y respeto', feedbackSuggestion: 'Bien usas ejemplos. Sigue dialogando con respeto.' },
+        { levelId: 'en_desarrollo', descriptor: 'Usa ejemplos con apoyo y escucha opiniones', evidence: 'Uso de ejemplos con guía', feedbackSuggestion: 'Estás mejorando en el diálogo filosófico.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para usar ejemplos y dialogar', evidence: 'Diálogo con asistencia', feedbackSuggestion: 'Vamos a dialogar juntos con respeto.' },
+      ],
+    },
+  ];
+}
+
+function buildBiologiaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Observación de seres vivos', description: 'Observa y describe características de organismos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Observa con precisión y describe características morfológicas, fisiológicas y conductuales', evidence: 'Registro de observación detallado', feedbackSuggestion: 'Tu observación es muy precisa y completa.' },
+        { levelId: 'adecuado', descriptor: 'Identifica al menos 3 características del organismo', evidence: 'Identificación de características', feedbackSuggestion: 'Bien observas. Describe más detalles.' },
+        { levelId: 'en_desarrollo', descriptor: 'Identifica características básicas con apoyo', evidence: 'Observación con guía', feedbackSuggestion: 'Estás mejorando tu capacidad de observación.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para observar y describir', evidence: 'Observación con asistencia', feedbackSuggestion: 'Vamos a observar juntos con atención.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Clasificación biológica', description: 'Clasifica organismos según criterios científicos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Clasifica usando criterios taxonómicos y explica las razones de la clasificación', evidence: 'Clasificación con justificación', feedbackSuggestion: 'Tu clasificación es precisa y bien fundamentada.' },
+        { levelId: 'adecuado', descriptor: 'Clasifica al menos 2 grupos de organismos', evidence: 'Clasificación básica', feedbackSuggestion: 'Bien clasificas. Fundamenta tus criterios.' },
+        { levelId: 'en_desarrollo', descriptor: 'Clasifica con apoyo y criterios simples', evidence: 'Clasificación con guía', feedbackSuggestion: 'Estás aprendiendo a clasificar organismos.' },
+        { levelId: 'inicial', descriptor: 'Requiere guía para clasificar', evidence: 'Clasificación con asistencia', feedbackSuggestion: 'Vamos a clasificar juntos.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Explicación de procesos biológicos', description: 'Explica procesos como ciclo de vida, alimentación, ecología', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Explica procesos biológicos con vocabulario científico y conexiones ecológicas', evidence: 'Explicación científica completa', feedbackSuggestion: 'Tu explicación es científica y clara.' },
+        { levelId: 'adecuado', descriptor: 'Explica el proceso con vocabulario adecuado', evidence: 'Explicación correcta', feedbackSuggestion: 'Bien explicas el proceso. Usa más vocabulario científico.' },
+        { levelId: 'en_desarrollo', descriptor: 'Explica con apoyo y vocabulario simple', evidence: 'Explicación con guía', feedbackSuggestion: 'Estás aprendiendo a explicar procesos biológicos.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para explicar', evidence: 'Explicación con asistencia', feedbackSuggestion: 'Vamos a explicar juntos el proceso.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Conexión con el entorno', description: 'Relaciona el contenido biológico con su entorno y realidad', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Relaciona el contenido con situaciones reales y propone acciones de conservación', evidence: 'Conexión con realidad y propuesta', feedbackSuggestion: 'Tu conexión con el entorno es profunda.' },
+        { levelId: 'adecuado', descriptor: 'Menciona al menos 1 conexión con su entorno', evidence: 'Conexión básica', feedbackSuggestion: 'Bien conectas. Piensa en más ejemplos reales.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce conexiones con apoyo', evidence: 'Conexión con guía', feedbackSuggestion: 'Estás aprendiendo a relacionar con tu entorno.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para conectar con la realidad', evidence: 'Conexión con asistencia', feedbackSuggestion: 'Vamos a pensar en cómo se relaciona con tu vida.' },
+      ],
+    },
+  ];
+}
+
+function buildFisicaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Comprensión de leyes físicas', description: 'Comprende y aplica leyes y principios de la física', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Comprende leyes físicas con precisión y las aplica a situaciones nuevas', evidence: 'Aplicación de leyes a problemas', feedbackSuggestion: 'Tu comprensión de las leyes físicas es excelente.' },
+        { levelId: 'adecuado', descriptor: 'Comprende al menos 2 leyes y sus aplicaciones', evidence: 'Comprensión de leyes', feedbackSuggestion: 'Bien comprendes las leyes. Aplica más.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce principios físicos con apoyo', evidence: 'Comprensión con guía', feedbackSuggestion: 'Estás construyendo tu comprensión de la física.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para comprender leyes', evidence: 'Comprensión con asistencia', feedbackSuggestion: 'Vamos a explorar juntos las leyes físicas.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Diseño experimental', description: 'Diseña experimentos para verificar hipótesis', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Diseña experimentos con control de variables, mediciones precisas y análisis de error', evidence: 'Diseño experimental completo', feedbackSuggestion: 'Tu diseño experimental es riguroso.' },
+        { levelId: 'adecuado', descriptor: 'Diseña un experimento básico con hipótesis', evidence: 'Diseño con hipótesis', feedbackSuggestion: 'Bien diseñaste. Controla más variables.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa en diseño experimental con guía', evidence: 'Diseño con apoyo', feedbackSuggestion: 'Estás aprendiendo a diseñar experimentos.' },
+        { levelId: 'inicial', descriptor: 'Requiere asistencia para diseñar experimentos', evidence: 'Diseño con asistencia', feedbackSuggestion: 'Vamos a diseñar juntos el experimento.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Análisis de datos', description: 'Analiza resultados y extrae conclusiones', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Analiza datos con tablas, gráficos y estadísticas simples, extrayendo conclusiones fundamentadas', evidence: 'Análisis completo con gráficos', feedbackSuggestion: 'Tu análisis de datos es preciso y claro.' },
+        { levelId: 'adecuado', descriptor: 'Organiza datos y saca conclusiones básicas', evidence: 'Análisis básico', feedbackSuggestion: 'Bien analizas. Usa más herramientas gráficas.' },
+        { levelId: 'en_desarrollo', descriptor: 'Organiza datos con apoyo del docente', evidence: 'Análisis con guía', feedbackSuggestion: 'Estás aprendiendo a analizar datos.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para organizar datos', evidence: 'Análisis con asistencia', feedbackSuggestion: 'Vamos a organizar juntos los datos.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Explicación de fenómenos', description: 'Explica fenómenos físicos usando principios científicos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Explica fenómenos con vocabulario preciso, diagramas y modelos conceptuales', evidence: 'Explicación científica completa', feedbackSuggestion: 'Tu explicación de fenómenos es sobresaliente.' },
+        { levelId: 'adecuado', descriptor: 'Explica el fenómeno con vocabulario adecuado', evidence: 'Explicación correcta', feedbackSuggestion: 'Bien explicas. Usa más vocabulario técnico.' },
+        { levelId: 'en_desarrollo', descriptor: 'Explica con apoyo y vocabulario simple', evidence: 'Explicación con guía', feedbackSuggestion: 'Estás aprendiendo a explicar fenómenos físicos.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para explicar fenómenos', evidence: 'Explicación con asistencia', feedbackSuggestion: 'Vamos a explicar juntos el fenómeno.' },
+      ],
+    },
+  ];
+}
+
+function buildQuimicaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Comprensión de sustancias', description: 'Comprende propiedades y clasificación de sustancias', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Clasifica sustancias con criterios químicos y explica sus propiedades a nivel molecular', evidence: 'Clasificación con justificación molecular', feedbackSuggestion: 'Tu comprensión de sustancias es profunda.' },
+        { levelId: 'adecuado', descriptor: 'Identifica propiedades físicas y químicas básicas', evidence: 'Identificación de propiedades', feedbackSuggestion: 'Bien identificas las propiedades. Profundiza más.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce algunas propiedades con apoyo', evidence: 'Reconocimiento con guía', feedbackSuggestion: 'Estás construyendo tu comprensión química.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para identificar sustancias', evidence: 'Reconocimiento con asistencia', feedbackSuggestion: 'Vamos a explorar juntos las sustancias.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Diseño experimental químico', description: 'Diseña experimentos seguros para observar reacciones', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Diseña experimentos con protocolo de seguridad, mediciones y control de variables', evidence: 'Diseño experimental seguro y riguroso', feedbackSuggestion: 'Tu diseño experimental es seguro y preciso.' },
+        { levelId: 'adecuado', descriptor: 'Diseña un experimento básico con supervisión', evidence: 'Diseño con supervisión', feedbackSuggestion: 'Bien diseñaste. Recuerda siempre la seguridad.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa en experimentos con guía del docente', evidence: 'Participación con apoyo', feedbackSuggestion: 'Estás aprendiendo a experimentar con seguridad.' },
+        { levelId: 'inicial', descriptor: 'Requiere asistencia directa para experimentar', evidence: 'Experimentación con asistencia', feedbackSuggestion: 'Vamos a experimentar juntos con cuidado.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Vocabulario químico', description: 'Usa vocabulario químico preciso para comunicar', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Usa vocabulario químico preciso y lo aplica en explicaciones y escritos', evidence: 'Uso de vocabulario técnico', feedbackSuggestion: 'Tu vocabulario químico es preciso.' },
+        { levelId: 'adecuado', descriptor: 'Usa al menos 5 términos químicos correctamente', evidence: 'Uso de vocabulario básico', feedbackSuggestion: 'Bien usas el vocabulario. Sigue aprendiendo más términos.' },
+        { levelId: 'en_desarrollo', descriptor: 'Usa vocabulario con apoyo y modelado', evidence: 'Uso de vocabulario con guía', feedbackSuggestion: 'Estás aprendiendo el vocabulario químico.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para usar vocabulario químico', evidence: 'Vocabulario con asistencia', feedbackSuggestion: 'Vamos a aprender juntos los términos químicos.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Conexión con la vida cotidiana', description: 'Relaciona la química con situaciones de la vida diaria', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Relaciona conceptos químicos con problemas reales y propone soluciones', evidence: 'Conexión con realidad y propuesta', feedbackSuggestion: 'Tu conexión con la vida real es excelente.' },
+        { levelId: 'adecuado', descriptor: 'Menciona al menos 1 aplicación en la vida diaria', evidence: 'Conexión básica', feedbackSuggestion: 'Bien conectas. Piensa en más aplicaciones.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce aplicaciones con apoyo', evidence: 'Conexión con guía', feedbackSuggestion: 'Estás aprendiendo a relacionar con la vida real.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para conectar con la realidad', evidence: 'Conexión con asistencia', feedbackSuggestion: 'Vamos a pensar en cómo la química está en tu vida.' },
+      ],
+    },
+  ];
+}
+
+function buildCiudadaniaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Comprensión de problemas sociales', description: 'Comprende problemas sociales con evidencia científica', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Analiza problemas sociales con evidencia científica multidimensional', evidence: 'Análisis con evidencia', feedbackSuggestion: 'Tu comprensión de problemas es profunda.' },
+        { levelId: 'adecuado', descriptor: 'Identifica al menos 2 dimensiones de un problema social', evidence: 'Identificación de dimensiones', feedbackSuggestion: 'Bien analizas. Considera más perspectivas.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce problemas con apoyo del docente', evidence: 'Reconocimiento con guía', feedbackSuggestion: 'Estás aprendiendo a analizar problemas sociales.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para comprender problemas', evidence: 'Reconocimiento con asistencia', feedbackSuggestion: 'Vamos a explorar juntos este problema.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Uso de evidencia científica', description: 'Usa datos y evidencia para fundamentar argumentos', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Usa evidencia científica variada y la integra en argumentos sólidos', evidence: 'Uso de evidencia múltiple', feedbackSuggestion: 'Tu uso de evidencia es riguroso.' },
+        { levelId: 'adecuado', descriptor: 'Usa al menos 1 fuente de evidencia para argumentar', evidence: 'Uso de evidencia básica', feedbackSuggestion: 'Bien usas la evidencia. Busca más fuentes.' },
+        { levelId: 'en_desarrollo', descriptor: 'Usa evidencia con apoyo del docente', evidence: 'Uso de evidencia con guía', feedbackSuggestion: 'Estás aprendiendo a usar evidencia científica.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para usar evidencia', evidence: 'Uso de evidencia con asistencia', feedbackSuggestion: 'Vamos a buscar juntos la evidencia.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Análisis de impacto', description: 'Analiza el impacto de decisiones en la sociedad y medio ambiente', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Analiza impactos a corto y largo plazo, proponiendo soluciones fundamentadas', evidence: 'Análisis de impacto completo', feedbackSuggestion: 'Tu análisis de impacto es profundo y propositivo.' },
+        { levelId: 'adecuado', descriptor: 'Menciona al menos 2 impactos de una decisión', evidence: 'Identificación de impactos', feedbackSuggestion: 'Bien analizas los impactos. Profundiza más.' },
+        { levelId: 'en_desarrollo', descriptor: 'Reconoce impactos con apoyo', evidence: 'Análisis con guía', feedbackSuggestion: 'Estás aprendiendo a analizar impactos.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para identificar impactos', evidence: 'Análisis con asistencia', feedbackSuggestion: 'Vamos a pensar en las consecuencias juntos.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Decisión informada', description: 'Toma decisiones considerando evidencia y perspectivas diversas', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Toma decisiones considerando evidencia, ética y múltiples perspectivas', evidence: 'Decisión fundamentada y ética', feedbackSuggestion: 'Tus decisiones son informadas y responsables.' },
+        { levelId: 'adecuado', descriptor: 'Toma una decisión considerando al menos 2 factores', evidence: 'Decisión con factores', feedbackSuggestion: 'Bien decides. Considera más factores.' },
+        { levelId: 'en_desarrollo', descriptor: 'Toma decisiones con guía del docente', evidence: 'Decisión con guía', feedbackSuggestion: 'Estás aprendiendo a tomar decisiones informadas.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo para tomar decisiones', evidence: 'Decisión con asistencia', feedbackSuggestion: 'Vamos a decidir juntos considerando todo.' },
+      ],
+    },
+  ];
+}
+
+function buildParvulariaCriteria(): RubricCriterion[] {
+  return [
+    {
+      id: 'c1', name: 'Exploración y juego', description: 'Explora el entorno y participa en juegos con curiosidad', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Explora con curiosidad, hace preguntas y participa activamente en juegos variados', evidence: 'Participación activa y curiosa', feedbackSuggestion: 'Tu exploración es muy curiosa y activa.' },
+        { levelId: 'adecuado', descriptor: 'Participa en juegos y exploraciones con interés', evidence: 'Participación con interés', feedbackSuggestion: 'Bien exploras. Sigue haciendo preguntas.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa con apoyo del docente o compañeros', evidence: 'Participación con guía', feedbackSuggestion: 'Estás explorando cada vez más.' },
+        { levelId: 'inicial', descriptor: 'Necesita modelado para participar', evidence: 'Participación con asistencia', feedbackSuggestion: 'Vamos a explorar juntos.' },
+      ],
+    },
+    {
+      id: 'c2', name: 'Expresión libre', description: 'Se expresa a través del dibujo, la voz, el cuerpo y la creatividad', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Se expresa con variedad de medios y comunica sus ideas con claridad', evidence: 'Expresión variada y comunicativa', feedbackSuggestion: 'Tu expresión es muy creativa y clara.' },
+        { levelId: 'adecuado', descriptor: 'Se expresa por al menos 2 medios diferentes', evidence: 'Expresión con variedad', feedbackSuggestion: 'Bien te expresas. Prueba nuevos medios.' },
+        { levelId: 'en_desarrollo', descriptor: 'Se expresa con apoyo y estímulo', evidence: 'Expresión con guía', feedbackSuggestion: 'Estás encontrando tu forma de expresarte.' },
+        { levelId: 'inicial', descriptor: 'Necesita estímulo para expresarse', evidence: 'Expresión con asistencia', feedbackSuggestion: 'Vamos a expresar juntos lo que sientes.' },
+      ],
+    },
+    {
+      id: 'c3', name: 'Participación grupal', description: 'Participa en actividades grupales respetando turnos y normas simples', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Participa respetando turnos, ayuda a compañeros y disfruta del juego grupal', evidence: 'Participación colaborativa', feedbackSuggestion: 'Eres muy buen compañero/a de juego.' },
+        { levelId: 'adecuado', descriptor: 'Participa y respeta turnos básicos', evidence: 'Participación con turnos', feedbackSuggestion: 'Bien participas. Sigue respetando a los demás.' },
+        { levelId: 'en_desarrollo', descriptor: 'Participa con recordatorio de normas', evidence: 'Participación con recordatorio', feedbackSuggestion: 'Estás aprendiendo a jugar con otros.' },
+        { levelId: 'inicial', descriptor: 'Necesita apoyo constante para participar', evidence: 'Participación con apoyo', feedbackSuggestion: 'Vamos a participar juntos en el juego.' },
+      ],
+    },
+    {
+      id: 'c4', name: 'Relación con otros', description: 'Se relaciona con compañeros y adultos de forma respetuosa', weight: 25,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Se relaciona con empatía, resuelve conflictos con palabras y muestra afecto', evidence: 'Relación empática y respetuosa', feedbackSuggestion: 'Tu forma de relacionarte es ejemplar.' },
+        { levelId: 'adecuado', descriptor: 'Se relaciona y comparte con al menos 2 compañeros', evidence: 'Relación básica', feedbackSuggestion: 'Bien te relacionas. Sigue compartiendo.' },
+        { levelId: 'en_desarrollo', descriptor: 'Se relaciona con apoyo del adulto', evidence: 'Relación con guía', feedbackSuggestion: 'Estás aprendiendo a relacionarte mejor.' },
+        { levelId: 'inicial', descriptor: 'Necesita mediación para relacionarse', evidence: 'Relación con asistencia', feedbackSuggestion: 'Vamos a jugar juntos con los demás.' },
+      ],
+    },
+  ];
+}
+
 function buildGeneralCriteria(): RubricCriterion[] {
   return [
     {
@@ -667,7 +1003,7 @@ function buildSelfAssessment(isLower: boolean): { title: string; prompts: string
   };
 }
 
-function buildPremiumRubric(input: {
+export function buildPremiumRubric(input: {
   level: string; subject: string; objectiveCode: string; objectiveText: string;
   topic: string; indicators?: string[]; skills?: string[];
 }): PremiumRubric {
@@ -689,6 +1025,14 @@ function buildPremiumRubric(input: {
     case 'formacion_ciudadana': criteriaBank = buildFormacionCiudadanaCriteria(); break;
     case 'orientacion': criteriaBank = buildOrientacionCriteria(); break;
     case 'ingles': criteriaBank = buildInglesCriteria(); break;
+    case 'musica': criteriaBank = buildMusicaCriteria(); break;
+    case 'educacion_fisica': criteriaBank = buildEducacionFisicaCriteria(); break;
+    case 'filosofia': criteriaBank = buildFilosofiaCriteria(); break;
+    case 'biologia': criteriaBank = buildBiologiaCriteria(); break;
+    case 'fisica': criteriaBank = buildFisicaCriteria(); break;
+    case 'quimica': criteriaBank = buildQuimicaCriteria(); break;
+    case 'ciencias_ciudadania': criteriaBank = buildCiudadaniaCriteria(); break;
+    case 'parvularia': criteriaBank = buildParvulariaCriteria(); break;
     default: criteriaBank = buildGeneralCriteria(); break;
   }
 
