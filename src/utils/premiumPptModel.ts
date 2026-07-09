@@ -200,9 +200,43 @@ function buildOaDrivenBullets(oaText: string, isLower: boolean, maxB: number): s
 }
 
 function buildOaTable(oaText: string, subject: string, isLower: boolean): { headers: string[]; rows: string[][]; caption?: string } | undefined {
-  if (isLower) return undefined;
   const lower = oaText.toLowerCase();
-  if (subject.toLowerCase().includes('ciencias') || lower.includes('planta') || lower.includes('animal') || lower.includes('seres vivos') || lower.includes('ciclo') || lower.includes('ecosistema')) {
+  const subLower = subject.toLowerCase();
+
+  if (subLower.includes('ciencias') || lower.includes('planta') || lower.includes('animal') || lower.includes('seres vivos') || lower.includes('ciclo') || lower.includes('ecosistema')) {
+    if (isLower) {
+      if (lower.includes('planta') || lower.includes('flor') || lower.includes('semilla') || lower.includes('polinización') || lower.includes('germinación')) {
+        return {
+          headers: ['Elemento', 'Lo observo', 'Dibujo o ejemplo'],
+          rows: [
+            ['Semilla', 'Puede germinar', 'Dibujar semilla'],
+            ['Planta', 'Tiene tallo y hojas', 'Dibujar planta'],
+            ['Flor', 'Puede formar fruto', 'Dibujar flor'],
+          ],
+          caption: 'Las plantas: lo que observamos',
+        };
+      }
+      if (lower.includes('animal') || lower.includes('alimentación') || lower.includes('hábitat')) {
+        return {
+          headers: ['Animal', 'Dónde vive', 'Qué necesita'],
+          rows: [
+            ['Ave', 'Árboles o cielo', 'Alimento y refugio'],
+            ['Pez', 'Agua dulce o salada', 'Oxígeno y alimento'],
+            ['Insecto', 'Jardín o bosque', 'Plantas y agua'],
+          ],
+          caption: 'Los animales: dónde viven',
+        };
+      }
+      return {
+        headers: ['Elemento', 'Lo que veo', 'Comento'],
+        rows: [
+          [truncate(oaText.split(' ')[0] || 'Elemento', 20), 'Lo observo en la naturaleza', 'Lo explico con mis palabras'],
+          ['Ejemplo', 'Lo veo en mi entorno', 'Lo comparto con mi curso'],
+          ['Dibujo', 'Lo represento en mi cuaderno', 'Lo muestro al profe'],
+        ],
+        caption: 'Lo que aprendimos',
+      };
+    }
     if (lower.includes('planta') || lower.includes('flor') || lower.includes('semilla') || lower.includes('polinización') || lower.includes('germinación')) {
       return {
         headers: ['Etapa', 'Qué ocurre', 'Qué podemos observar'],
@@ -238,7 +272,19 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
       caption: 'Mapa de conceptos del OA',
     };
   }
-  if (subject.toLowerCase().includes('historia') || lower.includes('sociedad') || lower.includes('chile') || lower.includes('histórico')) {
+
+  if (subLower.includes('historia') || lower.includes('sociedad') || lower.includes('chile') || lower.includes('histórico')) {
+    if (isLower) {
+      return {
+        headers: ['Lugar o persona', 'Qué hace', 'Por qué es importante'],
+        rows: [
+          ['Mi barrio o ciudad', 'Aquí vivo yo', 'Es donde aprendo y juego'],
+          ['Una persona importante', 'Ayuda a otros', 'Enseña y protege'],
+          ['Una fecha especial', 'Celebramos algo', 'Recuerda nuestra historia'],
+        ],
+        caption: 'Lo que sé de mi comunidad',
+      };
+    }
     return {
       headers: ['Periodo / Evento', 'Características', 'Impacto'],
       rows: [
@@ -249,7 +295,19 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
       caption: 'Análisis del contexto histórico',
     };
   }
-  if (subject.toLowerCase().includes('matemática') || lower.includes('número') || lower.includes('operación') || lower.includes('geometría')) {
+
+  if (subLower.includes('matemática') || lower.includes('número') || lower.includes('operación') || lower.includes('geometría')) {
+    if (isLower) {
+      return {
+        headers: ['Representación', 'Ejemplo', 'Lo explico'],
+        rows: [
+          ['Un número', 'Lo escribo y lo cuento', 'Lo muestro con dedos o fichas'],
+          ['Una suma', '3 + 2 = 5', 'Lo resuelvo con MATERIAL'],
+          ['Un problema', 'Leo y dibuyo', 'Lo explico con mis palabras'],
+        ],
+        caption: 'Lo que puedo hacer con los números',
+      };
+    }
     return {
       headers: ['Concepto', 'Procedimiento', 'Resultado esperado'],
       rows: [
@@ -260,7 +318,19 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
       caption: 'Pasos para resolver el problema',
     };
   }
-  if (subject.toLowerCase().includes('lenguaje') || lower.includes('texto') || lower.includes('lectura') || lower.includes('escritura')) {
+
+  if (subLower.includes('lenguaje') || lower.includes('texto') || lower.includes('lectura') || lower.includes('escritura')) {
+    if (isLower) {
+      return {
+        headers: ['Idea', '¿Dónde aparece?', 'Lo digo con mis palabras'],
+        rows: [
+          ['La idea principal', 'En el título o primer párrafo', 'La cuento con una frase'],
+          ['Un personaje', 'En la historia', 'Lo describo y lo dibujo'],
+          ['Una palabra nueva', 'En el texto', 'La busco y la uso'],
+        ],
+        caption: 'Lo que entendí del texto',
+      };
+    }
     return {
       headers: ['Estrategia', 'Descripción', 'Ejemplo de aplicación'],
       rows: [
@@ -271,7 +341,19 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
       caption: 'Estrategias de comprensión lectora',
     };
   }
-  if (subject.toLowerCase().includes('artes') || lower.includes('expresión') || lower.includes('creatividad') || lower.includes('obra')) {
+
+  if (subLower.includes('artes') || lower.includes('expresión') || lower.includes('creatividad') || lower.includes('obra')) {
+    if (isLower) {
+      return {
+        headers: ['Elemento visual', 'Lo veo en', 'Me hace sentir'],
+        rows: [
+          ['Color', 'Mi dibujo u obra', 'Alegría, calma u otra emoción'],
+          ['Forma', 'Figuras o líneas', 'Curiosidad'],
+          ['Textura', 'Materiales usados', 'Interés'],
+        ],
+        caption: 'Lo que veo en el arte',
+      };
+    }
     return {
       headers: ['Elemento', 'Descripción', 'Ejemplo en la obra'],
       rows: [
@@ -283,6 +365,7 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
       caption: 'Elementos del lenguaje visual',
     };
   }
+
   return undefined;
 }
 

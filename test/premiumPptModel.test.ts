@@ -243,11 +243,52 @@ describe('premiumPptModel v1.5.5 — OA-driven content', () => {
     expect(assessment!.table).toBeDefined();
   });
 
-  it('no genera tabla para 1° Básico', () => {
+  it('1° Básico genera tabla simple con max 3 columnas y 3 filas', () => {
     const result = buildPremiumPptModel(BASE_INPUT);
     const concepts = result.slides.find(s => s.layout === 'concept_cards');
     expect(concepts).toBeDefined();
-    expect(concepts!.table).toBeUndefined();
+    expect(concepts!.table).toBeDefined();
+    expect(concepts!.table!.headers.length).toBeLessThanOrEqual(3);
+    expect(concepts!.table!.rows.length).toBeLessThanOrEqual(3);
+  });
+
+  it('1° Básico tabla usa lenguaje breve y simple', () => {
+    const result = buildPremiumPptModel(BASE_INPUT);
+    const concepts = result.slides.find(s => s.layout === 'concept_cards');
+    const allCells = concepts!.table!.rows.flat().join(' ');
+    expect(allCells.toLowerCase()).toMatch(/dibujo|dibujar|observo|comento|veo|hago|puede|tiene/);
+  });
+
+  it('3° Básico con OA de plantas genera tabla de plantas', () => {
+    const input3b = { ...BASE_INPUT, level: '3° Básico', objectiveText: 'Reconocer el ciclo de vida de las plantas con flor incluyendo semilla germinación crecimiento floración' };
+    const result = buildPremiumPptModel(input3b);
+    const concepts = result.slides.find(s => s.layout === 'concept_cards');
+    expect(concepts).toBeDefined();
+    expect(concepts!.table).toBeDefined();
+    const allCells = concepts!.table!.rows.flat().join(' ').toLowerCase();
+    expect(allCells).toMatch(/semilla|planta|flor/);
+  });
+
+  it('5° Básico mantiene tabla analítica con más filas', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const concepts = result.slides.find(s => s.layout === 'concept_cards');
+    expect(concepts).toBeDefined();
+    expect(concepts!.table).toBeDefined();
+    expect(concepts!.table!.rows.length).toBeGreaterThanOrEqual(4);
+    expect(concepts!.table!.headers).toContain('Etapa');
+  });
+
+  it('no aparece texto "Imagen futura" en el modelo', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const allText = JSON.stringify(result).toLowerCase();
+    expect(allText).not.toContain('imagen futura');
+  });
+
+  it('si tema contradice OA, el OA manda', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const cover = result.slides.find(s => s.layout === 'cover');
+    expect(cover!.title.toLowerCase()).toContain('planta');
+    expect(cover!.title.toLowerCase()).not.toContain('animal');
   });
 
   it('genera visualPrompt descriptivo para portada', () => {
