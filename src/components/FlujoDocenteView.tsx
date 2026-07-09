@@ -49,6 +49,7 @@ export function FlujoDocenteView() {
   const [resourceId, setResourceId] = useState('');
   const [pptxBlob, setPptxBlob] = useState<Blob | null>(null);
   const [pptxLoading, setPptxLoading] = useState(false);
+  const [premiumModel, setPremiumModel] = useState<any>(null);
 
   // Load courses
   useEffect(() => {
@@ -119,6 +120,7 @@ export function FlujoDocenteView() {
       setResult(null);
       setPptxBlob(null);
       setPptxLoading(false);
+      setPremiumModel(null);
       setStep('generando');
 
     const req: MaterialRequest = {
@@ -157,25 +159,28 @@ export function FlujoDocenteView() {
         setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         setResourceId(res.resourceId || '');
         if (selectedProducto === 'presentacion') {
-          try {
-            setPptxLoading(true);
-            const model = buildPremiumPptModel({
-              level: selectedOA?.course_name || '',
-              subject: selectedOA?.subject_name || '',
-              objectiveCode: selectedOA?.code || '',
-              objectiveText: selectedOA?.official_text || '',
-              topic,
-              indicators,
-              skills,
-              additionalContext,
-            });
-            const blob = await generatePremiumPptx(model);
+          const model = buildPremiumPptModel({
+            level: selectedOA?.course_name || '',
+            subject: selectedOA?.subject_name || '',
+            objectiveCode: selectedOA?.code || '',
+            objectiveText: selectedOA?.official_text || '',
+            topic,
+            indicators,
+            skills,
+            additionalContext,
+          });
+          setPremiumModel(model);
+          setStep('resultado');
+          setPptxLoading(true);
+          generatePremiumPptx(model).then(blob => {
             setPptxBlob(blob);
-          } catch {
+          }).catch(() => {
             setPptxBlob(null);
-          } finally {
+          }).finally(() => {
             setPptxLoading(false);
-          }
+          });
+        } else {
+          setStep('resultado');
         }
         setStep('resultado');
       } else {
@@ -578,18 +583,8 @@ export function FlujoDocenteView() {
                 iconLeft={Download}
                 disabled={pptxLoading || !pptxBlob}
                 onClick={() => {
-                  if (pptxBlob && selectedOA) {
-                    const model = buildPremiumPptModel({
-                      level: selectedOA.course_name,
-                      subject: selectedOA.subject_name,
-                      objectiveCode: selectedOA.code,
-                      objectiveText: selectedOA.official_text,
-                      topic,
-                      indicators,
-                      skills,
-                      additionalContext,
-                    });
-                    downloadPremiumPptx(model, pptxBlob);
+                  if (pptxBlob && premiumModel) {
+                    downloadPremiumPptx(premiumModel, pptxBlob);
                   }
                 }}
               >

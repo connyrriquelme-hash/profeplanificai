@@ -401,7 +401,7 @@ function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, p
     { icon: '🎯', text: 'Producto final' },
   ];
   iconCards.forEach((ic, i) => {
-    const x = 8.5 + (i % 1) * 2.2;
+    const x = 8.5 + i * 0.0;
     const y = 1.8 + i * 1.6;
     addIconCard(s, ic.icon, ic.text, theme, x, y, 4.2, 1.3);
   });
@@ -595,6 +595,7 @@ export function downloadPremiumPptx(presentation: PremiumPresentation, blob: Blo
   const safeName = `${presentation.asignatura}-${presentation.nivel}-${presentation.tema}`
     .replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s-]/g, '')
     .replace(/\s+/g, '-')
+    .replace(/-+$/, '')
     .toLowerCase()
     .slice(0, 60);
   const url = URL.createObjectURL(blob);
