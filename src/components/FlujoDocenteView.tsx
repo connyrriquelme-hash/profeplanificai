@@ -12,7 +12,9 @@ import { generateGuide, generateEvaluation, generateRubric, generatePresentation
 import { buildPremiumPptModel, type PremiumPresentation } from '../utils/premiumPptModel';
 import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
 import PremiumPptPreview from './PremiumPptPreview';
+import PremiumRubricPreview from './PremiumRubricPreview';
 import { enrichPresentationWithImages } from '../services/premiumPptAiService';
+import type { PremiumRubric } from '../utils/premiumRubricModel';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -54,6 +56,7 @@ export function FlujoDocenteView() {
   const [premiumModel, setPremiumModel] = useState<PremiumPresentation | null>(null);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState<{ current: number; total: number } | null>(null);
+  const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
 
   // Load courses
   useEffect(() => {
@@ -125,6 +128,7 @@ export function FlujoDocenteView() {
       setPptxBlob(null);
       setPptxLoading(false);
       setPremiumModel(null);
+      setPremiumRubric(null);
       setStep('generando');
 
     const req: MaterialRequest = {
@@ -162,6 +166,9 @@ export function FlujoDocenteView() {
       if (res?.ok) {
         setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         setResourceId(res.resourceId || '');
+        if (selectedProducto === 'rubrica' && res.rubric) {
+          setPremiumRubric(res.rubric as PremiumRubric);
+        }
         if (selectedProducto === 'presentacion') {
           const model = buildPremiumPptModel({
             level: selectedOA?.course_name || '',
@@ -606,6 +613,8 @@ export function FlujoDocenteView() {
                 isGeneratingImages={isGeneratingImages}
                 imageProgress={imageProgress || undefined}
               />
+            ) : selectedProducto === 'rubrica' && premiumRubric ? (
+              <PremiumRubricPreview rubric={premiumRubric} />
             ) : (
               <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-xl overflow-auto max-h-[500px]">
                 {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
