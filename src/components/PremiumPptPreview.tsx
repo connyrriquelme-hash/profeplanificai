@@ -20,15 +20,26 @@ function hexToCss(hex: string): string {
   return `#${hex}`;
 }
 
-function SlideImage({ url, keyword, className }: { url?: string; keyword: string; className?: string }) {
+function SlideImage({ url, keyword, className, theme }: { url?: string; keyword: string; className?: string; theme: SubjectTheme }) {
   const [error, setError] = useState(false);
   if (!url || error) {
     return (
-      <div className={`flex items-center justify-center rounded-lg border-2 border-dashed bg-white/10 ${className || ''}`}>
-        <div className="text-center text-white/40">
-          <div className="text-3xl mb-1">🎨</div>
-          <div className="text-sm italic">{keyword}</div>
+      <div
+        className={`flex flex-col items-center justify-center rounded-xl ${className || ''}`}
+        style={{
+          background: `linear-gradient(135deg, ${hexToCss(theme.primary)}dd, ${hexToCss(theme.secondary)}bb)`,
+          boxShadow: 'inset 0 0 40px rgba(255,255,255,0.1)',
+        }}
+      >
+        <div className="relative mb-2">
+          <div
+            className="absolute inset-0 rounded-full blur-xl opacity-40"
+            style={{ backgroundColor: hexToCss(theme.accent) }}
+          />
+          <div className="relative text-5xl">🎨</div>
         </div>
+        <div className="text-sm font-bold text-white/90 text-center px-4">{keyword}</div>
+        <div className="text-[10px] text-white/50 italic mt-1">Contenido visual premium</div>
       </div>
     );
   }
@@ -86,7 +97,7 @@ function CoverSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: 
         {slide.subtitle || `${pres.nivel} — ${pres.asignatura}`}
       </div>
       <div className="text-sm text-white/60 italic mb-6">OA: {pres.oa}</div>
-      <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || pres.tema} className="w-72 h-48" />
+      <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || pres.tema} className="w-72 h-48" theme={theme} />
     </div>
   );
 }
@@ -112,7 +123,7 @@ function HookSlideContent({ slide, theme }: { slide: PremiumSlide; theme: Subjec
         )}
       </div>
       <div className="w-64 flex items-center p-4">
-        <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'activación'} className="w-full h-56" />
+        <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'activación'} className="w-full h-56" theme={theme} />
       </div>
     </div>
   );
@@ -177,7 +188,7 @@ function VisualExplanationSlideContent({ slide, theme }: { slide: PremiumSlide; 
   return (
     <div className="flex h-full">
       <div className="w-64 flex items-center p-4">
-        <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'tema'} className="w-full h-56" />
+        <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'tema'} className="w-full h-56" theme={theme} />
       </div>
       <div className="flex-1 flex flex-col justify-center px-8">
         <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
@@ -214,7 +225,7 @@ function GuidedActivitySlideContent({ slide, theme }: { slide: PremiumSlide; the
         )}
       </div>
       <div className="w-56 flex items-center p-4">
-        <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'paso a paso'} className="w-full h-48" />
+        <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'paso a paso'} className="w-full h-48" theme={theme} />
       </div>
     </div>
   );

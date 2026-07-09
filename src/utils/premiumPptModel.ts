@@ -66,6 +66,7 @@ export type PremiumPresentation = {
   nivel: string;
   asignatura: string;
   oa: string;
+  oaText: string;
   tema: string;
   slides: PremiumSlide[];
 };
@@ -139,67 +140,321 @@ export function getSubjectTheme(subject: string): SubjectTheme {
   return DEFAULT_THEME;
 }
 
-function buildTableForSlide(layout: PremiumSlideLayout, input: PremiumInput, isLower: boolean): { headers: string[]; rows: string[][]; caption?: string } | undefined {
-  if (layout === 'concept_cards' && !isLower && input.skills && input.skills.length >= 2) {
+function extractOaConcepts(oaText: string): string[] {
+  const words = oaText.toLowerCase()
+    .replace(/[,;.:!?()]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 4);
+  const stopwords = new Set([
+    'para', 'como', 'entre', 'sobre', 'desde', 'hacia', 'otras', 'otros', 'otro',
+    'esta', 'este', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 'cada',
+    'cuando', 'donde', 'puede', 'pueden', 'debe', 'deben', 'tiene', 'tienen',
+    'hace', 'hacer', 'sido', 'mostrar', 'reconocer', 'describir', 'identificar',
+    'comparar', 'analizar', 'explicar', 'desarrollar', 'observar', 'relacionar',
+    'clasificar', 'ordenar', 'medir', 'estimar', 'calcular', 'resolver',
+    'interpretar', 'evaluar', 'crear', 'disenar', 'proponer', 'argumentar',
+    'comunicar', 'expresar', 'participar', 'colaborar', 'demostrar', 'aplicar',
+    'construir', 'transformar', 'conocer', 'comprender', 'aprender', 'fomentar',
+    'promover', 'fortalecer', 'integrar', 'vincular', 'conectar', 'asociar',
+    'diferenciar', 'agrupar', 'categorizar', 'jerarquizar', 'organizar',
+    'estructurar', 'sintetizar', 'generalizar', 'inferir', 'deducir', 'inducir',
+    'predecir', 'experimentar', 'investigar', 'explorar', 'descubrir',
+    'reflexionar', 'comprension', 'aprendizaje', 'desarrollo', 'proceso',
+    'producto', 'resultado', 'evidencia', 'indicador', 'criterio', 'nivel',
+    'logro', 'desempeno', 'competencia', 'habilidad', 'destreza', 'capacidad',
+    'actitud', 'valor', 'norma', 'regla', 'principio', 'concepto', 'grupo',
+    'clase', 'tipo', 'especie', 'organismo', 'ecosistema', 'ambiente',
+    'poblacion', 'comunidad', 'cadena', 'ciclo', 'nutriente', 'energia',
+    'materia', 'transformacion', 'cambio', 'equilibrio', 'interaccion',
+    'relacion', 'dependencia', 'adaptacion', 'evolucion', 'seleccion',
+    'variacion', 'herencia', 'genetica',     'celular', 'membrana', 'celula',
+    'tejido', 'organo', 'sistema', 'bacterias',
+    'raiz', 'tallo', 'hoja',
+    'fotosintesis', 'respiracion',
+    'incluyendo', 'incluye', 'incluir', 'describe', 'comprender',
+    'conocer', 'aplicar', 'usar', 'utilizar', 'realizar', 'desarrollar',
+    'trabajar', 'actividad', 'actividades', 'estudiantes', 'alumnos',
+    'curso', 'clase', 'sesion', 'leccion', 'unidad', 'plan',
+    'basico', 'medio', 'inicial', 'transicion', 'sala', 'cuna',
+  ]);
+  const concepts = words.filter(w => !stopwords.has(w));
+  const unique = [...new Set(concepts)];
+  return unique.slice(0, 8);
+}
+
+function buildOaDrivenBullets(oaText: string, isLower: boolean, maxB: number): string[] {
+  const concepts = extractOaConcepts(oaText);
+  if (concepts.length === 0) {
+    return [truncate(oaText, 80)];
+  }
+  const verbs = isLower
+    ? ['Observa', 'Identifica', 'Comparte', 'Descubre']
+    : ['Analiza', 'Comprende', 'Relaciona', 'Aplica', 'Compara', 'Explica', 'Evalúa'];
+  const bullets: string[] = [];
+  for (let i = 0; i < Math.min(maxB, concepts.length); i++) {
+    const verb = verbs[i % verbs.length];
+    const concept = concepts[i];
+    bullets.push(`${verb} ${concept}`);
+  }
+  return bullets;
+}
+
+function buildOaTable(oaText: string, subject: string, isLower: boolean): { headers: string[]; rows: string[][]; caption?: string } | undefined {
+  if (isLower) return undefined;
+  const lower = oaText.toLowerCase();
+  if (subject.toLowerCase().includes('ciencias') || lower.includes('planta') || lower.includes('animal') || lower.includes('seres vivos') || lower.includes('ciclo') || lower.includes('ecosistema')) {
+    if (lower.includes('planta') || lower.includes('flor') || lower.includes('semilla') || lower.includes('polinización') || lower.includes('germinación')) {
+      return {
+        headers: ['Etapa', 'Qué ocurre', 'Qué podemos observar'],
+        rows: [
+          ['Germinación', 'La semilla comienza a crecer', 'Aparece una pequeña raíz'],
+          ['Crecimiento', 'La planta desarrolla tallo y hojas', 'Aumenta su tamaño y color verde'],
+          ['Floración', 'Aparecen flores en la planta', 'Se observan colores y formas'],
+          ['Polinización', 'El polen se traslada entre flores', 'Participan insectos, viento u otros'],
+          ['Formación del fruto', 'Se forman frutos con semillas', 'Aparecen nuevas semillas'],
+        ],
+        caption: 'Ciclo de vida de las plantas con flor',
+      };
+    }
+    if (lower.includes('animal') || lower.includes('alimentación') || lower.includes('hábitat')) {
+      return {
+        headers: ['Característica', 'Descripción', 'Ejemplo'],
+        rows: [
+          ['Alimentación', 'Cómo obtiene energía', 'Herbívoro, carnívoro, omnívoro'],
+          ['Hábitat', 'Dónde vive y se desarrolla', 'Bosque, desierto, océano'],
+          ['Reproducción', 'Cómo se perpetúa la especie', 'Huevos, vivíparo, gemación'],
+          ['Adaptación', 'Cómo se ajusta al ambiente', 'Camuflaje, migración, hibernación'],
+        ],
+        caption: 'Características de los seres vivos',
+      };
+    }
     return {
-      headers: ['Concepto', 'Descripción', 'Ejemplo'],
-      rows: input.skills.slice(0, 4).map(s => {
-        const parts = s.split(':');
-        const name = (parts[0] || s).trim();
-        const desc = (parts[1] || '').trim();
-        return [truncate(name, 30), truncate(desc || 'Relacionado con ' + input.topic, 40), input.topic];
-      }),
-      caption: 'Mapa de conceptos clave',
+      headers: ['Concepto', 'Descripción', 'Relación con el OA'],
+      rows: [
+        [truncate(oaText.split(' ')[0] || 'Concepto', 30), truncate(oaText, 50), subject],
+        ['Evidencia observable', 'Lo que podemos ver y medir', 'Experimentación'],
+        ['Conexión con la naturaleza', 'Presencia en nuestro entorno', 'Observación directa'],
+      ],
+      caption: 'Mapa de conceptos del OA',
     };
   }
-  if (layout === 'formative_assessment' && !isLower) {
+  if (subject.toLowerCase().includes('historia') || lower.includes('sociedad') || lower.includes('chile') || lower.includes('histórico')) {
     return {
-      headers: ['Criterio', 'Logrado', 'Por mejorar'],
+      headers: ['Periodo / Evento', 'Características', 'Impacto'],
       rows: [
-        ['Comprensión del concepto principal', '✅', '—'],
-        ['Aplicación en contexto real', '—', '—'],
-        ['Participación en actividades', '✅', '—'],
+        ['Contexto histórico', truncate(oaText, 40), 'Transformaciones sociales'],
+        ['Actores principales', 'Personas y grupos involucrados', 'Dinámica social'],
+        ['Consecuencias', 'Cambios y legados', 'Relevancia actual'],
       ],
-      caption: 'Rúbrica rápida de autoevaluación',
+      caption: 'Análisis del contexto histórico',
+    };
+  }
+  if (subject.toLowerCase().includes('matemática') || lower.includes('número') || lower.includes('operación') || lower.includes('geometría')) {
+    return {
+      headers: ['Concepto', 'Procedimiento', 'Resultado esperado'],
+      rows: [
+        [truncate(oaText.split(',')[0] || 'Problema', 30), 'Identificar datos y operar', 'Solución correcta'],
+        ['Verificación', 'Revisar el procedimiento', 'Coherencia del resultado'],
+        ['Aplicación', 'Usar en situaciones reales', 'Transferencia del conocimiento'],
+      ],
+      caption: 'Pasos para resolver el problema',
+    };
+  }
+  if (subject.toLowerCase().includes('lenguaje') || lower.includes('texto') || lower.includes('lectura') || lower.includes('escritura')) {
+    return {
+      headers: ['Estrategia', 'Descripción', 'Ejemplo de aplicación'],
+      rows: [
+        ['Comprensión', 'Entender el mensaje del texto', 'Identificar idea principal'],
+        ['Interpretación', 'Dar sentido a la información', 'Inferir intención del autor'],
+        ['Producción', 'Crear textos con propósito', 'Redactar según la situación'],
+      ],
+      caption: 'Estrategias de comprensión lectora',
+    };
+  }
+  if (subject.toLowerCase().includes('artes') || lower.includes('expresión') || lower.includes('creatividad') || lower.includes('obra')) {
+    return {
+      headers: ['Elemento', 'Descripción', 'Ejemplo en la obra'],
+      rows: [
+        ['Línea', 'Trazo que delimita formas', 'Contorno de figuras'],
+        ['Color', 'Tono y saturación', 'Paleta cromática'],
+        ['Textura', 'Sensación táctil visual', 'Superficie rugosa o lisa'],
+        ['Composición', 'Organización de elementos', 'Distribución del espacio'],
+      ],
+      caption: 'Elementos del lenguaje visual',
     };
   }
   return undefined;
 }
 
-function generateSlideImagePrompt(layout: PremiumSlideLayout, input: PremiumInput, isLower: boolean): string | undefined {
-  const base = input.topic || input.subject;
+function generateSlideImagePrompt(layout: PremiumSlideLayout, oaText: string, subject: string, isLower: boolean): string | undefined {
+  const oaLower = oaText.toLowerCase();
+  const isPlant = oaLower.includes('planta') || oaLower.includes('flor') || oaLower.includes('semilla') || oaLower.includes('polinización');
+  const isAnimal = oaLower.includes('animal') || oaLower.includes('alimentación') || oaLower.includes('hábitat');
+  const base = isPlant ? 'plants flowers seeds pollination Chilean educational' : isAnimal ? 'animals habitat Chilean educational' : `${subject} educational Chilean`;
+
   switch (layout) {
     case 'cover':
-      return `Educational presentation cover illustration for ${input.subject} about ${base}, Chilean classroom context, professional, colorful, wide format`;
+      return `Educational presentation cover for ${subject}, ${base}, professional colorful illustration, wide format`;
     case 'hook':
-      return `Engaging motivational image about ${base} for ${isLower ? 'young children' : 'students'}, Chilean context, thought-provoking, colorful`;
+      return `Engaging motivational image, ${base} for ${isLower ? 'young children' : 'students'}, thought-provoking`;
     case 'visual_explanation':
-      return `Detailed educational diagram explaining ${base}, infographic style, clear labels, ${input.subject} context, professional illustration`;
+      return `Detailed educational diagram, ${base}, infographic style with clear labels, professional illustration`;
     case 'guided_activity':
-      return `${isLower ? 'Children' : 'Students'} doing hands-on activity about ${base}, classroom setting, collaborative, colorful`;
+      return `${isLower ? 'Children' : 'Students'} hands-on activity, ${base}, classroom setting, collaborative`;
     case 'concept_cards':
-      return `Visual concept map or cards showing key ideas about ${base}, clean design, educational infographic`;
+      return `Visual concept map, ${base}, clean educational infographic design`;
     case 'collaborative_activity':
-      return `${isLower ? 'Children' : 'Students'} working together on ${base} activity, teamwork, classroom, engaged`;
+      return `${isLower ? 'Children' : 'Students'} teamwork activity, ${base}, classroom engaged`;
     case 'dua_supports':
-      return `Universal Design for Learning symbols, inclusive classroom, diverse learners, ${base} theme`;
+      return `Universal Design for Learning, inclusive classroom, diverse learners, ${base}`;
     case 'closure':
-      return `Reflection and learning summary about ${base}, inspiring, educational, achievement`;
+      return `Reflection learning summary, ${base}, inspiring educational achievement`;
     default:
-      return `Educational illustration about ${base}, ${input.subject}, professional, engaging`;
+      return `Educational illustration, ${base}, professional engaging`;
   }
+}
+
+function buildHookBullets(oaText: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  const mainConcept = concepts[0] || oaText.split(' ')[0] || 'este tema';
+  if (isLower) {
+    return [
+      `¿Qué sabes sobre ${mainConcept}?`,
+      `¿Dónde has visto ${mainConcept} en tu vida diaria?`,
+      `Comparte una idea con tu compañero/a`,
+    ];
+  }
+  return [
+    `¿Qué sabes sobre ${mainConcept} y por qué es importante en ${mainConcept}?`,
+    `¿Dónde encontramos ${mainConcept} en nuestro entorno o en la naturaleza?`,
+    `Escribe una idea previa que tengas sobre el tema`,
+    `Observa la imagen: ¿qué relaciones identificas con ${mainConcept}?`,
+  ];
+}
+
+function buildObjectiveBullets(oaText: string, topicLabel: string, isLower: boolean): string[] {
+  if (isLower) {
+    return [
+      `Comprenderemos: ${truncate(oaText, 60)}`,
+      `Participaremos en actividades de observación y exploración`,
+    ];
+  }
+  return [
+    `Comprenderemos: ${truncate(oaText, 60)}`,
+    `Aplicaremos el conocimiento en situaciones reales`,
+    `Analizaremos las relaciones entre los conceptos del OA`,
+  ];
+}
+
+function buildConceptBullets(oaText: string, skills: string[], subject: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  if (skills.length > 0) {
+    return skills.slice(0, isLower ? 3 : 5).map(s => truncate(s, 50));
+  }
+  return concepts.slice(0, isLower ? 3 : 5).map(c => truncate(c.charAt(0).toUpperCase() + c.slice(1), 50));
+}
+
+function buildVisualBullets(oaText: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  const mainConcept = concepts[0] || 'este contenido';
+  if (isLower) {
+    return [
+      `Observa la imagen con atención`,
+      `¿Qué observas sobre ${mainConcept}?`,
+      `Comparte lo que ves con tu compañero/a`,
+    ];
+  }
+  return [
+    `Analiza la información presentada sobre ${mainConcept}`,
+    `¿Qué relaciones identificas entre los conceptos?`,
+    `Conecta con los conceptos previos del OA`,
+    `Identifica las partes clave del proceso`,
+  ];
+}
+
+function buildGuidedBullets(oaText: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  const mainConcept = concepts[0] || 'la actividad';
+  if (isLower) {
+    return [
+      `Observa ${mainConcept} con ayuda del/la profesor/a`,
+      `Identifica las partes importantes`,
+      `Comparte tus hallazgos`,
+    ];
+  }
+  return [
+    `Identifica los componentes de ${mainConcept}`,
+    `Sigue las instrucciones para cada paso del proceso`,
+    `Registra tus observaciones en la guía`,
+    `Completa cada paso con tu compañero/a`,
+  ];
+}
+
+function buildCollaborativeBullets(oaText: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  const mainConcept = concepts[0] || 'el tema';
+  if (isLower) {
+    return [
+      `Forma parejas con tu compañero`,
+      `Comparte lo que observaste sobre ${mainConcept}`,
+      `Escucha las ideas de otros`,
+    ];
+  }
+  return [
+    `Organiza tu equipo de trabajo`,
+    `Presenta los resultados sobre ${mainConcept} al curso`,
+    `Retroalimenta con respeto y fundamenta tu opinión`,
+  ];
+}
+
+function buildFormativeBullets(oaText: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  const mainConcept = concepts[0] || 'el tema';
+  if (isLower) {
+    return [
+      `¿Qué te gustó más de la clase sobre ${mainConcept}?`,
+      `Dibuja algo que aprendiste hoy`,
+      `Levanta la mano si tienes dudas`,
+    ];
+  }
+  return [
+    `¿Qué concepto de ${mainConcept} lograste comprender mejor?`,
+    `Escribe un ejemplo que demuestre tu comprensión`,
+    `¿Qué dudas te quedan sobre ${mainConcept}?`,
+    `Compara lo que sabías antes con lo que aprendiste hoy`,
+  ];
+}
+
+function buildClosureBullets(oaText: string, isLower: boolean): string[] {
+  const concepts = extractOaConcepts(oaText);
+  const mainConcept = concepts[0] || 'el tema';
+  if (isLower) {
+    return [
+      `Recuerda lo que aprendimos sobre ${mainConcept} hoy`,
+      `¿Qué fue lo más divertido?`,
+      `¡Gran trabajo hoy!`,
+    ];
+  }
+  return [
+    `Sintetiza los aprendizajes clave sobre ${mainConcept}`,
+    `¿Cómo aplicarás esto fuera del aula?`,
+    `Conecta ${mainConcept} con la próxima clase`,
+  ];
 }
 
 export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
   const theme = getSubjectTheme(input.subject);
   const nivelLabel = input.level;
   const oaShort = truncate(input.objectiveCode, 30);
-  const topicLabel = input.topic || input.objectiveText.slice(0, 60);
   const isLower = isLowerLevel(nivelLabel);
   const max = maxBullets(nivelLabel);
 
-  const indSlice = (input.indicators || []).slice(0, 3);
+  const oaText = input.objectiveText || input.topic;
+  const topicLabel = truncate(oaText, 60);
+
   const skillSlice = (input.skills || []).filter(s => s && s.trim().length > 1).slice(0, 4);
+
+  const oaTable = buildOaTable(oaText, input.subject, isLower);
 
   const slides: PremiumSlide[] = [
     {
@@ -207,8 +462,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'cover',
       title: topicLabel,
       subtitle: `${nivelLabel} — ${input.subject} — ${oaShort}`,
-      visualKeyword: input.topic || input.subject,
-      visualPrompt: generateSlideImagePrompt('cover', input, isLower),
+      visualKeyword: extractOaConcepts(oaText).slice(0, 3).join(', ') || topicLabel,
+      visualPrompt: generateSlideImagePrompt('cover', oaText, input.subject, isLower),
       icon: ICONS.cover,
       colorTheme: theme.primary,
     },
@@ -217,14 +472,9 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'hook',
       title: 'Activación inicial',
       subtitle: isLower ? '¿Qué sabemos?' : 'Pregunta motivadora',
-      bullets: adaptBulletsForLevel([
-        isLower ? '¿Qué sabes sobre este tema?' : '¿Qué sabemos sobre este tema y por qué es importante?',
-        isLower ? '¿Dónde lo has visto?' : '¿Dónde hemos encontrado este contenido en nuestra vida cotidiana?',
-        'Comparte con tu compañero/a',
-        isLower ? 'Dibuja lo que piensas' : 'Escribe una idea que tengas sobre el tema',
-      ], nivelLabel),
-      visualKeyword: input.topic || 'activación',
-      visualPrompt: generateSlideImagePrompt('hook', input, isLower),
+      bullets: adaptBulletsForLevel(buildHookBullets(oaText, isLower), nivelLabel),
+      visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || 'activación',
+      visualPrompt: generateSlideImagePrompt('hook', oaText, input.subject, isLower),
       icon: ICONS.hook,
       colorTheme: theme.secondary,
     },
@@ -232,14 +482,11 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       slideNumber: 3,
       layout: 'objective',
       title: 'Objetivo de aprendizaje',
-      subtitle: input.objectiveText,
-      bullets: adaptBulletsForLevel([
-        isLower ? `Aprenderemos sobre: ${topicLabel}` : `Comprenderemos: ${topicLabel}`,
-        isLower ? 'Participaremos en actividades' : 'Aplicaremos el conocimiento en situaciones reales',
-      ], nivelLabel),
+      subtitle: oaText,
+      bullets: adaptBulletsForLevel(buildObjectiveBullets(oaText, topicLabel, isLower), nivelLabel),
       studentPrompt: isLower
-        ? `Hoy vamos a aprender sobre ${topicLabel}`
-        : `Nuestro objetivo es comprender ${topicLabel} y aplicarlo en contextos reales`,
+        ? `Hoy vamos a aprender sobre ${truncate(oaText, 50)}`
+        : `Nuestro objetivo es comprender: ${truncate(oaText, 60)}`,
       icon: ICONS.objective,
       colorTheme: theme.primary,
     },
@@ -247,20 +494,11 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       slideNumber: 4,
       layout: 'concept_cards',
       title: 'Conceptos clave',
-      subtitle: isLower ? 'Ideas importantes' : 'Conceptos fundamentales',
-      bullets: adaptBulletsForLevel(
-        skillSlice.length > 0
-          ? skillSlice.map(s => truncate(s, 50))
-          : [
-              truncate(input.objectiveText, 50),
-              `Conexión con ${input.subject}`,
-              isLower ? 'Ejemplo cotidiano' : 'Aplicación en contexto real',
-            ],
-        nivelLabel
-      ),
-      visualKeyword: skillSlice[0] || input.topic,
-      visualPrompt: generateSlideImagePrompt('concept_cards', input, isLower),
-      table: buildTableForSlide('concept_cards', input, isLower),
+      subtitle: isLower ? 'Ideas importantes' : 'Conceptos fundamentales del OA',
+      bullets: adaptBulletsForLevel(buildConceptBullets(oaText, skillSlice, input.subject, isLower), nivelLabel),
+      visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || input.subject,
+      visualPrompt: generateSlideImagePrompt('concept_cards', oaText, input.subject, isLower),
+      table: oaTable,
       icon: ICONS.concept_cards,
       colorTheme: theme.accent,
     },
@@ -268,14 +506,10 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       slideNumber: 5,
       layout: 'visual_explanation',
       title: isLower ? 'Descubrimos' : 'Desarrollo del contenido',
-      subtitle: isLower ? 'Observa y explora' : 'Análisis y comprensión',
-      bullets: adaptBulletsForLevel([
-        isLower ? 'Observa la imagen con atención' : 'Analiza la información presentada',
-        isLower ? '¿Qué observas?' : '¿Qué relaciones identificas?',
-        isLower ? 'Comparte lo que ves' : 'Conecta con los conceptos previos',
-      ], nivelLabel),
-      visualKeyword: input.topic,
-      visualPrompt: generateSlideImagePrompt('visual_explanation', input, isLower),
+      subtitle: isLower ? 'Observa y explora' : 'Análisis y comprensión del OA',
+      bullets: adaptBulletsForLevel(buildVisualBullets(oaText, isLower), nivelLabel),
+      visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || oaText.split(' ')[0],
+      visualPrompt: generateSlideImagePrompt('visual_explanation', oaText, input.subject, isLower),
       icon: ICONS.visual_explanation,
       colorTheme: theme.secondary,
     },
@@ -284,16 +518,12 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'guided_activity',
       title: isLower ? 'Juguemos y aprendamos' : 'Actividad guiada',
       subtitle: isLower ? 'Actividad con apoyo' : 'Paso a paso con orientación docente',
-      bullets: adaptBulletsForLevel([
-        isLower ? 'Realiza con ayuda del/la profesor/a' : 'Sigue las instrucciones con tu grupo',
-        isLower ? 'Usa los materiales de la mesa' : 'Completa cada paso con tu compañero/a',
-        isLower ? 'Pide ayuda si la necesitas' : 'Registra tus observaciones',
-      ], nivelLabel),
-      visualKeyword: input.topic,
-      visualPrompt: generateSlideImagePrompt('guided_activity', input, isLower),
+      bullets: adaptBulletsForLevel(buildGuidedBullets(oaText, isLower), nivelLabel),
+      visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || 'paso a paso',
+      visualPrompt: generateSlideImagePrompt('guided_activity', oaText, input.subject, isLower),
       studentPrompt: isLower
-        ? 'Vamos a hacer una actividad divertida'
-        : 'Trabaja con tu grupo para resolver la actividad propuesta',
+        ? `Vamos a explorar ${truncate(oaText, 40)}`
+        : `Trabaja con tu grupo para resolver la actividad sobre ${truncate(oaText, 40)}`,
       icon: ICONS.guided_activity,
       colorTheme: theme.primary,
     },
@@ -302,12 +532,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'collaborative_activity',
       title: isLower ? 'Trabajemos juntos' : 'Actividad colaborativa',
       subtitle: isLower ? 'En pareja o grupo' : 'Trabajo en equipo',
-      bullets: adaptBulletsForLevel([
-        isLower ? 'Forma parejas con tu compañero' : 'Organiza tu equipo de trabajo',
-        isLower ? 'Comparte lo que hiciste' : 'Presenta los resultados al curso',
-        isLower ? 'Escucha las ideas de otros' : 'Retroalimenta con respeto',
-      ], nivelLabel),
-      visualPrompt: generateSlideImagePrompt('collaborative_activity', input, isLower),
+      bullets: adaptBulletsForLevel(buildCollaborativeBullets(oaText, isLower), nivelLabel),
+      visualPrompt: generateSlideImagePrompt('collaborative_activity', oaText, input.subject, isLower),
       icon: ICONS.collaborative_activity,
       colorTheme: theme.secondary,
     },
@@ -322,7 +548,6 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         'Implicación: motivación y relevancia personal',
       ],
       visualKeyword: 'DUA inclusión',
-      visualPrompt: generateSlideImagePrompt('dua_supports', input, isLower),
       icon: ICONS.dua_supports,
       colorTheme: theme.primary,
     },
@@ -331,12 +556,16 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'formative_assessment',
       title: 'Evaluación formativa',
       subtitle: isLower ? '¿Qué aprendimos?' : 'Monitoreo del aprendizaje',
-      bullets: adaptBulletsForLevel([
-        isLower ? '¿Qué te gustó más de la clase?' : '¿Qué concepto lograste comprender mejor?',
-        isLower ? 'Dibuja algo que aprendiste' : 'Escribe un ejemplo que demuestre tu comprensión',
-        isLower ? 'Levanta la mano si tienes dudas' : '¿Qué dudas te quedan sobre el tema?',
-      ], nivelLabel),
-      table: buildTableForSlide('formative_assessment', input, isLower),
+      bullets: adaptBulletsForLevel(buildFormativeBullets(oaText, isLower), nivelLabel),
+      table: buildOaTable(oaText, input.subject, isLower) || (isLower ? undefined : {
+        headers: ['Criterio', 'Logrado', 'Por mejorar'],
+        rows: [
+          ['Comprensión del concepto principal', '—', '—'],
+          ['Aplicación en contexto real', '—', '—'],
+          ['Participación en actividades', '—', '—'],
+        ],
+        caption: 'Autoevaluación del aprendizaje',
+      }),
       studentPrompt: isLower
         ? 'Responde con una imagen o una palabra'
         : 'Completa el ticket de salida antes de terminar',
@@ -348,11 +577,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       layout: 'closure',
       title: 'Cierre de la clase',
       subtitle: isLower ? '¿Qué nos llevamos?' : 'Reflexión y síntesis',
-      bullets: adaptBulletsForLevel([
-        isLower ? 'Recuerda lo que aprendimos hoy' : 'Sintetiza los aprendizajes clave',
-        isLower ? '¿Qué fue lo más divertido?' : '¿Cómo aplicarás esto fuera del aula?',
-        isLower ? '¡Gran trabajo hoy!' : 'Conecta con la próxima clase',
-      ], nivelLabel),
+      bullets: adaptBulletsForLevel(buildClosureBullets(oaText, isLower), nivelLabel),
       studentPrompt: isLower
         ? '¿Qué fue lo más divertido de hoy?'
         : '¿Qué estrategia te ayudó a aprender mejor?',
@@ -367,6 +592,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
     nivel: nivelLabel,
     asignatura: input.subject,
     oa: input.objectiveCode,
+    oaText,
     tema: topicLabel,
     slides,
   };

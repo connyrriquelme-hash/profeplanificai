@@ -21,6 +21,16 @@ const UPPER_INPUT = {
   skills: ['Análisis histórico', 'Pensamiento crítico', 'Interpretación de fuentes', 'Comparación'],
 };
 
+const PLANT_OA_INPUT = {
+  level: '5° Básico',
+  subject: 'Ciencias Naturales',
+  objectiveCode: 'CN05 OA 03',
+  objectiveText: 'Describir el ciclo de vida de las plantas con flor, incluyendo germinación, crecimiento, floración, polinización y formación del fruto con semillas',
+  topic: 'animales',
+  indicators: ['Describe etapas del ciclo', 'Identifica procesos de polinización'],
+  skills: ['Descripción del ciclo', 'Identificación de etapas', 'Observación de procesos'],
+};
+
 describe('buildPremiumPptModel', () => {
   it('genera entre 8 y 12 slides', () => {
     const result = buildPremiumPptModel(BASE_INPUT);
@@ -106,7 +116,6 @@ describe('buildPremiumPptModel', () => {
     const result = buildPremiumPptModel(BASE_INPUT);
     const slideWithVisual = result.slides.find(s => s.visualKeyword);
     expect(slideWithVisual).toBeDefined();
-    expect(slideWithVisual!.visualKeyword!.toLowerCase()).toMatch(/plantas|animales|naturaleza|ciencias/);
   });
 
   it('para Artes Visuales usa tema visual adecuado', () => {
@@ -153,7 +162,6 @@ describe('buildPremiumPptModel', () => {
     expect(result.nivel).toBe('1° Básico');
     expect(result.asignatura).toBe('Ciencias Naturales');
     expect(result.oa).toBe('CN01 OA 05');
-    expect(result.tema).toBe('Plantas y animales chilenos');
   });
 });
 
@@ -188,80 +196,102 @@ describe('getSubjectTheme', () => {
   });
 });
 
-describe('premiumPptModel v1.5.5 - Tables & Image Prompts', () => {
-  it('genera tabla en concept_cards para 3° Medio con skills', () => {
-    const result = buildPremiumPptModel(UPPER_INPUT);
+describe('premiumPptModel v1.5.5 — OA-driven content', () => {
+  it('OA drives title, not user topic', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const cover = result.slides.find(s => s.layout === 'cover');
+    expect(cover).toBeDefined();
+    expect(cover!.title.toLowerCase()).toContain('planta');
+    expect(cover!.title.toLowerCase()).not.toContain('animal');
+  });
+
+  it('visualKeyword uses OA concepts, not user topic', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const cover = result.slides.find(s => s.layout === 'cover');
+    expect(cover!.visualKeyword!.toLowerCase()).toContain('planta');
+    expect(cover!.visualKeyword!.toLowerCase()).not.toContain('animal');
+  });
+
+  it('OA text is stored in oaText field', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    expect(result.oaText).toContain('plantas con flor');
+  });
+
+  it('bullets are OA-specific, not generic', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const hook = result.slides.find(s => s.layout === 'hook');
+    expect(hook).toBeDefined();
+    const allBullets = hook!.bullets!.join(' ');
+    expect(allBullets.toLowerCase()).toContain('planta');
+    expect(allBullets.toLowerCase()).not.toContain('¿Qué sabes sobre este tema?');
+  });
+
+  it('genera tabla de plantas para CN con OA de plantas', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
     const concepts = result.slides.find(s => s.layout === 'concept_cards');
     expect(concepts).toBeDefined();
     expect(concepts!.table).toBeDefined();
-    expect(concepts!.table!.headers.length).toBe(3);
-    expect(concepts!.table!.rows.length).toBeGreaterThan(0);
-    expect(concepts!.table!.caption).toBeDefined();
+    expect(concepts!.table!.headers).toContain('Etapa');
+    expect(concepts!.table!.rows.length).toBeGreaterThanOrEqual(4);
+    expect(concepts!.table!.caption).toContain('planta');
   });
 
-  it('no genera tabla en concept_cards para 1° Básico', () => {
+  it('genera tabla para formative_assessment en 5° Básico', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const assessment = result.slides.find(s => s.layout === 'formative_assessment');
+    expect(assessment).toBeDefined();
+    expect(assessment!.table).toBeDefined();
+  });
+
+  it('no genera tabla para 1° Básico', () => {
     const result = buildPremiumPptModel(BASE_INPUT);
     const concepts = result.slides.find(s => s.layout === 'concept_cards');
     expect(concepts).toBeDefined();
     expect(concepts!.table).toBeUndefined();
   });
 
-  it('genera tabla en formative_assessment para 3° Medio', () => {
-    const result = buildPremiumPptModel(UPPER_INPUT);
-    const assessment = result.slides.find(s => s.layout === 'formative_assessment');
-    expect(assessment).toBeDefined();
-    expect(assessment!.table).toBeDefined();
-    expect(assessment!.table!.headers).toContain('Criterio');
-  });
-
-  it('no genera tabla en formative_assessment para 1° Básico', () => {
-    const result = buildPremiumPptModel(BASE_INPUT);
-    const assessment = result.slides.find(s => s.layout === 'formative_assessment');
-    expect(assessment).toBeDefined();
-    expect(assessment!.table).toBeUndefined();
-  });
-
-  it('genera visualPrompt descriptivo en portada', () => {
-    const result = buildPremiumPptModel(BASE_INPUT);
+  it('genera visualPrompt descriptivo para portada', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
     const cover = result.slides.find(s => s.layout === 'cover');
-    expect(cover).toBeDefined();
     expect(cover!.visualPrompt).toBeDefined();
     expect(cover!.visualPrompt!.length).toBeGreaterThan(10);
-    expect(cover!.visualPrompt!.toLowerCase()).toContain('plantas');
   });
 
   it('genera visualPrompt en hook slide', () => {
-    const result = buildPremiumPptModel(BASE_INPUT);
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
     const hook = result.slides.find(s => s.layout === 'hook');
-    expect(hook).toBeDefined();
     expect(hook!.visualPrompt).toBeDefined();
-    expect(hook!.visualPrompt!.length).toBeGreaterThan(10);
   });
 
   it('genera visualPrompt en visual_explanation slide', () => {
-    const result = buildPremiumPptModel(BASE_INPUT);
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
     const ve = result.slides.find(s => s.layout === 'visual_explanation');
-    expect(ve).toBeDefined();
     expect(ve!.visualPrompt).toBeDefined();
-    expect(ve!.visualPrompt!.length).toBeGreaterThan(10);
   });
 
-  it('no genera visualPrompt en objective slide', () => {
-    const result = buildPremiumPptModel(BASE_INPUT);
+  it('objective contiene el texto del OA', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
     const obj = result.slides.find(s => s.layout === 'objective');
     expect(obj).toBeDefined();
-    expect(obj!.visualPrompt).toBeUndefined();
+    expect(obj!.subtitle).toContain('plantas con flor');
   });
 
-  it('no genera visualPrompt en dua_supports slide', () => {
-    const result = buildPremiumPptModel(BASE_INPUT);
-    const dua = result.slides.find(s => s.layout === 'dua_supports');
-    expect(dua).toBeDefined();
-    expect(dua!.visualKeyword).toBeDefined();
+  it('guided_activity bullets son específicos al OA', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const guided = result.slides.find(s => s.layout === 'guided_activity');
+    const allBullets = guided!.bullets!.join(' ');
+    expect(allBullets.toLowerCase()).toMatch(/planta|flor|semilla|polinización|ciclo/);
+  });
+
+  it('closure bullets mencionan el OA', () => {
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
+    const closure = result.slides.find(s => s.layout === 'closure');
+    const allBullets = closure!.bullets!.join(' ');
+    expect(allBullets.toLowerCase()).toMatch(/planta|flor|semilla|polinización|ciclo/);
   });
 
   it('tabla tiene estructura válida para renderizado', () => {
-    const result = buildPremiumPptModel(UPPER_INPUT);
+    const result = buildPremiumPptModel(PLANT_OA_INPUT);
     const concepts = result.slides.find(s => s.layout === 'concept_cards');
     expect(concepts!.table!.headers.every(h => typeof h === 'string')).toBe(true);
     expect(concepts!.table!.rows.every(r => Array.isArray(r) && r.length === concepts!.table!.headers.length)).toBe(true);

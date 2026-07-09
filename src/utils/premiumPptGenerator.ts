@@ -92,26 +92,46 @@ function addVisualPlaceholder(slide: PptxGenJS.Slide, keyword: string, theme: Su
   };
   const pos = positions[layout];
 
-  const card: PptxGenJS.ShapeProps = {
+  const bg: PptxGenJS.ShapeProps = {
     ...pos,
-    fill: { color: theme.secondary, transparency: 80 },
-    rectRadius: 0.2,
-    line: { color: theme.accent, width: 2, dashType: 'dash' },
+    fill: { color: theme.primary, transparency: 10 },
+    rectRadius: 0.25,
   };
-  slide.addShape('rect', card);
+  slide.addShape('rect', bg);
 
-  slide.addText(`🎨 ${keyword}`, {
-    ...pos,
-    fontSize: 14, align: 'center', valign: 'middle',
-    color: theme.text, fontFace: 'Arial',
-    italic: true,
+  const innerBorder: PptxGenJS.ShapeProps = {
+    x: pos.x + 0.08, y: pos.y + 0.08, w: pos.w - 0.16, h: pos.h - 0.16,
+    fill: { color: 'FFFFFF', transparency: 85 },
+    rectRadius: 0.2,
+    line: { color: theme.secondary, width: 1.5 },
+  };
+  slide.addShape('rect', innerBorder);
+
+  const decoCircle: PptxGenJS.ShapeProps = {
+    x: pos.x + pos.w * 0.3, y: pos.y + pos.h * 0.15, w: pos.w * 0.4, h: pos.w * 0.4,
+    fill: { color: theme.secondary, transparency: 70 },
+    line: { width: 0 },
+  };
+  slide.addShape('ellipse', decoCircle);
+
+  slide.addText('🎨', {
+    x: pos.x, y: pos.y + pos.h * 0.1, w: pos.w, h: pos.h * 0.45,
+    fontSize: 48, align: 'center', valign: 'middle',
+    fontFace: 'Segoe UI Emoji',
   });
 
-  slide.addText('[ Imagen generada por IA ]', {
-    x: pos.x, y: pos.y + pos.h - 0.5, w: pos.w, h: 0.4,
+  slide.addText(keyword, {
+    x: pos.x + 0.3, y: pos.y + pos.h * 0.55, w: pos.w - 0.6, h: pos.h * 0.25,
+    fontSize: 13, align: 'center', valign: 'middle',
+    color: theme.text, fontFace: 'Arial',
+    bold: true,
+  });
+
+  slide.addText('Contenido visual premium', {
+    x: pos.x, y: pos.y + pos.h - 0.55, w: pos.w, h: 0.4,
     fontSize: 9, align: 'center', valign: 'middle',
     color: theme.text, fontFace: 'Arial',
-    transparency: 50,
+    transparency: 40, italic: true,
   });
 }
 
@@ -133,7 +153,7 @@ function addImageOrPlaceholder(slide: PptxGenJS.Slide, imageUrl: string | undefi
       });
       return;
     } catch {
-      // fallback to placeholder
+      // fallback to premium visual
     }
   }
 
