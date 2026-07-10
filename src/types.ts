@@ -370,19 +370,17 @@ export const RECURSOS_TIPOS = [
 
 export const EVAL_TIPOS = [
   { v: 'diagnostica', l: 'Evaluación diagnóstica' },
-  { v: 'formativa', l: 'Evaluación formativa' },
   { v: 'sumativa', l: 'Evaluación sumativa' },
   { v: 'simce', l: 'Evaluación tipo SIMCE' },
   { v: 'simce_breve', l: 'Ensayo SIMCE breve' },
   { v: 'banco_preguntas', l: 'Banco de preguntas' },
   { v: 'rubrica', l: 'Rúbrica analítica' },
   { v: 'holistica', l: 'Rúbrica holística' },
-  { v: 'cotejo', l: 'Lista de cotejo' },
-  { v: 'escala', l: 'Escala de apreciación' },
-  { v: 'ticket', l: 'Ticket de salida' },
-  { v: 'autoevaluacion', l: 'Autoevaluación' },
-  { v: 'coevaluacion', l: 'Coevaluación' },
-  { v: 'retroalimentacion', l: 'Retroalimentación automática' },
+  { v: 'evaluation_exit_ticket', l: 'Ticket de Salida' },
+  { v: 'evaluation_321', l: 'Formato 3-2-1' },
+  { v: 'evaluation_checklist', l: 'Lista de Cotejo / Autoevaluación' },
+  { v: 'evaluation_formative_rubric', l: 'Rúbrica Analítica Formativa' },
+  { v: 'evaluation_traffic_light', l: 'Semáforo de Comprensión' },
 ];
 
 export const PLAN_TIPOS = [

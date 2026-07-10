@@ -8,7 +8,7 @@ import {
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { generateGuide, generateEvaluation, generateRubric, generatePresentation, generateMaterial, type MaterialRequest } from '../services/materialGeneratorService';
+import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type FormativeEvaluationType } from '../services/materialGeneratorService';
 import { buildPremiumPptModel, type PremiumPresentation } from '../utils/premiumPptModel';
 import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
 import PremiumPptPreview from './PremiumPptPreview';
@@ -22,8 +22,12 @@ const PRODUCTOS = [
   { id: 'guia_estudiante', label: 'Guía Estudiante', icon: FileText, color: '#4f46e5' },
   { id: 'guia_docente', label: 'Guía Docente', icon: BookOpenCheck, color: '#0d9488' },
   { id: 'planificacion', label: 'Planificación', icon: Layers3, color: '#ea580c' },
-  { id: 'evaluacion', label: 'Evaluación', icon: ClipboardCheck, color: '#db2777' },
-  { id: 'rubrica', label: 'Rúbrica', icon: ClipboardList, color: '#7c3aed' },
+  { id: 'evaluation_exit_ticket', label: 'Ticket de Salida', icon: ClipboardCheck, color: '#db2777' },
+  { id: 'evaluation_321', label: 'Formato 3-2-1', icon: ClipboardCheck, color: '#7c3aed' },
+  { id: 'evaluation_checklist', label: 'Lista de Cotejo', icon: ClipboardList, color: '#059669' },
+  { id: 'evaluation_formative_rubric', label: 'Rúbrica Analítica', icon: ClipboardList, color: '#dc2626' },
+  { id: 'evaluation_traffic_light', label: 'Semáforo', icon: ClipboardCheck, color: '#ea580c' },
+  { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#7c3aed' },
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#059669' },
 ];
 
@@ -145,22 +149,34 @@ export function FlujoDocenteView() {
 
     try {
       let res: any;
-      switch (selectedProducto) {
-        case 'guia_estudiante':
-        case 'guia_docente':
-          res = await generateGuide(req, selectedProducto as any);
-          break;
-        case 'evaluacion':
-          res = await generateEvaluation(req);
-          break;
-        case 'rubrica':
-          res = await generateRubric(req);
-          break;
-        case 'presentacion':
-          res = await generatePresentation(req);
-          break;
-        default:
-          res = await generateMaterial(req, selectedProducto);
+      const isFormativeEvaluation = [
+        'evaluation_exit_ticket',
+        'evaluation_321',
+        'evaluation_checklist',
+        'evaluation_formative_rubric',
+        'evaluation_traffic_light'
+      ].includes(selectedProducto);
+
+      if (isFormativeEvaluation) {
+        res = await generateFormativeEvaluation(req, selectedProducto as any);
+      } else {
+        switch (selectedProducto) {
+          case 'guia_estudiante':
+          case 'guia_docente':
+            res = await generateGuide(req, selectedProducto as any);
+            break;
+          case 'evaluacion':
+            res = await generateEvaluation(req);
+            break;
+          case 'rubrica':
+            res = await generateRubric(req);
+            break;
+          case 'presentacion':
+            res = await generatePresentation(req);
+            break;
+          default:
+            res = await generateMaterial(req, selectedProducto);
+        }
       }
 
       if (res?.ok) {
@@ -487,7 +503,7 @@ export function FlujoDocenteView() {
     );
   }
 
-  // Step 5: Producto
+// Step 5: Producto
   if (step === 'producto') {
     return (
       <div className="max-w-3xl mx-auto">
@@ -533,7 +549,9 @@ export function FlujoDocenteView() {
                 <Badge color="indigo" size="sm">{selectedOA?.course_name}</Badge>
                 <Badge color="teal" size="sm">{selectedOA?.subject_name}</Badge>
                 <Badge color="amber" size="sm">{selectedOA?.code}</Badge>
-                <Badge color="violet" size="sm">{PRODUCTOS.find(p => p.id === selectedProducto)?.label}</Badge>
+                <Badge color="violet" size="sm">
+                  {PRODUCTOS.find(p => p.id === selectedProducto)?.label}
+                </Badge>
               </div>
               <Button
                 variant="premium"

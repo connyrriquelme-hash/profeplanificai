@@ -3,6 +3,13 @@
  * Connects frontend to /api/materials/* endpoints
  */
 
+export type FormativeEvaluationType =
+  | 'evaluation_exit_ticket'
+  | 'evaluation_321'
+  | 'evaluation_checklist'
+  | 'evaluation_formative_rubric'
+  | 'evaluation_traffic_light';
+
 export interface MaterialRequest {
   level: string;
   subject: string;
@@ -20,6 +27,7 @@ export interface MaterialRequest {
   difficulty?: string;
   type?: string;
   criteria?: string[];
+  evaluationSubType?: FormativeEvaluationType;
 }
 
 export interface MaterialResult {
@@ -53,6 +61,10 @@ export async function generateGuide(req: MaterialRequest, type: 'guia_estudiante
 
 export async function generateEvaluation(req: MaterialRequest): Promise<MaterialResult> {
   return postJSON('/api/materials/evaluation', req);
+}
+
+export async function generateFormativeEvaluation(req: MaterialRequest, subType: FormativeEvaluationType): Promise<MaterialResult> {
+  return postJSON('/api/materials/evaluation/formative', { ...req, evaluationSubType: subType });
 }
 
 export async function generateRubric(req: MaterialRequest): Promise<MaterialResult> {
