@@ -1,9 +1,43 @@
 import PptxGenJS from 'pptxgenjs';
 import type { PremiumPresentation, PremiumSlide, SubjectTheme } from './premiumPptModel';
-import { getSubjectTheme } from './premiumPptModel';
+import { getSubjectTheme, isChildMode, getPictogramForSlide, isParvulariaContext } from './premiumPptModel';
 
 const SLIDE_W = 13.333;
 const SLIDE_H = 7.5;
+
+const SUBJECT_ICONS: Record<string, string> = {
+  'celula': '🧬', 'planta': '🌱', 'semilla': '🌱', 'flor': '🌸', 'poliniz': '🐝',
+  'animal': '🦋', 'ecosistema': '🌿', 'ciclo': '🔄', 'fotosintesis': '☀️',
+  'numero': '🔢', 'suma': '➕', 'resta': '➖', 'multiplic': '✖️', 'divis': '➗',
+  'fraccion': '📊', 'geometr': '📐', 'figura': '🔷', 'angulo': '📐',
+  'texto': '📖', 'lectura': '📖', 'escritura': '✍️', 'palabra': '🔤', 'cuento': '📚', 'historia': '📜',
+  'personaje': '👤', 'narrativa': '📝', 'poema': '🎭', 'rima': '🎵',
+  'mapa': '🗺️', 'chile': '🇨🇱', 'indigena': '🏞️', 'colonia': '⛪', 'independencia': '🎖️',
+  'ingles': '🇬🇧', 'english': '🇬🇧', 'vocabulario': '📝', 'gramatica': '📐',
+  'color': '🎨', 'forma': '🔷', 'textura': '🖌️', 'composicion': '🖼️', 'dibujo': '✏️', 'pintura': '🖌️',
+  'ritmo': '🥁', 'melodia': '🎵', 'instrumento': '🎸', 'cancion': '🎤', 'partitura': '🎼',
+  'movimiento': '🏃', 'deporte': '⚽', 'ejercicio': '💪', 'salud': '❤️', 'equipo': '🤝',
+  'tecnologia': '💻', 'programa': '💻', 'robot': '🤖', 'diseno': '🎨', 'prototipo': '🔧',
+  'filosof': '🤔', 'etica': '⚖️', 'argumento': '💬', 'pregunta': '❓', 'razon': '🧠',
+  'fuerza': '⚡', 'energia': '⚡', 'onda': '🌊', 'luz': '💡', 'electricidad': '⚡',
+  'atomo': '⚛️', 'molecula': '🧪', 'reaccion': '⚗️', 'elemento': '🧪',
+  'ciudadan': '🏛️', 'derecho': '⚖️', 'deber': '📋', 'participa': '🗳️', 'comunidad': '👥', 'convivencia': '🤝',
+  'identidad': '👶', 'cuerpo': '🤸',
+};
+
+// Safe text color palette - NO hardcoded FFFFFF except on true dark backgrounds
+const SAFE_TEXT = {
+  onDark: 'FFFFFF',           // true dark backgrounds (primary dark variants)
+  onPrimaryDark: 'FFFFFF',    // on theme.primary when used as dark bg
+  onAccentDark: 'FFFFFF',     // on theme.accent when dark
+  onLight: '1E1B4B',          // theme.text (dark navy) on light/pastel backgrounds
+  onMedium: '3B0764',         // darker purple on medium backgrounds
+  bulletOnDark: 'FFFFFF',
+  bulletOnLight: '1E1B4B',
+  subtitleOnDark: 'DDDDDD',   // lighter gray on dark
+  footer: '888888',
+  slideNumber: 'AAAAAA',
+};
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const n = parseInt(hex, 16);
@@ -18,45 +52,148 @@ function darken(hex: string, amount: number): string {
   return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-function addGradientBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark') {
+function lighten(hex: string, amount: number): string {
+  const c = hexToRgb(hex);
+  const r = Math.min(255, Math.round(c.r + (255 - c.r) * amount));
+  const g = Math.min(255, Math.round(c.g + (255 - c.g) * amount));
+  const b = Math.min(255, Math.round(c.b + (255 - c.b) * amount));
+  return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function getContrastColor(backgroundHex: string): string {
+  const c = hexToRgb(backgroundHex);
+  const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+  return luminance > 0.5 ? '000000' : SAFE_TEXT.onDark;
+}
+
+function getTitleColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark'): string {
+  if (variant === 'dark') return SAFE_TEXT.onPrimaryDark;
+  if (variant === 'accent') return theme.primary;
+  return getContrastColor(theme.background);
+}
+
+function getBodyColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark'): string {
+  if (variant === 'dark') return SAFE_TEXT.onPrimaryDark;
+  if (variant === 'accent') return theme.text;
+  return getContrastColor(theme.background);
+}
+
+// Safe contrast helpers for child mode - ensure readable text on any background
+function getSafeTitleColor(theme: SubjectTheme, backgroundHex: string): string {
+  const c = hexToRgb(backgroundHex);
+  const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+  // Force dark text on light backgrounds, safe on medium/dark
+  if (luminance > 0.6) return SAFE_TEXT.onLight;
+  if (luminance > 0.4) return SAFE_TEXT.onMedium;
+  return SAFE_TEXT.onDark; // White only on true dark backgrounds
+}
+
+function getSafeBodyColor(theme: SubjectTheme, backgroundHex: string): string {
+  const c = hexToRgb(backgroundHex);
+  const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+  if (luminance > 0.6) return SAFE_TEXT.onLight;
+  if (luminance > 0.4) return SAFE_TEXT.onMedium;
+  return SAFE_TEXT.onDark;
+}
+
+function getChildModeBackground(theme: SubjectTheme): string {
+  // Soft pastel background for child mode
+  return lighten(theme.background, 0.3);
+}
+
+function addRichBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark', isParvularia: boolean = false) {
   if (variant === 'dark') {
     slide.background = { color: theme.primary };
-    const shape: PptxGenJS.ShapeProps = {
+    const base: PptxGenJS.ShapeProps = {
       x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-      fill: { color: darken(theme.primary, 0.15) },
+      fill: { color: darken(theme.primary, 0.08) },
       rectRadius: 0,
     };
-    slide.addShape('rect', shape);
-    const deco: PptxGenJS.ShapeProps = {
-      x: SLIDE_W * 0.6, y: -1, w: SLIDE_W * 0.6, h: SLIDE_H + 2,
+    slide.addShape('rect', base);
+    const grad1: PptxGenJS.ShapeProps = {
+      x: SLIDE_W * 0.55, y: -1.5, w: SLIDE_W * 0.7, h: SLIDE_H + 3,
+      fill: { color: theme.secondary, transparency: 75 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', grad1);
+    const grad2: PptxGenJS.ShapeProps = {
+      x: -1, y: SLIDE_H * 0.6, w: SLIDE_W * 0.5, h: SLIDE_H * 0.6,
+      fill: { color: theme.accent, transparency: 80 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', grad2);
+    const circle1: PptxGenJS.ShapeProps = {
+      x: SLIDE_W - 3, y: -2, w: 5, h: 5,
+      fill: { color: theme.accent, transparency: 65 },
+      line: { width: 0 },
+    };
+    slide.addShape('ellipse', circle1);
+    const circle2: PptxGenJS.ShapeProps = {
+      x: -1.5, y: SLIDE_H - 3, w: 6, h: 6,
       fill: { color: theme.secondary, transparency: 70 },
-      rectRadius: 0,
+      line: { width: 0 },
     };
-    slide.addShape('rect', deco);
+    slide.addShape('ellipse', circle2);
   } else if (variant === 'accent') {
     slide.background = { color: theme.background };
-    const bar: PptxGenJS.ShapeProps = {
+    const topBar: PptxGenJS.ShapeProps = {
+      x: 0, y: 0, w: SLIDE_W, h: 0.18,
+      fill: { color: theme.primary },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', topBar);
+    const sideBar: PptxGenJS.ShapeProps = {
+      x: 0, y: 0, w: 0.18, h: SLIDE_H,
+      fill: { color: theme.primary },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', sideBar);
+    const accentCircle: PptxGenJS.ShapeProps = {
+      x: SLIDE_W - 2.5, y: -1, w: 4, h: 4,
+      fill: { color: theme.accent, transparency: 55 },
+      line: { width: 0 },
+    };
+    slide.addShape('ellipse', accentCircle);
+    const bottomAccent: PptxGenJS.ShapeProps = {
+      x: 0, y: SLIDE_H - 0.12, w: SLIDE_W, h: 0.12,
+      fill: { color: theme.primary, transparency: 60 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', bottomAccent);
+  } else {
+    slide.background = { color: theme.background };
+    const topGlow: PptxGenJS.ShapeProps = {
       x: 0, y: 0, w: SLIDE_W, h: 0.15,
       fill: { color: theme.primary },
       rectRadius: 0,
     };
-    slide.addShape('rect', bar);
-    const side: PptxGenJS.ShapeProps = {
-      x: 0, y: 0, w: 0.15, h: SLIDE_H,
+    slide.addShape('rect', topGlow);
+    const sideGlow: PptxGenJS.ShapeProps = {
+      x: 0, y: 0, w: 0.12, h: SLIDE_H,
       fill: { color: theme.primary },
       rectRadius: 0,
     };
-    slide.addShape('rect', side);
-  } else {
-    slide.background = { color: theme.background };
+    slide.addShape('rect', sideGlow);
+    const cornerCircle: PptxGenJS.ShapeProps = {
+      x: SLIDE_W - 2, y: -1, w: 3.5, h: 3.5,
+      fill: { color: theme.accent, transparency: 60 },
+      line: { width: 0 },
+    };
+    slide.addShape('ellipse', cornerCircle);
+    const bottomLine: PptxGenJS.ShapeProps = {
+      x: 0, y: SLIDE_H - 0.1, w: SLIDE_W, h: 0.1,
+      fill: { color: theme.primary, transparency: 50 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', bottomLine);
   }
 }
 
-function addDecorativeCircles(slide: PptxGenJS.Slide, theme: SubjectTheme) {
+function addDecorativeElements(slide: PptxGenJS.Slide, theme: SubjectTheme) {
   const circles: PptxGenJS.ShapeProps[] = [
-    { x: SLIDE_W - 2.5, y: -1, w: 4, h: 4, fill: { color: theme.accent, transparency: 60 } },
-    { x: SLIDE_W - 1.5, y: SLIDE_H - 2, w: 3, h: 3, fill: { color: theme.secondary, transparency: 70 } },
-    { x: -1, y: SLIDE_H - 1.5, w: 2.5, h: 2.5, fill: { color: theme.accent, transparency: 80 } },
+    { x: SLIDE_W - 2.2, y: -1, w: 3.5, h: 3.5, fill: { color: theme.accent, transparency: 75 }, line: { width: 0 } },
+    { x: SLIDE_W - 1.2, y: SLIDE_H - 2, w: 2.8, h: 2.8, fill: { color: theme.secondary, transparency: 82 }, line: { width: 0 } },
+    { x: -1, y: SLIDE_H - 1.3, w: 2.2, h: 2.2, fill: { color: theme.accent, transparency: 88 }, line: { width: 0 } },
   ];
   circles.forEach(c => slide.addShape('ellipse', { ...c, line: { width: 0 } }));
 }
@@ -198,32 +335,35 @@ function addTable(slide: PptxGenJS.Slide, headers: string[], rows: string[][], o
   }
 }
 
-function addSlideTitle(slide: PptxGenJS.Slide, title: string, theme: SubjectTheme, opts?: { x?: number; y?: number; w?: number; color?: string }) {
+function addSlideTitle(slide: PptxGenJS.Slide, title: string, theme: SubjectTheme, opts?: { x?: number; y?: number; w?: number; color?: string; isDarkBg?: boolean }) {
+  const bgType = opts?.isDarkBg ? 'dark' : 'light';
+  const safeColor = opts?.color ?? (bgType === 'dark' ? SAFE_TEXT.onPrimaryDark : SAFE_TEXT.onLight);
   slide.addText(title, {
     x: opts?.x ?? 0.6, y: opts?.y ?? 0.3, w: opts?.w ?? 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: opts?.color ?? 'FFFFFF', align: 'left',
+    fontSize: 28, bold: true, color: safeColor, align: 'left',
     fontFace: 'Arial',
   });
 }
 
-function addSlideSubtitle(slide: PptxGenJS.Slide, subtitle: string, theme: SubjectTheme) {
+function addSlideSubtitle(slide: PptxGenJS.Slide, subtitle: string, theme: SubjectTheme, isDarkBg: boolean = false) {
   slide.addText(subtitle, {
     x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-    fontSize: 14, color: theme.text, fontFace: 'Arial',
-    italic: true, transparency: 30,
+    fontSize: 14, color: isDarkBg ? SAFE_TEXT.subtitleOnDark : theme.text, fontFace: 'Arial',
+    italic: true, transparency: isDarkBg ? 20 : 30,
   });
 }
 
-function addBullets(slide: PptxGenJS.Slide, bullets: string[], opts: { x: number; y: number; w: number; h: number; fontSize?: number; color?: string }) {
+function addBullets(slide: PptxGenJS.Slide, bullets: string[], opts: { x: number; y: number; w: number; h: number; fontSize?: number; color?: string; isDarkBg?: boolean }) {
   if (!bullets?.length) return;
+  const isDark = opts.isDarkBg ?? false;
+  const safeColor = opts.color ?? (isDark ? SAFE_TEXT.bulletOnDark : SAFE_TEXT.bulletOnLight);
   const text = bullets.map(b => ({
     text: `  ${b}`,
     options: {
       fontSize: opts.fontSize || 16,
-      color: opts.color || 'FFFFFF',
+      color: safeColor,
       fontFace: 'Arial',
-      bullet: { code: '2022', color: opts.color || 'FFFFFF' },
-      breakType: 'none' as const,
+      bullet: { code: '2022', color: safeColor },
       paraSpaceAfter: 8,
     },
   }));
@@ -246,38 +386,83 @@ function addSlideNumber(slide: PptxGenJS.Slide, num: number, total: number) {
 
 function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
-  addDecorativeCircles(s, theme);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, isChild ? 'light' : 'accent', isChild);
+  addDecorativeElements(s, theme);
+
+  const titleBg: PptxGenJS.ShapeProps = {
+    x: 1.5, y: 1.5, w: 10.3, h: 2.4,
+    fill: { color: SAFE_TEXT.onLight, transparency: 85 },
+    rectRadius: 0.2,
+  };
+  s.addShape('rect', titleBg);
+
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 1.0, y: 0.4, w: 11.3, h: 1.2,
+      fontSize: 48, align: 'center', fontFace: 'Arial',
+    });
+  }
 
   s.addText(slide.title, {
-    x: 1.0, y: 1.8, w: 11.3, h: 2.0,
-    fontSize: 40, bold: true, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    x: 1.0, y: isChild ? 1.8 : 1.6, w: 11.3, h: 2.2,
+    fontSize: isChild ? 40 : 44, bold: true, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
+    lineSpacing: 1.1,
   });
 
   s.addText(slide.subtitle || `${pres.nivel} — ${pres.asignatura}`, {
-    x: 1.5, y: 3.8, w: 10.3, h: 0.8,
+    x: 1.5, y: isChild ? 4.2 : 4.0, w: 10.3, h: 0.8,
     fontSize: 18, color: theme.accent, align: 'center', fontFace: 'Arial',
+    bold: false,
   });
 
+  const oaBox: PptxGenJS.ShapeProps = {
+    x: 2.5, y: isChild ? 5.3 : 5.1, w: 8.3, h: 0.7,
+    fill: { color: theme.primary, transparency: 85 },
+    rectRadius: 0.3,
+    line: { color: theme.accent, width: 1.5, transparency: 20 },
+    shadow: { type: 'outer', blur: 4, offset: 1, color: '000000', opacity: 0.1 },
+  };
+  s.addShape('rect', oaBox);
+
   s.addText(`OA: ${pres.oa}`, {
-    x: 2.0, y: 4.6, w: 9.3, h: 0.6,
-    fontSize: 12, color: 'CCCCCC', align: 'center', fontFace: 'Arial',
-    italic: true,
+    x: 2.5, y: (isChild ? 5.3 : 5.15), w: 8.3, h: 0.6,
+    fontSize: 14, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
+    bold: true,
   });
 
   addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'center');
+  addSlideNumber(s, 1, pres.slides.length);
   addFooter(s, pres.nivel, pres.asignatura);
 }
 
 function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'light', isChild);
+
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  // Add light card for text on dark background
+  const cardBg: PptxGenJS.ShapeProps = {
+    x: 0.5, y: 0.2, w: 7.0, h: 6.0,
+    fill: { color: SAFE_TEXT.onLight, transparency: 5 },
+    rectRadius: 0.15,
+  };
+  s.addShape('rect', cardBg);
 
   addSlideTitle(s, slide.title, theme);
   if (slide.subtitle) addSlideSubtitle(s, slide.subtitle, theme);
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 0.6, y: 1.6, w: 6.5, h: 4.5, color: 'FFFFFF' });
+    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 2.0 : 1.6, w: 6.5, h: 4.5, color: SAFE_TEXT.onDark, fontSize: isChild ? 18 : 16 });
   }
 
   addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || 'activación', theme, 'right');
@@ -285,7 +470,7 @@ function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPrese
   if (slide.studentPrompt) {
     s.addText(slide.studentPrompt, {
       x: 0.8, y: 6.0, w: 11.7, h: 0.7,
-      fontSize: 13, italic: true, color: theme.accent, fontFace: 'Arial',
+      fontSize: isChild ? 16 : 13, italic: true, color: theme.accent, fontFace: 'Arial',
       fill: { color: theme.primary, transparency: 60 },
       rectRadius: 0.1,
     });
@@ -296,45 +481,62 @@ function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPrese
 
 function buildObjectiveSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'accent', isChild);
 
-  const titleColor = theme.primary;
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  const titleColor = isChild ? getSafeTitleColor(theme, theme.background) : theme.primary;
   s.addText(slide.title, {
     x: 0.6, y: 0.3, w: 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: titleColor, align: 'left', fontFace: 'Arial',
+    fontSize: isChild ? 32 : 28, bold: true, color: titleColor, align: 'left', fontFace: 'Arial',
   });
 
   const oaBox: PptxGenJS.ShapeProps = {
-    x: 0.8, y: 1.3, w: 11.7, h: 1.5,
+    x: 0.8, y: isChild ? 1.6 : 1.3, w: 11.7, h: isChild ? 1.8 : 1.5,
     fill: { color: theme.primary, transparency: 90 },
     rectRadius: 0.15,
     line: { color: theme.primary, width: 2 },
   };
   s.addShape('rect', oaBox);
 
+  const bodyColor = isChild ? getSafeBodyColor(theme, theme.background) : theme.text;
   s.addText(`📋 ${slide.subtitle || pres.oa}`, {
-    x: 1.0, y: 1.4, w: 11.3, h: 1.3,
-    fontSize: 16, color: theme.text, fontFace: 'Arial',
+    x: 1.0, y: isChild ? 1.7 : 1.4, w: 11.3, h: isChild ? 1.6 : 1.3,
+    fontSize: isChild ? 18 : 16, color: bodyColor, fontFace: 'Arial',
     valign: 'middle',
   });
 
   if (slide.studentPrompt) {
     const promptBox: PptxGenJS.ShapeProps = {
-      x: 0.8, y: 3.2, w: 11.7, h: 1.2,
+      x: 0.8, y: isChild ? 3.8 : 3.2, w: 11.7, h: 1.2,
       fill: { color: theme.secondary, transparency: 80 },
       rectRadius: 0.15,
     };
     s.addShape('rect', promptBox);
 
     s.addText(`💬 "${slide.studentPrompt}"`, {
-      x: 1.0, y: 3.3, w: 11.3, h: 1.0,
-      fontSize: 18, italic: true, color: theme.primary, fontFace: 'Arial',
+      x: 1.0, y: isChild ? 3.9 : 3.3, w: 11.3, h: 1.0,
+      fontSize: isChild ? 20 : 18, italic: true, color: theme.primary, fontFace: 'Arial',
       valign: 'middle',
     });
   }
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 0.8, y: 4.8, w: 11.7, h: 2.0, fontSize: 15, color: theme.text });
+    addBullets(s, slide.bullets, { 
+      x: 0.8, 
+      y: isChild ? 5.4 : 4.8, 
+      w: 11.7, 
+      h: isChild ? 1.5 : 2.0, 
+      fontSize: isChild ? 16 : 15, 
+      color: isChild ? getSafeBodyColor(theme, theme.background) : theme.text 
+    });
   }
 
   addFooter(s, pres.nivel, pres.asignatura);
@@ -342,34 +544,50 @@ function buildObjectiveSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premium
 
 function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'light');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, isChild ? 'light' : 'light');
+  // Softer background for child mode
+  if (isChild) {
+    s.background = { color: getChildModeBackground(theme) };
+  }
+
+  const titleColor = isChild ? getSafeTitleColor(theme, isChild ? getChildModeBackground(theme) : theme.background) : theme.primary;
+  const bodyColor = isChild ? getSafeBodyColor(theme, isChild ? getChildModeBackground(theme) : theme.background) : theme.text;
+
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 11.5, y: 0.1, w: 1.5, h: 1.0,
+      fontSize: 48, align: 'right', fontFace: 'Arial',
+    });
+  }
 
   s.addText(slide.title, {
-    x: 0.6, y: 0.3, w: 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: theme.primary, align: 'left', fontFace: 'Arial',
+    x: 0.6, y: 0.3, w: isChild ? 10.5 : 12.1, h: 0.8,
+    fontSize: isChild ? 32 : 28, bold: true, color: titleColor, align: 'left', fontFace: 'Arial',
   });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
       x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: theme.text, fontFace: 'Arial', italic: true, transparency: 30,
+      fontSize: isChild ? 16 : 14, color: bodyColor, fontFace: 'Arial', italic: true, transparency: isChild ? 0 : 30,
     });
   }
 
   if (slide.table) {
-    addTable(s, slide.table.headers, slide.table.rows, { x: 0.6, y: 1.7, w: 12.1, h: 4.5 }, theme, slide.table.caption);
+    addTable(s, slide.table.headers, slide.table.rows, { x: 0.6, y: isChild ? 2.0 : 1.7, w: 12.1, h: isChild ? 4.0 : 4.5 }, theme, slide.table.caption);
   } else {
     const items = slide.bullets || [];
     const cols = items.length <= 3 ? items.length : 3;
     const rows = Math.ceil(items.length / cols);
     const cardW = (12.1 - (cols - 1) * 0.3) / cols;
-    const cardH = rows <= 1 ? 4.5 : (5.0 - (rows - 1) * 0.3) / rows;
+    const cardH = rows <= 1 ? (isChild ? 3.5 : 4.5) : ((isChild ? 4.5 : 5.0) - (rows - 1) * 0.3) / rows;
 
     items.forEach((item, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
       const x = 0.6 + col * (cardW + 0.3);
-      const y = 1.7 + row * (cardH + 0.3);
+      const y = (isChild ? 2.0 : 1.7) + row * (cardH + 0.3);
 
       const card: PptxGenJS.ShapeProps = {
         x, y, w: cardW, h: cardH,
@@ -389,12 +607,12 @@ function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Prem
 
       s.addText(`0${i + 1}`, {
         x: x + 0.15, y: y + 0.2, w: 0.6, h: 0.5,
-        fontSize: 22, bold: true, color: theme.primary, fontFace: 'Arial',
+        fontSize: isChild ? 26 : 22, bold: true, color: theme.primary, fontFace: 'Arial',
       });
 
       s.addText(item, {
         x: x + 0.15, y: y + 0.7, w: cardW - 0.3, h: cardH - 0.9,
-        fontSize: 13, color: theme.text, fontFace: 'Arial',
+        fontSize: isChild ? 15 : 13, color: bodyColor, fontFace: 'Arial',
         valign: 'top',
       });
     });
@@ -405,37 +623,79 @@ function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Prem
 
 function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, isChild ? 'dark' : 'dark', isChild);
 
-  addSlideTitle(s, slide.title, theme);
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  const titleY = isChild ? 0.5 : 0.3;
+  // Add a light card behind title for dark backgrounds
+  const titleCard: PptxGenJS.ShapeProps = {
+    x: 0.4, y: titleY - 0.1, w: 12.5, h: 1.0,
+    fill: { color: theme.background, transparency: 10 },
+    rectRadius: 0.1,
+  };
+  s.addShape('rect', titleCard);
+
+  s.addText(slide.title, {
+    x: 0.6, y: titleY, w: 12.1, h: 0.8,
+    fontSize: isChild ? 32 : 28, bold: true, color: SAFE_TEXT.onLight, align: 'left', fontFace: 'Arial',
+  });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
-      x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: theme.accent, fontFace: 'Arial', italic: true,
+      x: 0.6, y: isChild ? 1.2 : 1.0, w: 12.1, h: 0.5,
+      fontSize: 14, color: SAFE_TEXT.onLight, fontFace: 'Arial', italic: true,
     });
   }
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 7.0, y: 1.6, w: 5.8, h: 4.5, color: 'FFFFFF' });
+    const bulletCard: PptxGenJS.ShapeProps = {
+      x: 0.4, y: isChild ? 1.6 : 1.4, w: isChild ? 11.7 : 6.2, h: 4.8,
+      fill: { color: theme.background, transparency: 10 },
+      rectRadius: 0.1,
+    };
+    s.addShape('rect', bulletCard);
+
+    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: isChild ? 11.5 : 5.8, h: 4.5, color: SAFE_TEXT.onLight, fontSize: isChild ? 18 : 16, isDarkBg: false });
   }
 
-  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'left');
+  if (!isChild) {
+    addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'left');
+  } else {
+    addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'right');
+  }
   addFooter(s, pres.nivel, pres.asignatura);
 }
 
 function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'accent', isChild);
 
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  const titleColor = isChild ? getSafeTitleColor(theme, theme.background) : theme.primary;
   s.addText(slide.title, {
-    x: 0.6, y: 0.3, w: 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: theme.primary, align: 'left', fontFace: 'Arial',
+    x: 0.6, y: isChild ? 0.5 : 0.3, w: 12.1, h: 0.8,
+    fontSize: isChild ? 32 : 28, bold: true, color: titleColor, align: 'left', fontFace: 'Arial',
   });
 
   const stepsBox: PptxGenJS.ShapeProps = {
-    x: 0.6, y: 1.3, w: 7.5, h: 5.0,
-    fill: { color: 'FFFFFF' },
+    x: 0.6, y: isChild ? 1.5 : 1.3, w: isChild ? 11.5 : 7.5, h: 5.0,
+    fill: { color: isChild ? getChildModeBackground(theme) : 'FFFFFF' },
     rectRadius: 0.15,
     shadow: { type: 'outer', blur: 4, offset: 1, color: '000000', opacity: 0.08 },
   };
@@ -443,22 +703,26 @@ function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Pr
 
   if (slide.bullets?.length) {
     const stepTexts = slide.bullets.map((b, i) => ({
-      text: `Paso ${i + 1}: ${b}`,
+      text: `${isChild ? 'Paso' : 'Paso'} ${i + 1}: ${b}`,
       options: {
-        fontSize: 15, color: theme.text, fontFace: 'Arial',
+        fontSize: isChild ? 18 : 15, 
+        color: isChild ? getSafeBodyColor(theme, getChildModeBackground(theme)) : theme.text, 
+        fontFace: 'Arial',
         bullet: false,
         paraSpaceAfter: 12,
       },
     }));
-    s.addText(stepTexts, { x: 0.9, y: 1.5, w: 7.0, h: 4.5, valign: 'top' });
+    s.addText(stepTexts, { x: isChild ? 1.0 : 0.9, y: isChild ? 1.7 : 1.5, w: isChild ? 10.9 : 7.0, h: 4.5, valign: 'top' });
   }
 
-  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || 'paso a paso', theme, 'right');
+  if (!isChild) {
+    addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || 'paso a paso', theme, 'right');
+  }
 
   if (slide.studentPrompt) {
     s.addText(slide.studentPrompt, {
       x: 0.8, y: 6.4, w: 11.7, h: 0.5,
-      fontSize: 12, italic: true, color: theme.primary, fontFace: 'Arial',
+      fontSize: isChild ? 14 : 12, italic: true, color: isChild ? getSafeBodyColor(theme, theme.background) : theme.primary, fontFace: 'Arial',
     });
   }
 
@@ -467,52 +731,106 @@ function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Pr
 
 function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'light', isChild);
 
-  addSlideTitle(s, slide.title, theme);
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  // Light card for title
+  const titleCard: PptxGenJS.ShapeProps = {
+    x: 0.4, y: 0.1, w: 12.5, h: 1.0,
+    fill: { color: theme.background, transparency: 10 },
+    rectRadius: 0.1,
+  };
+  s.addShape('rect', titleCard);
+
+  addSlideTitle(s, slide.title, theme, { isDarkBg: false });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
-      x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: theme.accent, fontFace: 'Arial', italic: true,
+      x: 0.6, y: isChild ? 1.2 : 1.0, w: 12.1, h: 0.5,
+      fontSize: 14, color: SAFE_TEXT.onLight, fontFace: 'Arial', italic: true,
     });
   }
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 0.6, y: 1.6, w: 7.0, h: 4.5, color: 'FFFFFF' });
+    const bulletCard: PptxGenJS.ShapeProps = {
+      x: 0.4, y: isChild ? 1.6 : 1.4, w: 7.4, h: 4.8,
+      fill: { color: theme.background, transparency: 10 },
+      rectRadius: 0.1,
+    };
+    s.addShape('rect', bulletCard);
+
+    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: 7.0, h: 4.5, color: SAFE_TEXT.onLight, fontSize: isChild ? 18 : 16, isDarkBg: false });
   }
 
-  const iconCards = [
-    { icon: '👥', text: 'Trabajo en equipo' },
-    { icon: '💬', text: 'Comunicación' },
-    { icon: '🎯', text: 'Producto final' },
-  ];
-  iconCards.forEach((ic, i) => {
-    const x = 8.5 + i * 0.0;
-    const y = 1.8 + i * 1.6;
-    addIconCard(s, ic.icon, ic.text, theme, x, y, 4.2, 1.3);
-  });
+  if (!isChild) {
+    const iconCards = [
+      { icon: '👥', text: 'Trabajo en equipo' },
+      { icon: '💬', text: 'Comunicación' },
+      { icon: '🎯', text: 'Producto final' },
+    ];
+    iconCards.forEach((ic, i) => {
+      const x = 8.5;
+      const y = 1.8 + i * 1.6;
+      addIconCard(s, ic.icon, ic.text, theme, x, y, 4.2, 1.3);
+    });
+  } else {
+    // Child mode: simpler icons
+    const iconCards = [
+      { icon: '👫', text: 'Juntos' },
+      { icon: '🗣️', text: 'Hablamos' },
+      { icon: '🏆', text: 'Logramos' },
+    ];
+    iconCards.forEach((ic, i) => {
+      const x = 0.6 + i * 4.0;
+      const y = 4.5;
+      addIconCard(s, ic.icon, ic.text, theme, x, y, 3.8, 1.2);
+    });
+  }
 
   addFooter(s, pres.nivel, pres.asignatura);
 }
 
 function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'accent', isChild);
+
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  const titleColor = isChild ? getSafeTitleColor(theme, theme.background) : theme.primary;
+  const bodyColor = isChild ? getSafeBodyColor(theme, theme.background) : theme.text;
 
   s.addText(slide.title, {
-    x: 0.6, y: 0.3, w: 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: theme.primary, align: 'left', fontFace: 'Arial',
+    x: 0.6, y: isChild ? 0.5 : 0.3, w: 12.1, h: 0.8,
+    fontSize: isChild ? 32 : 28, bold: true, color: titleColor, align: 'left', fontFace: 'Arial',
   });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
-      x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: theme.text, fontFace: 'Arial', italic: true,
+      x: 0.6, y: isChild ? 1.2 : 1.0, w: 12.1, h: 0.5,
+      fontSize: 14, color: bodyColor, fontFace: 'Arial', italic: true,
     });
   }
 
-  const duaCards = [
+  const duaCards = isChild ? [
+    { icon: '👁️', title: 'Vemos', desc: 'Imágenes, videos, objetos reales' },
+    { icon: '✋', title: 'Hacemos', desc: 'Dibujamos, jugamos, mostramos' },
+    { icon: '❤️', title: 'Queremos', desc: 'Elegimos, nos gusta, participamos' },
+  ] : [
     { icon: '👁️', title: 'Representación', desc: 'Información en múltiples formatos: texto, imagen, audio, video, manipulación' },
     { icon: '✋', title: 'Acción y Expresión', desc: 'Opciones para demostrar aprendizaje: oral, escrita, visual, digital' },
     { icon: '❤️', title: 'Implicación', desc: 'Motivación y relevancia: elección, autonomía, conexión personal' },
@@ -520,13 +838,13 @@ function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premi
 
   duaCards.forEach((card, i) => {
     const x = 0.6 + i * 4.1;
-    const y = 1.7;
+    const y = isChild ? 2.0 : 1.7;
     const w = 3.8;
-    const h = 4.5;
+    const h = isChild ? 4.0 : 4.5;
 
     const cardBg: PptxGenJS.ShapeProps = {
       x, y, w, h,
-      fill: { color: 'FFFFFF' },
+      fill: { color: isChild ? getChildModeBackground(theme) : 'FFFFFF' },
       rectRadius: 0.15,
       shadow: { type: 'outer', blur: 4, offset: 1, color: '000000', opacity: 0.08 },
     };
@@ -541,17 +859,17 @@ function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premi
 
     s.addText(card.icon, {
       x, y: y + 0.3, w, h: 1.0,
-      fontSize: 36, align: 'center', fontFace: 'Segoe UI Emoji',
+      fontSize: isChild ? 40 : 36, align: 'center', fontFace: 'Segoe UI Emoji',
     });
 
     s.addText(card.title, {
       x, y: y + 1.3, w, h: 0.6,
-      fontSize: 16, bold: true, color: theme.primary, align: 'center', fontFace: 'Arial',
+      fontSize: isChild ? 18 : 16, bold: true, color: theme.primary, align: 'center', fontFace: 'Arial',
     });
 
     s.addText(card.desc, {
-      x: x + 0.2, y: y + 2.0, w: w - 0.4, h: 2.2,
-      fontSize: 12, color: theme.text, align: 'center', fontFace: 'Arial',
+      x: x + 0.2, y: y + 2.0, w: w - 0.4, h: isChild ? 1.8 : 2.2,
+      fontSize: isChild ? 14 : 12, color: bodyColor, align: 'center', fontFace: 'Arial',
       valign: 'top',
     });
   });
@@ -561,45 +879,57 @@ function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premi
 
 function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'accent', isChild);
+
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 0.6, y: 0.3, w: 12.1, h: 0.8,
+      fontSize: 32, align: 'left', fontFace: 'Arial',
+    });
+  }
+
+  const titleColor = isChild ? getSafeTitleColor(theme, theme.background) : theme.primary;
+  const bodyColor = isChild ? getSafeBodyColor(theme, theme.background) : theme.text;
 
   s.addText(slide.title, {
-    x: 0.6, y: 0.3, w: 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: theme.primary, align: 'left', fontFace: 'Arial',
+    x: 0.6, y: isChild ? 0.5 : 0.3, w: 12.1, h: 0.8,
+    fontSize: isChild ? 32 : 28, bold: true, color: titleColor, align: 'left', fontFace: 'Arial',
   });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
-      x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: theme.text, fontFace: 'Arial', italic: true,
+      x: 0.6, y: isChild ? 1.2 : 1.0, w: 12.1, h: 0.5,
+      fontSize: 14, color: bodyColor, fontFace: 'Arial', italic: true,
     });
   }
 
   if (slide.table) {
-    addTable(s, slide.table.headers, slide.table.rows, { x: 0.8, y: 1.7, w: 11.5, h: 3.0 }, theme, slide.table.caption);
+    addTable(s, slide.table.headers, slide.table.rows, { x: 0.8, y: isChild ? 2.0 : 1.7, w: 11.5, h: isChild ? 3.5 : 3.0 }, theme, slide.table.caption);
   } else if (slide.bullets?.length) {
     const bulletTexts = slide.bullets.map((b, i) => ({
-      text: `✅  ${b}`,
+      text: `${isChild ? '✅' : '✅'}  ${b}`,
       options: {
-        fontSize: 15, color: theme.text, fontFace: 'Arial',
+        fontSize: isChild ? 18 : 15, color: bodyColor, fontFace: 'Arial',
         paraSpaceAfter: 14,
       },
     }));
-    s.addText(bulletTexts, { x: 0.8, y: 1.7, w: 11.5, h: 4.0, valign: 'top' });
+    s.addText(bulletTexts, { x: 0.8, y: isChild ? 2.0 : 1.7, w: 11.5, h: isChild ? 3.5 : 4.0, valign: 'top' });
   }
 
   if (slide.studentPrompt) {
     const ticketBox: PptxGenJS.ShapeProps = {
-      x: 0.8, y: 5.5, w: 11.7, h: 1.2,
+      x: 0.8, y: isChild ? 5.8 : 5.5, w: 11.7, h: 1.2,
       fill: { color: theme.primary, transparency: 90 },
       rectRadius: 0.15,
       line: { color: theme.primary, width: 2 },
     };
     s.addShape('rect', ticketBox);
 
-    s.addText(`🎫 Ticket de salida: "${slide.studentPrompt}"`, {
-      x: 1.0, y: 5.6, w: 11.3, h: 1.0,
-      fontSize: 14, bold: true, color: theme.primary, fontFace: 'Arial',
+    s.addText(`${isChild ? '🎨' : '🎫'} ${isChild ? 'Mi dibujo:' : 'Ticket de salida:'} "${slide.studentPrompt}"`, {
+      x: 1.0, y: isChild ? 5.9 : 5.6, w: 11.3, h: 1.0,
+      fontSize: isChild ? 16 : 14, bold: true, color: theme.primary, fontFace: 'Arial',
       valign: 'middle',
     });
   }
@@ -609,29 +939,53 @@ function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pre
 
 function buildClosureSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
-  addDecorativeCircles(s, theme);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
+  addRichBackground(s, theme, 'accent', isChild);
+  addDecorativeElements(s, theme);
+
+  // Pictogram for child mode
+  if (isChild && slide.pictogram) {
+    s.addText(slide.pictogram, {
+      x: 1.0, y: 0.3, w: 11.3, h: 1.0,
+      fontSize: 48, align: 'center', fontFace: 'Arial',
+    });
+  }
+
+  // Light card for title
+  const titleCard: PptxGenJS.ShapeProps = {
+    x: 1.0, y: isChild ? 1.6 : 1.3, w: 11.3, h: 1.2,
+    fill: { color: theme.background, transparency: 10 },
+    rectRadius: 0.15,
+  };
+  s.addShape('rect', titleCard);
 
   s.addText(slide.title, {
-    x: 1.0, y: 1.5, w: 11.3, h: 1.0,
-    fontSize: 36, bold: true, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    x: 1.0, y: isChild ? 1.8 : 1.5, w: 11.3, h: 1.0,
+    fontSize: isChild ? 40 : 36, bold: true, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
   });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
-      x: 1.5, y: 2.5, w: 10.3, h: 0.6,
+      x: 1.5, y: isChild ? 2.8 : 2.5, w: 10.3, h: 0.6,
       fontSize: 16, color: theme.accent, align: 'center', fontFace: 'Arial',
     });
   }
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 2.0, y: 3.3, w: 9.3, h: 2.5, fontSize: 15, color: 'DDDDDD' });
+    const bulletCard: PptxGenJS.ShapeProps = {
+      x: 1.8, y: isChild ? 3.3 : 3.0, w: 9.7, h: 3.0,
+      fill: { color: theme.background, transparency: 10 },
+      rectRadius: 0.1,
+    };
+    s.addShape('rect', bulletCard);
+
+    addBullets(s, slide.bullets, { x: 2.0, y: isChild ? 3.5 : 3.3, w: 9.3, h: 2.5, fontSize: isChild ? 18 : 15, color: SAFE_TEXT.onLight, isDarkBg: false });
   }
 
   if (slide.studentPrompt) {
     s.addText(`"${slide.studentPrompt}"`, {
-      x: 2.0, y: 5.8, w: 9.3, h: 0.7,
-      fontSize: 14, italic: true, color: theme.accent, align: 'center', fontFace: 'Arial',
+      x: 2.0, y: isChild ? 6.0 : 5.8, w: 9.3, h: 0.7,
+      fontSize: isChild ? 16 : 14, italic: true, color: theme.accent, align: 'center', fontFace: 'Arial',
     });
   }
 

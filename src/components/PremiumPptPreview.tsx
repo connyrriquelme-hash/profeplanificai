@@ -16,38 +16,139 @@ const LAYOUT_LABELS: Record<string, string> = {
   closure: 'Cierre',
 };
 
+const SUBJECT_ICONS: Record<string, string> = {
+  'celula': '🧬', 'planta': '🌱', 'semilla': '🌱', 'flor': '🌸', 'poliniz': '🐝',
+  'animal': '🦋', 'ecosistema': '🌿', 'ciclo': '🔄', 'fotosintesis': '☀️',
+  'numero': '🔢', 'suma': '➕', 'resta': '➖', 'multiplic': '✖️', 'divis': '➗',
+  'fraccion': '📊', 'geometr': '📐', 'figura': '🔷', 'angulo': '📐',
+  'texto': '📖', 'lectura': '📖', 'escritura': '✍️', 'palabra': '🔤', 'cuento': '📚', 'historia': '📜',
+  'personaje': '👤', 'narrativa': '📝', 'poema': '🎭', 'rima': '🎵',
+  'mapa': '🗺️', 'chile': '🇨🇱', 'indigena': '🏞️', 'colonia': '⛪', 'independencia': '🎖️',
+  'ingles': '🇬🇧', 'english': '🇬🇧', 'vocabulario': '📝', 'gramatica': '📐',
+  'color': '🎨', 'forma': '🔷', 'textura': '🖌️', 'composicion': '🖼️', 'dibujo': '✏️', 'pintura': '🖌️',
+  'ritmo': '🥁', 'melodia': '🎵', 'instrumento': '🎸', 'cancion': '🎤', 'partitura': '🎼',
+  'movimiento': '🏃', 'deporte': '⚽', 'ejercicio': '💪', 'salud': '❤️', 'equipo': '🤝',
+  'tecnologia': '💻', 'programa': '💻', 'robot': '🤖', 'diseno': '🎨', 'prototipo': '🔧',
+  'filosof': '🤔', 'etica': '⚖️', 'argumento': '💬', 'pregunta': '❓', 'razon': '🧠',
+  'fuerza': '⚡', 'energia': '⚡', 'onda': '🌊', 'luz': '💡', 'electricidad': '⚡',
+  'atomo': '⚛️', 'molecula': '🧪', 'reaccion': '⚗️', 'elemento': '🧪',
+  'ciudadan': '🏛️', 'derecho': '⚖️', 'deber': '📋', 'participa': '🗳️', 'comunidad': '👥', 'convivencia': '🤝',
+  'identidad': '👶', 'cuerpo': '🤸',
+};
+
 function hexToCss(hex: string): string {
   return `#${hex}`;
+}
+
+// Safe text color palette - NO text-white allowed
+const SAFE_TEXT_CSS = {
+  black: '#111827',
+  darkGray: '#374151',
+  gray: '#6B7280',
+  red: '#DC2626',
+  blue: '#1D4ED8',
+  darkBlue: '#1E3A8A',
+  onDark: '#FFFFFF',      // only on true dark backgrounds
+  onPrimaryDark: '#FFFFFF',
+  onAccentDark: '#FFFFFF',
+  onLight: '#1E1B4B',     // theme.text (dark navy) on light/pastel
+  onMedium: '#3B0764',    // darker purple on medium
+  bulletOnDark: '#FFFFFF',
+  bulletOnLight: '#1E1B4B',
+  subtitleOnDark: '#DDDDDD', // lighter gray on dark
+  footer: '#888888',
+  slideNumber: '#AAAAAA',
+};
+
+function getSubjectIcon(keyword: string): string {
+  const kw = keyword.toLowerCase();
+  for (const [key, icon] of Object.entries(SUBJECT_ICONS)) {
+    if (kw.includes(key)) return icon;
+  }
+  return '📚';
+}
+
+function getBackgroundStyle(theme: SubjectTheme, layout: string): React.CSSProperties {
+  const isDark = false; // No dark backgrounds - all light/accent
+  const isAccent = ['objective', 'guided_activity', 'dua_supports', 'formative_assessment'].includes(layout);
+  
+  if (isAccent) {
+    // Accent variant: light background + top bar + side bar + accent circle
+    return {
+      background: hexToCss(theme.background),
+      position: 'relative',
+      overflow: 'hidden',
+    };
+  } else {
+    // Light variant: light background + top glow + side glow + corner circle
+    return {
+      background: hexToCss(theme.background),
+      position: 'relative',
+      overflow: 'hidden',
+    };
+  }
+}
+
+function lighten(hex: string, amount: number): string {
+  const n = parseInt(hex, 16);
+  const r = Math.min(255, Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * amount));
+  const g = Math.min(255, Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * amount));
+  const b = Math.min(255, Math.round((n & 255) + (255 - (n & 255)) * amount));
+  return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function PremiumIllustrationPanel({ keyword, theme, className }: { keyword: string; theme: SubjectTheme; className?: string }) {
+  const icon = getSubjectIcon(keyword);
+  return (
+    <div
+      className={`flex flex-col items-center justify-center rounded-2xl p-6 ${className || ''}`}
+      style={{
+        background: `linear-gradient(135deg, ${hexToCss(theme.primary)}1a, ${hexToCss(theme.secondary)}10)`,
+        border: `1px solid ${hexToCss(theme.secondary)}33`,
+        borderRadius: '1rem',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08), inset 0 0 40px rgba(255,255,255,0.05)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Accent bar on left */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+        style={{ backgroundColor: hexToCss(theme.accent) }}
+      />
+      {/* Decorative circle */}
+      <div
+        className="absolute top-4 right-4 w-20 h-20 rounded-full opacity-30 blur-xl"
+        style={{ backgroundColor: hexToCss(theme.secondary) }}
+      />
+      {/* Icon */}
+      <div className="relative mb-3">
+        <div className="text-6xl">{getSubjectIcon(keyword)}</div>
+      </div>
+      {/* Keyword */}
+      <div className="text-base font-bold text-center text-white/95 px-4" style={{ color: `#${theme.text}` }}>
+        {keyword}
+      </div>
+      {/* Caption */}
+      <div className="text-xs text-center mt-2 italic" style={{ color: `#${theme.text}99` }}>
+        Ilustración pedagógica
+      </div>
+    </div>
+  );
 }
 
 function SlideImage({ url, keyword, className, theme }: { url?: string; keyword: string; className?: string; theme: SubjectTheme }) {
   const [error, setError] = useState(false);
   if (!url || error) {
     return (
-      <div
-        className={`flex flex-col items-center justify-center rounded-xl ${className || ''}`}
-        style={{
-          background: `linear-gradient(135deg, ${hexToCss(theme.primary)}dd, ${hexToCss(theme.secondary)}bb)`,
-          boxShadow: 'inset 0 0 40px rgba(255,255,255,0.1)',
-        }}
-      >
-        <div className="relative mb-2">
-          <div
-            className="absolute inset-0 rounded-full blur-xl opacity-40"
-            style={{ backgroundColor: hexToCss(theme.accent) }}
-          />
-          <div className="relative text-5xl">🎨</div>
-        </div>
-        <div className="text-sm font-bold text-white/90 text-center px-4">{keyword}</div>
-        <div className="text-[10px] text-white/50 italic mt-1">Contenido visual premium</div>
-      </div>
+      <PremiumIllustrationPanel keyword={keyword} theme={theme} className={className} />
     );
   }
   return (
     <img
       src={url}
       alt={keyword}
-      className={`rounded-lg object-cover ${className || ''}`}
+      className={`rounded-xl object-cover ${className || ''}`}
       onError={() => setError(true)}
     />
   );
@@ -56,15 +157,19 @@ function SlideImage({ url, keyword, className, theme }: { url?: string; keyword:
 function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows: string[][]; caption?: string; theme: SubjectTheme }) {
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-white/20">
+      <div className="overflow-x-auto rounded-lg border" style={{ borderColor: `${SAFE_TEXT_CSS.onDark}33` }}>
         <table className="w-full text-sm">
           <thead>
             <tr>
               {headers.map((h, i) => (
                 <th
                   key={i}
-                  className="px-3 py-2 text-left font-bold text-white border-b border-white/20"
-                  style={{ backgroundColor: hexToCss(theme.primary) }}
+                  className="px-3 py-2 text-left font-bold"
+                  style={{ 
+                    backgroundColor: hexToCss(theme.primary),
+                    color: SAFE_TEXT_CSS.onPrimaryDark,
+                    borderBottom: `1px solid ${SAFE_TEXT_CSS.onDark}33`
+                  }}
                 >
                   {h}
                 </th>
@@ -75,7 +180,10 @@ function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows
             {rows.map((row, ri) => (
               <tr key={ri} className={ri % 2 === 0 ? 'bg-white/5' : 'bg-white/10'}>
                 {row.map((cell, ci) => (
-                  <td key={ci} className="px-3 py-2 text-white/90 border-b border-white/10">
+                  <td key={ci} className="px-3 py-2 border-b" style={{ 
+                    color: SAFE_TEXT_CSS.onLight,
+                    borderColor: `${SAFE_TEXT_CSS.onDark}1a`
+                  }}>
                     {cell}
                   </td>
                 ))}
@@ -84,47 +192,112 @@ function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows
           </tbody>
         </table>
       </div>
-      {caption && <div className="text-xs text-white/50 italic mt-1 text-center">{caption}</div>}
+      {caption && <div className="text-xs italic mt-1 text-center" style={{ color: SAFE_TEXT_CSS.gray }}>{caption}</div>}
     </div>
   );
 }
 
 function CoverSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: PremiumPresentation; theme: SubjectTheme }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-8">
-      <div className="text-5xl font-bold text-white mb-4">{slide.title}</div>
-      <div className="text-xl mb-2" style={{ color: hexToCss(theme.accent) }}>
+    <div
+      className="relative flex flex-col items-center justify-center h-full text-center px-8"
+      style={{
+        background: `linear-gradient(135deg, #F8FAFC 0%, ${hexToCss(lighten(theme.background, 0.25))} 100%)`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-30 blur-3xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full opacity-40 blur-2xl" style={{ backgroundColor: hexToCss(theme.secondary) }} />
+      <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-20" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      
+      {/* Title with background card */}
+      <div
+        className="relative z-10 px-6 py-3 rounded-xl mx-8 mb-4"
+        style={{
+          backgroundColor: SAFE_TEXT_CSS.onLight,
+          borderRadius: '1rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        }}
+      >
+        <div className="text-5xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</div>
+      </div>
+      
+      <div className="relative z-10 text-xl mb-2" style={{ color: hexToCss(theme.accent) }}>
         {slide.subtitle || `${pres.nivel} — ${pres.asignatura}`}
       </div>
-      <div className="text-sm text-white/60 italic mb-6">OA: {pres.oa}</div>
+      <div className="relative z-10 text-sm italic mb-6" style={{ color: SAFE_TEXT_CSS.onLight }}>OA: {pres.oa}</div>
+      
+      {/* Visual panel */}
       <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || pres.tema} className="w-72 h-48" theme={theme} />
+      
+      {/* Bottom accent bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 opacity-40" style={{ backgroundColor: hexToCss(theme.accent) }} />
     </div>
   );
 }
 
 function HookSlideContent({ slide, theme }: { slide: PremiumSlide; theme: SubjectTheme }) {
   return (
-    <div className="flex h-full">
-      <div className="flex-1 flex flex-col justify-center px-8">
-        <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
-        {slide.subtitle && <div className="text-base text-white/60 italic mb-4">{slide.subtitle}</div>}
-        <ul className="space-y-2">
+    <div
+      className="relative flex h-full"
+      style={{
+        background: `linear-gradient(135deg, #F8FAFC 0%, ${hexToCss(lighten(theme.background, 0.25))} 100%)`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-25 blur-3xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full opacity-30 blur-2xl" style={{ backgroundColor: hexToCss(theme.secondary) }} />
+      <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-15" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      
+      <div className="relative flex h-full flex-1 flex-col justify-center px-8">
+        {/* Title card - light background with dark text */}
+        <div
+          className="px-6 py-3 rounded-xl w-full max-w-2xl"
+          style={{
+            backgroundColor: SAFE_TEXT_CSS.onLight,
+            borderRadius: '1rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          }}
+        >
+          <h2 className="text-3xl font-bold" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
+        </div>
+        
+        {slide.subtitle && (
+          <div className="text-base italic mb-4 relative z-10" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>
+        )}
+        
+        <ul className="space-y-2 relative z-10">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/90">
+            <li key={i} className="flex items-start gap-2" style={{ color: SAFE_TEXT_CSS.onLight }}>
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
-              <span>{b}</span>
+              <span className="text-lg">{b}</span>
             </li>
           ))}
         </ul>
+        
         {slide.studentPrompt && (
-          <div className="mt-4 px-3 py-2 rounded-lg text-sm italic" style={{ backgroundColor: hexToCss(theme.primary) + '40', color: hexToCss(theme.accent) }}>
-            {slide.studentPrompt}
+          <div className="mt-4 px-4 py-3 rounded-xl relative z-10" style={{
+            backgroundColor: `${hexToCss(theme.primary)}33`,
+            color: hexToCss(theme.accent),
+            border: `1px solid ${hexToCss(theme.accent)}44`,
+            borderRadius: '0.75rem',
+          }}>
+            <span className="font-medium">💬 {slide.studentPrompt}</span>
           </div>
         )}
       </div>
-      <div className="w-64 flex items-center p-4">
+      
+      <div className="w-64 flex items-center p-4 relative z-10">
         <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'activación'} className="w-full h-56" theme={theme} />
       </div>
+      
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
+      <div className="absolute bottom-0 left-0 right-0 h-3 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
     </div>
   );
 }
@@ -191,11 +364,14 @@ function VisualExplanationSlideContent({ slide, theme }: { slide: PremiumSlide; 
         <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'tema'} className="w-full h-56" theme={theme} />
       </div>
       <div className="flex-1 flex flex-col justify-center px-8">
-        <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
-        {slide.subtitle && <div className="text-base italic mb-4" style={{ color: hexToCss(theme.accent) }}>{slide.subtitle}</div>}
+        {/* Title with light card background */}
+        <div className="px-6 py-3 rounded-xl max-w-2xl mb-4" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
+          <h2 className="text-3xl font-bold" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
+        </div>
+        {slide.subtitle && <div className="text-base italic mb-4" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
         <ul className="space-y-2">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/90">
+            <li key={i} className="flex items-start gap-2" style={{ color: SAFE_TEXT_CSS.onLight }}>
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
               <span>{b}</span>
             </li>
@@ -211,12 +387,12 @@ function GuidedActivitySlideContent({ slide, theme }: { slide: PremiumSlide; the
     <div className="flex h-full">
       <div className="flex-1 flex flex-col justify-center px-8">
         <h2 className="text-3xl font-bold mb-1" style={{ color: hexToCss(theme.primary) }}>{slide.title}</h2>
-        {slide.subtitle && <div className="text-sm text-white/60 italic mb-3">{slide.subtitle}</div>}
+        {slide.subtitle && <div className="text-sm italic mb-3" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
         <div className="bg-white/90 rounded-lg p-4 flex-1">
           {slide.bullets?.map((b, i) => (
             <div key={i} className="flex items-start gap-2 mb-3">
               <span className="font-bold text-sm" style={{ color: hexToCss(theme.primary) }}>Paso {i + 1}:</span>
-              <span className="text-sm" style={{ color: hexToCss(theme.text) }}>{b}</span>
+              <span className="text-sm" style={{ color: SAFE_TEXT_CSS.onLight }}>{b}</span>
             </div>
           ))}
         </div>
@@ -240,11 +416,14 @@ function CollaborativeActivitySlideContent({ slide, theme }: { slide: PremiumSli
   return (
     <div className="flex h-full">
       <div className="flex-1 flex flex-col justify-center px-8">
-        <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
+        {/* Title with light card */}
+        <div className="px-6 py-3 rounded-xl max-w-2xl mb-4" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
+          <h2 className="text-3xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
+        </div>
         {slide.subtitle && <div className="text-base italic mb-4" style={{ color: hexToCss(theme.accent) }}>{slide.subtitle}</div>}
         <ul className="space-y-2">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/90">
+            <li key={i} className="flex items-start gap-2" style={{ color: SAFE_TEXT_CSS.onLight }}>
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
               <span>{b}</span>
             </li>
@@ -253,9 +432,9 @@ function CollaborativeActivitySlideContent({ slide, theme }: { slide: PremiumSli
       </div>
       <div className="w-64 flex flex-col gap-3 justify-center p-4">
         {iconCards.map((ic, i) => (
-          <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
+          <div key={i} className="rounded-lg p-3 text-center" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
             <div className="text-2xl mb-1">{ic.icon}</div>
-            <div className="text-xs font-bold text-white/80">{ic.text}</div>
+            <div className="text-xs font-bold" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{ic.text}</div>
           </div>
         ))}
       </div>
@@ -272,13 +451,13 @@ function DuaSupportsSlideContent({ slide, theme }: { slide: PremiumSlide; theme:
   return (
     <div className="flex flex-col h-full px-8 pt-6">
       <h2 className="text-3xl font-bold mb-1" style={{ color: hexToCss(theme.primary) }}>{slide.title}</h2>
-      {slide.subtitle && <div className="text-sm text-white/60 italic mb-4">{slide.subtitle}</div>}
+      {slide.subtitle && <div className="text-sm italic mb-4" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
       <div className="grid grid-cols-3 gap-4 flex-1">
         {duaCards.map((card, i) => (
-          <div key={i} className="bg-white/90 rounded-lg p-4 flex flex-col items-center text-center" style={{ borderTop: `3px solid ${hexToCss(theme.primary)}` }}>
+          <div key={i} className="rounded-lg p-4 flex flex-col items-center text-center" style={{ borderTop: `3px solid ${hexToCss(theme.primary)}`, backgroundColor: SAFE_TEXT_CSS.onLight }}>
             <div className="text-3xl mb-2">{card.icon}</div>
             <div className="font-bold text-sm mb-2" style={{ color: hexToCss(theme.primary) }}>{card.title}</div>
-            <div className="text-xs" style={{ color: hexToCss(theme.text) }}>{card.desc}</div>
+            <div className="text-xs" style={{ color: SAFE_TEXT_CSS.gray }}>{card.desc}</div>
           </div>
         ))}
       </div>
@@ -290,7 +469,7 @@ function FormativeAssessmentSlideContent({ slide, theme }: { slide: PremiumSlide
   return (
     <div className="flex flex-col h-full px-8 pt-6">
       <h2 className="text-3xl font-bold mb-1" style={{ color: hexToCss(theme.primary) }}>{slide.title}</h2>
-      {slide.subtitle && <div className="text-sm text-white/60 italic mb-4">{slide.subtitle}</div>}
+      {slide.subtitle && <div className="text-sm italic mb-4" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
       {slide.table ? (
         <div className="flex-1 flex items-center">
           <SlideTable headers={slide.table.headers} rows={slide.table.rows} caption={slide.table.caption} theme={theme} />
@@ -300,13 +479,13 @@ function FormativeAssessmentSlideContent({ slide, theme }: { slide: PremiumSlide
           {slide.bullets?.map((b, i) => (
             <div key={i} className="flex items-start gap-2">
               <span className="text-lg">✅</span>
-              <span className="text-base" style={{ color: hexToCss(theme.text) }}>{b}</span>
+              <span className="text-base" style={{ color: SAFE_TEXT_CSS.onLight }}>{b}</span>
             </div>
           ))}
         </div>
       )}
       {slide.studentPrompt && (
-        <div className="mt-4 px-4 py-3 rounded-lg border-2" style={{ borderColor: hexToCss(theme.primary), backgroundColor: hexToCss(theme.primary) + '10' }}>
+        <div className="mt-4 px-4 py-3 rounded-lg border-2" style={{ borderColor: hexToCss(theme.primary), backgroundColor: `${hexToCss(theme.primary)}10` }}>
           <div className="font-bold text-sm" style={{ color: hexToCss(theme.primary) }}>🎫 Ticket de salida: "{slide.studentPrompt}"</div>
         </div>
       )}
@@ -317,11 +496,14 @@ function FormativeAssessmentSlideContent({ slide, theme }: { slide: PremiumSlide
 function ClosureSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: PremiumPresentation; theme: SubjectTheme }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8">
-      <div className="text-4xl font-bold text-white mb-3">{slide.title}</div>
+      {/* Light card for title */}
+      <div className="px-8 py-4 rounded-2xl mb-4" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
+        <div className="text-4xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</div>
+      </div>
       {slide.subtitle && <div className="text-base mb-4" style={{ color: hexToCss(theme.accent) }}>{slide.subtitle}</div>}
       <ul className="space-y-2 mb-4">
         {slide.bullets?.map((b, i) => (
-          <li key={i} className="text-base text-white/80">{b}</li>
+          <li key={i} className="text-base" style={{ color: SAFE_TEXT_CSS.onLight }}>{b}</li>
         ))}
       </ul>
       {slide.studentPrompt && (
@@ -362,28 +544,65 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
   const next = useCallback(() => setCurrentSlide(i => Math.min(total - 1, i + 1)), [total]);
 
   const renderSlide = SLIDE_RENDERERS[slide.layout];
-  const bgColor = slide.layout === 'cover' || slide.layout === 'hook' || slide.layout === 'visual_explanation' || slide.layout === 'collaborative_activity' || slide.layout === 'closure'
-    ? hexToCss(theme.primary)
-    : hexToCss(theme.background);
+  const isAccentLayout = ['objective', 'guided_activity', 'dua_supports', 'formative_assessment'].includes(slide.layout);
+
+  // Rich background styles matching PPT generator - all light/accent now
+  const getSlideBackground = (theme: SubjectTheme): React.CSSProperties => {
+    if (isAccentLayout) {
+      // Accent variant: light background + top bar + side bar + accent circle
+      return {
+        background: hexToCss(theme.background),
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
+      };
+    }
+
+    // Light variant: light background + top glow + side glow + corner circle
+    return {
+      background: `linear-gradient(135deg, #F8FAFC 0%, ${hexToCss(lighten(theme.background, 0.25))} 100%)`,
+      position: 'relative' as const,
+      overflow: 'hidden' as const,
+    };
+  };
+
+  const slideBgStyle = getSlideBackground(theme);
 
   const slideContent = (
     <div
       className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl"
-      style={{ backgroundColor: bgColor, aspectRatio: '16/9' }}
+      style={{ ...slideBgStyle, aspectRatio: '16/9' as const }}
     >
+      {/* Decorative elements for accent layouts */}
+      {isAccentLayout && (
+        <>
+          <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 left-0 w-2 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 blur-2xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+          <div className="absolute bottom-0 left-0 right-0 h-3 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
+        </>
+      )}
+      {!isAccentLayout && (
+        <>
+          <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 blur-2xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+          <div className="absolute bottom-0 left-0 right-0 h-2 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
+        </>
+      )}
+      
       <div className="absolute inset-0 p-6">
         {renderSlide ? renderSlide(slide, presentation, theme) : (
           <div className="flex flex-col justify-center h-full px-8">
-            <h2 className="text-2xl font-bold text-white mb-2">{slide.title}</h2>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
             <ul className="space-y-1">
               {slide.bullets?.map((b, i) => (
-                <li key={i} className="text-sm text-white/80">• {b}</li>
+                <li key={i} className="text-sm" style={{ color: SAFE_TEXT_CSS.darkGray }}>• {b}</li>
               ))}
             </ul>
           </div>
         )}
       </div>
-      <div className="absolute bottom-2 left-4 right-4 flex justify-between items-center text-[10px] text-white/40">
+      <div className="absolute bottom-2 left-4 right-4 flex justify-between items-center text-[10px]" style={{ color: SAFE_TEXT_CSS.gray }}>
         <span>ProfePlanificAI | {presentation.nivel} | {presentation.asignatura}</span>
         <span>{currentSlide + 1} / {total}</span>
       </div>
@@ -409,16 +628,16 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
         <div className="flex items-center justify-between p-3">
-          <div className="text-white text-sm font-medium">{presentation.title}</div>
+          <div className="text-sm font-medium" style={{ color: SAFE_TEXT_CSS.onLight }}>{presentation.title}</div>
           <div className="flex items-center gap-3">
             {isGeneratingImages && imageProgress && (
-              <span className="text-xs text-white/60">
+              <span className="text-xs" style={{ color: SAFE_TEXT_CSS.gray }}>
                 Generando imágenes: {imageProgress.current}/{imageProgress.total}
               </span>
             )}
-            <button onClick={() => setIsFullscreen(false)} className="text-white/60 hover:text-white">
+            <button onClick={() => setIsFullscreen(false)} className="hover:text-red-600" style={{ color: SAFE_TEXT_CSS.gray }}>
               <X size={20} />
             </button>
           </div>
@@ -429,11 +648,11 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           </div>
         </div>
         <div className="flex items-center justify-center gap-4 p-4">
-          <button onClick={prev} disabled={currentSlide === 0} className="text-white/60 hover:text-white disabled:opacity-30">
+          <button onClick={prev} disabled={currentSlide === 0} className="disabled:opacity-30" style={{ color: SAFE_TEXT_CSS.gray }}>
             <ChevronLeft size={24} />
           </button>
-          <span className="text-white text-sm">{currentSlide + 1} / {total}</span>
-          <button onClick={next} disabled={currentSlide === total - 1} className="text-white/60 hover:text-white disabled:opacity-30">
+          <span className="text-sm" style={{ color: SAFE_TEXT_CSS.onLight }}>{currentSlide + 1} / {total}</span>
+          <button onClick={next} disabled={currentSlide === total - 1} className="disabled:opacity-30" style={{ color: SAFE_TEXT_CSS.gray }}>
             <ChevronRight size={24} />
           </button>
         </div>

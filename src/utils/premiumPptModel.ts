@@ -10,6 +10,8 @@ export type PremiumSlideLayout =
   | 'formative_assessment'
   | 'closure';
 
+import { isLowerLevel } from './pedagogicalProductProfiles';
+
 export type SubjectTheme = {
   primary: string;
   secondary: string;
@@ -58,6 +60,8 @@ export type PremiumSlide = {
   imageStatus?: 'pending' | 'generating' | 'generated' | 'failed';
   contentBlocks?: PremiumContentBlock[];
   table?: { headers: string[]; rows: string[][]; caption?: string };
+  pictogram?: string;
+  isChildMode?: boolean;
 };
 
 export type PremiumPresentation = {
@@ -119,14 +123,117 @@ const ICONS: Record<PremiumSlideLayout, string> = {
   closure: '🏁',
 };
 
-function isLowerLevel(level: string): boolean {
-  const lower = level.toLowerCase();
-  if (lower.includes('sala cuna') || lower.includes('transición') || lower.includes('transicion') || lower.includes('pre-kinder') || lower.includes('prekinder') || lower.includes('kinder') || lower.includes('parvularia')) {
-    return true;
+const PICTOGRAM_MAP: Record<string, string> = {
+  comer: '🍎',
+  dormir: '😴',
+  lavarse: '🧼',
+  jugar: '🧸',
+  ordenar: '📦',
+  familia: '👨‍👩‍👧‍👦',
+  casa: '🏠',
+  escuela: '🏫',
+  agua: '💧',
+  manos: '🤲',
+  fruta: '🍎',
+  cepillo: '🪥',
+  cama: '🛏️',
+  sol: '☀️',
+  luna: '🌙',
+  colacion: '🍎',
+  higiene: '🧼',
+  comer_fruta: '🍎',
+  lavar_manos: '🧼',
+  cepillar_dientes: '🪥',
+  guardar_juguetes: '📦',
+  leer_cuento: '📖',
+  poner_pijama: '👕',
+  ir_bano: '🚽',
+  desayunar: '🥣',
+  almorzar: '🍽️',
+  merendar: '🍪',
+  cena: '🍲',
+  siesta: '😴',
+  despertar: '🌅',
+  vestirse: '👕',
+  lavar_cara: '🧼',
+  cepillar_pelo: '🪮',
+  mochila: '🎒',
+  zapatos: '👟',
+  abrigo: '🧥',
+  saludo: '👋',
+  despedida: '👋',
+  compartir: '🤝',
+  esperar_turno: '⏳',
+  escuchar: '👂',
+  hablar: '🗣️',
+  observar: '👀',
+  imitar: '🙈',
+  elegir: '👆',
+  mostrar: '👋',
+  aplaudir: '👏',
+  sonreir: '😊',
+  abrazar: '🤗',
+};
+
+export function getPictogram(keyword: string): string {
+  const kw = keyword.toLowerCase();
+  for (const [key, icon] of Object.entries(PICTOGRAM_MAP)) {
+    if (kw.includes(key)) return icon;
   }
-  const isBasic = lower.includes('básico') || lower.includes('basico') || lower.endsWith('b');
-  return (isBasic && (lower.includes('1°') || lower.includes('2°') || lower.includes('3°') || lower.includes('4°'))) ||
-    lower.includes('1b') || lower.includes('2b') || lower.includes('3b') || lower.includes('4b');
+  return '✨';
+}
+
+export function getPictogramForSlide(layout: string, keyword: string): string {
+  const kw = keyword.toLowerCase();
+  if (layout === 'hook') return '💡';
+  if (layout === 'concept_cards') return '🃏';
+  if (layout === 'visual_explanation') return '🔍';
+  if (layout === 'guided_activity') return '✏️';
+  if (layout === 'collaborative_activity') return '🤝';
+  if (layout === 'dua_supports') return '🌈';
+  if (layout === 'formative_assessment') return '✅';
+  if (layout === 'closure') return '🏁';
+  for (const [key, icon] of Object.entries(PICTOGRAM_MAP)) {
+    if (kw.includes(key)) return icon;
+  }
+  return '✨';
+}
+
+export function isChildMode(level: string): boolean {
+  const lower = level.toLowerCase();
+  return lower.includes('sala cuna') || 
+         lower.includes('transición') || lower.includes('transicion') ||
+         lower.includes('pre-kinder') || lower.includes('prekinder') ||
+         lower.includes('kinder') ||
+         lower.includes('parvularia') ||
+         lower.includes('medio') ||
+         lower.includes('1° básico') || lower.includes('1° basico') || lower.includes('1b') ||
+         lower.includes('2° básico') || lower.includes('2° basico') || lower.includes('2b') ||
+         lower.includes('3° básico') || lower.includes('3° basico') || lower.includes('3b');
+}
+
+export function isParvulariaContext(level: string, subject: string, oaText: string): boolean {
+  const lvl = level.toLowerCase();
+  const sub = subject.toLowerCase();
+  const oa = oaText.toLowerCase();
+  return lvl.includes('sala cuna') ||
+         lvl.includes('parvularia') ||
+         lvl.includes('prekinder') || lvl.includes('pre-kinder') ||
+         lvl.includes('kinder') ||
+         lvl.includes('medio') ||
+         lvl.includes('transición') || lvl.includes('transicion') ||
+         oa.includes('rutina') ||
+         oa.includes('vida cotidiana') ||
+         oa.includes('alimentación') || oa.includes('alimentacion') ||
+         oa.includes('dormir') ||
+         oa.includes('higiene') ||
+         oa.includes('lavarse') ||
+         oa.includes('cuidado personal') ||
+         sub.includes('parvularia') ||
+         sub.includes('sala cuna') ||
+         sub.includes('identidad') ||
+         sub.includes('convivencia') ||
+         sub.includes('corporalidad');
 }
 
 function maxBullets(level: string): number {
@@ -162,7 +269,7 @@ function extractOaConcepts(oaText: string): string[] {
     .replace(/[,;.:!?()]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length > 4);
-  const stopwords = new Set([
+const stopwords = new Set([
     'para', 'como', 'entre', 'sobre', 'desde', 'hacia', 'otras', 'otros', 'otro',
     'esta', 'este', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 'cada',
     'cuando', 'donde', 'puede', 'pueden', 'debe', 'deben', 'tiene', 'tienen',
@@ -193,6 +300,10 @@ function extractOaConcepts(oaText: string): string[] {
     'trabajar', 'actividad', 'actividades', 'estudiantes', 'alumnos',
     'curso', 'clase', 'sesion', 'leccion', 'unidad', 'plan',
     'basico', 'medio', 'inicial', 'transicion', 'sala', 'cuna',
+    'algunas', 'algunos', 'algun', 'habitual', 'habituales', 'habitual',
+    'realizan', 'realiza', 'realizar', 'tales', 'tale', 'algunas',
+    'identificar', 'reconoce', 'reconoce', 'observar', 'cotidiana',
+    'cotidianas', 'vida', 'diaria', 'cotidiano', 'algunas',
   ]);
   const concepts = words.filter(w => !stopwords.has(w));
   const unique = [...new Set(concepts)];
@@ -607,6 +718,34 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
     };
   }
 
+  const oaLower = oaText.toLowerCase();
+  if (subLower.includes('sala cuna') || subLower.includes('sala cuna') || oaLower.includes('rutina') || oaLower.includes('vida cotidiana') || oaLower.includes('actividad habitual') || oaLower.includes('alimentación') || oaLower.includes('alimentacion') || oaLower.includes('dormir') || oaLower.includes('dormir') || oaLower.includes('preparación') || oaLower.includes('preparacion')) {
+    if (isLower) {
+      return {
+        headers: ['Rutina diaria', 'Qué hago', 'Qué aprendo'],
+        rows: [
+          ['Comer', 'Me lavo las manos y como', 'Nutrición y autonomía'],
+          ['Dormir', 'Me preparo para descansar', 'Hábitos de sueño'],
+          ['Jugar', 'Exploro y me muevo', 'Desarrollo motor'],
+          ['Lavarse', 'Me lavo las manos y cara', 'Higiene personal'],
+          ['Ordenar', 'Guardo mis juguetes', 'Orden y responsabilidad'],
+        ],
+        caption: 'Rutinas diarias en Sala Cuna',
+      };
+    }
+    return {
+      headers: ['Rutina', 'Qué ocurre', 'Aprendizaje esperado'],
+      rows: [
+        ['Alimentación', 'Niños y niñas comen con autonomía', 'Autonomía y nutrición'],
+        ['Sueño', 'Rutina de descanso y relajación', 'Hábitos de sueño saludable'],
+        ['Higiene', 'Lavado de manos y rostro', 'Autocuidado e higiene'],
+        ['Juego libre', 'Exploración y movimiento libre', 'Desarrollo motor y creatividad'],
+        ['Orden', 'Guardar materiales y juguetes', 'Responsabilidad y orden'],
+      ],
+      caption: 'Rutinas de vida cotidiana en Sala Cuna',
+    };
+  }
+
   return undefined;
 }
 
@@ -626,46 +765,50 @@ function generateSlideImagePrompt(layout: PremiumSlideLayout, oaText: string, su
   else if (subLower.includes('física') || subLower.includes('fisica')) domain = 'physics energy forces motion laboratory Chilean';
   else if (subLower.includes('química') || subLower.includes('quimica')) domain = 'chemistry elements molecules reactions laboratory Chilean';
   else if (subLower.includes('biología') || subLower.includes('biologia')) domain = 'biology organisms nature ecology Chilean';
-  else if (subLower.includes('orientación') || subLower.includes('orientacion')) domain = 'counseling emotions wellbeing social emotional learning Chilean';
-  else if (subLower.includes('formación ciudadana') || subLower.includes('formacion ciudadana') || subLower.includes('ciudadana')) domain = 'citizenship rights community participation Chilean';
-  else if (subLower.includes('inglés') || subLower.includes('ingles') || subLower.includes('english')) domain = 'english language learning vocabulary bilingual Chilean classroom';
-  else if (subLower.includes('artes') || subLower.includes('visual')) domain = 'visual arts color form texture creativity Chilean';
-  else if (subLower.includes('historia') || subLower.includes('geografía') || subLower.includes('geografia')) domain = 'history geography maps sources community Chilean';
-  else if (subLower.includes('matemática') || subLower.includes('matematica')) domain = 'mathematics numbers geometry patterns problem solving Chilean';
-  else if (subLower.includes('lenguaje') || subLower.includes('comunicación') || subLower.includes('comunicacion')) domain = 'language reading writing comprehension texts Chilean';
   else if (subLower.includes('parvularia') || subLower.includes('kinder') || subLower.includes('prekinder')) domain = 'preschool children play exploration learning Chilean';
   else if (subLower.includes('ciencias') || subLower.includes('natural')) domain = 'science nature observation experiment Chilean';
 
+  const isParvularia = isParvulariaContext('', subject, oaText);
+
   switch (layout) {
     case 'cover':
+      if (isParvularia) return `Educational presentation cover for preschool Chilean, ${domain}, tender illustration of children in daily routines, soft pastel colors, wide format`;
       return `Educational presentation cover for ${subject}, ${domain}, professional colorful illustration, wide format`;
     case 'hook':
+      if (isParvularia) return `Engaging motivational image for preschool, ${domain} for young children, tender illustration of daily routines like eating, sleeping, washing hands, Chilean context`;
       return `Engaging motivational image, ${domain} for ${isLower ? 'young children' : 'students'}, thought-provoking`;
     case 'visual_explanation':
+      if (isParvularia) return `Detailed educational diagram for preschool, ${domain}, infographic style with simple icons of daily routines like eating, sleeping, washing hands, Chilean preschool context`;
       return `Detailed educational diagram, ${domain}, infographic style with clear labels, professional illustration`;
     case 'guided_activity':
+      if (isParvularia) return `Preschool children hands-on activity with educator, ${domain}, Chilean preschool classroom, simple routine cards`;
       return `${isLower ? 'Children' : 'Students'} hands-on activity, ${domain}, classroom setting, collaborative`;
     case 'concept_cards':
+      if (isParvularia) return `Visual concept cards for preschool, ${domain}, simple icons of daily routines like eating, sleeping, washing, Chilean style`;
       return `Visual concept map, ${domain}, clean educational infographic design`;
     case 'collaborative_activity':
+      if (isParvularia) return `Preschool children group activity with educator, ${domain}, Chilean preschool circle time`;
       return `${isLower ? 'Children' : 'Students'} teamwork activity, ${domain}, classroom engaged`;
     case 'dua_supports':
+      if (isParvularia) return `Universal Design for Learning for preschool, ${domain}, inclusive Chilean preschool, sensory supports, visual schedules`;
       return `Universal Design for Learning, inclusive classroom, diverse learners, ${domain}`;
     case 'closure':
+      if (isParvularia) return `Reflection summary for preschool, ${domain}, tender illustration of children ending their day, Chilean preschool`;
       return `Reflection learning summary, ${domain}, inspiring educational achievement`;
     default:
       return `Educational illustration, ${domain}, professional engaging`;
   }
 }
 
-function buildHookBullets(oaText: string, isLower: boolean): string[] {
+function buildHookBullets(oaText: string, isLower: boolean, subject: string = '', level: string = ''): string[] {
   const concepts = extractOaConcepts(oaText);
   const mainConcept = concepts[0] || oaText.split(' ')[0] || 'este tema';
-  if (isLower) {
+  const isParvularia = isParvulariaContext(level, subject, oaText);
+  if (isLower || isParvularia) {
     return [
       `¿Qué sabes sobre ${mainConcept}?`,
       `¿Dónde has visto ${mainConcept} en tu vida diaria?`,
-      `Comparte una idea con tu compañero/a`,
+      `Observa la imagen y señala lo que ves`,
     ];
   }
   return [
@@ -676,8 +819,9 @@ function buildHookBullets(oaText: string, isLower: boolean): string[] {
   ];
 }
 
-function buildObjectiveBullets(oaText: string, topicLabel: string, isLower: boolean): string[] {
-  if (isLower) {
+function buildObjectiveBullets(oaText: string, topicLabel: string, isLower: boolean, subject: string = '', level: string = ''): string[] {
+  const isParvularia = isParvulariaContext(level, subject, oaText);
+  if (isLower || isParvularia) {
     return [
       `Comprenderemos: ${truncate(oaText, 60)}`,
       `Participaremos en actividades de observación y exploración`,
@@ -698,14 +842,15 @@ function buildConceptBullets(oaText: string, skills: string[], subject: string, 
   return concepts.slice(0, isLower ? 3 : 5).map(c => truncate(c.charAt(0).toUpperCase() + c.slice(1), 50));
 }
 
-function buildVisualBullets(oaText: string, isLower: boolean): string[] {
+function buildVisualBullets(oaText: string, isLower: boolean, subject: string = '', level: string = ''): string[] {
   const concepts = extractOaConcepts(oaText);
   const mainConcept = concepts[0] || 'este contenido';
-  if (isLower) {
+  const isParvularia = isParvulariaContext(level, subject, oaText);
+  if (isLower || isParvularia) {
     return [
       `Observa la imagen con atención`,
       `¿Qué observas sobre ${mainConcept}?`,
-      `Comparte lo que ves con tu compañero/a`,
+      `Señala lo que ves en la imagen`,
     ];
   }
   return [
@@ -716,14 +861,15 @@ function buildVisualBullets(oaText: string, isLower: boolean): string[] {
   ];
 }
 
-function buildGuidedBullets(oaText: string, isLower: boolean): string[] {
+function buildGuidedBullets(oaText: string, isLower: boolean, subject: string = '', level: string = ''): string[] {
   const concepts = extractOaConcepts(oaText);
   const mainConcept = concepts[0] || 'la actividad';
-  if (isLower) {
+  const isParvularia = isParvulariaContext(level, subject, oaText);
+  if (isLower || isParvularia) {
     return [
       `Observa ${mainConcept} con ayuda del/la profesor/a`,
       `Identifica las partes importantes`,
-      `Comparte tus hallazgos`,
+      `Muestra lo que descubriste`,
     ];
   }
   return [
@@ -734,14 +880,15 @@ function buildGuidedBullets(oaText: string, isLower: boolean): string[] {
   ];
 }
 
-function buildCollaborativeBullets(oaText: string, isLower: boolean): string[] {
+function buildCollaborativeBullets(oaText: string, isLower: boolean, subject: string = '', level: string = ''): string[] {
   const concepts = extractOaConcepts(oaText);
   const mainConcept = concepts[0] || 'el tema';
-  if (isLower) {
+  const isParvularia = isParvulariaContext(level, subject, oaText);
+  if (isLower || isParvularia) {
     return [
-      `Forma parejas con tu compañero`,
-      `Comparte lo que observaste sobre ${mainConcept}`,
-      `Escucha las ideas de otros`,
+      `Juntos exploramos ${mainConcept}`,
+      `Hablamos de lo que vemos`,
+      `Celebramos lo que logramos`,
     ];
   }
   return [
@@ -791,6 +938,7 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
   const nivelLabel = input.level;
   const oaShort = truncate(input.objectiveCode, 30);
   const isLower = isLowerLevel(nivelLabel);
+  const childMode = isChildMode(nivelLabel);
   const max = maxBullets(nivelLabel);
 
   const oaText = input.objectiveText || input.topic;
@@ -810,29 +958,35 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       visualPrompt: generateSlideImagePrompt('cover', oaText, input.subject, isLower),
       icon: ICONS.cover,
       colorTheme: theme.primary,
+      pictogram: getPictogramForSlide('cover', topicLabel),
+      isChildMode: childMode,
     },
     {
       slideNumber: 2,
       layout: 'hook',
       title: 'Activación inicial',
       subtitle: isLower ? '¿Qué sabemos?' : 'Pregunta motivadora',
-      bullets: adaptBulletsForLevel(buildHookBullets(oaText, isLower), nivelLabel),
+      bullets: adaptBulletsForLevel(buildHookBullets(oaText, isLower, input.subject, nivelLabel), nivelLabel),
       visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || 'activación',
       visualPrompt: generateSlideImagePrompt('hook', oaText, input.subject, isLower),
       icon: ICONS.hook,
       colorTheme: theme.secondary,
+      pictogram: getPictogramForSlide('hook', oaText),
+      isChildMode: childMode,
     },
     {
       slideNumber: 3,
       layout: 'objective',
       title: 'Objetivo de aprendizaje',
       subtitle: oaText,
-      bullets: adaptBulletsForLevel(buildObjectiveBullets(oaText, topicLabel, isLower), nivelLabel),
+      bullets: adaptBulletsForLevel(buildObjectiveBullets(oaText, topicLabel, isLower, input.subject, nivelLabel), nivelLabel),
       studentPrompt: isLower
         ? `Hoy vamos a aprender sobre ${truncate(oaText, 50)}`
         : `Nuestro objetivo es comprender: ${truncate(oaText, 60)}`,
       icon: ICONS.objective,
       colorTheme: theme.primary,
+      pictogram: getPictogramForSlide('objective', oaText),
+      isChildMode: childMode,
     },
     {
       slideNumber: 4,
@@ -845,24 +999,28 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       table: oaTable,
       icon: ICONS.concept_cards,
       colorTheme: theme.accent,
+      pictogram: getPictogramForSlide('concept_cards', oaText),
+      isChildMode: childMode,
     },
     {
       slideNumber: 5,
       layout: 'visual_explanation',
       title: isLower ? 'Descubrimos' : 'Desarrollo del contenido',
       subtitle: isLower ? 'Observa y explora' : 'Análisis y comprensión del OA',
-      bullets: adaptBulletsForLevel(buildVisualBullets(oaText, isLower), nivelLabel),
+      bullets: adaptBulletsForLevel(buildVisualBullets(oaText, isLower, input.subject, nivelLabel), nivelLabel),
       visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || oaText.split(' ')[0],
       visualPrompt: generateSlideImagePrompt('visual_explanation', oaText, input.subject, isLower),
       icon: ICONS.visual_explanation,
       colorTheme: theme.secondary,
+      pictogram: getPictogramForSlide('visual_explanation', oaText),
+      isChildMode: childMode,
     },
     {
       slideNumber: 6,
       layout: 'guided_activity',
       title: isLower ? 'Juguemos y aprendamos' : 'Actividad guiada',
       subtitle: isLower ? 'Actividad con apoyo' : 'Paso a paso con orientación docente',
-      bullets: adaptBulletsForLevel(buildGuidedBullets(oaText, isLower), nivelLabel),
+      bullets: adaptBulletsForLevel(buildGuidedBullets(oaText, isLower, input.subject, nivelLabel), nivelLabel),
       visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || 'paso a paso',
       visualPrompt: generateSlideImagePrompt('guided_activity', oaText, input.subject, isLower),
       studentPrompt: isLower
@@ -870,16 +1028,20 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         : `Trabaja con tu grupo para resolver la actividad sobre ${truncate(oaText, 40)}`,
       icon: ICONS.guided_activity,
       colorTheme: theme.primary,
+      pictogram: getPictogramForSlide('guided_activity', oaText),
+      isChildMode: childMode,
     },
     {
       slideNumber: 7,
       layout: 'collaborative_activity',
       title: isLower ? 'Trabajemos juntos' : 'Actividad colaborativa',
       subtitle: isLower ? 'En pareja o grupo' : 'Trabajo en equipo',
-      bullets: adaptBulletsForLevel(buildCollaborativeBullets(oaText, isLower), nivelLabel),
+      bullets: adaptBulletsForLevel(buildCollaborativeBullets(oaText, isLower, input.subject, nivelLabel), nivelLabel),
       visualPrompt: generateSlideImagePrompt('collaborative_activity', oaText, input.subject, isLower),
       icon: ICONS.collaborative_activity,
       colorTheme: theme.secondary,
+      pictogram: getPictogramForSlide('collaborative_activity', oaText),
+      isChildMode: childMode,
     },
     {
       slideNumber: 8,
@@ -908,6 +1070,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
       visualKeyword: 'DUA inclusión',
       icon: ICONS.dua_supports,
       colorTheme: theme.primary,
+      pictogram: getPictogramForSlide('dua_supports', 'DUA'),
+      isChildMode: childMode,
     },
     {
       slideNumber: 9,
@@ -945,6 +1109,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         : 'Completa el ticket de salida antes de terminar',
       icon: ICONS.formative_assessment,
       colorTheme: theme.accent,
+      pictogram: getPictogramForSlide('formative_assessment', 'evaluación'),
+      isChildMode: childMode,
     },
     {
       slideNumber: 10,
@@ -957,6 +1123,8 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
         : '¿Qué estrategia te ayudó a aprender mejor?',
       icon: ICONS.closure,
       colorTheme: theme.primary,
+      pictogram: getPictogramForSlide('closure', 'cierre'),
+      isChildMode: childMode,
     },
   ];
 
