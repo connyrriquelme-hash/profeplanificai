@@ -162,7 +162,7 @@ function extractOaConcepts(oaText: string): string[] {
     .replace(/[,;.:!?()]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length > 4);
-  const stopwords = new Set([
+const stopwords = new Set([
     'para', 'como', 'entre', 'sobre', 'desde', 'hacia', 'otras', 'otros', 'otro',
     'esta', 'este', 'estos', 'estas', 'todo', 'toda', 'todos', 'todas', 'cada',
     'cuando', 'donde', 'puede', 'pueden', 'debe', 'deben', 'tiene', 'tienen',
@@ -193,6 +193,10 @@ function extractOaConcepts(oaText: string): string[] {
     'trabajar', 'actividad', 'actividades', 'estudiantes', 'alumnos',
     'curso', 'clase', 'sesion', 'leccion', 'unidad', 'plan',
     'basico', 'medio', 'inicial', 'transicion', 'sala', 'cuna',
+    'algunas', 'algunos', 'algun', 'habitual', 'habituales', 'habitual',
+    'realizan', 'realiza', 'realizar', 'tales', 'tale', 'algunas',
+    'identificar', 'reconoce', 'reconoce', 'observar', 'cotidiana',
+    'cotidianas', 'vida', 'diaria', 'cotidiano', 'algunas',
   ]);
   const concepts = words.filter(w => !stopwords.has(w));
   const unique = [...new Set(concepts)];
@@ -607,6 +611,34 @@ function buildOaTable(oaText: string, subject: string, isLower: boolean): { head
     };
   }
 
+  const oaLower = oaText.toLowerCase();
+  if (subLower.includes('sala cuna') || subLower.includes('sala cuna') || oaLower.includes('rutina') || oaLower.includes('vida cotidiana') || oaLower.includes('actividad habitual') || oaLower.includes('alimentación') || oaLower.includes('alimentacion') || oaLower.includes('dormir') || oaLower.includes('dormir') || oaLower.includes('preparación') || oaLower.includes('preparacion')) {
+    if (isLower) {
+      return {
+        headers: ['Rutina diaria', 'Qué hago', 'Qué aprendo'],
+        rows: [
+          ['Comer', 'Me lavo las manos y como', 'Nutrición y autonomía'],
+          ['Dormir', 'Me preparo para descansar', 'Hábitos de sueño'],
+          ['Jugar', 'Exploro y me muevo', 'Desarrollo motor'],
+          ['Lavarse', 'Me lavo las manos y cara', 'Higiene personal'],
+          ['Ordenar', 'Guardo mis juguetes', 'Orden y responsabilidad'],
+        ],
+        caption: 'Rutinas diarias en Sala Cuna',
+      };
+    }
+    return {
+      headers: ['Rutina', 'Qué ocurre', 'Aprendizaje esperado'],
+      rows: [
+        ['Alimentación', 'Niños y niñas comen con autonomía', 'Autonomía y nutrición'],
+        ['Sueño', 'Rutina de descanso y relajación', 'Hábitos de sueño saludable'],
+        ['Higiene', 'Lavado de manos y rostro', 'Autocuidado e higiene'],
+        ['Juego libre', 'Exploración y movimiento libre', 'Desarrollo motor y creatividad'],
+        ['Orden', 'Guardar materiales y juguetes', 'Responsabilidad y orden'],
+      ],
+      caption: 'Rutinas de vida cotidiana en Sala Cuna',
+    };
+  }
+
   return undefined;
 }
 
@@ -626,42 +658,46 @@ function generateSlideImagePrompt(layout: PremiumSlideLayout, oaText: string, su
   else if (subLower.includes('física') || subLower.includes('fisica')) domain = 'physics energy forces motion laboratory Chilean';
   else if (subLower.includes('química') || subLower.includes('quimica')) domain = 'chemistry elements molecules reactions laboratory Chilean';
   else if (subLower.includes('biología') || subLower.includes('biologia')) domain = 'biology organisms nature ecology Chilean';
-  else if (subLower.includes('orientación') || subLower.includes('orientacion')) domain = 'counseling emotions wellbeing social emotional learning Chilean';
-  else if (subLower.includes('formación ciudadana') || subLower.includes('formacion ciudadana') || subLower.includes('ciudadana')) domain = 'citizenship rights community participation Chilean';
-  else if (subLower.includes('inglés') || subLower.includes('ingles') || subLower.includes('english')) domain = 'english language learning vocabulary bilingual Chilean classroom';
-  else if (subLower.includes('artes') || subLower.includes('visual')) domain = 'visual arts color form texture creativity Chilean';
-  else if (subLower.includes('historia') || subLower.includes('geografía') || subLower.includes('geografia')) domain = 'history geography maps sources community Chilean';
-  else if (subLower.includes('matemática') || subLower.includes('matematica')) domain = 'mathematics numbers geometry patterns problem solving Chilean';
-  else if (subLower.includes('lenguaje') || subLower.includes('comunicación') || subLower.includes('comunicacion')) domain = 'language reading writing comprehension texts Chilean';
   else if (subLower.includes('parvularia') || subLower.includes('kinder') || subLower.includes('prekinder')) domain = 'preschool children play exploration learning Chilean';
   else if (subLower.includes('ciencias') || subLower.includes('natural')) domain = 'science nature observation experiment Chilean';
 
+  const isParvularia = subLower.includes('parvularia') || subLower.includes('kinder') || subLower.includes('prekinder') || subLower.includes('sala cuna') || oaLower.includes('sala cuna') || oaLower.includes('parvularia') || oaLower.includes('vida cotidiana') || oaLower.includes('rutina');
+
   switch (layout) {
     case 'cover':
+      if (isParvularia) return `Educational presentation cover for preschool Chilean, ${domain}, tender illustration of children in daily routines, soft pastel colors, wide format`;
       return `Educational presentation cover for ${subject}, ${domain}, professional colorful illustration, wide format`;
     case 'hook':
+      if (isParvularia) return `Engaging motivational image for preschool, ${domain} for young children, tender illustration of daily routines like eating, sleeping, washing hands, Chilean context`;
       return `Engaging motivational image, ${domain} for ${isLower ? 'young children' : 'students'}, thought-provoking`;
     case 'visual_explanation':
+      if (isParvularia) return `Detailed educational diagram for preschool, ${domain}, infographic style with simple icons of daily routines like eating, sleeping, washing hands, Chilean preschool context`;
       return `Detailed educational diagram, ${domain}, infographic style with clear labels, professional illustration`;
     case 'guided_activity':
+      if (isParvularia) return `Preschool children hands-on activity with educator, ${domain}, Chilean preschool classroom, simple routine cards`;
       return `${isLower ? 'Children' : 'Students'} hands-on activity, ${domain}, classroom setting, collaborative`;
     case 'concept_cards':
+      if (isParvularia) return `Visual concept cards for preschool, ${domain}, simple icons of daily routines like eating, sleeping, washing, Chilean style`;
       return `Visual concept map, ${domain}, clean educational infographic design`;
     case 'collaborative_activity':
+      if (isParvularia) return `Preschool children group activity with educator, ${domain}, Chilean preschool circle time`;
       return `${isLower ? 'Children' : 'Students'} teamwork activity, ${domain}, classroom engaged`;
     case 'dua_supports':
+      if (isParvularia) return `Universal Design for Learning for preschool, ${domain}, inclusive Chilean preschool, sensory supports, visual schedules`;
       return `Universal Design for Learning, inclusive classroom, diverse learners, ${domain}`;
     case 'closure':
+      if (isParvularia) return `Reflection summary for preschool, ${domain}, tender illustration of children ending their day, Chilean preschool`;
       return `Reflection learning summary, ${domain}, inspiring educational achievement`;
     default:
       return `Educational illustration, ${domain}, professional engaging`;
   }
 }
 
-function buildHookBullets(oaText: string, isLower: boolean): string[] {
+function buildHookBullets(oaText: string, isLower: boolean, subject: string = ''): string[] {
   const concepts = extractOaConcepts(oaText);
   const mainConcept = concepts[0] || oaText.split(' ')[0] || 'este tema';
-  if (isLower) {
+  const isParvularia = oaText.toLowerCase().includes('sala cuna') || oaText.toLowerCase().includes('parvularia') || oaText.toLowerCase().includes('vida cotidiana') || oaText.toLowerCase().includes('rutina');
+  if (isLower || isParvularia) {
     return [
       `¿Qué sabes sobre ${mainConcept}?`,
       `¿Dónde has visto ${mainConcept} en tu vida diaria?`,
@@ -676,8 +712,9 @@ function buildHookBullets(oaText: string, isLower: boolean): string[] {
   ];
 }
 
-function buildObjectiveBullets(oaText: string, topicLabel: string, isLower: boolean): string[] {
-  if (isLower) {
+function buildObjectiveBullets(oaText: string, topicLabel: string, isLower: boolean, subject: string = ''): string[] {
+  const isParvularia = oaText.toLowerCase().includes('sala cuna') || oaText.toLowerCase().includes('parvularia') || oaText.toLowerCase().includes('vida cotidiana') || oaText.toLowerCase().includes('rutina');
+  if (isLower || isParvularia) {
     return [
       `Comprenderemos: ${truncate(oaText, 60)}`,
       `Participaremos en actividades de observación y exploración`,

@@ -46,7 +46,50 @@ function lighten(hex: string, amount: number): string {
   return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-function addRichBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark') {
+function getContrastColor(backgroundHex: string): string {
+  const c = hexToRgb(backgroundHex);
+  const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+  return luminance > 0.5 ? '000000' : 'FFFFFF';
+}
+
+function getTitleColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark'): string {
+  if (variant === 'dark') return 'FFFFFF';
+  if (variant === 'accent') return theme.primary;
+  return getContrastColor(theme.background);
+}
+
+function getBodyColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark'): string {
+  if (variant === 'dark') return 'FFFFFF';
+  if (variant === 'accent') return theme.text;
+  return getContrastColor(theme.background);
+}
+
+function isParvularia(oaText: string, subject: string): boolean {
+  const oaLower = oaText.toLowerCase();
+  const subLower = subject.toLowerCase();
+  return subLower.includes('parvularia') || 
+         subLower.includes('sala cuna') ||
+         subLower.includes('kinder') ||
+         subLower.includes('identidad') || 
+         subLower.includes('convivencia') || 
+         subLower.includes('corporalidad') ||
+         oaLower.includes('rutina') || 
+         oaLower.includes('vida cotidiana') || 
+         oaLower.includes('actividad habitual') ||
+         oaLower.includes('alimentación') || 
+         oaLower.includes('alimentacion') ||
+         oaLower.includes('dormir') || 
+         oaLower.includes('preparación') || 
+         oaLower.includes('preparacion') ||
+         subLower.includes('parvularia') ||
+         subLower.includes('sala cuna') ||
+         subLower.includes('kinder') ||
+         subLower.includes('identidad') || 
+         subLower.includes('convivencia') || 
+         subLower.includes('corporalidad');
+}
+
+function addRichBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark', isParvularia: boolean = false) {
   if (variant === 'dark') {
     slide.background = { color: theme.primary };
     const base: PptxGenJS.ShapeProps = {
@@ -327,26 +370,46 @@ function addSlideNumber(slide: PptxGenJS.Slide, num: number, total: number) {
 
 function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addRichBackground(s, theme, 'dark');
+  const isParv = isParvularia(pres.oa, pres.asignatura);
+  addRichBackground(s, theme, 'dark', isParv);
   addDecorativeElements(s, theme);
 
+  const titleBg: PptxGenJS.ShapeProps = {
+    x: 1.5, y: 1.5, w: 10.3, h: 2.4,
+    fill: { color: '000000', transparency: 30 },
+    rectRadius: 0.2,
+  };
+  s.addShape('rect', titleBg);
+
   s.addText(slide.title, {
-    x: 1.0, y: 1.8, w: 11.3, h: 2.0,
-    fontSize: 40, bold: true, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    x: 1.0, y: 1.6, w: 11.3, h: 2.2,
+    fontSize: 44, bold: true, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    lineSpacing: 1.1,
   });
 
   s.addText(slide.subtitle || `${pres.nivel} — ${pres.asignatura}`, {
-    x: 1.5, y: 3.8, w: 10.3, h: 0.8,
+    x: 1.5, y: 4.0, w: 10.3, h: 0.8,
     fontSize: 18, color: theme.accent, align: 'center', fontFace: 'Arial',
+    bold: false,
   });
 
+  const oaBox: PptxGenJS.ShapeProps = {
+    x: 2.5, y: 5.1, w: 8.3, h: 0.7,
+    fill: { color: theme.primary, transparency: 85 },
+    rectRadius: 0.3,
+    line: { color: theme.accent, width: 1.5, transparency: 20 },
+    shadow: { type: 'outer', blur: 4, offset: 1, color: '000000', opacity: 0.1 },
+  };
+  s.addShape('rect', oaBox);
+
   s.addText(`OA: ${pres.oa}`, {
-    x: 2.0, y: 4.6, w: 9.3, h: 0.6,
-    fontSize: 12, color: 'CCCCCC', align: 'center', fontFace: 'Arial',
-    italic: true,
+    x: 2.5, y: 5.15, w: 8.3, h: 0.6,
+    fontSize: 14, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    bold: true,
   });
 
   addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'center');
+  addSlideNumber(s, 1, pres.slides.length);
   addFooter(s, pres.nivel, pres.asignatura);
 }
 
