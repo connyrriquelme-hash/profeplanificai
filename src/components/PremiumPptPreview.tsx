@@ -164,15 +164,19 @@ function SlideImage({ url, keyword, className, theme }: { url?: string; keyword:
 function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows: string[][]; caption?: string; theme: SubjectTheme }) {
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-white/20">
+      <div className="overflow-x-auto rounded-lg border" style={{ borderColor: `${SAFE_TEXT_CSS.onDark}33` }}>
         <table className="w-full text-sm">
           <thead>
             <tr>
               {headers.map((h, i) => (
                 <th
                   key={i}
-                  className="px-3 py-2 text-left font-bold text-white border-b border-white/20"
-                  style={{ backgroundColor: hexToCss(theme.primary) }}
+                  className="px-3 py-2 text-left font-bold"
+                  style={{ 
+                    backgroundColor: hexToCss(theme.primary),
+                    color: SAFE_TEXT_CSS.onPrimaryDark,
+                    borderBottom: `1px solid ${SAFE_TEXT_CSS.onDark}33`
+                  }}
                 >
                   {h}
                 </th>
@@ -183,7 +187,10 @@ function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows
             {rows.map((row, ri) => (
               <tr key={ri} className={ri % 2 === 0 ? 'bg-white/5' : 'bg-white/10'}>
                 {row.map((cell, ci) => (
-                  <td key={ci} className="px-3 py-2 text-white/90 border-b border-white/10">
+                  <td key={ci} className="px-3 py-2 border-b" style={{ 
+                    color: SAFE_TEXT_CSS.onLight,
+                    borderColor: `${SAFE_TEXT_CSS.onDark}1a`
+                  }}>
                     {cell}
                   </td>
                 ))}
@@ -192,7 +199,7 @@ function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows
           </tbody>
         </table>
       </div>
-      {caption && <div className="text-xs text-white/50 italic mt-1 text-center">{caption}</div>}
+      {caption && <div className="text-xs italic mt-1 text-center" style={{ color: SAFE_TEXT_CSS.gray }}>{caption}</div>}
     </div>
   );
 }
@@ -216,18 +223,18 @@ function CoverSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: 
       <div
         className="relative z-10 px-6 py-3 rounded-xl mx-8 mb-4"
         style={{
-          backgroundColor: 'rgba(0,0,0,0.25)',
+          backgroundColor: SAFE_TEXT_CSS.onLight,
           borderRadius: '1rem',
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
         }}
       >
-        <div className="text-5xl font-bold text-white mb-2">{slide.title}</div>
+        <div className="text-5xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</div>
       </div>
       
       <div className="relative z-10 text-xl mb-2" style={{ color: hexToCss(theme.accent) }}>
         {slide.subtitle || `${pres.nivel} — ${pres.asignatura}`}
       </div>
-      <div className="relative z-10 text-sm text-white/60 italic mb-6">OA: {pres.oa}</div>
+      <div className="relative z-10 text-sm italic mb-6" style={{ color: SAFE_TEXT_CSS.onLight }}>OA: {pres.oa}</div>
       
       {/* Visual panel */}
       <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || pres.tema} className="w-72 h-48" theme={theme} />
@@ -254,25 +261,25 @@ function HookSlideContent({ slide, theme }: { slide: PremiumSlide; theme: Subjec
       <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-15" style={{ backgroundColor: hexToCss(theme.accent) }} />
       
       <div className="relative flex h-full flex-1 flex-col justify-center px-8">
-        {/* Title card */}
+        {/* Title card - light background with dark text */}
         <div
           className="px-6 py-3 rounded-xl w-full max-w-2xl"
           style={{
-            backgroundColor: 'rgba(0,0,0,0.25)',
+            backgroundColor: SAFE_TEXT_CSS.onLight,
             borderRadius: '1rem',
             boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           }}
         >
-          <h2 className="text-3xl font-bold text-white">{slide.title}</h2>
+          <h2 className="text-3xl font-bold" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
         </div>
         
         {slide.subtitle && (
-          <div className="text-base text-white/60 italic mb-4 relative z-10">{slide.subtitle}</div>
+          <div className="text-base italic mb-4 relative z-10" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>
         )}
         
         <ul className="space-y-2 relative z-10">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/95">
+            <li key={i} className="flex items-start gap-2" style={{ color: SAFE_TEXT_CSS.onLight }}>
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
               <span className="text-lg">{b}</span>
             </li>
@@ -364,11 +371,14 @@ function VisualExplanationSlideContent({ slide, theme }: { slide: PremiumSlide; 
         <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'tema'} className="w-full h-56" theme={theme} />
       </div>
       <div className="flex-1 flex flex-col justify-center px-8">
-        <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
-        {slide.subtitle && <div className="text-base italic mb-4" style={{ color: hexToCss(theme.accent) }}>{slide.subtitle}</div>}
+        {/* Title with light card background */}
+        <div className="px-6 py-3 rounded-xl max-w-2xl mb-4" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
+          <h2 className="text-3xl font-bold" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
+        </div>
+        {slide.subtitle && <div className="text-base italic mb-4" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
         <ul className="space-y-2">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/90">
+            <li key={i} className="flex items-start gap-2" style={{ color: SAFE_TEXT_CSS.onLight }}>
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
               <span>{b}</span>
             </li>
@@ -384,12 +394,12 @@ function GuidedActivitySlideContent({ slide, theme }: { slide: PremiumSlide; the
     <div className="flex h-full">
       <div className="flex-1 flex flex-col justify-center px-8">
         <h2 className="text-3xl font-bold mb-1" style={{ color: hexToCss(theme.primary) }}>{slide.title}</h2>
-        {slide.subtitle && <div className="text-sm text-white/60 italic mb-3">{slide.subtitle}</div>}
+        {slide.subtitle && <div className="text-sm italic mb-3" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
         <div className="bg-white/90 rounded-lg p-4 flex-1">
           {slide.bullets?.map((b, i) => (
             <div key={i} className="flex items-start gap-2 mb-3">
               <span className="font-bold text-sm" style={{ color: hexToCss(theme.primary) }}>Paso {i + 1}:</span>
-              <span className="text-sm" style={{ color: hexToCss(theme.text) }}>{b}</span>
+              <span className="text-sm" style={{ color: SAFE_TEXT_CSS.onLight }}>{b}</span>
             </div>
           ))}
         </div>
@@ -413,11 +423,14 @@ function CollaborativeActivitySlideContent({ slide, theme }: { slide: PremiumSli
   return (
     <div className="flex h-full">
       <div className="flex-1 flex flex-col justify-center px-8">
-        <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
+        {/* Title with light card */}
+        <div className="px-6 py-3 rounded-xl max-w-2xl mb-4" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
+          <h2 className="text-3xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
+        </div>
         {slide.subtitle && <div className="text-base italic mb-4" style={{ color: hexToCss(theme.accent) }}>{slide.subtitle}</div>}
         <ul className="space-y-2">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/90">
+            <li key={i} className="flex items-start gap-2" style={{ color: SAFE_TEXT_CSS.onLight }}>
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
               <span>{b}</span>
             </li>
@@ -426,9 +439,9 @@ function CollaborativeActivitySlideContent({ slide, theme }: { slide: PremiumSli
       </div>
       <div className="w-64 flex flex-col gap-3 justify-center p-4">
         {iconCards.map((ic, i) => (
-          <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
+          <div key={i} className="rounded-lg p-3 text-center" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
             <div className="text-2xl mb-1">{ic.icon}</div>
-            <div className="text-xs font-bold text-white/80">{ic.text}</div>
+            <div className="text-xs font-bold" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{ic.text}</div>
           </div>
         ))}
       </div>
@@ -445,13 +458,13 @@ function DuaSupportsSlideContent({ slide, theme }: { slide: PremiumSlide; theme:
   return (
     <div className="flex flex-col h-full px-8 pt-6">
       <h2 className="text-3xl font-bold mb-1" style={{ color: hexToCss(theme.primary) }}>{slide.title}</h2>
-      {slide.subtitle && <div className="text-sm text-white/60 italic mb-4">{slide.subtitle}</div>}
+      {slide.subtitle && <div className="text-sm italic mb-4" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
       <div className="grid grid-cols-3 gap-4 flex-1">
         {duaCards.map((card, i) => (
-          <div key={i} className="bg-white/90 rounded-lg p-4 flex flex-col items-center text-center" style={{ borderTop: `3px solid ${hexToCss(theme.primary)}` }}>
+          <div key={i} className="rounded-lg p-4 flex flex-col items-center text-center" style={{ borderTop: `3px solid ${hexToCss(theme.primary)}`, backgroundColor: SAFE_TEXT_CSS.onLight }}>
             <div className="text-3xl mb-2">{card.icon}</div>
             <div className="font-bold text-sm mb-2" style={{ color: hexToCss(theme.primary) }}>{card.title}</div>
-            <div className="text-xs" style={{ color: hexToCss(theme.text) }}>{card.desc}</div>
+            <div className="text-xs" style={{ color: SAFE_TEXT_CSS.gray }}>{card.desc}</div>
           </div>
         ))}
       </div>
@@ -463,7 +476,7 @@ function FormativeAssessmentSlideContent({ slide, theme }: { slide: PremiumSlide
   return (
     <div className="flex flex-col h-full px-8 pt-6">
       <h2 className="text-3xl font-bold mb-1" style={{ color: hexToCss(theme.primary) }}>{slide.title}</h2>
-      {slide.subtitle && <div className="text-sm text-white/60 italic mb-4">{slide.subtitle}</div>}
+      {slide.subtitle && <div className="text-sm italic mb-4" style={{ color: SAFE_TEXT_CSS.darkGray }}>{slide.subtitle}</div>}
       {slide.table ? (
         <div className="flex-1 flex items-center">
           <SlideTable headers={slide.table.headers} rows={slide.table.rows} caption={slide.table.caption} theme={theme} />
@@ -473,13 +486,13 @@ function FormativeAssessmentSlideContent({ slide, theme }: { slide: PremiumSlide
           {slide.bullets?.map((b, i) => (
             <div key={i} className="flex items-start gap-2">
               <span className="text-lg">✅</span>
-              <span className="text-base" style={{ color: hexToCss(theme.text) }}>{b}</span>
+              <span className="text-base" style={{ color: SAFE_TEXT_CSS.onLight }}>{b}</span>
             </div>
           ))}
         </div>
       )}
       {slide.studentPrompt && (
-        <div className="mt-4 px-4 py-3 rounded-lg border-2" style={{ borderColor: hexToCss(theme.primary), backgroundColor: hexToCss(theme.primary) + '10' }}>
+        <div className="mt-4 px-4 py-3 rounded-lg border-2" style={{ borderColor: hexToCss(theme.primary), backgroundColor: `${hexToCss(theme.primary)}10` }}>
           <div className="font-bold text-sm" style={{ color: hexToCss(theme.primary) }}>🎫 Ticket de salida: "{slide.studentPrompt}"</div>
         </div>
       )}
@@ -490,11 +503,14 @@ function FormativeAssessmentSlideContent({ slide, theme }: { slide: PremiumSlide
 function ClosureSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: PremiumPresentation; theme: SubjectTheme }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8">
-      <div className="text-4xl font-bold text-white mb-3">{slide.title}</div>
+      {/* Light card for title */}
+      <div className="px-8 py-4 rounded-2xl mb-4" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
+        <div className="text-4xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</div>
+      </div>
       {slide.subtitle && <div className="text-base mb-4" style={{ color: hexToCss(theme.accent) }}>{slide.subtitle}</div>}
       <ul className="space-y-2 mb-4">
         {slide.bullets?.map((b, i) => (
-          <li key={i} className="text-base text-white/80">{b}</li>
+          <li key={i} className="text-base" style={{ color: SAFE_TEXT_CSS.onLight }}>{b}</li>
         ))}
       </ul>
       {slide.studentPrompt && (
