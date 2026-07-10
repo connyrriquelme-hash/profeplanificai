@@ -40,6 +40,26 @@ function hexToCss(hex: string): string {
   return `#${hex}`;
 }
 
+// Safe text color palette - NO text-white allowed
+const SAFE_TEXT_CSS = {
+  black: '#111827',
+  darkGray: '#374151',
+  gray: '#6B7280',
+  red: '#DC2626',
+  blue: '#1D4ED8',
+  darkBlue: '#1E3A8A',
+  onDark: '#FFFFFF',      // only on true dark backgrounds
+  onPrimaryDark: '#FFFFFF',
+  onAccentDark: '#FFFFFF',
+  onLight: '#1E1B4B',     // theme.text (dark navy) on light/pastel
+  onMedium: '#3B0764',    // darker purple on medium
+  bulletOnDark: '#FFFFFF',
+  bulletOnLight: '#1E1B4B',
+  subtitleOnDark: '#DDDDDD', // lighter gray on dark
+  footer: '#888888',
+  slideNumber: '#AAAAAA',
+};
+
 function getSubjectIcon(keyword: string): string {
   const kw = keyword.toLowerCase();
   for (const [key, icon] of Object.entries(SUBJECT_ICONS)) {

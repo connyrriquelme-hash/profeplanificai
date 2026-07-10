@@ -16,13 +16,27 @@ const SUBJECT_ICONS: Record<string, string> = {
   'ingles': '🇬🇧', 'english': '🇬🇧', 'vocabulario': '📝', 'gramatica': '📐',
   'color': '🎨', 'forma': '🔷', 'textura': '🖌️', 'composicion': '🖼️', 'dibujo': '✏️', 'pintura': '🖌️',
   'ritmo': '🥁', 'melodia': '🎵', 'instrumento': '🎸', 'cancion': '🎤', 'partitura': '🎼',
-'movimiento': '🏃', 'deporte': '⚽', 'ejercicio': '💪', 'salud': '❤️', 'equipo': '🤝',
+  'movimiento': '🏃', 'deporte': '⚽', 'ejercicio': '💪', 'salud': '❤️', 'equipo': '🤝',
   'tecnologia': '💻', 'programa': '💻', 'robot': '🤖', 'diseno': '🎨', 'prototipo': '🔧',
   'filosof': '🤔', 'etica': '⚖️', 'argumento': '💬', 'pregunta': '❓', 'razon': '🧠',
   'fuerza': '⚡', 'energia': '⚡', 'onda': '🌊', 'luz': '💡', 'electricidad': '⚡',
   'atomo': '⚛️', 'molecula': '🧪', 'reaccion': '⚗️', 'elemento': '🧪',
   'ciudadan': '🏛️', 'derecho': '⚖️', 'deber': '📋', 'participa': '🗳️', 'comunidad': '👥', 'convivencia': '🤝',
   'identidad': '👶', 'cuerpo': '🤸',
+};
+
+// Safe text color palette - NO hardcoded FFFFFF except on true dark backgrounds
+const SAFE_TEXT = {
+  onDark: 'FFFFFF',           // true dark backgrounds (primary dark variants)
+  onPrimaryDark: 'FFFFFF',    // on theme.primary when used as dark bg
+  onAccentDark: 'FFFFFF',     // on theme.accent when dark
+  onLight: '1E1B4B',          // theme.text (dark navy) on light/pastel backgrounds
+  onMedium: '3B0764',         // darker purple on medium backgrounds
+  bulletOnDark: 'FFFFFF',
+  bulletOnLight: '1E1B4B',
+  subtitleOnDark: 'DDDDDD',   // lighter gray on dark
+  footer: '888888',
+  slideNumber: 'AAAAAA',
 };
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -49,17 +63,17 @@ function lighten(hex: string, amount: number): string {
 function getContrastColor(backgroundHex: string): string {
   const c = hexToRgb(backgroundHex);
   const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
-  return luminance > 0.5 ? '000000' : 'FFFFFF';
+  return luminance > 0.5 ? '000000' : SAFE_TEXT.onDark;
 }
 
 function getTitleColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark'): string {
-  if (variant === 'dark') return 'FFFFFF';
+  if (variant === 'dark') return SAFE_TEXT.onPrimaryDark;
   if (variant === 'accent') return theme.primary;
   return getContrastColor(theme.background);
 }
 
 function getBodyColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark'): string {
-  if (variant === 'dark') return 'FFFFFF';
+  if (variant === 'dark') return SAFE_TEXT.onPrimaryDark;
   if (variant === 'accent') return theme.text;
   return getContrastColor(theme.background);
 }
@@ -68,18 +82,18 @@ function getBodyColor(theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' 
 function getSafeTitleColor(theme: SubjectTheme, backgroundHex: string): string {
   const c = hexToRgb(backgroundHex);
   const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
-  // Force dark text on light backgrounds, white on dark
-  if (luminance > 0.6) return theme.text; // Dark text for light backgrounds
-  if (luminance > 0.4) return '1E1B4B'; // Dark navy for medium backgrounds
-  return 'FFFFFF'; // White for dark backgrounds
+  // Force dark text on light backgrounds, safe on medium/dark
+  if (luminance > 0.6) return SAFE_TEXT.onLight;
+  if (luminance > 0.4) return SAFE_TEXT.onMedium;
+  return SAFE_TEXT.onDark; // White only on true dark backgrounds
 }
 
 function getSafeBodyColor(theme: SubjectTheme, backgroundHex: string): string {
   const c = hexToRgb(backgroundHex);
   const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
-  if (luminance > 0.6) return theme.text;
-  if (luminance > 0.4) return '3B0764';
-  return 'FFFFFF';
+  if (luminance > 0.6) return SAFE_TEXT.onLight;
+  if (luminance > 0.4) return SAFE_TEXT.onMedium;
+  return SAFE_TEXT.onDark;
 }
 
 function getChildModeBackground(theme: SubjectTheme): string {
@@ -321,31 +335,35 @@ function addTable(slide: PptxGenJS.Slide, headers: string[], rows: string[][], o
   }
 }
 
-function addSlideTitle(slide: PptxGenJS.Slide, title: string, theme: SubjectTheme, opts?: { x?: number; y?: number; w?: number; color?: string }) {
+function addSlideTitle(slide: PptxGenJS.Slide, title: string, theme: SubjectTheme, opts?: { x?: number; y?: number; w?: number; color?: string; isDarkBg?: boolean }) {
+  const bgType = opts?.isDarkBg ? 'dark' : 'light';
+  const safeColor = opts?.color ?? (bgType === 'dark' ? SAFE_TEXT.onPrimaryDark : SAFE_TEXT.onLight);
   slide.addText(title, {
     x: opts?.x ?? 0.6, y: opts?.y ?? 0.3, w: opts?.w ?? 12.1, h: 0.8,
-    fontSize: 28, bold: true, color: opts?.color ?? 'FFFFFF', align: 'left',
+    fontSize: 28, bold: true, color: safeColor, align: 'left',
     fontFace: 'Arial',
   });
 }
 
-function addSlideSubtitle(slide: PptxGenJS.Slide, subtitle: string, theme: SubjectTheme) {
+function addSlideSubtitle(slide: PptxGenJS.Slide, subtitle: string, theme: SubjectTheme, isDarkBg: boolean = false) {
   slide.addText(subtitle, {
     x: 0.6, y: 1.0, w: 12.1, h: 0.5,
-    fontSize: 14, color: theme.text, fontFace: 'Arial',
-    italic: true, transparency: 30,
+    fontSize: 14, color: isDarkBg ? SAFE_TEXT.subtitleOnDark : theme.text, fontFace: 'Arial',
+    italic: true, transparency: isDarkBg ? 20 : 30,
   });
 }
 
-function addBullets(slide: PptxGenJS.Slide, bullets: string[], opts: { x: number; y: number; w: number; h: number; fontSize?: number; color?: string }) {
+function addBullets(slide: PptxGenJS.Slide, bullets: string[], opts: { x: number; y: number; w: number; h: number; fontSize?: number; color?: string; isDarkBg?: boolean }) {
   if (!bullets?.length) return;
+  const isDark = opts.isDarkBg ?? false;
+  const safeColor = opts.color ?? (isDark ? SAFE_TEXT.bulletOnDark : SAFE_TEXT.bulletOnLight);
   const text = bullets.map(b => ({
     text: `  ${b}`,
     options: {
       fontSize: opts.fontSize || 16,
-      color: opts.color || 'FFFFFF',
+      color: safeColor,
       fontFace: 'Arial',
-      bullet: { code: '2022', color: opts.color || 'FFFFFF' },
+      bullet: { code: '2022', color: safeColor },
       paraSpaceAfter: 8,
     },
   }));
@@ -374,7 +392,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
 
   const titleBg: PptxGenJS.ShapeProps = {
     x: 1.5, y: 1.5, w: 10.3, h: 2.4,
-    fill: { color: '000000', transparency: 30 },
+    fill: { color: SAFE_TEXT.onLight, transparency: 85 },
     rectRadius: 0.2,
   };
   s.addShape('rect', titleBg);
@@ -389,7 +407,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
 
   s.addText(slide.title, {
     x: 1.0, y: isChild ? 1.8 : 1.6, w: 11.3, h: 2.2,
-    fontSize: isChild ? 40 : 44, bold: true, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    fontSize: isChild ? 40 : 44, bold: true, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
     lineSpacing: 1.1,
   });
 
@@ -410,7 +428,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
 
   s.addText(`OA: ${pres.oa}`, {
     x: 2.5, y: (isChild ? 5.3 : 5.15), w: 8.3, h: 0.6,
-    fontSize: 14, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    fontSize: 14, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
     bold: true,
   });
 
@@ -432,11 +450,19 @@ function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPrese
     });
   }
 
+  // Add light card for text on dark background
+  const cardBg: PptxGenJS.ShapeProps = {
+    x: 0.5, y: 0.2, w: 7.0, h: 6.0,
+    fill: { color: SAFE_TEXT.onLight, transparency: 5 },
+    rectRadius: 0.15,
+  };
+  s.addShape('rect', cardBg);
+
   addSlideTitle(s, slide.title, theme);
   if (slide.subtitle) addSlideSubtitle(s, slide.subtitle, theme);
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 2.0 : 1.6, w: 6.5, h: 4.5, color: 'FFFFFF', fontSize: isChild ? 18 : 16 });
+    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 2.0 : 1.6, w: 6.5, h: 4.5, color: SAFE_TEXT.onDark, fontSize: isChild ? 18 : 16 });
   }
 
   addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || 'activación', theme, 'right');
@@ -609,27 +635,40 @@ function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres:
   }
 
   const titleY = isChild ? 0.5 : 0.3;
+  // Add a light card behind title for dark backgrounds
+  const titleCard: PptxGenJS.ShapeProps = {
+    x: 0.4, y: titleY - 0.1, w: 12.5, h: 1.0,
+    fill: { color: theme.background, transparency: 10 },
+    rectRadius: 0.1,
+  };
+  s.addShape('rect', titleCard);
+
   s.addText(slide.title, {
     x: 0.6, y: titleY, w: 12.1, h: 0.8,
-    fontSize: isChild ? 32 : 28, bold: true, color: isChild ? getSafeTitleColor(theme, theme.primary) : 'FFFFFF', align: 'left', fontFace: 'Arial',
+    fontSize: isChild ? 32 : 28, bold: true, color: SAFE_TEXT.onLight, align: 'left', fontFace: 'Arial',
   });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
       x: 0.6, y: isChild ? 1.2 : 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: isChild ? getSafeBodyColor(theme, theme.primary) : theme.accent, fontFace: 'Arial', italic: true,
+      fontSize: 14, color: SAFE_TEXT.onLight, fontFace: 'Arial', italic: true,
     });
   }
 
   if (slide.bullets?.length) {
-    const bulletColor = isChild ? getSafeBodyColor(theme, theme.primary) : 'FFFFFF';
-    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: isChild ? 11.5 : 5.8, h: 4.5, color: bulletColor, fontSize: isChild ? 18 : 16 });
+    const bulletCard: PptxGenJS.ShapeProps = {
+      x: 0.4, y: isChild ? 1.6 : 1.4, w: isChild ? 11.7 : 6.2, h: 4.8,
+      fill: { color: theme.background, transparency: 10 },
+      rectRadius: 0.1,
+    };
+    s.addShape('rect', bulletCard);
+
+    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: isChild ? 11.5 : 5.8, h: 4.5, color: SAFE_TEXT.onLight, fontSize: isChild ? 18 : 16, isDarkBg: false });
   }
 
   if (!isChild) {
     addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'left');
   } else {
-    // For child mode, put image on right and bullets full width
     addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'right');
   }
   addFooter(s, pres.nivel, pres.asignatura);
@@ -703,18 +742,32 @@ function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, p
     });
   }
 
-  addSlideTitle(s, slide.title, theme);
+  // Light card for title
+  const titleCard: PptxGenJS.ShapeProps = {
+    x: 0.4, y: 0.1, w: 12.5, h: 1.0,
+    fill: { color: theme.background, transparency: 10 },
+    rectRadius: 0.1,
+  };
+  s.addShape('rect', titleCard);
+
+  addSlideTitle(s, slide.title, theme, { isDarkBg: false });
 
   if (slide.subtitle) {
     s.addText(slide.subtitle, {
       x: 0.6, y: isChild ? 1.2 : 1.0, w: 12.1, h: 0.5,
-      fontSize: 14, color: isChild ? getSafeBodyColor(theme, theme.primary) : theme.accent, fontFace: 'Arial', italic: true,
+      fontSize: 14, color: SAFE_TEXT.onLight, fontFace: 'Arial', italic: true,
     });
   }
 
   if (slide.bullets?.length) {
-    const bulletColor = isChild ? getSafeBodyColor(theme, theme.primary) : 'FFFFFF';
-    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: 7.0, h: 4.5, color: bulletColor, fontSize: isChild ? 18 : 16 });
+    const bulletCard: PptxGenJS.ShapeProps = {
+      x: 0.4, y: isChild ? 1.6 : 1.4, w: 7.4, h: 4.8,
+      fill: { color: theme.background, transparency: 10 },
+      rectRadius: 0.1,
+    };
+    s.addShape('rect', bulletCard);
+
+    addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: 7.0, h: 4.5, color: SAFE_TEXT.onLight, fontSize: isChild ? 18 : 16, isDarkBg: false });
   }
 
   if (!isChild) {
@@ -898,9 +951,17 @@ function buildClosureSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPr
     });
   }
 
+  // Light card for title
+  const titleCard: PptxGenJS.ShapeProps = {
+    x: 1.0, y: isChild ? 1.6 : 1.3, w: 11.3, h: 1.2,
+    fill: { color: theme.background, transparency: 10 },
+    rectRadius: 0.15,
+  };
+  s.addShape('rect', titleCard);
+
   s.addText(slide.title, {
     x: 1.0, y: isChild ? 1.8 : 1.5, w: 11.3, h: 1.0,
-    fontSize: isChild ? 40 : 36, bold: true, color: 'FFFFFF', align: 'center', fontFace: 'Arial',
+    fontSize: isChild ? 40 : 36, bold: true, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
   });
 
   if (slide.subtitle) {
@@ -911,7 +972,14 @@ function buildClosureSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPr
   }
 
   if (slide.bullets?.length) {
-    addBullets(s, slide.bullets, { x: 2.0, y: isChild ? 3.5 : 3.3, w: 9.3, h: 2.5, fontSize: isChild ? 18 : 15, color: 'DDDDDD' });
+    const bulletCard: PptxGenJS.ShapeProps = {
+      x: 1.8, y: isChild ? 3.3 : 3.0, w: 9.7, h: 3.0,
+      fill: { color: theme.background, transparency: 10 },
+      rectRadius: 0.1,
+    };
+    s.addShape('rect', bulletCard);
+
+    addBullets(s, slide.bullets, { x: 2.0, y: isChild ? 3.5 : 3.3, w: 9.3, h: 2.5, fontSize: isChild ? 18 : 15, color: SAFE_TEXT.onLight, isDarkBg: false });
   }
 
   if (slide.studentPrompt) {
