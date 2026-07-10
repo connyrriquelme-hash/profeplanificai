@@ -387,7 +387,7 @@ function addSlideNumber(slide: PptxGenJS.Slide, num: number, total: number) {
 function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
   const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
-  addRichBackground(s, theme, 'dark', isChild);
+  addRichBackground(s, theme, isChild ? 'light' : 'accent', isChild);
   addDecorativeElements(s, theme);
 
   const titleBg: PptxGenJS.ShapeProps = {
@@ -440,7 +440,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
 function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
   const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
-  addRichBackground(s, theme, 'dark', isChild);
+  addRichBackground(s, theme, 'light', isChild);
 
   // Pictogram for child mode
   if (isChild && slide.pictogram) {
@@ -732,7 +732,7 @@ function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Pr
 function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
   const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
-  addRichBackground(s, theme, 'dark', isChild);
+  addRichBackground(s, theme, 'light', isChild);
 
   // Pictogram for child mode
   if (isChild && slide.pictogram) {
@@ -940,7 +940,7 @@ function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pre
 function buildClosureSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
   const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
-  addRichBackground(s, theme, 'dark', isChild);
+  addRichBackground(s, theme, 'accent', isChild);
   addDecorativeElements(s, theme);
 
   // Pictogram for child mode

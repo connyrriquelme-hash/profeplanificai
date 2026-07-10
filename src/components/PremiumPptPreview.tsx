@@ -69,17 +69,10 @@ function getSubjectIcon(keyword: string): string {
 }
 
 function getBackgroundStyle(theme: SubjectTheme, layout: string): React.CSSProperties {
-  const isDark = ['cover', 'hook', 'visual_explanation', 'collaborative_activity', 'closure'].includes(layout);
+  const isDark = false; // No dark backgrounds - all light/accent
   const isAccent = ['objective', 'guided_activity', 'dua_supports', 'formative_assessment'].includes(layout);
   
-  if (isDark) {
-    // Dark variant: primary background + gradient overlays + decorative circles
-    return {
-      background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${hexToCss(darken(theme.primary, 0.15))} 100%)`,
-      position: 'relative',
-      overflow: 'hidden',
-    };
-  } else if (isAccent) {
+  if (isAccent) {
     // Accent variant: light background + top bar + side bar + accent circle
     return {
       background: hexToCss(theme.background),
@@ -96,11 +89,11 @@ function getBackgroundStyle(theme: SubjectTheme, layout: string): React.CSSPrope
   }
 }
 
-function darken(hex: string, amount: number): string {
+function lighten(hex: string, amount: number): string {
   const n = parseInt(hex, 16);
-  const r = Math.max(0, Math.round(((n >> 16) & 255) * (1 - amount)));
-  const g = Math.max(0, Math.round(((n >> 8) & 255) * (1 - amount)));
-  const b = Math.max(0, Math.round((n & 255) * (1 - amount)));
+  const r = Math.min(255, Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * amount));
+  const g = Math.min(255, Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * amount));
+  const b = Math.min(255, Math.round((n & 255) + (255 - (n & 255)) * amount));
   return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
@@ -209,7 +202,7 @@ function CoverSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: 
     <div
       className="relative flex flex-col items-center justify-center h-full text-center px-8"
       style={{
-        background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${darken(hexToCss(theme.primary), 0.2)} 100%)`,
+        background: `linear-gradient(135deg, #F8FAFC 0%, ${hexToCss(lighten(theme.background, 0.25))} 100%)`,
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -250,7 +243,7 @@ function HookSlideContent({ slide, theme }: { slide: PremiumSlide; theme: Subjec
     <div
       className="relative flex h-full"
       style={{
-        background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${darken(hexToCss(theme.primary), 0.2)} 100%)`,
+        background: `linear-gradient(135deg, #F8FAFC 0%, ${hexToCss(lighten(theme.background, 0.25))} 100%)`,
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -551,30 +544,25 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
   const next = useCallback(() => setCurrentSlide(i => Math.min(total - 1, i + 1)), [total]);
 
   const renderSlide = SLIDE_RENDERERS[slide.layout];
-  const isDarkLayout = ['cover', 'hook', 'visual_explanation', 'collaborative_activity', 'closure'].includes(slide.layout);
   const isAccentLayout = ['objective', 'guided_activity', 'dua_supports', 'formative_assessment'].includes(slide.layout);
 
-  // Rich background styles matching PPT generator
-  const getSlideBackground = (theme: SubjectTheme) => {
-    if (isDarkLayout) {
-      return {
-        background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${darken(hexToCss(theme.primary), 0.2)} 100%)`,
-        position: 'relative' as const,
-        overflow: 'hidden' as const,
-      };
-    } else if (isAccentLayout) {
-      return {
-        background: hexToCss(theme.background),
-        position: 'relative' as const,
-        overflow: 'hidden' as const,
-      };
-    } else {
+  // Rich background styles matching PPT generator - all light/accent now
+  const getSlideBackground = (theme: SubjectTheme): React.CSSProperties => {
+    if (isAccentLayout) {
+      // Accent variant: light background + top bar + side bar + accent circle
       return {
         background: hexToCss(theme.background),
         position: 'relative' as const,
         overflow: 'hidden' as const,
       };
     }
+
+    // Light variant: light background + top glow + side glow + corner circle
+    return {
+      background: `linear-gradient(135deg, #F8FAFC 0%, ${hexToCss(lighten(theme.background, 0.25))} 100%)`,
+      position: 'relative' as const,
+      overflow: 'hidden' as const,
+    };
   };
 
   const slideBgStyle = getSlideBackground(theme);
@@ -582,16 +570,9 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
   const slideContent = (
     <div
       className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl"
-      style={{ ...slideBgStyle, aspectRatio: '16/9' }}
+      style={{ ...slideBgStyle, aspectRatio: '16/9' as const }}
     >
-      {/* Decorative elements for dark layouts */}
-      {isDarkLayout && (
-        <>
-          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-25 blur-3xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full opacity-40 blur-2xl" style={{ backgroundColor: hexToCss(theme.secondary) }} />
-          <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-20" style={{ backgroundColor: hexToCss(theme.accent) }} />
-        </>
-      )}
+      {/* Decorative elements for accent layouts */}
       {isAccentLayout && (
         <>
           <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hexToCss(theme.primary) }} />
@@ -600,7 +581,7 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           <div className="absolute bottom-0 left-0 right-0 h-3 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
         </>
       )}
-      {(!isDarkLayout && !isAccentLayout) && (
+      {!isAccentLayout && (
         <>
           <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hexToCss(theme.primary) }} />
           <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
@@ -612,16 +593,16 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
       <div className="absolute inset-0 p-6">
         {renderSlide ? renderSlide(slide, presentation, theme) : (
           <div className="flex flex-col justify-center h-full px-8">
-            <h2 className="text-2xl font-bold text-white mb-2">{slide.title}</h2>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: SAFE_TEXT_CSS.darkBlue }}>{slide.title}</h2>
             <ul className="space-y-1">
               {slide.bullets?.map((b, i) => (
-                <li key={i} className="text-sm text-white/80">• {b}</li>
+                <li key={i} className="text-sm" style={{ color: SAFE_TEXT_CSS.darkGray }}>• {b}</li>
               ))}
             </ul>
           </div>
         )}
       </div>
-      <div className="absolute bottom-2 left-4 right-4 flex justify-between items-center text-[10px] text-white/40">
+      <div className="absolute bottom-2 left-4 right-4 flex justify-between items-center text-[10px]" style={{ color: SAFE_TEXT_CSS.gray }}>
         <span>ProfePlanificAI | {presentation.nivel} | {presentation.asignatura}</span>
         <span>{currentSlide + 1} / {total}</span>
       </div>
@@ -647,16 +628,16 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: SAFE_TEXT_CSS.onLight }}>
         <div className="flex items-center justify-between p-3">
-          <div className="text-white text-sm font-medium">{presentation.title}</div>
+          <div className="text-sm font-medium" style={{ color: SAFE_TEXT_CSS.onLight }}>{presentation.title}</div>
           <div className="flex items-center gap-3">
             {isGeneratingImages && imageProgress && (
-              <span className="text-xs text-white/60">
+              <span className="text-xs" style={{ color: SAFE_TEXT_CSS.gray }}>
                 Generando imágenes: {imageProgress.current}/{imageProgress.total}
               </span>
             )}
-            <button onClick={() => setIsFullscreen(false)} className="text-white/60 hover:text-white">
+            <button onClick={() => setIsFullscreen(false)} className="hover:text-red-600" style={{ color: SAFE_TEXT_CSS.gray }}>
               <X size={20} />
             </button>
           </div>
@@ -667,11 +648,11 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           </div>
         </div>
         <div className="flex items-center justify-center gap-4 p-4">
-          <button onClick={prev} disabled={currentSlide === 0} className="text-white/60 hover:text-white disabled:opacity-30">
+          <button onClick={prev} disabled={currentSlide === 0} className="disabled:opacity-30" style={{ color: SAFE_TEXT_CSS.gray }}>
             <ChevronLeft size={24} />
           </button>
-          <span className="text-white text-sm">{currentSlide + 1} / {total}</span>
-          <button onClick={next} disabled={currentSlide === total - 1} className="text-white/60 hover:text-white disabled:opacity-30">
+          <span className="text-sm" style={{ color: SAFE_TEXT_CSS.onLight }}>{currentSlide + 1} / {total}</span>
+          <button onClick={next} disabled={currentSlide === total - 1} className="disabled:opacity-30" style={{ color: SAFE_TEXT_CSS.gray }}>
             <ChevronRight size={24} />
           </button>
         </div>
