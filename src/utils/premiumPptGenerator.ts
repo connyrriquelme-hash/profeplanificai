@@ -5,6 +5,26 @@ import { getSubjectTheme } from './premiumPptModel';
 const SLIDE_W = 13.333;
 const SLIDE_H = 7.5;
 
+const SUBJECT_ICONS: Record<string, string> = {
+  'celula': '🧬', 'planta': '🌱', 'semilla': '🌱', 'flor': '🌸', 'poliniz': '🐝',
+  'animal': '🦋', 'ecosistema': '🌿', 'ciclo': '🔄', 'fotosintesis': '☀️',
+  'numero': '🔢', 'suma': '➕', 'resta': '➖', 'multiplic': '✖️', 'divis': '➗',
+  'fraccion': '📊', 'geometr': '📐', 'figura': '🔷', 'angulo': '📐',
+  'texto': '📖', 'lectura': '📖', 'escritura': '✍️', 'palabra': '🔤', 'cuento': '📚', 'historia': '📜',
+  'personaje': '👤', 'narrativa': '📝', 'poema': '🎭', 'rima': '🎵',
+  'mapa': '🗺️', 'chile': '🇨🇱', 'indigena': '🏞️', 'colonia': '⛪', 'independencia': '🎖️',
+  'ingles': '🇬🇧', 'english': '🇬🇧', 'vocabulario': '📝', 'gramatica': '📐',
+  'color': '🎨', 'forma': '🔷', 'textura': '🖌️', 'composicion': '🖼️', 'dibujo': '✏️', 'pintura': '🖌️',
+  'ritmo': '🥁', 'melodia': '🎵', 'instrumento': '🎸', 'cancion': '🎤', 'partitura': '🎼',
+'movimiento': '🏃', 'deporte': '⚽', 'ejercicio': '💪', 'salud': '❤️', 'equipo': '🤝',
+  'tecnologia': '💻', 'programa': '💻', 'robot': '🤖', 'diseno': '🎨', 'prototipo': '🔧',
+  'filosof': '🤔', 'etica': '⚖️', 'argumento': '💬', 'pregunta': '❓', 'razon': '🧠',
+  'fuerza': '⚡', 'energia': '⚡', 'onda': '🌊', 'luz': '💡', 'electricidad': '⚡',
+  'atomo': '⚛️', 'molecula': '🧪', 'reaccion': '⚗️', 'elemento': '🧪',
+  'ciudadan': '🏛️', 'derecho': '⚖️', 'deber': '📋', 'participa': '🗳️', 'comunidad': '👥', 'convivencia': '🤝',
+  'identidad': '👶', 'cuerpo': '🤸',
+};
+
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const n = parseInt(hex, 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
@@ -18,45 +38,107 @@ function darken(hex: string, amount: number): string {
   return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-function addGradientBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark') {
+function lighten(hex: string, amount: number): string {
+  const c = hexToRgb(hex);
+  const r = Math.min(255, Math.round(c.r + (255 - c.r) * amount));
+  const g = Math.min(255, Math.round(c.g + (255 - c.g) * amount));
+  const b = Math.min(255, Math.round(c.b + (255 - c.b) * amount));
+  return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function addRichBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark') {
   if (variant === 'dark') {
     slide.background = { color: theme.primary };
-    const shape: PptxGenJS.ShapeProps = {
+    const base: PptxGenJS.ShapeProps = {
       x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-      fill: { color: darken(theme.primary, 0.15) },
+      fill: { color: darken(theme.primary, 0.08) },
       rectRadius: 0,
     };
-    slide.addShape('rect', shape);
-    const deco: PptxGenJS.ShapeProps = {
-      x: SLIDE_W * 0.6, y: -1, w: SLIDE_W * 0.6, h: SLIDE_H + 2,
+    slide.addShape('rect', base);
+    const grad1: PptxGenJS.ShapeProps = {
+      x: SLIDE_W * 0.55, y: -1.5, w: SLIDE_W * 0.7, h: SLIDE_H + 3,
+      fill: { color: theme.secondary, transparency: 75 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', grad1);
+    const grad2: PptxGenJS.ShapeProps = {
+      x: -1, y: SLIDE_H * 0.6, w: SLIDE_W * 0.5, h: SLIDE_H * 0.6,
+      fill: { color: theme.accent, transparency: 80 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', grad2);
+    const circle1: PptxGenJS.ShapeProps = {
+      x: SLIDE_W - 3, y: -2, w: 5, h: 5,
+      fill: { color: theme.accent, transparency: 65 },
+      line: { width: 0 },
+    };
+    slide.addShape('ellipse', circle1);
+    const circle2: PptxGenJS.ShapeProps = {
+      x: -1.5, y: SLIDE_H - 3, w: 6, h: 6,
       fill: { color: theme.secondary, transparency: 70 },
-      rectRadius: 0,
+      line: { width: 0 },
     };
-    slide.addShape('rect', deco);
+    slide.addShape('ellipse', circle2);
   } else if (variant === 'accent') {
     slide.background = { color: theme.background };
-    const bar: PptxGenJS.ShapeProps = {
+    const topBar: PptxGenJS.ShapeProps = {
+      x: 0, y: 0, w: SLIDE_W, h: 0.18,
+      fill: { color: theme.primary },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', topBar);
+    const sideBar: PptxGenJS.ShapeProps = {
+      x: 0, y: 0, w: 0.18, h: SLIDE_H,
+      fill: { color: theme.primary },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', sideBar);
+    const accentCircle: PptxGenJS.ShapeProps = {
+      x: SLIDE_W - 2.5, y: -1, w: 4, h: 4,
+      fill: { color: theme.accent, transparency: 55 },
+      line: { width: 0 },
+    };
+    slide.addShape('ellipse', accentCircle);
+    const bottomAccent: PptxGenJS.ShapeProps = {
+      x: 0, y: SLIDE_H - 0.12, w: SLIDE_W, h: 0.12,
+      fill: { color: theme.primary, transparency: 60 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', bottomAccent);
+  } else {
+    slide.background = { color: theme.background };
+    const topGlow: PptxGenJS.ShapeProps = {
       x: 0, y: 0, w: SLIDE_W, h: 0.15,
       fill: { color: theme.primary },
       rectRadius: 0,
     };
-    slide.addShape('rect', bar);
-    const side: PptxGenJS.ShapeProps = {
-      x: 0, y: 0, w: 0.15, h: SLIDE_H,
+    slide.addShape('rect', topGlow);
+    const sideGlow: PptxGenJS.ShapeProps = {
+      x: 0, y: 0, w: 0.12, h: SLIDE_H,
       fill: { color: theme.primary },
       rectRadius: 0,
     };
-    slide.addShape('rect', side);
-  } else {
-    slide.background = { color: theme.background };
+    slide.addShape('rect', sideGlow);
+    const cornerCircle: PptxGenJS.ShapeProps = {
+      x: SLIDE_W - 2, y: -1, w: 3.5, h: 3.5,
+      fill: { color: theme.accent, transparency: 60 },
+      line: { width: 0 },
+    };
+    slide.addShape('ellipse', cornerCircle);
+    const bottomLine: PptxGenJS.ShapeProps = {
+      x: 0, y: SLIDE_H - 0.1, w: SLIDE_W, h: 0.1,
+      fill: { color: theme.primary, transparency: 50 },
+      rectRadius: 0,
+    };
+    slide.addShape('rect', bottomLine);
   }
 }
 
-function addDecorativeCircles(slide: PptxGenJS.Slide, theme: SubjectTheme) {
+function addDecorativeElements(slide: PptxGenJS.Slide, theme: SubjectTheme) {
   const circles: PptxGenJS.ShapeProps[] = [
-    { x: SLIDE_W - 2.5, y: -1, w: 4, h: 4, fill: { color: theme.accent, transparency: 60 } },
-    { x: SLIDE_W - 1.5, y: SLIDE_H - 2, w: 3, h: 3, fill: { color: theme.secondary, transparency: 70 } },
-    { x: -1, y: SLIDE_H - 1.5, w: 2.5, h: 2.5, fill: { color: theme.accent, transparency: 80 } },
+    { x: SLIDE_W - 2.2, y: -1, w: 3.5, h: 3.5, fill: { color: theme.accent, transparency: 75 }, line: { width: 0 } },
+    { x: SLIDE_W - 1.2, y: SLIDE_H - 2, w: 2.8, h: 2.8, fill: { color: theme.secondary, transparency: 82 }, line: { width: 0 } },
+    { x: -1, y: SLIDE_H - 1.3, w: 2.2, h: 2.2, fill: { color: theme.accent, transparency: 88 }, line: { width: 0 } },
   ];
   circles.forEach(c => slide.addShape('ellipse', { ...c, line: { width: 0 } }));
 }
@@ -223,7 +305,6 @@ function addBullets(slide: PptxGenJS.Slide, bullets: string[], opts: { x: number
       color: opts.color || 'FFFFFF',
       fontFace: 'Arial',
       bullet: { code: '2022', color: opts.color || 'FFFFFF' },
-      breakType: 'none' as const,
       paraSpaceAfter: 8,
     },
   }));
@@ -246,8 +327,8 @@ function addSlideNumber(slide: PptxGenJS.Slide, num: number, total: number) {
 
 function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
-  addDecorativeCircles(s, theme);
+  addRichBackground(s, theme, 'dark');
+  addDecorativeElements(s, theme);
 
   s.addText(slide.title, {
     x: 1.0, y: 1.8, w: 11.3, h: 2.0,
@@ -271,7 +352,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
 
 function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
+  addRichBackground(s, theme, 'dark');
 
   addSlideTitle(s, slide.title, theme);
   if (slide.subtitle) addSlideSubtitle(s, slide.subtitle, theme);
@@ -296,7 +377,7 @@ function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPrese
 
 function buildObjectiveSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  addRichBackground(s, theme, 'accent');
 
   const titleColor = theme.primary;
   s.addText(slide.title, {
@@ -342,7 +423,7 @@ function buildObjectiveSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premium
 
 function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'light');
+  addRichBackground(s, theme, 'light');
 
   s.addText(slide.title, {
     x: 0.6, y: 0.3, w: 12.1, h: 0.8,
@@ -405,7 +486,7 @@ function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Prem
 
 function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
+  addRichBackground(s, theme, 'dark');
 
   addSlideTitle(s, slide.title, theme);
 
@@ -426,7 +507,7 @@ function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres:
 
 function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  addRichBackground(s, theme, 'accent');
 
   s.addText(slide.title, {
     x: 0.6, y: 0.3, w: 12.1, h: 0.8,
@@ -467,7 +548,7 @@ function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Pr
 
 function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
+  addRichBackground(s, theme, 'dark');
 
   addSlideTitle(s, slide.title, theme);
 
@@ -498,7 +579,7 @@ function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, p
 
 function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  addRichBackground(s, theme, 'accent');
 
   s.addText(slide.title, {
     x: 0.6, y: 0.3, w: 12.1, h: 0.8,
@@ -561,7 +642,7 @@ function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premi
 
 function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'accent');
+  addRichBackground(s, theme, 'accent');
 
   s.addText(slide.title, {
     x: 0.6, y: 0.3, w: 12.1, h: 0.8,
@@ -609,8 +690,8 @@ function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pre
 
 function buildClosureSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  addGradientBackground(s, theme, 'dark');
-  addDecorativeCircles(s, theme);
+  addRichBackground(s, theme, 'dark');
+  addDecorativeElements(s, theme);
 
   s.addText(slide.title, {
     x: 1.0, y: 1.5, w: 11.3, h: 1.0,
