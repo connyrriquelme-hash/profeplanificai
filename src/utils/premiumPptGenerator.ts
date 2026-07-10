@@ -1,6 +1,6 @@
 import PptxGenJS from 'pptxgenjs';
 import type { PremiumPresentation, PremiumSlide, SubjectTheme } from './premiumPptModel';
-import { getSubjectTheme, isChildMode, getPictogramForSlide } from './premiumPptModel';
+import { getSubjectTheme, isChildMode, getPictogramForSlide, isParvulariaContext } from './premiumPptModel';
 
 const SLIDE_W = 13.333;
 const SLIDE_H = 7.5;
@@ -85,31 +85,6 @@ function getSafeBodyColor(theme: SubjectTheme, backgroundHex: string): string {
 function getChildModeBackground(theme: SubjectTheme): string {
   // Soft pastel background for child mode
   return lighten(theme.background, 0.3);
-}
-
-function isParvularia(oaText: string, subject: string): boolean {
-  const oaLower = oaText.toLowerCase();
-  const subLower = subject.toLowerCase();
-  return subLower.includes('parvularia') || 
-         subLower.includes('sala cuna') ||
-         subLower.includes('kinder') ||
-         subLower.includes('identidad') || 
-         subLower.includes('convivencia') || 
-         subLower.includes('corporalidad') ||
-         oaLower.includes('rutina') || 
-         oaLower.includes('vida cotidiana') || 
-         oaLower.includes('actividad habitual') ||
-         oaLower.includes('alimentación') || 
-         oaLower.includes('alimentacion') ||
-         oaLower.includes('dormir') || 
-         oaLower.includes('preparación') || 
-         oaLower.includes('preparacion') ||
-         subLower.includes('parvularia') ||
-         subLower.includes('sala cuna') ||
-         subLower.includes('kinder') ||
-         subLower.includes('identidad') || 
-         subLower.includes('convivencia') || 
-         subLower.includes('corporalidad');
 }
 
 function addRichBackground(slide: PptxGenJS.Slide, theme: SubjectTheme, variant: 'dark' | 'light' | 'accent' = 'dark', isParvularia: boolean = false) {
@@ -393,7 +368,7 @@ function addSlideNumber(slide: PptxGenJS.Slide, num: number, total: number) {
 
 function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'dark', isChild);
   addDecorativeElements(s, theme);
 
@@ -446,7 +421,7 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
 
 function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'dark', isChild);
 
   // Pictogram for child mode
@@ -480,7 +455,7 @@ function buildHookSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPrese
 
 function buildObjectiveSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'accent', isChild);
 
   // Pictogram for child mode
@@ -543,7 +518,7 @@ function buildObjectiveSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premium
 
 function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, isChild ? 'light' : 'light');
   // Softer background for child mode
   if (isChild) {
@@ -622,7 +597,7 @@ function buildConceptCardsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Prem
 
 function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, isChild ? 'dark' : 'dark', isChild);
 
   // Pictogram for child mode
@@ -662,7 +637,7 @@ function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres:
 
 function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'accent', isChild);
 
   // Pictogram for child mode
@@ -717,7 +692,7 @@ function buildGuidedActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Pr
 
 function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'dark', isChild);
 
   // Pictogram for child mode
@@ -772,7 +747,7 @@ function buildCollaborativeActivitySlide(pptx: PptxGenJS, slide: PremiumSlide, p
 
 function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'accent', isChild);
 
   // Pictogram for child mode
@@ -851,7 +826,7 @@ function buildDuaSupportsSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: Premi
 
 function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'accent', isChild);
 
   // Pictogram for child mode
@@ -911,7 +886,7 @@ function buildFormativeAssessmentSlide(pptx: PptxGenJS, slide: PremiumSlide, pre
 
 function buildClosureSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
-  const isChild = slide.isChildMode ?? isParvularia(pres.oa, pres.asignatura);
+  const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
   addRichBackground(s, theme, 'dark', isChild);
   addDecorativeElements(s, theme);
 
