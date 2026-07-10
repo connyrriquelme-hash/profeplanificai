@@ -16,38 +16,126 @@ const LAYOUT_LABELS: Record<string, string> = {
   closure: 'Cierre',
 };
 
+const SUBJECT_ICONS: Record<string, string> = {
+  'celula': '🧬', 'planta': '🌱', 'semilla': '🌱', 'flor': '🌸', 'poliniz': '🐝',
+  'animal': '🦋', 'ecosistema': '🌿', 'ciclo': '🔄', 'fotosintesis': '☀️',
+  'numero': '🔢', 'suma': '➕', 'resta': '➖', 'multiplic': '✖️', 'divis': '➗',
+  'fraccion': '📊', 'geometr': '📐', 'figura': '🔷', 'angulo': '📐',
+  'texto': '📖', 'lectura': '📖', 'escritura': '✍️', 'palabra': '🔤', 'cuento': '📚', 'historia': '📜',
+  'personaje': '👤', 'narrativa': '📝', 'poema': '🎭', 'rima': '🎵',
+  'mapa': '🗺️', 'chile': '🇨🇱', 'indigena': '🏞️', 'colonia': '⛪', 'independencia': '🎖️',
+  'ingles': '🇬🇧', 'english': '🇬🇧', 'vocabulario': '📝', 'gramatica': '📐',
+  'color': '🎨', 'forma': '🔷', 'textura': '🖌️', 'composicion': '🖼️', 'dibujo': '✏️', 'pintura': '🖌️',
+  'ritmo': '🥁', 'melodia': '🎵', 'instrumento': '🎸', 'cancion': '🎤', 'partitura': '🎼',
+  'movimiento': '🏃', 'deporte': '⚽', 'ejercicio': '💪', 'salud': '❤️', 'equipo': '🤝',
+  'tecnologia': '💻', 'programa': '💻', 'robot': '🤖', 'diseno': '🎨', 'prototipo': '🔧',
+  'filosof': '🤔', 'etica': '⚖️', 'argumento': '💬', 'pregunta': '❓', 'razon': '🧠',
+  'fuerza': '⚡', 'energia': '⚡', 'onda': '🌊', 'luz': '💡', 'electricidad': '⚡',
+  'atomo': '⚛️', 'molecula': '🧪', 'reaccion': '⚗️', 'elemento': '🧪',
+  'ciudadan': '🏛️', 'derecho': '⚖️', 'deber': '📋', 'participa': '🗳️', 'comunidad': '👥', 'convivencia': '🤝',
+  'identidad': '👶', 'cuerpo': '🤸',
+};
+
 function hexToCss(hex: string): string {
   return `#${hex}`;
+}
+
+function getSubjectIcon(keyword: string): string {
+  const kw = keyword.toLowerCase();
+  for (const [key, icon] of Object.entries(SUBJECT_ICONS)) {
+    if (kw.includes(key)) return icon;
+  }
+  return '📚';
+}
+
+function getBackgroundStyle(theme: SubjectTheme, layout: string): React.CSSProperties {
+  const isDark = ['cover', 'hook', 'visual_explanation', 'collaborative_activity', 'closure'].includes(layout);
+  const isAccent = ['objective', 'guided_activity', 'dua_supports', 'formative_assessment'].includes(layout);
+  
+  if (isDark) {
+    // Dark variant: primary background + gradient overlays + decorative circles
+    return {
+      background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${hexToCss(darken(theme.primary, 0.15))} 100%)`,
+      position: 'relative',
+      overflow: 'hidden',
+    };
+  } else if (isAccent) {
+    // Accent variant: light background + top bar + side bar + accent circle
+    return {
+      background: hexToCss(theme.background),
+      position: 'relative',
+      overflow: 'hidden',
+    };
+  } else {
+    // Light variant: light background + top glow + side glow + corner circle
+    return {
+      background: hexToCss(theme.background),
+      position: 'relative',
+      overflow: 'hidden',
+    };
+  }
+}
+
+function darken(hex: string, amount: number): string {
+  const n = parseInt(hex, 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 255) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >> 8) & 255) * (1 - amount)));
+  const b = Math.max(0, Math.round((n & 255) * (1 - amount)));
+  return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function PremiumIllustrationPanel({ keyword, theme, className }: { keyword: string; theme: SubjectTheme; className?: string }) {
+  const icon = getSubjectIcon(keyword);
+  return (
+    <div
+      className={`flex flex-col items-center justify-center rounded-2xl p-6 ${className || ''}`}
+      style={{
+        background: `linear-gradient(135deg, ${hexToCss(theme.primary)}1a, ${hexToCss(theme.secondary)}10)`,
+        border: `1px solid ${hexToCss(theme.secondary)}33`,
+        borderRadius: '1rem',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08), inset 0 0 40px rgba(255,255,255,0.05)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Accent bar on left */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+        style={{ backgroundColor: hexToCss(theme.accent) }}
+      />
+      {/* Decorative circle */}
+      <div
+        className="absolute top-4 right-4 w-20 h-20 rounded-full opacity-30 blur-xl"
+        style={{ backgroundColor: hexToCss(theme.secondary) }}
+      />
+      {/* Icon */}
+      <div className="relative mb-3">
+        <div className="text-6xl">{getSubjectIcon(keyword)}</div>
+      </div>
+      {/* Keyword */}
+      <div className="text-base font-bold text-center text-white/95 px-4" style={{ color: `#${theme.text}` }}>
+        {keyword}
+      </div>
+      {/* Caption */}
+      <div className="text-xs text-center mt-2 italic" style={{ color: `#${theme.text}99` }}>
+        Ilustración pedagógica
+      </div>
+    </div>
+  );
 }
 
 function SlideImage({ url, keyword, className, theme }: { url?: string; keyword: string; className?: string; theme: SubjectTheme }) {
   const [error, setError] = useState(false);
   if (!url || error) {
     return (
-      <div
-        className={`flex flex-col items-center justify-center rounded-xl ${className || ''}`}
-        style={{
-          background: `linear-gradient(135deg, ${hexToCss(theme.primary)}dd, ${hexToCss(theme.secondary)}bb)`,
-          boxShadow: 'inset 0 0 40px rgba(255,255,255,0.1)',
-        }}
-      >
-        <div className="relative mb-2">
-          <div
-            className="absolute inset-0 rounded-full blur-xl opacity-40"
-            style={{ backgroundColor: hexToCss(theme.accent) }}
-          />
-          <div className="relative text-5xl">🎨</div>
-        </div>
-        <div className="text-sm font-bold text-white/90 text-center px-4">{keyword}</div>
-        <div className="text-[10px] text-white/50 italic mt-1">Contenido visual premium</div>
-      </div>
+      <PremiumIllustrationPanel keyword={keyword} theme={theme} className={className} />
     );
   }
   return (
     <img
       src={url}
       alt={keyword}
-      className={`rounded-lg object-cover ${className || ''}`}
+      className={`rounded-xl object-cover ${className || ''}`}
       onError={() => setError(true)}
     />
   );
@@ -91,40 +179,105 @@ function SlideTable({ headers, rows, caption, theme }: { headers: string[]; rows
 
 function CoverSlideContent({ slide, pres, theme }: { slide: PremiumSlide; pres: PremiumPresentation; theme: SubjectTheme }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-8">
-      <div className="text-5xl font-bold text-white mb-4">{slide.title}</div>
-      <div className="text-xl mb-2" style={{ color: hexToCss(theme.accent) }}>
+    <div
+      className="relative flex flex-col items-center justify-center h-full text-center px-8"
+      style={{
+        background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${darken(hexToCss(theme.primary), 0.2)} 100%)`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-30 blur-3xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full opacity-40 blur-2xl" style={{ backgroundColor: hexToCss(theme.secondary) }} />
+      <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-20" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      
+      {/* Title with background card */}
+      <div
+        className="relative z-10 px-6 py-3 rounded-xl mx-8 mb-4"
+        style={{
+          backgroundColor: 'rgba(0,0,0,0.25)',
+          borderRadius: '1rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        }}
+      >
+        <div className="text-5xl font-bold text-white mb-2">{slide.title}</div>
+      </div>
+      
+      <div className="relative z-10 text-xl mb-2" style={{ color: hexToCss(theme.accent) }}>
         {slide.subtitle || `${pres.nivel} — ${pres.asignatura}`}
       </div>
-      <div className="text-sm text-white/60 italic mb-6">OA: {pres.oa}</div>
+      <div className="relative z-10 text-sm text-white/60 italic mb-6">OA: {pres.oa}</div>
+      
+      {/* Visual panel */}
       <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || pres.tema} className="w-72 h-48" theme={theme} />
+      
+      {/* Bottom accent bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 opacity-40" style={{ backgroundColor: hexToCss(theme.accent) }} />
     </div>
   );
 }
 
 function HookSlideContent({ slide, theme }: { slide: PremiumSlide; theme: SubjectTheme }) {
   return (
-    <div className="flex h-full">
-      <div className="flex-1 flex flex-col justify-center px-8">
-        <h2 className="text-3xl font-bold text-white mb-2">{slide.title}</h2>
-        {slide.subtitle && <div className="text-base text-white/60 italic mb-4">{slide.subtitle}</div>}
-        <ul className="space-y-2">
+    <div
+      className="relative flex h-full"
+      style={{
+        background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${darken(hexToCss(theme.primary), 0.2)} 100%)`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-25 blur-3xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full opacity-30 blur-2xl" style={{ backgroundColor: hexToCss(theme.secondary) }} />
+      <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-15" style={{ backgroundColor: hexToCss(theme.accent) }} />
+      
+      <div className="relative flex h-full flex-1 flex-col justify-center px-8">
+        {/* Title card */}
+        <div
+          className="px-6 py-3 rounded-xl w-full max-w-2xl"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.25)',
+            borderRadius: '1rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          }}
+        >
+          <h2 className="text-3xl font-bold text-white">{slide.title}</h2>
+        </div>
+        
+        {slide.subtitle && (
+          <div className="text-base text-white/60 italic mb-4 relative z-10">{slide.subtitle}</div>
+        )}
+        
+        <ul className="space-y-2 relative z-10">
           {slide.bullets?.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-white/90">
+            <li key={i} className="flex items-start gap-2 text-white/95">
               <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hexToCss(theme.accent) }} />
-              <span>{b}</span>
+              <span className="text-lg">{b}</span>
             </li>
           ))}
         </ul>
+        
         {slide.studentPrompt && (
-          <div className="mt-4 px-3 py-2 rounded-lg text-sm italic" style={{ backgroundColor: hexToCss(theme.primary) + '40', color: hexToCss(theme.accent) }}>
-            {slide.studentPrompt}
+          <div className="mt-4 px-4 py-3 rounded-xl relative z-10" style={{
+            backgroundColor: `${hexToCss(theme.primary)}33`,
+            color: hexToCss(theme.accent),
+            border: `1px solid ${hexToCss(theme.accent)}44`,
+            borderRadius: '0.75rem',
+          }}>
+            <span className="font-medium">💬 {slide.studentPrompt}</span>
           </div>
         )}
       </div>
-      <div className="w-64 flex items-center p-4">
+      
+      <div className="w-64 flex items-center p-4 relative z-10">
         <SlideImage url={slide.imageUrl} keyword={slide.visualKeyword || 'activación'} className="w-full h-56" theme={theme} />
       </div>
+      
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
+      <div className="absolute bottom-0 left-0 right-0 h-3 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
     </div>
   );
 }
@@ -362,15 +515,64 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
   const next = useCallback(() => setCurrentSlide(i => Math.min(total - 1, i + 1)), [total]);
 
   const renderSlide = SLIDE_RENDERERS[slide.layout];
-  const bgColor = slide.layout === 'cover' || slide.layout === 'hook' || slide.layout === 'visual_explanation' || slide.layout === 'collaborative_activity' || slide.layout === 'closure'
-    ? hexToCss(theme.primary)
-    : hexToCss(theme.background);
+  const isDarkLayout = ['cover', 'hook', 'visual_explanation', 'collaborative_activity', 'closure'].includes(slide.layout);
+  const isAccentLayout = ['objective', 'guided_activity', 'dua_supports', 'formative_assessment'].includes(slide.layout);
+
+  // Rich background styles matching PPT generator
+  const getSlideBackground = (theme: SubjectTheme) => {
+    if (isDarkLayout) {
+      return {
+        background: `linear-gradient(135deg, ${hexToCss(theme.primary)} 0%, ${darken(hexToCss(theme.primary), 0.2)} 100%)`,
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
+      };
+    } else if (isAccentLayout) {
+      return {
+        background: hexToCss(theme.background),
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
+      };
+    } else {
+      return {
+        background: hexToCss(theme.background),
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
+      };
+    }
+  };
+
+  const slideBgStyle = getSlideBackground(theme);
 
   const slideContent = (
     <div
       className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl"
-      style={{ backgroundColor: bgColor, aspectRatio: '16/9' }}
+      style={{ ...slideBgStyle, aspectRatio: '16/9' }}
     >
+      {/* Decorative elements for dark layouts */}
+      {isDarkLayout && (
+        <>
+          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-25 blur-3xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full opacity-40 blur-2xl" style={{ backgroundColor: hexToCss(theme.secondary) }} />
+          <div className="absolute top-1/2 right-8 w-16 h-16 rounded-full opacity-20" style={{ backgroundColor: hexToCss(theme.accent) }} />
+        </>
+      )}
+      {isAccentLayout && (
+        <>
+          <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 left-0 w-2 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 blur-2xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+          <div className="absolute bottom-0 left-0 right-0 h-3 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
+        </>
+      )}
+      {(!isDarkLayout && !isAccentLayout) && (
+        <>
+          <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: hexToCss(theme.primary) }} />
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 blur-2xl" style={{ backgroundColor: hexToCss(theme.accent) }} />
+          <div className="absolute bottom-0 left-0 right-0 h-2 opacity-40" style={{ backgroundColor: hexToCss(theme.primary) }} />
+        </>
+      )}
+      
       <div className="absolute inset-0 p-6">
         {renderSlide ? renderSlide(slide, presentation, theme) : (
           <div className="flex flex-col justify-center h-full px-8">
