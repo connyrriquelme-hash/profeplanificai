@@ -126,11 +126,16 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
     const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema, curriculumContext);
     const duaGuide = await AIEngine.generateDuaGuide(context.env, plan);
 
+    // DIAGNOSTIC LOGS
+    const rawFlag = context.env.ENABLE_PREMIUM_PLANNING_AGENT;
     const usePremiumPlanning = getEnvFlag(context.env, 'ENABLE_PREMIUM_PLANNING_AGENT', false);
+    console.log('[DIAG] ENABLE_PREMIUM_PLANNING_AGENT raw:', rawFlag, '| parsed:', usePremiumPlanning, '| type:', typeof rawFlag);
+    
     let premiumPlanning = null;
     let usedPremiumPlanning = false;
 
     if (usePremiumPlanning) {
+      console.log('[DIAG] Entering PlanningAgent block');
       try {
         const { PlanningAgent } = await import('../core/PlanningAgent');
         const { ContextEngine } = await import('../core/ContextEngine');
@@ -138,9 +143,16 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
         const pedagogicalContext = buildPedagogicalContextFromPlan(plan);
         
         const planningAgent = new PlanningAgent(context.env);
+        console.log('[DIAG] PlanningAgent instantiated, calling generate...');
         const result = await planningAgent.generate({}, {
           pedagogicalContext,
           userParams: { nivel, asignatura, tema }
+        });
+        console.log('[DIAG] PlanningAgent result:', {
+          hasContent: !!result.content,
+          validationPassed: result.validation?.passed,
+          validationErrors: result.validation?.errors,
+          agent: result.metadata?.agent
         });
 
         if (result.content && result.validation.passed) {

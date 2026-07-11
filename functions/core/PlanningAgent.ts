@@ -1,6 +1,6 @@
-import { BaseAgent, type BaseAgentConfig } from '../BaseAgent';
-import { getAgentPrompt } from '../promptLoader';
-import type { PedagogicalContext } from '../ContextEngine';
+import { BaseAgent, type BaseAgentConfig } from './BaseAgent';
+import { getAgentPrompt } from './promptLoader';
+import type { PedagogicalContext } from './ContextEngine';
 
 export interface PlanningPhase {
   tiempo_minutos: number;
