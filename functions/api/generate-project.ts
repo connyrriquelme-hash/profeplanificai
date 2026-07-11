@@ -24,6 +24,78 @@ function jsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
+function getEnvFlag(env: any, key: string, defaultValue: boolean): boolean {
+  const val = env[key];
+  if (val === undefined || val === null) return defaultValue;
+  if (typeof val === 'boolean') return val;
+  if (typeof val === 'string') return val.toLowerCase() === 'true' || val === '1';
+  return Boolean(val);
+}
+
+function buildPedagogicalContextFromPlan(plan: any): any {
+  const habilidades = plan.habilidades 
+    ? plan.habilidades.split(',').map((h: string) => h.trim()).filter(Boolean)
+    : [];
+  
+  const indicadores = (plan.indicadores_seleccionados || []).map((ind: string, idx: number) => ({
+    id: idx + 1,
+    indicator_text: ind,
+    observable_action: '',
+    bloom_level: '',
+    skill_tag: ''
+  }));
+
+  const criterios = plan.criterios_seleccionados || [];
+
+  return {
+    nivel: plan.curso,
+    asignatura: plan.asignatura,
+    tema: plan.tema,
+    oa: {
+      codigo: plan.objetivo_aprendizaje?.split(':')[0]?.trim() || '',
+      descripcion: plan.objetivo_aprendizaje?.split(':').slice(1).join(':').trim() || plan.objetivo_aprendizaje || '',
+      habilidades_csv: plan.habilidades || '',
+      unidad_titulo: '',
+      unidad_numero: 0,
+      eje: '',
+      eje_descripcion: '',
+      bloom_level: plan.taxonomia_bloom_sugerida || ''
+    },
+    indicadores,
+    habilidades,
+    habilidades_sugeridas: [],
+    criterios_aprendizaje: criterios,
+    habilidades_curriculares: plan.habilidades_curriculares 
+      ? plan.habilidades_curriculares.split(',').map((h: string) => h.trim()).filter(Boolean)
+      : [],
+    contexto_clase: {
+      nivel: plan.curso,
+      curso: plan.curso,
+      asignatura: plan.asignatura,
+      cantidad_estudiantes: 30,
+      estudiantes_nee: 0,
+      tipos_nee: [],
+      recursos_disponibles: ['Pizarra', 'Proyector', 'Material didáctico'],
+      duracion_minutos: 90,
+      metodologia_sugerida: 'Activa/Colaborativa'
+    },
+    planificacion_existente: { tiene_planificacion: false },
+    recursos: [],
+    dua: {
+      nivel_apoyo: [],
+      nivel_estandar: [],
+      nivel_desafio: [],
+      representacion: [],
+      accion_expresion: [],
+      implicacion: []
+    },
+    evaluaciones_relacionadas: [],
+    productos_previos: [],
+    barreras_aprendizaje: [],
+    adaptaciones_sugeridas: {}
+  };
+}
+
 export async function onRequestPost(context: EventContext<GenerateProjectEnv>): Promise<Response> {
   try {
     const body = await context.request.json<GenerateProjectRequest>();
@@ -54,7 +126,45 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
     const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema, curriculumContext);
     const duaGuide = await AIEngine.generateDuaGuide(context.env, plan);
 
-    return jsonResponse({
+    const usePremiumPlanning = getEnvFlag(context.env, 'ENABLE_PREMIUM_PLANNING_AGENT', false);
+    let premiumPlanning = null;
+    let usedPremiumPlanning = false;
+
+    if (usePremiumPlanning) {
+      try {
+        const { PlanningAgent } = await import('../core/PlanningAgent');
+        const { ContextEngine } = await import('../core/ContextEngine');
+        
+        const pedagogicalContext = buildPedagogicalContextFromPlan(plan);
+        
+        const planningAgent = new PlanningAgent(context.env);
+        const result = await planningAgent.generate({}, {
+          pedagogicalContext,
+          userParams: { nivel, asignatura, tema }
+        });
+
+        if (result.content && result.validation.passed) {
+          premiumPlanning = result.content;
+          usedPremiumPlanning = true;
+          
+          if (context.env.NODE_ENV === 'development' || context.env.DEBUG) {
+            console.log('[PlanningAgent] Generación exitosa:', {
+              agente: result.metadata.agent,
+              calidad: result.metadata.quality_score,
+              confianza: result.metadata.confidence
+            });
+          }
+        } else if (context.env.NODE_ENV === 'development' || context.env.DEBUG) {
+          console.warn('[PlanningAgent] Validación fallida, usando fallback:', result.validation.errors);
+        }
+      } catch (error) {
+        if (context.env.NODE_ENV === 'development' || context.env.DEBUG) {
+          console.warn('[PlanningAgent] Error, usando fallback:', error instanceof Error ? error.message : String(error));
+        }
+      }
+    }
+
+    const responseData: any = {
       ok: true,
       plan,
       duaGuide,
@@ -62,7 +172,14 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
         ...plan,
         ...duaGuide,
       },
-    });
+    };
+
+    if (usedPremiumPlanning && premiumPlanning) {
+      responseData.premiumPlanning = premiumPlanning;
+      responseData.usedPremiumPlanning = true;
+    }
+
+    return jsonResponse(responseData);
   } catch (error) {
     console.error('[generate-project] Error:', error);
     const message = error instanceof Error ? error.message : String(error);
