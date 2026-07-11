@@ -78,3 +78,7 @@ export async function generatePresentation(req: MaterialRequest): Promise<Materi
 export async function generateMaterial(req: MaterialRequest, type: string): Promise<MaterialResult> {
   return postJSON(`/api/materials/generate?type=${type}`, req);
 }
+
+export async function generateBitacoraCientifica(req: MaterialRequest): Promise<MaterialResult> {
+  return postJSON('/api/materials/bitacora-cientifica', req);
+}

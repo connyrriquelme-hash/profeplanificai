@@ -3,12 +3,12 @@ import {
   BookOpenCheck, Target, Layers3, WandSparkles, FileText,
   ClipboardCheck, ClipboardList, Presentation, Loader2, Check,
   ArrowRight, ArrowLeft, Sparkles, GraduationCap, Lightbulb,
-  Eye, Save, Download, RefreshCw, AlertTriangle
+  Eye, Save, Download, RefreshCw, AlertTriangle, Microscope
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type FormativeEvaluationType } from '../services/materialGeneratorService';
+import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type FormativeEvaluationType } from '../services/materialGeneratorService';
 import { buildPremiumPptModel, type PremiumPresentation } from '../utils/premiumPptModel';
 import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
 import PremiumPptPreview from './PremiumPptPreview';
@@ -27,6 +27,7 @@ const PRODUCTOS = [
   { id: 'evaluation_checklist', label: 'Lista de Cotejo', icon: ClipboardList, color: '#059669' },
   { id: 'evaluation_formative_rubric', label: 'Rúbrica Analítica', icon: ClipboardList, color: '#dc2626' },
   { id: 'evaluation_traffic_light', label: 'Semáforo', icon: ClipboardCheck, color: '#ea580c' },
+  { id: 'bitacora_cientifica', label: 'Bitácora Científica IA', icon: Microscope, color: '#0891b2' },
   { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#7c3aed' },
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#059669' },
 ];
@@ -157,8 +158,12 @@ export function FlujoDocenteView() {
         'evaluation_traffic_light'
       ].includes(selectedProducto);
 
+      const isBitacoraCientifica = selectedProducto === 'bitacora_cientifica';
+
       if (isFormativeEvaluation) {
         res = await generateFormativeEvaluation(req, selectedProducto as any);
+      } else if (isBitacoraCientifica) {
+        res = await generateBitacoraCientifica(req);
       } else {
         switch (selectedProducto) {
           case 'guia_estudiante':
