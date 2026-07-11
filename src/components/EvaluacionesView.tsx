@@ -22,6 +22,8 @@ import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { IconBadge } from './ui/IconBadge';
 import { SectionHeader } from './ui/SectionHeader';
+import { FORMATIVE_EVALUATION_OPTIONS, FormativeEvaluationType } from '../utils/formativeEvaluationTypes';
+import { downloadEvaluationHtml, exportEvaluationToWord } from '../utils/exportEvaluationWord';
 
 interface EvaluacionesViewProps {
   onNavigate: (view: string) => void;
