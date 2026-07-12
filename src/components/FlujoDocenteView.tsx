@@ -3,12 +3,12 @@ import {
   BookOpenCheck, Target, Layers3, WandSparkles, FileText,
   ClipboardCheck, ClipboardList, Presentation, Loader2, Check,
   ArrowRight, ArrowLeft, Sparkles, GraduationCap, Lightbulb,
-  Eye, Save, Download, RefreshCw, AlertTriangle, Microscope
+  Save, Download, RefreshCw, AlertTriangle, Microscope
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type FormativeEvaluationType } from '../services/materialGeneratorService';
+import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
 import { buildPremiumPptModel, type PremiumPresentation } from '../utils/premiumPptModel';
 import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
 import PremiumPptPreview from './PremiumPptPreview';
@@ -44,7 +44,7 @@ export function FlujoDocenteView() {
   const [objectives, setObjectives] = useState<D1Objective[]>([]);
   const [indicators, setIndicators] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
-  const [methodologies, setMethodologies] = useState<any[]>([]);
+  const [methodologies, setMethodologies] = useState<Array<{ id?: string; name: string; subject_fits?: boolean }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -55,7 +55,7 @@ export function FlujoDocenteView() {
   const [selectedProducto, setSelectedProducto] = useState('');
   const [topic, setTopic] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<unknown>(null);
   const [resourceId, setResourceId] = useState('');
   const [pptxBlob, setPptxBlob] = useState<Blob | null>(null);
   const [pptxLoading, setPptxLoading] = useState(false);
@@ -93,11 +93,11 @@ export function FlujoDocenteView() {
         if ((d.data || []).length > 0) {
           fetch(`/api/curriculum/indicators?oa_code=${encodeURIComponent((d.data[0] as D1Objective).code)}&limit=10`)
             .then(r => r.json())
-            .then(id => setIndicators((id.indicators || id.data || []).map((i: any) => i.indicator_text || i.text)))
+            .then(id => setIndicators((id.indicators || id.data || []).map((i: Record<string, unknown>) => (typeof i.indicator_text === 'string' ? i.indicator_text : typeof i.text === 'string' ? i.text : ''))))
             .catch(() => {});
           fetch(`/api/curriculum/skills?objective_id=${encodeURIComponent(d.data[0].id)}`)
             .then(r => r.json())
-            .then(sk => setSkills((sk.data || []).map((s: any) => s.official_text || s.text)))
+            .then(sk => setSkills((sk.data || []).map((s: Record<string, unknown>) => (typeof s.official_text === 'string' ? s.official_text : typeof s.text === 'string' ? s.text : ''))))
             .catch(() => {});
         }
       })
@@ -118,11 +118,11 @@ export function FlujoDocenteView() {
     // Load indicators and skills for this OA
     fetch(`/api/curriculum/indicators?oa_code=${encodeURIComponent(oa.code)}&limit=10`)
       .then(r => r.json())
-      .then(id => setIndicators((id.indicators || id.data || []).map((i: any) => i.indicator_text || i.text)))
+      .then(id => setIndicators((id.indicators || id.data || []).map((i: Record<string, unknown>) => (typeof i.indicator_text === 'string' ? i.indicator_text : typeof i.text === 'string' ? i.text : ''))))
       .catch(() => {});
     fetch(`/api/curriculum/skills?objective_id=${encodeURIComponent(oa.id)}`)
       .then(r => r.json())
-      .then(sk => setSkills((sk.data || []).map((s: any) => s.official_text || s.text)))
+      .then(sk => setSkills((sk.data || []).map((s: Record<string, unknown>) => (typeof s.official_text === 'string' ? s.official_text : typeof s.text === 'string' ? s.text : ''))))
       .catch(() => {});
   }, []);
 
@@ -150,7 +150,7 @@ export function FlujoDocenteView() {
     };
 
     try {
-      let res: any;
+      let res: MaterialResult;
       const isFormativeEvaluation = [
         'evaluation_exit_ticket',
         'evaluation_321',
@@ -162,14 +162,14 @@ export function FlujoDocenteView() {
       const isBitacoraCientifica = selectedProducto === 'bitacora_cientifica';
 
       if (isFormativeEvaluation) {
-        res = await generateFormativeEvaluation(req, selectedProducto as any);
+        res = await generateFormativeEvaluation(req, selectedProducto as FormativeEvaluationType);
       } else if (isBitacoraCientifica) {
         res = await generateBitacoraCientifica(req);
       } else {
         switch (selectedProducto) {
           case 'guia_estudiante':
           case 'guia_docente':
-            res = await generateGuide(req, selectedProducto as any);
+            res = await generateGuide(req, selectedProducto as 'guia_estudiante' | 'guia_docente');
             break;
           case 'evaluacion':
             res = await generateEvaluation(req);
@@ -211,7 +211,6 @@ export function FlujoDocenteView() {
             additionalContext,
           });
           setPremiumModel(model);
-          setStep('resultado');
           setPptxLoading(true);
           generatePremiumPptx(model).then(blob => {
             setPptxBlob(blob);
@@ -221,15 +220,14 @@ export function FlujoDocenteView() {
             setPptxLoading(false);
           });
         } else {
-          setStep('resultado');
         }
         setStep('resultado');
       } else {
         setError(res?.error || 'Error al generar');
         setStep('producto');
       }
-    } catch (err: any) {
-      setError(err.message || 'Error inesperado');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error inesperado');
       setStep('producto');
     } finally {
       setLoading(false);
@@ -254,8 +252,7 @@ export function FlujoDocenteView() {
       }).finally(() => {
         setPptxLoading(false);
       });
-    } catch (err) {
-      console.error('Error generating images:', err);
+    } catch {
     } finally {
       setIsGeneratingImages(false);
       setImageProgress(null);

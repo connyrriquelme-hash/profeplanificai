@@ -14,11 +14,6 @@ function hasStringProp(obj: unknown, key: string): obj is Record<string, unknown
   return typeof obj === 'object' && obj !== null && key in obj && typeof (obj as Record<string, unknown>)[key] === 'string';
 }
 
-/** Check if an object has an object property */
-function hasObjProp(obj: unknown, key: string): obj is Record<string, unknown> {
-  return typeof obj === 'object' && obj !== null && key in obj && typeof (obj as Record<string, unknown>)[key] === 'object';
-}
-
 /** Extract metadata from any raw product response */
 function extractMetadata(raw: Record<string, unknown>): ProductMetadata {
   return {

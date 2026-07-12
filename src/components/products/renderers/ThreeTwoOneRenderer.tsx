@@ -55,11 +55,11 @@ export function ThreeTwoOneRenderer({ product, className, style }: ThreeTwoOneRe
 
       <div className="space-y-4">
         {defaultCards.map((card, index) => {
-          const style = cardStyles[card.type] || cardStyles.three;
+          const cardStyle = cardStyles[card.type] || cardStyles.three;
           return (
-            <div key={index} className={`${style.bg} border ${style.border} rounded-xl p-4`}>
+            <div key={index} className={`${cardStyle.bg} border ${cardStyle.border} rounded-xl p-4`}>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xl">{style.icon}</span>
+                <span className="text-xl">{cardStyle.icon}</span>
                 <h3 className="font-semibold text-gray-800">{card.prompt}</h3>
               </div>
               <div className="space-y-3">

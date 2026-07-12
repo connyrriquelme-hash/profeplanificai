@@ -4,8 +4,6 @@ A comprehensive notebook viewer for prebásica, básica, and media level scienti
 Features a modular, responsive, and printable design for displaying and interacting with notebook contents.
 */
 
-import { useEffect } from 'react';
-
 import type { ClassroomScientificNotebook } from '../../../types/scientificNotebook';
 
 // Import specific components for modularity
@@ -32,11 +30,6 @@ export function ScientificNotebookRenderer({
   className, 
   style 
 }: ScientificNotebookRendererProps) {
-
-  // Effect to ensure we always have valid notebook data
-  useEffect(() => {
-    if (!notebook) return;
-  }, [notebook]);
 
   const evidenceGroups = [
     { key: 'photos' as const, label: 'Fotografías' },

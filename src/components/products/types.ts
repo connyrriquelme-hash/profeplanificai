@@ -109,11 +109,6 @@ export interface ProjectTask {
   status?: string;
 }
 
-export interface ProjectRole {
-  role: string;
-  description: string;
-}
-
 export interface GuideSection {
   title: string;
   content: string;
@@ -124,13 +119,6 @@ export interface DUASection {
   principle: string;
   strategies: string[];
   accommodations?: string[];
-}
-
-export interface DUAStrategy {
-  principle: string;
-  barriers: string[];
-  strategies: string[];
-  accommodations: string[];
 }
 
 export interface ActivityPhase {

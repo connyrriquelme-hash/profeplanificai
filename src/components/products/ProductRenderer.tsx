@@ -20,7 +20,7 @@ import { ThreeTwoOneRenderer } from './renderers/ThreeTwoOneRenderer';
 import { GraphicOrganizerRenderer } from './renderers/GraphicOrganizerRenderer';
 import { EvaluationRenderer } from './renderers/EvaluationRenderer';
 import { GenericProductRenderer } from './renderers/GenericProductRenderer';
-import type { PedagogicalProduct, SupportedProductType } from './types';
+import type { PedagogicalProduct } from './types';
 import { normalizeProduct } from './normalizers';
 
 // Also support the existing ClassroomScientificNotebook format

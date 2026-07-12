@@ -99,7 +99,7 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
 
         return (
           <ProductSection key={index} title={phaseName} icon={icon}>
-            <div className={`border rounded-lg p-4 ${colorClass.split(' ').slice(0, 2).join(' ')}`}>
+            <div className={`border rounded-lg p-4 ${colorClass}`}>
               <p className="text-sm whitespace-pre-wrap">{phase.description}</p>
               {phase.duration && (
                 <div className="mt-2 flex items-center gap-1 text-xs opacity-75">
