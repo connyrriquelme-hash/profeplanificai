@@ -1,0 +1,1 @@
+export type EducationGroup = 'prebasica' | 'basica_1_6' | 'basica_7_8' | 'media' | 'unknown';

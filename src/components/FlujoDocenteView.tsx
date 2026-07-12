@@ -15,6 +15,7 @@ import PremiumPptPreview from './PremiumPptPreview';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import { enrichPresentationWithImages } from '../services/premiumPptAiService';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
+import ProductRenderer from './products/ProductRenderer';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -185,7 +186,15 @@ export function FlujoDocenteView() {
       }
 
       if (res?.ok) {
-        setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
+        // For bitacora_cientifica, the response contains evaluation which needs to be normalized
+        if (selectedProducto === 'bitacora_cientifica' && res.evaluation) {
+          // The evaluation from the endpoint is the raw bitacora, we need to ensure it's properly structured
+          // The ProductRenderer expects the full ClassroomScientificNotebook structure
+          // For now, we pass the evaluation directly - it should match ClassroomScientificNotebook
+          setResult(res.evaluation);
+        } else {
+          setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
+        }
         setResourceId(res.resourceId || '');
         if (selectedProducto === 'rubrica' && res.rubric) {
           setPremiumRubric(res.rubric as PremiumRubric);
@@ -638,6 +647,8 @@ export function FlujoDocenteView() {
               />
             ) : selectedProducto === 'rubrica' && premiumRubric ? (
               <PremiumRubricPreview rubric={premiumRubric} />
+            ) : selectedProducto === 'bitacora_cientifica' ? (
+              <ProductRenderer product={result} />
             ) : (
               <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-xl overflow-auto max-h-[500px]">
                 {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
