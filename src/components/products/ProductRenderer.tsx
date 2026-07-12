@@ -1,16 +1,90 @@
-/** Product Renderer
+/**
+ * Product Renderer — Registry-based router
+ *
+ * Routes to the appropriate renderer based on product type.
+ * Accepts both raw API responses and typed PedagogicalProduct objects.
+ * Auto-normalizes raw responses using minimal normalizers.
+ */
 
-Main entry point for rendering student notebook products.
-Routes to appropriate renderer based on product type.
-*/
+import React from 'react';
+import { ChecklistRenderer } from './renderers/ChecklistRenderer';
+import { RubricRenderer } from './renderers/RubricRenderer';
+import { ScaleRenderer } from './renderers/ScaleRenderer';
+import { TicketRenderer } from './renderers/TicketRenderer';
+import { GuideRenderer } from './renderers/GuideRenderer';
+import { DUAGuideRenderer } from './renderers/DUAGuideRenderer';
+import { ActivityRenderer } from './renderers/ActivityRenderer';
+import { ProjectRenderer } from './renderers/ProjectRenderer';
+import { ExperimentRenderer } from './renderers/ExperimentRenderer';
+import { ThreeTwoOneRenderer } from './renderers/ThreeTwoOneRenderer';
+import { GraphicOrganizerRenderer } from './renderers/GraphicOrganizerRenderer';
+import { EvaluationRenderer } from './renderers/EvaluationRenderer';
+import { GenericProductRenderer } from './renderers/GenericProductRenderer';
+import type { PedagogicalProduct, SupportedProductType } from './types';
+import { normalizeProduct } from './normalizers';
 
-import { ScientificNotebookRenderer } from './ScientificNotebookRenderer';
+// Also support the existing ClassroomScientificNotebook format
 import type { ClassroomScientificNotebook } from '../../types/scientificNotebook';
+import { ScientificNotebookRenderer } from './renderers/ScientificNotebookRenderer';
 
-type SupportedProduct = ClassroomScientificNotebook | { type?: string; [key: string]: unknown };
+/** Renderer component type */
+type RendererComponent = React.ComponentType<{ product: PedagogicalProduct; className?: string; style?: React.CSSProperties }>;
 
-function isScientificNotebook(
-  product: SupportedProduct
+/**
+ * Registry of renderers keyed by product type.
+ * Maps ALL real type values from the backend to their renderers.
+ */
+const rendererRegistry: Record<string, RendererComponent> = {
+  // Checklists
+  checklist: ChecklistRenderer,
+  lista_cotejo: ChecklistRenderer,
+
+  // Rubrics
+  rubrica: RubricRenderer,
+  rubrica_formativa: RubricRenderer,
+
+  // Scales
+  escala_apreciacion: ScaleRenderer,
+
+  // Tickets
+  ticket_salida: TicketRenderer,
+  ticket_entrada: TicketRenderer,
+
+  // Guides
+  guia_aprendizaje: GuideRenderer,
+  guia_estudiante: GuideRenderer,
+  guia_docente: GuideRenderer,
+
+  // DUA
+  guia_dua: DUAGuideRenderer,
+
+  // Activities
+  actividad: ActivityRenderer,
+  material_didactico: GenericProductRenderer,
+
+  // Projects
+  proyecto: ProjectRenderer,
+
+  // Experiments
+  experimento: ExperimentRenderer,
+
+  // 3-2-1 Format
+  formato_321: ThreeTwoOneRenderer,
+
+  // Graphic organizers
+  organizador_grafico: GraphicOrganizerRenderer,
+
+  // Evaluations
+  evaluacion: EvaluationRenderer,
+  semaforo: GenericProductRenderer,
+
+  // Scientific notebook
+  bitacora_cientifica: GenericProductRenderer,
+};
+
+/** Type guard for ClassroomScientificNotebook */
+function isClassroomScientificNotebook(
+  product: unknown
 ): product is ClassroomScientificNotebook {
   return (
     typeof product === 'object' &&
@@ -22,51 +96,61 @@ function isScientificNotebook(
   );
 }
 
-function hasStringType(
-  product: SupportedProduct
-): product is SupportedProduct & { type: string } {
+/** Type guard for PedagogicalProduct */
+function isPedagogicalProduct(
+  product: unknown
+): product is PedagogicalProduct {
   return (
     typeof product === 'object' &&
     product !== null &&
     'type' in product &&
-    typeof (product as { type?: unknown }).type === 'string'
+    typeof (product as PedagogicalProduct).type === 'string' &&
+    'metadata' in product &&
+    'data' in product
   );
 }
 
-export default function ProductRenderer({ product }: { product: SupportedProduct }) {
-  if (isScientificNotebook(product)) {
-    return <ScientificNotebookRenderer notebook={product} />;
+interface ProductRendererProps {
+  product: PedagogicalProduct | ClassroomScientificNotebook | unknown;
+  selectedProducto?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export default function ProductRenderer({ product, selectedProducto, className, style }: ProductRendererProps) {
+  // Handle ClassroomScientificNotebook format (existing)
+  if (isClassroomScientificNotebook(product)) {
+    return <ScientificNotebookRenderer notebook={product} className={className} style={style} />;
   }
 
-  const productType = hasStringType(product) ? product.type : undefined;
+  // Handle PedagogicalProduct format (new, already typed)
+  if (isPedagogicalProduct(product)) {
+    const Renderer = rendererRegistry[product.type];
+    if (Renderer) {
+      return <Renderer product={product} className={className} style={style} />;
+    }
+    return <GenericProductRenderer product={product} className={className} style={style} />;
+  }
 
-  return (
-    <div className="p-6 border rounded-lg bg-gray-50">
-      <div className="bg-white p-4 rounded-lg border border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Producto sin vista especializada
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Tipo: <code className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-700 font-mono text-xs">
-                {productType ?? 'desconocido'}
-              </code>
-            </p>
-          </div>
-        </div>
-        <p className="text-sm text-gray-600 mt-3">
-          Este producto todavía no tiene una vista especializada.
-        </p>
-        <p className="text-xs text-gray-400 mt-2">
-          Tipo detectado: <code className="font-mono">{productType ?? 'desconocido'}</code>
-        </p>
-      </div>
-    </div>
-  );
+  // Try normalizing raw API response
+  const normalized = normalizeProduct(product as Record<string, unknown>, selectedProducto);
+  if (normalized) {
+    const Renderer = rendererRegistry[normalized.type];
+    if (Renderer) {
+      return <Renderer product={normalized} className={className} style={style} />;
+    }
+    return <GenericProductRenderer product={normalized} className={className} style={style} />;
+  }
+
+  // Ultimate fallback: try to extract title/data from raw object
+  const raw = typeof product === 'object' && product !== null ? product as Record<string, unknown> : null;
+  const fallbackProduct: PedagogicalProduct = {
+    type: 'material_didactico',
+    metadata: {
+      title: raw && typeof raw.title === 'string' ? raw.title : 'Producto',
+      subtitle: raw && typeof raw.subtitle === 'string' ? raw.subtitle : undefined,
+    },
+    data: raw || {},
+  };
+  return <GenericProductRenderer product={fallbackProduct} className={className} style={style} />;
 }

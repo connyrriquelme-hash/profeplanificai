@@ -647,12 +647,8 @@ export function FlujoDocenteView() {
               />
             ) : selectedProducto === 'rubrica' && premiumRubric ? (
               <PremiumRubricPreview rubric={premiumRubric} />
-            ) : selectedProducto === 'bitacora_cientifica' ? (
-              <ProductRenderer product={result} />
             ) : (
-              <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-xl overflow-auto max-h-[500px]">
-                {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-              </pre>
+              <ProductRenderer product={result} selectedProducto={selectedProducto} />
             )}
           </div>
 
