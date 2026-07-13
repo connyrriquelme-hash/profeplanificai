@@ -1,4 +1,4 @@
-import { requireAdmin } from '../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../../_lib/auth-adapter';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +7,10 @@ interface Env {
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'audit:read');
 
     const { results } = await context.env.DB.prepare(
       `SELECT aal.id, aal.admin_user_id, aal.action, aal.target_type, aal.target_id,

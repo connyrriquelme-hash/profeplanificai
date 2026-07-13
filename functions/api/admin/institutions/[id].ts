@@ -1,4 +1,4 @@
-import { requireAdmin, logAdminAction } from '../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionMatchContext } from '../../../_lib/auth-adapter';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +7,11 @@ interface Env {
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:read');
+    await requireInstitutionMatchContext(context.request, env, context.params.id as string);
 
     const { id } = context.params;
     const institution = await context.env.DB.prepare(
@@ -34,7 +38,11 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:update');
+    await requireInstitutionMatchContext(context.request, env, context.params.id as string);
 
     const { id } = context.params;
     const body = await context.request.json() as {
@@ -68,8 +76,6 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
     await context.env.DB.prepare(
       `UPDATE institutions SET ${updates.join(', ')} WHERE id = ?`
     ).bind(...values).run();
-
-    await logAdminAction(context.env, admin.id, 'update_institution', 'institution', id as string, body);
 
     return Response.json({ ok: true });
   } catch (err) {

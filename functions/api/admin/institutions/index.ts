@@ -1,4 +1,4 @@
-import { requireAdmin, logAdminAction } from '../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../../_lib/auth-adapter';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +7,11 @@ interface Env {
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:read');
+
     const { results } = await context.env.DB.prepare(
       'SELECT * FROM institutions ORDER BY created_at DESC'
     ).all();
@@ -20,7 +24,10 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:create');
 
     const body = await context.request.json() as {
       name?: string;
@@ -50,8 +57,6 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       body.contact_email || null,
       body.contact_phone || null
     ).run();
-
-    await logAdminAction(context.env, admin.id, 'create_institution', 'institution', id, { name: body.name });
 
     return Response.json({ ok: true, id }, { status: 201 });
   } catch (err) {

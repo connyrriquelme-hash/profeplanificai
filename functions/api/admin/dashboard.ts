@@ -1,18 +1,28 @@
-import { requireAdmin, type AdminEnv } from '../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../_lib/auth-adapter';
 
-interface Env extends AdminEnv {}
+interface Env {
+  DB: D1Database;
+  JWT_SECRET?: string;
+}
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requireInstitutionContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:read');
+
+    const authContext = await requireAuthContext(context.request, env);
+    const activeContext = await requireActiveAuthContext(context.request, env);
 
     const [user, planes, recursos, evaluaciones, cursos, estudiantes, posts] = await Promise.all([
-      context.env.DB.prepare('SELECT id, email, nombre, rol FROM usuarios WHERE id = ?').bind(admin.id).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM planes WHERE usuario_id = ?').bind(admin.id).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM recursos WHERE usuario_id = ?').bind(admin.id).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM evaluaciones WHERE usuario_id = ?').bind(admin.id).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM cursos WHERE usuario_id = ?').bind(admin.id).first(),
-      context.env.DB.prepare('SELECT COUNT(*) as count FROM estudiantes WHERE usuario_id = ?').bind(admin.id).first(),
+      context.env.DB.prepare('SELECT id, email, nombre, rol FROM usuarios WHERE id = ?').bind(authContext.userId).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM planes WHERE usuario_id = ?').bind(authContext.userId).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM recursos WHERE usuario_id = ?').bind(authContext.userId).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM evaluaciones WHERE usuario_id = ?').bind(authContext.userId).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM cursos WHERE usuario_id = ?').bind(authContext.userId).first(),
+      context.env.DB.prepare('SELECT COUNT(*) as count FROM estudiantes WHERE usuario_id = ?').bind(authContext.userId).first(),
       context.env.DB.prepare('SELECT COUNT(*) as count FROM colaboracion_posts').first(),
     ]);
 
