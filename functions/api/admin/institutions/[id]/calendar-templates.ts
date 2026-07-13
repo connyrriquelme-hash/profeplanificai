@@ -1,4 +1,5 @@
-import { requireAdmin, logAdminAction } from '../../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../../../_lib/auth-adapter';
+import { logAdminAction } from '../../../../../_lib/roles';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +8,11 @@ interface Env {
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requireInstitutionContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:read');
 
     const { id } = context.params;
     const { results } = await context.env.DB.prepare(
@@ -23,7 +28,11 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requireInstitutionContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:update');
 
     const { id } = context.params;
     const body = await context.request.json() as {
@@ -67,7 +76,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       body.ends_on || null
     ).run();
 
-    await logAdminAction(context.env, admin.id, 'create_calendar_template', 'calendar_template', templateId, {
+    await logAdminAction(context.env, authContext.userId, 'create_calendar_template', 'calendar_template', templateId, {
       institution_id: id,
       name: body.name,
     });

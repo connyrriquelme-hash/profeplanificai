@@ -1,4 +1,6 @@
 import { verifyToken } from './auth';
+import { requireAuthContext, requireActiveAuthContext, requireInstitutionMatchContext, requirePermissionContext } from './auth-adapter';
+import { requireInstitutionAdminContext } from './auth-adapter';
 
 export interface AdminEnv {
   DB: D1Database;
@@ -12,34 +14,20 @@ export interface AdminUser {
   rol: string;
 }
 
+/**
+ * @deprecated Use requireAuthContext + requirePermission from functions/core/authorization instead.
+ * Maintained for backward compatibility with existing endpoints.
+ * Now uses institutionalRole + permissions instead of legacy user.rol.
+ */
 export async function requireAdmin(request: Request, env: AdminEnv): Promise<AdminUser> {
-  const auth = request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) {
-    throw new Response(JSON.stringify({ ok: false, error: 'Token requerido' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  const secret = env.JWT_SECRET || '';
-  if (!secret) {
-    throw new Response(JSON.stringify({ ok: false, error: 'JWT_SECRET no configurado' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  const payload = await verifyToken(auth.slice(7), secret);
-  if (!payload?.sub) {
-    throw new Response(JSON.stringify({ ok: false, error: 'Token inválido o expirado' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const authEnv = { DB: env.DB, JWT_SECRET: env.JWT_SECRET };
+  const authContext = await requireAuthContext(request, authEnv);
+  await requireActiveAuthContext(request, authEnv);
+  await requirePermissionContext(request, authEnv, 'user:*');
 
   const user = await env.DB.prepare(
     'SELECT id, email, nombre, rol FROM usuarios WHERE id = ?'
-  ).bind(payload.sub).first<AdminUser>();
+  ).bind(authContext.userId).first<AdminUser>();
 
   if (!user) {
     throw new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), {
@@ -48,32 +36,29 @@ export async function requireAdmin(request: Request, env: AdminEnv): Promise<Adm
     });
   }
 
-  if (user.rol !== 'admin') {
-    throw new Response(JSON.stringify({ ok: false, error: 'No tienes permisos de administrador.' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   return user;
 }
 
+/**
+ * @deprecated Use requireInstitutionAdminContext from functions/_lib/auth-adapter instead.
+ * Maintained for backward compatibility.
+ * Now uses institutionalRole + permissions instead of legacy user.rol.
+ */
 export async function requireInstitutionAdmin(
   request: Request,
   env: AdminEnv,
   institutionId: string,
 ): Promise<AdminUser> {
-  const user = await requireAdmin(request, env);
+  const authEnv = { DB: env.DB, JWT_SECRET: env.JWT_SECRET };
+  const authContext = await requireInstitutionAdminContext(request, authEnv, institutionId);
 
-  if (user.rol === 'admin') return user;
+  const user = await env.DB.prepare(
+    'SELECT id, email, nombre, rol FROM usuarios WHERE id = ?'
+  ).bind(authContext.userId).first<AdminUser>();
 
-  const member = await env.DB.prepare(
-    'SELECT role FROM institution_members WHERE user_id = ? AND institution_id = ? AND status = ?'
-  ).bind(user.id, institutionId, 'active').first<{ role: string }>();
-
-  if (!member || member.role !== 'institution_admin') {
-    throw new Response(JSON.stringify({ ok: false, error: 'No tienes permisos de administrador de institución.' }), {
-      status: 403,
+  if (!user) {
+    throw new Response(JSON.stringify({ ok: false, error: 'Usuario no encontrado' }), {
+      status: 401,
       headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -96,4 +81,48 @@ export async function logAdminAction(
     `INSERT INTO admin_audit_log (id, admin_user_id, action, target_type, target_id, metadata_json)
      VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(id, adminUserId, action, targetType || null, targetId || null, metadataJson).run();
+}
+
+/**
+ * @deprecated Use requirePermission from functions/core/authorization instead.
+ * Maps legacy role to institutional role for backward compatibility.
+ */
+function mapLegacyRole(legacyRole: string): string {
+  switch (legacyRole) {
+    case 'admin':
+      return 'institution_admin';
+    case 'docente':
+      return 'teacher';
+    case 'student':
+      return 'student';
+    case 'coordinator':
+      return 'coordinator';
+    case 'super_admin':
+      return 'super_admin';
+    default:
+      return 'teacher';
+  }
+}
+
+/**
+ * @deprecated Use requirePermission from functions/core/authorization instead.
+ * Returns permissions for a legacy role for backward compatibility.
+ */
+function getPermissionsForRole(legacyRole: string): string[] {
+  switch (legacyRole) {
+    case 'admin':
+    case 'super_admin':
+      return ['institution:*', 'user:*', 'course:*', 'plan:*', 'classbook:*', 'report:*', 'config:*', 'audit:*'];
+    case 'institution_admin':
+      return ['institution:read', 'institution:update', 'user:create', 'user:read', 'user:update', 'user:delete', 'course:create', 'course:read', 'course:update', 'course:assign_teacher', 'plan:read', 'classbook:read', 'classbook:write', 'report:institution', 'audit:institution'];
+    case 'coordinator':
+      return ['course:read', 'plan:read', 'plan:review', 'plan:approve', 'plan:observe', 'classbook:read', 'report:scope'];
+    case 'docente':
+    case 'teacher':
+      return ['course:read_own', 'plan:create', 'plan:read_own', 'plan:update_own', 'classbook:create', 'classbook:read_own', 'classbook:update_own', 'classbook:sign_own', 'resource:create', 'resource:read', 'evaluation:create'];
+    case 'student':
+      return ['classbook:read_own', 'resource:read_assigned', 'evaluation:take_assigned'];
+    default:
+      return [];
+  }
 }

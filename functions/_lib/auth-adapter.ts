@@ -8,6 +8,7 @@ import {
   requireInstitutionMatch,
   requirePermission,
   requireAnyPermission,
+  AuthorizationError,
 } from '../core/authorization';
 
 export interface AuthAdapterEnv extends SessionEnv, AuthEnv {}
@@ -44,7 +45,10 @@ export async function getAuthContextFromRequest(
   try {
     const context = await requireAuthenticatedUser(mockRequest, authEnv);
     return context;
-  } catch {
+  } catch (err) {
+    if (err instanceof AuthorizationError) {
+      throw err;
+    }
     return null;
   }
 }
@@ -67,14 +71,18 @@ export async function requireActiveAuthContext(
   request: Request,
   env: AuthAdapterEnv
 ): Promise<AuthenticatedUserContext> {
-  const context = await requireAuthContext(request, env);
-  if (!context.isActive) {
-    throw new Response(JSON.stringify({ ok: false, error: 'Usuario inactivo' }), {
-      status: 409,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  try {
+    const context = await requireAuthContext(request, env);
+    return await requireActiveUser(context);
+  } catch (err) {
+    if (err instanceof AuthorizationError) {
+      throw new Response(JSON.stringify({ ok: false, error: err.message }), {
+        status: err.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw err;
   }
-  return context;
 }
 
 export async function requireInstitutionContext(
@@ -102,7 +110,17 @@ export async function requirePermissionContext(
 ) {
   const context = await requireAuthContext(request, env);
   const activeContext = await requireActiveUser(context);
-  return requirePermission(activeContext, permission);
+  try {
+    return await requirePermission(activeContext, permission);
+  } catch (err: unknown) {
+    if (err instanceof AuthorizationError) {
+      throw new Response(JSON.stringify({ ok: false, error: err.message }), {
+        status: err.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw err;
+  }
 }
 
 export async function requireAnyPermissionContext(
@@ -112,7 +130,17 @@ export async function requireAnyPermissionContext(
 ) {
   const context = await requireAuthContext(request, env);
   const activeContext = await requireActiveUser(context);
-  return requireAnyPermission(activeContext, permissions);
+  try {
+    return await requireAnyPermission(activeContext, permissions);
+  } catch (err: unknown) {
+    if (err instanceof AuthorizationError) {
+      throw new Response(JSON.stringify({ ok: false, error: err.message }), {
+        status: err.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw err;
+  }
 }
 
 export async function requireInstitutionAdminContext(

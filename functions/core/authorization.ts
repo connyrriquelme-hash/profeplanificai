@@ -66,7 +66,7 @@ export function notFound(message = 'Recurso no encontrado'): AuthorizationError 
   return new AuthorizationError(404, 'NOT_FOUND', message);
 }
 
-const ROLE_PERMISSIONS: Record<InstitutionalRole, string[]> = {
+export const ROLE_PERMISSIONS: Record<InstitutionalRole, string[]> = {
   super_admin: [
     'institution:*',
     'user:*',

@@ -1,4 +1,5 @@
-import { requireAdmin, logAdminAction } from '../../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../../../../_lib/auth-adapter';
+import { logAdminAction } from '../../../../../_lib/roles';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +8,10 @@ interface Env {
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:read');
 
     const { id } = context.params;
     const { results } = await context.env.DB.prepare(
@@ -28,7 +32,10 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'user:create');
 
     const { id } = context.params;
     const body = await context.request.json() as { email?: string; role?: string };
@@ -60,7 +67,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
        VALUES (?, ?, ?, ?, 'active')`
     ).bind(memberId, id, user.id, role).run();
 
-    await logAdminAction(context.env, admin.id, 'add_institution_member', 'institution_member', memberId, {
+    await logAdminAction(context.env, authContext.userId, 'add_institution_member', 'institution_member', memberId, {
       institution_id: id,
       user_id: user.id,
       email: body.email,

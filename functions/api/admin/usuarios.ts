@@ -1,11 +1,19 @@
-import { requireAdmin, logAdminAction, type AdminEnv } from '../../_lib/roles';
-import { hashPassword } from '../../_lib/auth';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../_lib/auth-adapter';
+import { logAdminAction, hashPassword } from '../../_lib/auth';
+import { ROLE_PERMISSIONS } from '../../core/authorization';
 
-interface Env extends AdminEnv {}
+interface Env {
+  DB: D1Database;
+  JWT_SECRET?: string;
+}
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'user:read');
+
     const { results } = await context.env.DB.prepare(
       'SELECT id, email, nombre, rol, active, created_at, updated_at FROM usuarios ORDER BY created_at DESC'
     ).all();
@@ -18,7 +26,10 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'user:create');
 
     const body = await context.request.json() as { name?: string; email?: string; password?: string; role?: string; active?: boolean };
     const { name, email, password, role, active } = body;
@@ -31,7 +42,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       return Response.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 });
     }
 
-    const validRoles = ['admin', 'docente', 'user'];
+    const validRoles = Object.keys(ROLE_PERMISSIONS);
     const userRole = validRoles.includes(role || '') ? role! : 'docente';
 
     const existing = await context.env.DB.prepare('SELECT id FROM usuarios WHERE email = ?').bind(email).first();
@@ -45,10 +56,10 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const userActive = active === false ? 0 : 1;
 
     await context.env.DB.prepare(
-      'INSERT INTO usuarios (id, email, nombre, password_hash, rol, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      `INSERT INTO usuarios (id, email, nombre, password_hash, rol, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(id, email, name, passwordHash, userRole, userActive, now, now).run();
 
-    await logAdminAction({ DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET }, admin.id, 'create_user', 'user', id, { email, rol: userRole });
+    await logAdminAction({ DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET }, authContext.userId, 'create_user', 'user', id, { email, rol: userRole });
 
     return Response.json({
       success: true,
@@ -62,7 +73,10 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET });
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'user:update');
 
     const body = await context.request.json() as { userId?: string; rol?: string; password?: string; nombre?: string; active?: boolean };
     const { userId, rol, password, nombre, active } = body;
@@ -71,8 +85,11 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       return Response.json({ error: 'Falta userId' }, { status: 400 });
     }
 
-    if (rol && !['admin', 'docente', 'institution_admin', 'user'].includes(rol)) {
-      return Response.json({ error: 'Rol inválido.' }, { status: 400 });
+    if (rol) {
+      const validRoles = Object.keys(ROLE_PERMISSIONS);
+      if (!validRoles.includes(rol)) {
+        return Response.json({ error: 'Rol inválido.' }, { status: 400 });
+      }
     }
 
     const updates: string[] = [];
@@ -86,7 +103,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       values.push(ph);
     }
     if (active !== undefined) {
-      if (userId === admin.id && !active) {
+      if (userId === authContext.userId && !active) {
         return Response.json({ error: 'No puedes desactivar tu propia cuenta.' }, { status: 400 });
       }
       updates.push('active = ?');
@@ -111,7 +128,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       }
     }
 
-    await logAdminAction({ DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET }, admin.id, 'update_user', 'user', userId, { rol, nombre: !!nombre, active });
+    await logAdminAction({ DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET }, authContext.userId, 'update_user', 'user', userId, { rol, nombre: !!nombre, active });
 
     return Response.json({ success: true });
   } catch (err) {

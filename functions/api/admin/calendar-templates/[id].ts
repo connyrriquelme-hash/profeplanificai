@@ -1,4 +1,5 @@
-import { requireAdmin, logAdminAction } from '../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../../_lib/auth-adapter';
+import { logAdminAction } from '../../../_lib/roles';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +8,10 @@ interface Env {
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:update');
 
     const { id } = context.params;
     const body = await context.request.json() as {
@@ -52,7 +56,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       `UPDATE calendar_templates SET ${updates.join(', ')} WHERE id = ?`
     ).bind(...values).run();
 
-    await logAdminAction(context.env, admin.id, 'update_calendar_template', 'calendar_template', id as string, body);
+    await logAdminAction(context.env, authContext.userId, 'update_calendar_template', 'calendar_template', id as string, body);
 
     return Response.json({ ok: true });
   } catch (err) {
@@ -63,7 +67,10 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
 
 export async function onRequestDelete(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'institution:update');
 
     const { id } = context.params;
 
@@ -77,7 +84,7 @@ export async function onRequestDelete(context: EventContext<Env>): Promise<Respo
 
     await context.env.DB.prepare('DELETE FROM calendar_templates WHERE id = ?').bind(id).run();
 
-    await logAdminAction(context.env, admin.id, 'delete_calendar_template', 'calendar_template', id as string, {
+    await logAdminAction(context.env, authContext.userId, 'delete_calendar_template', 'calendar_template', id as string, {
       name: template.name,
       institution_id: template.institution_id,
     });

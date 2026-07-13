@@ -29,19 +29,41 @@ function makeMockDB(options: {
   findUserById?: any;
   adminUser?: any;
   adminCount?: number;
+  institutionMember?: any;
+  coordinatorScope?: any;
+  teacherCourses?: any;
 }) {
   return {
     prepare: (sql: string) => ({
       bind: (...args: any[]) => ({
         first: async () => {
-          if (sql.includes('SELECT id, email, nombre, rol') && sql.includes('WHERE id = ?')) {
-            return options.adminUser || null;
+          // User query from JWT token
+          if (sql.includes('SELECT id, email, nombre, rol, active') && sql.includes('WHERE id = ?')) {
+            return options.findUserById || options.adminUser || { id: 'user-1', email: 'test@test.cl', nombre: 'Test', rol: 'docente', active: 1 };
           }
+          // Email lookup for registration
           if (sql.includes('SELECT id FROM usuarios WHERE email')) {
             return options.findUserByEmail || null;
           }
+          // Admin count check
           if (sql.includes('SELECT COUNT(*) as c FROM usuarios WHERE rol')) {
             return { c: options.adminCount ?? 1 };
+          }
+          // Institution membership query (new authorization system)
+          if (sql.includes('FROM institution_members') && sql.includes('WHERE user_id = ?')) {
+            return options.institutionMember || null;
+          }
+          // Global admin check
+          if (sql.includes('SELECT 1 FROM usuarios WHERE id = ? AND rol = ?')) {
+            return options.adminUser?.rol === 'admin' ? { 1: 1 } : null;
+          }
+          // Coordinator scope query
+          if (sql.includes('FROM coordinator_scopes') && sql.includes('WHERE user_id = ?')) {
+            return options.coordinatorScope || null;
+          }
+          // Teacher courses query
+          if (sql.includes('FROM teacher_classes') && sql.includes('WHERE tc.teacher_id = ?')) {
+            return options.teacherCourses || { results: [] };
           }
           return options.findUserById || null;
         },
@@ -140,7 +162,8 @@ describe('Auth + Admin User Management', () => {
     it('GET requires admin role - non-admin gets 403', async () => {
       const mod = await import('../functions/api/admin/usuarios');
       const mockDB = makeMockDB({
-        adminUser: { id: 'user-1', email: 'doc@test.cl', nombre: 'Doc', rol: 'docente' },
+        findUserById: { id: 'user-1', email: 'doc@test.cl', nombre: 'Doc', rol: 'docente', active: 1 },
+        institutionMember: { institution_id: 'inst-1', role: 'teacher' },
       });
       const token = await signToken('user-1', 'doc@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
@@ -166,7 +189,8 @@ describe('Auth + Admin User Management', () => {
     it('POST requires admin role - non-admin gets 403', async () => {
       const mod = await import('../functions/api/admin/usuarios');
       const mockDB = makeMockDB({
-        adminUser: { id: 'user-1', email: 'doc@test.cl', nombre: 'Doc', rol: 'docente' },
+        findUserById: { id: 'user-1', email: 'doc@test.cl', nombre: 'Doc', rol: 'docente', active: 1 },
+        institutionMember: { institution_id: 'inst-1', role: 'teacher' },
       });
       const token = await signToken('user-1', 'doc@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
@@ -181,7 +205,10 @@ describe('Auth + Admin User Management', () => {
 
     it('POST returns 400 when fields missing', async () => {
       const mod = await import('../functions/api/admin/usuarios');
-      const mockDB = makeMockDB({ adminUser });
+      const mockDB = makeMockDB({
+        findUserById: { id: 'admin-1', email: 'admin@test.cl', nombre: 'Admin', rol: 'admin', active: 1 },
+        institutionMember: { role: 'institution_admin' },
+      });
       const token = await signToken('admin-1', 'admin@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
         method: 'POST',
@@ -198,7 +225,8 @@ describe('Auth + Admin User Management', () => {
     it('POST returns 409 when email exists', async () => {
       const mod = await import('../functions/api/admin/usuarios');
       const mockDB = makeMockDB({
-        adminUser,
+        findUserById: { id: 'admin-1', email: 'admin@test.cl', nombre: 'Admin', rol: 'admin', active: 1 },
+        institutionMember: { role: 'institution_admin' },
         findUserByEmail: { id: 'existing-user' },
       });
       const token = await signToken('admin-1', 'admin@test.cl', TEST_SECRET);
@@ -216,7 +244,11 @@ describe('Auth + Admin User Management', () => {
 
     it('POST returns 400 when password too short', async () => {
       const mod = await import('../functions/api/admin/usuarios');
-      const mockDB = makeMockDB({ adminUser, findUserByEmail: null });
+      const mockDB = makeMockDB({
+        findUserById: { id: 'admin-1', email: 'admin@test.cl', nombre: 'Admin', rol: 'admin', active: 1 },
+        institutionMember: { role: 'institution_admin' },
+        findUserByEmail: null,
+      });
       const token = await signToken('admin-1', 'admin@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
         method: 'POST',
@@ -232,7 +264,10 @@ describe('Auth + Admin User Management', () => {
 
     it('PATCH returns 400 when trying to deactivate self', async () => {
       const mod = await import('../functions/api/admin/usuarios');
-      const mockDB = makeMockDB({ adminUser });
+      const mockDB = makeMockDB({
+        findUserById: { id: 'admin-1', email: 'admin@test.cl', nombre: 'Admin', rol: 'admin', active: 1 },
+        institutionMember: { role: 'institution_admin' },
+      });
       const token = await signToken('admin-1', 'admin@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
         method: 'PATCH',
@@ -248,7 +283,10 @@ describe('Auth + Admin User Management', () => {
 
     it('PATCH returns 400 when no fields provided', async () => {
       const mod = await import('../functions/api/admin/usuarios');
-      const mockDB = makeMockDB({ adminUser });
+      const mockDB = makeMockDB({
+        findUserById: { id: 'admin-1', email: 'admin@test.cl', nombre: 'Admin', rol: 'admin', active: 1 },
+        institutionMember: { role: 'institution_admin' },
+      });
       const token = await signToken('admin-1', 'admin@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
         method: 'PATCH',
@@ -264,7 +302,10 @@ describe('Auth + Admin User Management', () => {
 
     it('PATCH returns 400 when userId missing', async () => {
       const mod = await import('../functions/api/admin/usuarios');
-      const mockDB = makeMockDB({ adminUser });
+      const mockDB = makeMockDB({
+        findUserById: { id: 'admin-1', email: 'admin@test.cl', nombre: 'Admin', rol: 'admin', active: 1 },
+        institutionMember: { role: 'institution_admin' },
+      });
       const token = await signToken('admin-1', 'admin@test.cl', TEST_SECRET);
       const request = new Request('http://localhost/api/admin/usuarios', {
         method: 'PATCH',

@@ -1,4 +1,5 @@
-import { requireAdmin, logAdminAction } from '../../../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../../../../../_lib/auth-adapter';
+import { logAdminAction } from '../../../../../../_lib/roles';
 
 interface Env {
   DB: D1Database;
@@ -7,7 +8,10 @@ interface Env {
 
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
   try {
-    const admin = await requireAdmin(context.request, context.env);
+    const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
+    const authContext = await requireAuthContext(context.request, env);
+    await requireActiveAuthContext(context.request, env);
+    await requirePermissionContext(context.request, env, 'user:update');
 
     const { id, memberId } = context.params;
     const body = await context.request.json() as { role?: string; status?: string };
@@ -30,7 +34,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       `UPDATE institution_members SET ${updates.join(', ')} WHERE id = ? AND institution_id = ?`
     ).bind(...values).run();
 
-    await logAdminAction(context.env, admin.id, 'update_institution_member', 'institution_member', memberId as string, {
+    await logAdminAction(context.env, authContext.userId, 'update_institution_member', 'institution_member', memberId as string, {
       institution_id: id,
       ...body,
     });
