@@ -29,6 +29,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { DuaGuideGenerator } from './pages/DuaGuideGenerator';
 import { ProjectCopilot } from './components/ProjectCopilot';
 import { ActiveLessonProvider } from './contexts/ActiveLessonContext';
+import { ClassbookView } from './pages/ClassbookView';
+import { ClassSessionDetailView } from './components/classbook/ClassSessionDetailView';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -48,6 +50,8 @@ function AppContent() {
     if (path === '/dua-guide') return 'dua-guide';
     if (path === '/admin-panel') return 'admin-panel';
     if (path === '/admin') return 'admin';
+    if (path === '/libro-clases') return 'libro-clases';
+    if (path.startsWith('/libro-clases/')) return 'libro-clases-session';
     return 'dashboard';
   })() as ViewType;
   const [activeView, setActiveView] = useState<ViewType>(initialView);
@@ -70,6 +74,8 @@ function AppContent() {
       window.history.pushState(null, '', '/admin-panel');
     } else if (nextView === 'admin' && window.location.pathname !== '/admin') {
       window.history.pushState(null, '', '/admin');
+    } else if (nextView === 'libro-clases' && window.location.pathname !== '/libro-clases') {
+      window.history.pushState(null, '', '/libro-clases');
     }
   }, []);
 
@@ -136,6 +142,16 @@ function AppContent() {
         return <AdminView onNavigate={handleViewChange} />;
       case 'admin-panel':
         return <AdminPanelView />;
+      case 'libro-clases':
+        return <ClassbookView onNavigate={handleViewChange} />;
+      case 'libro-clases-session':
+        return (
+          <ClassSessionDetailView
+            sessionId={(viewState as Record<string, unknown>)?.sessionId as string ?? ''}
+            onBack={() => handleViewChange('libro-clases')}
+            onRefresh={() => {}}
+          />
+        );
       default:
         return <DashboardView onNavigate={handleViewChange} />;
     }

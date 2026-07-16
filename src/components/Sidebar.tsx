@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot, GraduationCap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../utils/roles';
 
@@ -37,6 +37,7 @@ const menuSections = [
   {
     label: 'GESTION ESCOLAR',
     items: [
+      { id: 'libro-clases', label: 'Libro de Clases', icon: GraduationCap },
       { id: 'banco-recursos', label: 'Banco de Recursos', icon: Boxes },
       { id: 'panel-compartido', label: 'Panel Compartido', icon: Share2 },
     ],

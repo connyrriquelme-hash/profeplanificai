@@ -271,6 +271,8 @@ export type ViewType =
   | 'project-copilot'
   | 'admin'
   | 'admin-panel'
+  | 'libro-clases'
+  | 'libro-clases-session'
   | 'print';
 
 export type SharedDocumentPermission = 'view' | 'comment' | 'edit';

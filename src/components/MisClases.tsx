@@ -19,6 +19,9 @@ import { normalizeProductContent } from '../utils/productNormalizer';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
 import { useActiveLesson } from '../contexts/ActiveLessonContext';
+import { useAuth } from '../contexts/AuthContext';
+import { classbookService } from '../services/classbookService';
+import { canCreateSession } from '../utils/classbookPermissions';
 
 type RightTab = 'semana' | 'clase' | 'curriculum' | 'recursos' | 'evaluacion' | 'ntb';
 
@@ -98,6 +101,7 @@ const LC = 'block text-[11px] font-black tracking-wide uppercase text-slate-500 
 const IC = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all';
 
 export function MisClases() {
+  const { user } = useAuth();
   const { getOptions } = useConfigOptions();
   const cfgMethodologies = getOptions('methodologies');
   const cfgNtbTypes = getOptions('non_teaching_types');
@@ -148,6 +152,7 @@ export function MisClases() {
   const lastAutosave = useRef('');
   const [bankResources, setBankResources] = useState<any[]>([]);
   const [bankRefreshKey, setBankRefreshKey] = useState(0);
+  const [sendingToClassbook, setSendingToClassbook] = useState(false);
   const { setCurriculum } = useActiveLesson();
 
   const selectedClass = useMemo(() => classes.find((c) => c.id === scheduleForm.class_id) || classes[0], [classes, scheduleForm.class_id]);
@@ -390,6 +395,24 @@ export function MisClases() {
 
   const handleDeleteNtb = async (id: string) => { if (!confirm('Eliminar este bloque no lectivo?')) return; await deleteNonTeachingBlock(id); setToast('Bloque eliminado.'); await loadMain(); };
   const handleToggleNtbDone = async (block: NonTeachingBlock) => { await updateNonTeachingBlock(block.id, { status: block.status === 'realizado' ? 'pendiente' : 'realizado' }); await loadMain(); };
+
+  const handleSendToClassbook = async () => {
+    if (!selectedBundle?.lesson?.id) return;
+    if (!canCreateSession(user)) { setError('No tienes permiso para crear sesiones en el Libro de Clases.'); return; }
+    setSendingToClassbook(true); setError('');
+    try {
+      await classbookService.createClassSessionFromLesson(selectedBundle.lesson.id);
+      setToast('Clase enviada al Libro de Clases exitosamente.');
+      setTimeout(() => setToast(''), 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo enviar al Libro de Clases.';
+      if (msg.includes('409') || msg.includes('ya existe') || msg.includes('already')) {
+        setToast('Esta clase ya fue enviada al Libro de Clases.');
+      } else {
+        setError(msg);
+      }
+    } finally { setSendingToClassbook(false); }
+  };
 
   const saveFields = useCallback((fields: Record<string, unknown>, curriculum?: Record<string, unknown>) => {
     if (!selectedLessonId) return;
@@ -704,6 +727,15 @@ export function MisClases() {
               <div><p className="text-xs font-bold text-violet-600">Detalle de clase</p><h3 className="font-black text-slate-900 text-lg">{selectedBundle.plan?.title || selectedBundle.lesson.title}</h3><p className="text-sm text-slate-500">{selectedBundle.lesson.lesson_date} &middot; {selectedBundle.lesson.start_time}-{selectedBundle.lesson.end_time}</p></div>
               <div className="flex items-center gap-2 text-sm text-slate-500">{savingState === 'saving' ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{savingState === 'saving' ? 'Guardando...' : savingState === 'saved' ? 'Guardado automaticamente' : 'Borrador'}</div>
             </div>
+
+            {canCreateSession(user) && selectedBundle?.lesson?.id && (
+              <div className="mb-4">
+                <button onClick={() => void handleSendToClassbook()} disabled={sendingToClassbook} className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100 transition-all disabled:opacity-50">
+                  {sendingToClassbook ? <Loader2 size={14} className="animate-spin" /> : <GraduationCap size={14} />}
+                  {sendingToClassbook ? 'Enviando...' : 'Enviar al Libro de Clases'}
+                </button>
+              </div>
+            )}
 
             {/* RESUMEN: Datos de clase */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 mb-5">

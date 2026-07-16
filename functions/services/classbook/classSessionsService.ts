@@ -231,6 +231,34 @@ export class ClassSessionService {
     const existing = await this.getById(id);
     if (!existing) return null;
 
+    const contentFields = ['taught_content', 'teacher_notes', 'objective_ids_json', 'indicators_json', 'skills_json', 'attitudes_json', 'dua_supports_json', 'formative_assessment_json', 'resources_json'];
+    const hasContentChange = contentFields.some(f => (input as Record<string, unknown>)[f] !== undefined);
+
+    if (hasContentChange) {
+      const snapshot = JSON.stringify({
+        taught_content: existing.taught_content,
+        teacher_notes: existing.teacher_notes,
+        objective_ids_json: existing.objective_ids_json,
+        indicators_json: existing.indicators_json,
+        skills_json: existing.skills_json,
+        attitudes_json: existing.attitudes_json,
+        dua_supports_json: existing.dua_supports_json,
+        formative_assessment_json: existing.formative_assessment_json,
+        resources_json: existing.resources_json,
+        status: existing.status,
+      });
+      const contentHash = await this.computeHash(snapshot);
+      await this.createVersion({
+        class_session_id: id,
+        institution_id: existing.institution_id,
+        version: existing.version,
+        snapshot_json: snapshot,
+        content_hash: contentHash,
+        change_reason: 'Auto-guardado',
+        created_by: existing.created_by,
+      });
+    }
+
     const updates: string[] = [];
     const params: (string | number | null)[] = [];
 
@@ -281,6 +309,11 @@ export class ClassSessionService {
 
     if (updates.length === 0) return existing;
 
+    if (hasContentChange) {
+      updates.push('version = ?');
+      params.push(existing.version + 1);
+    }
+
     updates.push('updated_at = ?');
     params.push(new Date().toISOString());
     params.push(id);
@@ -290,6 +323,14 @@ export class ClassSessionService {
     ).bind(...params).run();
 
     return this.getById(id);
+  }
+
+  private async computeHash(data: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   async complete(id: string, finalize = false): Promise<ClassSession | null> {
