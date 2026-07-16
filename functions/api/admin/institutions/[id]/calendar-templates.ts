@@ -1,5 +1,5 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../../../_lib/auth-adapter';
-import { logAdminAction } from '../../../../../_lib/roles';
+import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../../_lib/auth-adapter';
+import { logAdminAction } from '../../../../_lib/roles';
 
 interface Env {
   DB: D1Database;

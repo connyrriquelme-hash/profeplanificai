@@ -1,5 +1,6 @@
 import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../_lib/auth-adapter';
-import { logAdminAction, hashPassword } from '../../_lib/auth';
+import { hashPassword } from '../../_lib/auth';
+import { logAdminAction } from '../../_lib/roles';
 import { ROLE_PERMISSIONS } from '../../core/authorization';
 
 interface Env {

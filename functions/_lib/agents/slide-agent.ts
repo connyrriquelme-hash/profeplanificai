@@ -1,4 +1,4 @@
-import type { Env } from '../_middleware';
+import type { Env } from '../../_middleware';
 
 export interface SlideResource {
   id: string;

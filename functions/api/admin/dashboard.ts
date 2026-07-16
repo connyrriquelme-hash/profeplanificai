@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../_lib/auth-adapter';
+import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../_lib/auth-adapter';
 
 interface Env {
   DB: D1Database;
@@ -12,9 +12,6 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     await requireActiveAuthContext(context.request, env);
     await requireInstitutionContext(context.request, env);
     await requirePermissionContext(context.request, env, 'institution:read');
-
-    const authContext = await requireAuthContext(context.request, env);
-    const activeContext = await requireActiveAuthContext(context.request, env);
 
     const [user, planes, recursos, evaluaciones, cursos, estudiantes, posts] = await Promise.all([
       context.env.DB.prepare('SELECT id, email, nombre, rol FROM usuarios WHERE id = ?').bind(authContext.userId).first(),

@@ -1,5 +1,5 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext } from '../../../../_lib/auth-adapter';
-import { SignatureCredentialsService } from '../../../../services/classbook';
+import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { SignatureCredentialsService } from '../../../services/classbook';
 
 interface Env {
   DB: D1Database;

@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext } from '../../../_lib/auth-adapter';
+import { requireAuthContext, requireActiveAuthContext } from '../../_lib/auth-adapter';
 
 interface Env {
   DB: D1Database;
