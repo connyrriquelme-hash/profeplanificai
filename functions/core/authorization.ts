@@ -90,7 +90,18 @@ export const ROLE_PERMISSIONS: Record<InstitutionalRole, string[]> = {
     'course:assign_teacher',
     'plan:read',
     'classbook:read',
-    'classbook:write',
+    'classbook:create',
+    'classbook:update',
+    'classbook:complete',
+    'classbook:attendance',
+    'classbook:observe',
+    'classbook:review',
+    'classbook:sign',
+    'classbook:configure',
+    'student:read',
+    'student:create',
+    'student:update',
+    'enrollment:manage',
     'report:institution',
     'audit:institution',
   ],
@@ -101,6 +112,8 @@ export const ROLE_PERMISSIONS: Record<InstitutionalRole, string[]> = {
     'plan:approve',
     'plan:observe',
     'classbook:read',
+    'classbook:observe',
+    'classbook:review',
     'classbook:sign_pending',
     'report:scope',
   ],
@@ -113,6 +126,8 @@ export const ROLE_PERMISSIONS: Record<InstitutionalRole, string[]> = {
     'classbook:read_own',
     'classbook:update_own',
     'classbook:sign_own',
+    'classbook:attendance',
+    'classbook:observe',
     'resource:create',
     'resource:read',
     'evaluation:create',
@@ -264,6 +279,16 @@ export async function requireAuthenticatedUser(
     ).bind(user.id, 'admin').first();
     if (globalAdmin) {
       institutionalRole = 'super_admin';
+      const membership = await env.DB.prepare(
+        `SELECT institution_id, role FROM institution_members
+         WHERE user_id = ? AND status = 'active'
+         ORDER BY CASE role WHEN 'institution_admin' THEN 1 WHEN 'coordinator' THEN 2 ELSE 3 END
+         LIMIT 1`
+      ).bind(user.id).first<{ institution_id: string; role: string }>();
+
+      if (membership) {
+        institutionId = membership.institution_id;
+      }
     } else {
       const membership = await env.DB.prepare(
         `SELECT institution_id, role FROM institution_members
