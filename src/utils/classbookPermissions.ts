@@ -65,6 +65,24 @@ export function canSignSession(user: AuthUser | null): boolean {
   return user.permissions?.includes('classbook:sign') ?? false;
 }
 
+export function canConfigureSignature(user: AuthUser | null): boolean {
+  if (!user) return false;
+  if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
+  return user.permissions?.includes('classbook:configure') ?? false;
+}
+
+export function canResetSignature(user: AuthUser | null): boolean {
+  if (!user) return false;
+  if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
+  return user.permissions?.includes('classbook:configure') ?? false;
+}
+
+export function canUnlockSignature(user: AuthUser | null): boolean {
+  if (!user) return false;
+  if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
+  return user.permissions?.includes('classbook:configure') ?? false;
+}
+
 export function canReadClassbook(user: AuthUser | null): boolean {
   if (!user) return false;
   if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;

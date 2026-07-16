@@ -131,4 +131,13 @@ export interface ClassbookSignatureStatus {
   signed_at?: string;
   signed_by?: string;
   content_hash?: string;
+  credential?: SignatureCredentialStatus;
+}
+
+export interface SignatureCredentialStatus {
+  configured: boolean;
+  locked: boolean;
+  must_change_pin: boolean;
+  failed_attempts: number;
+  locked_until: string | null;
 }

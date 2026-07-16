@@ -3,6 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { classbookService } from '../../services/classbookService';
 import { canEditSession, canCompleteSession, canManageAttendance, canCreateObservation, canSignSession } from '../../utils/classbookPermissions';
 import type { ClassbookSession, ClassbookAttendanceRecord, ClassbookSignatureStatus, ClassbookObservation } from '../../types/classbook';
+import { SignaturePinSetup } from './SignaturePinSetup';
+import { SignaturePinChange } from './SignaturePinChange';
+import { SessionSignatureModal } from './SessionSignatureModal';
 
 interface Props {
   sessionId: string;
@@ -56,6 +59,11 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
   const [newObsContent, setNewObsContent] = useState('');
   const [newObsCategory, setNewObsCategory] = useState('academic');
 
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [showPinChange, setShowPinChange] = useState(false);
+  const [credentialStatus, setCredentialStatus] = useState<import('../../types/classbook').SignatureCredentialStatus | null>(null);
+
   useEffect(() => {
     const ctrl = new AbortController();
     setLoading(true);
@@ -65,13 +73,15 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
       classbookService.getSignatureStatus(sessionId, ctrl.signal).catch(() => ({ signed: false })),
       classbookService.getSessionVersions(sessionId, ctrl.signal).catch(() => []),
       classbookService.getObservations('', { class_session_id: sessionId }, ctrl.signal).catch(() => []),
+      classbookService.getSignatureCredentialStatus(ctrl.signal).catch(() => null),
     ])
-      .then(([s, att, sig, vers, obs]) => {
+      .then(([s, att, sig, vers, obs, cred]) => {
         setSession(s);
         setAttendance(att);
         setSignature(sig);
         setVersions(vers);
         setObservations(obs);
+        setCredentialStatus(cred);
         const tc = s?.taught_content ?? '';
         const tn = s?.teacher_notes ?? '';
         editedContentRef.current = tc;
@@ -278,6 +288,52 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
       {message && (
         <div role="status" aria-live="polite" className={`text-sm px-4 py-2 rounded-xl ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
           {message}
+        </div>
+      )}
+
+      {canSign && !signature?.signed && session.status !== 'cancelled' && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Firma digital</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {credentialStatus?.configured
+                  ? credentialStatus.locked
+                    ? 'Cuenta bloqueada — contacte al administrador'
+                    : credentialStatus.must_change_pin
+                      ? 'Debe cambiar su PIN antes de firmar'
+                      : 'Listo para firmar'
+                  : 'Configure su PIN de firma para poder firmar sesiones'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {!credentialStatus?.configured ? (
+                <button
+                  onClick={() => setShowPinSetup(true)}
+                  className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+                >
+                  Configurar PIN
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowPinChange(true)}
+                    className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+                  >
+                    Cambiar PIN
+                  </button>
+                  {(session.status === 'completed' || session.status === 'pending_signature') && !credentialStatus.locked && !credentialStatus.must_change_pin && (
+                    <button
+                      onClick={() => setShowSignModal(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+                    >
+                      Firmar sesión
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -548,6 +604,50 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
               </div>
             )}
           </Section>
+        </div>
+      )}
+      {showSignModal && session && (
+        <SessionSignatureModal
+          session={session}
+          onSuccess={() => {
+            setShowSignModal(false);
+            setMessage('Sesión firmada correctamente');
+            setTimeout(() => setMessage(null), 3000);
+            classbookService.getSignatureStatus(sessionId).then(setSignature);
+            onRefresh();
+          }}
+          onCancel={() => setShowSignModal(false)}
+        />
+      )}
+
+      {showPinSetup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPinSetup(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <SignaturePinSetup
+              onComplete={() => {
+                setShowPinSetup(false);
+                setMessage('PIN configurado correctamente');
+                setTimeout(() => setMessage(null), 3000);
+                classbookService.getSignatureCredentialStatus().then(setCredentialStatus);
+              }}
+              onCancel={() => setShowPinSetup(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {showPinChange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPinChange(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <SignaturePinChange
+              onComplete={() => {
+                setShowPinChange(false);
+                setMessage('PIN cambiado correctamente');
+                setTimeout(() => setMessage(null), 3000);
+              }}
+              onCancel={() => setShowPinChange(false)}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -370,6 +370,27 @@ export interface CreateClassbookAuditInput {
   metadata_json?: Record<string, unknown>;
 }
 
+export interface TeacherSignatureCredential {
+  id: string;
+  institution_id: string;
+  user_id: string;
+  pin_hash: string;
+  pin_salt: string;
+  failed_attempts: number;
+  locked_until: string | null;
+  must_change_pin: number;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface SignatureCredentialStatus {
+  configured: boolean;
+  locked: boolean;
+  must_change_pin: boolean;
+  failed_attempts: number;
+  locked_until: string | null;
+}
+
 export interface ClassbookListOptions {
   limit?: number;
   offset?: number;

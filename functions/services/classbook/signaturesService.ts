@@ -193,6 +193,60 @@ export class SignaturesService {
     return { session: updatedSession, signature };
   }
 
+  async signSessionWithPin(
+    sessionId: string,
+    userId: string,
+    institutionId: string,
+    contentHash: string,
+    pin: string,
+    credentialsService: {
+      verifyPin: (userId: string, institutionId: string, pin: string) => Promise<{ valid: boolean; reason?: string }>;
+    }
+  ): Promise<{ session: ClassSession | null; signature: SignatureEvent }> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+
+    if (session.institution_id !== institutionId) {
+      throw new Error('Session does not belong to this institution');
+    }
+
+    if (session.status !== 'completed' && session.status !== 'pending_signature') {
+      throw new Error('Session is not ready for signature');
+    }
+
+    if (session.teacher_id !== userId) {
+      throw new Error('Solo el docente de la sesión puede firmarla');
+    }
+
+    const existingSignature = await this.getSignatureBySession(sessionId);
+    if (existingSignature) {
+      throw new Error('Sesión ya firmada');
+    }
+
+    const pinVerification = await credentialsService.verifyPin(userId, institutionId, pin);
+    if (!pinVerification.valid) {
+      throw new Error(pinVerification.reason || 'PIN inválido');
+    }
+
+    const signature = await this.create({
+      institution_id: institutionId,
+      class_session_id: sessionId,
+      user_id: userId,
+      signed_version: session.version,
+      content_hash: contentHash,
+      signature_method: 'pin',
+      terminal_id: null,
+      result: 'success',
+    });
+
+    await this.updateSessionStatus(sessionId, 'signed', session.version);
+
+    const updatedSession = await this.getSessionById(sessionId);
+    return { session: updatedSession, signature };
+  }
+
   async manualConfirmSignature(
     sessionId: string,
     userId: string,

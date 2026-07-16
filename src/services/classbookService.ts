@@ -208,4 +208,57 @@ export const classbookService = {
     );
     return res.data ?? { signed: false };
   },
+
+  async getSignatureCredentialStatus(signal?: AbortSignal): Promise<import('../types/classbook').SignatureCredentialStatus> {
+    const res = await api.get<{ ok: boolean; data: import('../types/classbook').SignatureCredentialStatus }>(
+      '/api/classbook/signature-credentials/status',
+      signal
+    );
+    return res.data ?? { configured: false, locked: false, must_change_pin: false, failed_attempts: 0, locked_until: null };
+  },
+
+  async setupSignaturePin(pin: string, signal?: AbortSignal): Promise<{ configured: boolean; must_change_pin: boolean }> {
+    const res = await api.post<{ ok: boolean; data: { configured: boolean; must_change_pin: boolean } }>(
+      '/api/classbook/signature-credentials/setup',
+      { pin },
+      signal
+    );
+    return res.data;
+  },
+
+  async changeSignaturePin(currentPin: string, newPin: string, signal?: AbortSignal): Promise<{ changed: boolean }> {
+    const res = await api.post<{ ok: boolean; data: { changed: boolean } }>(
+      '/api/classbook/signature-credentials/change',
+      { current_pin: currentPin, new_pin: newPin },
+      signal
+    );
+    return res.data;
+  },
+
+  async signSessionWithPin(sessionId: string, contentHash: string, pin: string, signal?: AbortSignal): Promise<{ session: ClassbookSession; signature: unknown }> {
+    const res = await api.post<{ ok: boolean; data: { session: ClassbookSession; signature: unknown } }>(
+      `/api/classbook/sessions/${sessionId}/signature`,
+      { content_hash: contentHash, pin },
+      signal
+    );
+    return res.data;
+  },
+
+  async resetSignaturePin(userId: string, signal?: AbortSignal): Promise<{ reset: boolean }> {
+    const res = await api.post<{ ok: boolean; data: { reset: boolean } }>(
+      `/api/classbook/signature-credentials/${userId}/reset`,
+      {},
+      signal
+    );
+    return res.data;
+  },
+
+  async unlockSignaturePin(userId: string, signal?: AbortSignal): Promise<{ unlocked: boolean }> {
+    const res = await api.post<{ ok: boolean; data: { unlocked: boolean } }>(
+      `/api/classbook/signature-credentials/${userId}/unlock`,
+      {},
+      signal
+    );
+    return res.data;
+  },
 };
