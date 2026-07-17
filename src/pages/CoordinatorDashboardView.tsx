@@ -31,11 +31,16 @@ interface Props {
 }
 
 export function CoordinatorDashboardView({ onNavigate }: Props) {
-  const { user } = useAuth();
+  const { user, activeInstitutionId } = useAuth();
   const [activeTab, setActiveTab] = useState<CoordinatorTab>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<CoordinatorDashboardFilters>({});
+
+  const effectiveInstitutionId =
+    user?.institutionalRole === 'super_admin'
+      ? activeInstitutionId ?? undefined
+      : user?.institutionId;
 
   const [summary, setSummary] = useState<CoordinatorDashboardSummary | null>(null);
   const [teachers, setTeachers] = useState<CoordinatorTeacherSummary[]>([]);
@@ -66,14 +71,14 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
     setError(null);
     try {
       const [s, t, c, se, r, si, co, a] = await Promise.all([
-        classbookService.getCoordinatorDashboard(filtersToUse),
-        classbookService.getCoordinatorTeachers(filtersToUse),
-        classbookService.getCoordinatorCourses(filtersToUse),
-        classbookService.getCoordinatorSessions(filtersToUse),
-        classbookService.getCoordinatorPlanningReviews(filtersToUse),
-        classbookService.getCoordinatorPendingSignatures(filtersToUse),
-        classbookService.getCoordinatorCoverage(filtersToUse),
-        classbookService.getCoordinatorAlerts(filtersToUse),
+        classbookService.getCoordinatorDashboard(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorTeachers(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorCourses(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorSessions(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorPlanningReviews(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorPendingSignatures(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorCoverage(filtersToUse, effectiveInstitutionId),
+        classbookService.getCoordinatorAlerts(filtersToUse, effectiveInstitutionId),
       ]);
       setSummary(s);
       setTeachers(t);
@@ -88,16 +93,16 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [effectiveInstitutionId]);
 
   const fetchFilterOptions = useCallback(async () => {
     try {
-      const options = await classbookService.getCoordinatorFilterOptions();
+      const options = await classbookService.getCoordinatorFilterOptions(effectiveInstitutionId);
       setFilterOptions(options);
     } catch (err) {
       console.error('Error loading filter options:', err);
     }
-  }, []);
+  }, [effectiveInstitutionId]);
 
   useEffect(() => {
     fetchData(filters);
@@ -173,6 +178,17 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Acceso restringido</h2>
           <p className="text-slate-500">No tienes permisos para ver el panel de coordinación.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.institutionalRole === 'super_admin' && !activeInstitutionId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Seleccionar institución</h2>
+          <p className="text-slate-500">Selecciona una institución activa para ver el panel de coordinación.</p>
         </div>
       </div>
     );

@@ -24,6 +24,9 @@ interface AuthContextType {
   loadSessions: () => Promise<void>;
   revokeSession: (sessionId: string) => Promise<void>;
   revokeOtherSessions: () => Promise<number>;
+  activeInstitutionId: string | null;
+  setActiveInstitution: (institutionId: string) => void;
+  clearActiveInstitution: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [online, setOnline] = useState(false);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [activeInstitutionId, setActiveInstitutionIdState] = useState<string | null>(null);
 
   useEffect(() => {
     verifySession()
@@ -90,8 +94,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return count;
   }, [loadSessions]);
 
+  const setActiveInstitution = useCallback((institutionId: string) => {
+    setActiveInstitutionIdState(institutionId);
+    // Also persist to localStorage for persistence across reloads
+    localStorage.setItem('activeInstitutionId', institutionId);
+  }, []);
+
+  const clearActiveInstitution = useCallback(() => {
+    setActiveInstitutionIdState(null);
+    localStorage.removeItem('activeInstitutionId');
+  }, []);
+
+  // Load active institution from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('activeInstitutionId');
+    if (saved) {
+      setActiveInstitutionIdState(saved);
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, online, login, logout, refreshUser: refreshUserCallback, isAuthenticated: !!user, sessions, loadSessions, revokeSession, revokeOtherSessions }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      online, 
+      login, 
+      logout, 
+      refreshUser: refreshUserCallback, 
+      isAuthenticated: !!user, 
+      sessions, 
+      loadSessions, 
+      revokeSession, 
+      revokeOtherSessions,
+      activeInstitutionId,
+      setActiveInstitution,
+      clearActiveInstitution,
+    }}>
       {children}
     </AuthContext.Provider>
   );

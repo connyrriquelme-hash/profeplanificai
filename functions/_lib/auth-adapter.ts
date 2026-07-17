@@ -8,6 +8,7 @@ import {
   requireInstitutionMatch,
   requirePermission,
   requireAnyPermission,
+  requireRole,
   AuthorizationError,
 } from '../core/authorization';
 
@@ -129,6 +130,16 @@ export async function requireAnyPermissionContext(
     }
     throw err;
   }
+}
+
+export async function requireRoleContext(
+  request: Request,
+  env: AuthAdapterEnv,
+  role: string
+) {
+  const context = await requireAuthContext(request, env);
+  const activeContext = await requireActiveUser(context);
+  return requireRole(activeContext, role as any);
 }
 
 export async function requireInstitutionAdminContext(

@@ -10,6 +10,7 @@ import { ClassSessionDetailView } from '../components/classbook/ClassSessionDeta
 import { AttendancePanel } from '../components/classbook/AttendancePanel';
 import { ObservationsPanel } from '../components/classbook/ObservationsPanel';
 import { PlanningReviewsPanel } from '../components/classbook/PlanningReviewsPanel';
+import { InstitutionSelector } from '../components/classbook/InstitutionSelector';
 
 type ClassbookTab = 'overview' | 'sessions' | 'attendance' | 'observations' | 'reviews' | 'signatures';
 
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export function ClassbookView({ onNavigate, sessionId }: Props) {
-  const { user } = useAuth();
+  const { user, activeInstitutionId } = useAuth();
   const [activeTab, setActiveTab] = useState<ClassbookTab>(sessionId ? 'sessions' : 'overview');
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(sessionId ?? null);
   const [academicYears, setAcademicYears] = useState<ClassbookAcademicYear[]>([]);
@@ -40,13 +41,17 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
     setSelectedSessionId(null);
   }, []);
 
-  const institutionId = (user as unknown as { institution_id?: string })?.institution_id ?? '';
+  const effectiveInstitutionId =
+    user?.institutionalRole === 'super_admin'
+      ? activeInstitutionId ?? ''
+      : user?.institutionId ?? '';
 
   useEffect(() => {
     if (!user || !canViewClassbook(user)) return;
+    if (user.institutionalRole === 'super_admin' && !activeInstitutionId) return;
     const ctrl = new AbortController();
     setLoading(true);
-    classbookService.getAcademicYears(institutionId, ctrl.signal)
+    classbookService.getAcademicYears(effectiveInstitutionId, ctrl.signal)
       .then((years: ClassbookAcademicYear[]) => {
         setAcademicYears(years);
         const active = years.find((y: ClassbookAcademicYear) => y.status === 'active') ?? years[0] ?? null;
@@ -67,7 +72,7 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
         }
       });
     return () => ctrl.abort();
-  }, [user, institutionId]);
+  }, [user, effectiveInstitutionId, activeInstitutionId]);
 
   const handleYearChange = useCallback(async (year: ClassbookAcademicYear) => {
     setSelectedYear(year);
@@ -104,6 +109,18 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
           <button onClick={() => onNavigate('dashboard')} className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition">
             Volver al inicio
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.institutionalRole === 'super_admin' && !activeInstitutionId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">Seleccionar institución</h2>
+          <p className="text-sm text-slate-500">Selecciona una institución activa para continuar.</p>
+          <InstitutionSelector />
         </div>
       </div>
     );
@@ -161,19 +178,19 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
           {activeTab === 'attendance' && selectedYear && (
             <AttendancePanel
               sessions={sessions}
-              institutionId={institutionId}
+              institutionId={effectiveInstitutionId}
               onRefresh={handleRefresh}
             />
           )}
           {activeTab === 'observations' && selectedYear && (
             <ObservationsPanel
-              institutionId={institutionId}
+              institutionId={effectiveInstitutionId}
               yearId={selectedYear.id}
               sessions={sessions}
             />
           )}
           {activeTab === 'reviews' && selectedYear && (
-            <PlanningReviewsPanel institutionId={institutionId} />
+            <PlanningReviewsPanel institutionId={effectiveInstitutionId} />
           )}
           {activeTab === 'signatures' && (
             <div className="text-center py-16 text-slate-500">
