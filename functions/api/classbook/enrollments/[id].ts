@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../_lib/auth-adapter';
 import { CourseEnrollmentService } from '../../../services/classbook';
 
 interface Env {
@@ -9,10 +9,8 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'enrollment:manage');
-    await requireInstitutionContext(context.request, env);
 
     const enrollmentService = new CourseEnrollmentService(env);
     const { id } = context.params;
@@ -23,7 +21,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       return Response.json({ ok: false, error: 'Matrícula no encontrada' }, { status: 404 });
     }
 
-    if (enrollment.institution_id !== authContext.institutionId) {
+    if (enrollment.institution_id !== institutionId) {
       return Response.json({ ok: false, error: 'No tienes acceso a esta matrícula' }, { status: 403 });
     }
 
@@ -37,9 +35,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'enrollment:manage');
 
     const { id } = context.params;
@@ -56,7 +52,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       return Response.json({ ok: false, error: 'Matrícula no encontrada' }, { status: 404 });
     }
 
-    if (enrollment.institution_id !== authContext.institutionId) {
+    if (enrollment.institution_id !== institutionId) {
       return Response.json({ ok: false, error: 'No tienes acceso a esta matrícula' }, { status: 403 });
     }
 
@@ -76,9 +72,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
 export async function onRequestDelete(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'enrollment:manage');
 
     const { id } = context.params;
@@ -90,7 +84,7 @@ export async function onRequestDelete(context: EventContext<Env>): Promise<Respo
       return Response.json({ ok: false, error: 'Matrícula no encontrada' }, { status: 404 });
     }
 
-    if (enrollment.institution_id !== authContext.institutionId) {
+    if (enrollment.institution_id !== institutionId) {
       return Response.json({ ok: false, error: 'No tienes acceso a esta matrícula' }, { status: 403 });
     }
 

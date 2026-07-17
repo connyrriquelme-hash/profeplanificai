@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../_lib/auth-adapter';
 import { ClassSessionService } from '../../../services/classbook';
 
 interface Env {
@@ -9,13 +9,10 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:read');
-    await requireInstitutionContext(context.request, env);
 
     const sessionService = new ClassSessionService(env);
-    const institutionId = authContext.institutionId;
     const filters = {
       institution_id: institutionId,
       academic_year_id: context.query.academic_year_id,
@@ -39,9 +36,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:create');
 
     const body = await context.request.json() as {
@@ -73,7 +68,6 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const sessionService = new ClassSessionService(env);
-    const institutionId = authContext.institutionId;
     const session = await sessionService.create({
       academic_year_id: body.academic_year_id,
       academic_term_id: body.academic_term_id,

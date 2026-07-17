@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../../_lib/auth-adapter';
 import { AttendanceService } from '../../../../services/classbook';
 
 interface Env {
@@ -9,13 +9,10 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:read');
-    await requireInstitutionContext(context.request, env);
 
     const attendanceService = new AttendanceService(env);
-    const institutionId = authContext.institutionId;
     const { id } = context.params;
 
     const records = await attendanceService.getBySession(id);
@@ -37,9 +34,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 export async function onRequestPut(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:attendance');
 
     const { id } = context.params;
@@ -59,7 +54,6 @@ export async function onRequestPut(context: EventContext<Env>): Promise<Response
     }
 
     const attendanceService = new AttendanceService(env);
-    const institutionId = authContext.institutionId;
 
     // Verify session belongs to institution
     // This would need a session service call - for now we'll trust the session exists

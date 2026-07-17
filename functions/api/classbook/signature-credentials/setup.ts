@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId } from '../../../_lib/auth-adapter';
 import { SignatureCredentialsService } from '../../../services/classbook';
 import { ClassbookAuditService } from '../../../services/classbook';
 
@@ -10,9 +10,7 @@ interface Env {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    const institutionCtx = await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
 
     const body = await context.request.json() as { pin?: string };
     if (!body.pin) {
@@ -20,20 +18,20 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const credentialsService = new SignatureCredentialsService(env);
-    const hasExisting = await credentialsService.hasCredential(authContext.userId, institutionCtx.institutionId);
+    const hasExisting = await credentialsService.hasCredential(authContext.userId, institutionId);
     if (hasExisting) {
       return Response.json({ ok: false, error: 'Ya existe una credencial de firma configurada' }, { status: 409 });
     }
 
     const credential = await credentialsService.createCredential(
       authContext.userId,
-      institutionCtx.institutionId,
+      institutionId,
       body.pin
     );
 
     const auditService = new ClassbookAuditService(env);
     await auditService.log({
-      institution_id: institutionCtx.institutionId,
+      institution_id: institutionId,
       actor_user_id: authContext.userId,
       action: 'signature_pin_configured',
       resource_type: 'teacher_signature_credential',

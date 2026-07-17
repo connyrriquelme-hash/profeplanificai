@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../../_lib/auth-adapter';
 import { SignatureCredentialsService } from '../../../../services/classbook';
 import { ClassbookAuditService } from '../../../../services/classbook';
 
@@ -10,9 +10,7 @@ interface Env {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    const institutionCtx = await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:configure');
 
     const { userId } = context.params;
@@ -21,16 +19,16 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const credentialsService = new SignatureCredentialsService(env);
-    const hasCredential = await credentialsService.hasCredential(userId, institutionCtx.institutionId);
+    const hasCredential = await credentialsService.hasCredential(userId, institutionId);
     if (!hasCredential) {
       return Response.json({ ok: false, error: 'Credencial no encontrada' }, { status: 404 });
     }
 
-    await credentialsService.resetCredential(userId, institutionCtx.institutionId);
+    await credentialsService.resetCredential(userId, institutionId);
 
     const auditService = new ClassbookAuditService(env);
     await auditService.log({
-      institution_id: institutionCtx.institutionId,
+      institution_id: institutionId,
       actor_user_id: authContext.userId,
       action: 'signature_pin_reset',
       resource_type: 'teacher_signature_credential',

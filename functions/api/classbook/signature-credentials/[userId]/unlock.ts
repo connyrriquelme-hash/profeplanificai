@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext, requirePermissionContext } from '../../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../../_lib/auth-adapter';
 import { SignatureCredentialsService } from '../../../../services/classbook';
 import { ClassbookAuditService } from '../../../../services/classbook';
 
@@ -10,9 +10,7 @@ interface Env {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    const institutionCtx = await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:configure');
 
     const { userId } = context.params;
@@ -21,7 +19,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const credentialsService = new SignatureCredentialsService(env);
-    const status = await credentialsService.getCredentialStatus(userId, institutionCtx.institutionId);
+    const status = await credentialsService.getCredentialStatus(userId, institutionId);
     if (!status.configured) {
       return Response.json({ ok: false, error: 'Credencial no encontrada' }, { status: 404 });
     }
@@ -30,11 +28,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       return Response.json({ ok: false, error: 'La credencial no está bloqueada' }, { status: 400 });
     }
 
-    await credentialsService.unlockCredential(userId, institutionCtx.institutionId);
+    await credentialsService.unlockCredential(userId, institutionId);
 
     const auditService = new ClassbookAuditService(env);
     await auditService.log({
-      institution_id: institutionCtx.institutionId,
+      institution_id: institutionId,
       actor_user_id: authContext.userId,
       action: 'signature_pin_unlocked',
       resource_type: 'teacher_signature_credential',

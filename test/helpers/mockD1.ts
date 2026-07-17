@@ -780,6 +780,7 @@ export function makeMockDB(
     lessonPlanCurriculum?: Row[];
     objectives?: Row[];
     courses?: Row[];
+    institutions?: Row[];
   } = {}
 ): MockD1Database {
   const data: Record<string, Row[]> = {};
@@ -855,6 +856,7 @@ export function makeMockDB(
   if (options.objectives) data['objectives'] = options.objectives;
   if (options.classSessionVersions) data['class_session_versions'] = options.classSessionVersions;
   if (options.planningReviews) data['planning_reviews'] = options.planningReviews;
+  if (options.institutions) data['institutions'] = options.institutions;
 
   return createMockD1(data);
 }

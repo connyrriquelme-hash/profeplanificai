@@ -150,3 +150,51 @@ export async function requireInstitutionAdminContext(
   const context = await requireInstitutionContext(request, env);
   return requireInstitutionMatch(context, institutionId);
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function resolveEffectiveInstitutionId(
+  request: Request,
+  env: AuthAdapterEnv
+): Promise<{ institutionId: string; authContext: AuthenticatedUserContext }> {
+  const context = await requireAuthContext(request, env);
+  const activeContext = await requireActiveUser(context);
+
+  if (activeContext.role === 'super_admin') {
+    const url = new URL(request.url);
+    const param = url.searchParams.get('institution_id');
+
+    if (!param) {
+      throw new Response(JSON.stringify({ ok: false, error: 'Selecciona una institución activa' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!UUID_RE.test(param)) {
+      throw new Response(JSON.stringify({ ok: false, error: 'Institución inválida' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const exists = await env.DB.prepare('SELECT id FROM institutions WHERE id = ?').bind(param).first<{ id: string }>();
+    if (!exists) {
+      throw new Response(JSON.stringify({ ok: false, error: 'Institución no encontrada' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return { institutionId: param, authContext: activeContext };
+  }
+
+  if (!activeContext.institutionId) {
+    throw new Response(JSON.stringify({ ok: false, error: 'Usuario sin institución asignada' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return { institutionId: activeContext.institutionId, authContext: activeContext };
+}

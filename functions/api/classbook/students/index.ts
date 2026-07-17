@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../_lib/auth-adapter';
 import { StudentProfileService, CourseEnrollmentService } from '../../../services/classbook';
 
 interface Env {
@@ -9,13 +9,10 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'student:read');
-    await requireInstitutionContext(context.request, env);
 
     const studentService = new StudentProfileService(env);
-    const institutionId = authContext.institutionId;
     const academicYearId = context.query.academic_year_id;
     const courseId = context.query.course_id;
 
@@ -36,9 +33,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'student:create');
 
     const body = await context.request.json() as {
@@ -55,7 +50,6 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const studentService = new StudentProfileService(env);
-    const institutionId = authContext.institutionId;
     const student = await studentService.create({
       institution_id: institutionId,
       internal_identifier: body.internal_identifier,
