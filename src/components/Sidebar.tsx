@@ -69,7 +69,14 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const navItems = (collapsed = false) => (
     <nav className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2 space-y-3' : 'px-3 space-y-5'}`}>
       {menuSections.map((section) => {
-        const visibleItems = section.items.filter(item => !ADMIN_ONLY_VIEW_IDS.has(item.id) || isAdmin);
+        const visibleItems = section.items.filter(item => {
+          if (ADMIN_ONLY_VIEW_IDS.has(item.id)) return isAdmin;
+          if (item.id === 'coordinator-dashboard') {
+            const role = user?.institutionalRole;
+            return role === 'super_admin' || role === 'institution_admin' || role === 'coordinator';
+          }
+          return true;
+        });
         if (visibleItems.length === 0) return null;
         return (
           <div key={section.label}>

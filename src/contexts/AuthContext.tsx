@@ -7,6 +7,9 @@ export interface User {
   nombre: string;
   rol: 'docente' | 'admin';
   active?: number;
+  institutionalRole?: 'super_admin' | 'institution_admin' | 'coordinator' | 'teacher' | 'student';
+  permissions?: string[];
+  institutionId?: string;
 }
 
 interface AuthContextType {

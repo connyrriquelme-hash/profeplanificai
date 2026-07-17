@@ -8,6 +8,7 @@ import { PlanningReviewService } from './planningReviewsService';
 import { ClassbookAuditService } from './auditService';
 import { SignaturesService } from './signaturesService';
 import { SignatureCredentialsService } from './signatureCredentialsService';
+import { CoordinatorDashboardService } from './coordinatorDashboardService';
 
 export interface ClassbookServicesEnv {
   DB: D1Database;
@@ -25,6 +26,7 @@ export interface ClassbookServices {
   audit: ClassbookAuditService;
   signatures: SignaturesService;
   signatureCredentials: SignatureCredentialsService;
+  coordinatorDashboard: CoordinatorDashboardService;
 }
 
 export function createClassbookServices(env: ClassbookServicesEnv): ClassbookServices {
@@ -40,6 +42,7 @@ export function createClassbookServices(env: ClassbookServicesEnv): ClassbookSer
     audit: new ClassbookAuditService(env),
     signatures: new SignaturesService(env),
     signatureCredentials: new SignatureCredentialsService(env),
+    coordinatorDashboard: new CoordinatorDashboardService(env),
   };
 }
 
@@ -52,3 +55,4 @@ export * from './planningReviewsService';
 export * from './auditService';
 export * from './signaturesService';
 export * from './signatureCredentialsService';
+export * from './coordinatorDashboardService';

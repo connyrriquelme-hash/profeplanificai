@@ -238,6 +238,299 @@ class MockDBState {
   }
 }
 
+function parseJsonArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function countDistinct(rows: Row[], column: string): number {
+  return new Set(rows.map(row => row[column]).filter(Boolean)).size;
+}
+
+function filterCoordinatorSessions(state: MockDBState, sql: string, boundArgs: unknown[]): Row[] {
+  let rows = [...state.getTable('class_sessions')];
+  const normalized = sql.replace(/\s+/g, ' ');
+  let argIndex = 0;
+
+  const consumeEquals = (pattern: RegExp, column: string) => {
+    if (!pattern.test(normalized)) return;
+    const value = boundArgs[argIndex++];
+    rows = rows.filter(row => row[column] === value);
+  };
+
+  consumeEquals(/cs\.institution_id\s*=\s*\?/i, 'institution_id');
+  consumeEquals(/cs\.academic_year_id\s*=\s*\?/i, 'academic_year_id');
+  consumeEquals(/cs\.course_id\s*=\s*\?/i, 'course_id');
+  consumeEquals(/cs\.subject_id\s*=\s*\?/i, 'subject_id');
+  consumeEquals(/cs\.teacher_id\s*=\s*\?/i, 'teacher_id');
+  consumeEquals(/cs\.status\s*=\s*\?/i, 'status');
+
+  if (/cs\.date\s*>=\s*\?/i.test(normalized)) {
+    const value = String(boundArgs[argIndex++] || '');
+    rows = rows.filter(row => String(row.date || '') >= value);
+  }
+  if (/cs\.date\s*<=\s*\?/i.test(normalized)) {
+    const value = String(boundArgs[argIndex++] || '');
+    rows = rows.filter(row => String(row.date || '') <= value);
+  }
+
+  const inMatches = [...normalized.matchAll(/cs\.(course_id|subject_id|academic_year_id)\s+IN\s*\(([^)]*)\)/gi)];
+  for (const match of inMatches) {
+    const column = match[1];
+    const count = (match[2].match(/\?/g) || []).length;
+    const allowed = boundArgs.slice(argIndex, argIndex + count);
+    argIndex += count;
+    if (allowed.length > 0) {
+      rows = rows.filter(row => allowed.includes(row[column]));
+    }
+  }
+
+  return rows;
+}
+
+function coordinatorDashboardSessionsRow(state: MockDBState, sql: string, boundArgs: unknown[]): Row {
+  const sessions = filterCoordinatorSessions(state, sql, boundArgs);
+  const attendanceSessionIds = new Set(state.getTable('attendance_records').map(row => row.class_session_id));
+
+  return {
+    total: sessions.length,
+    scheduled: sessions.filter(row => row.status === 'scheduled').length,
+    completed: sessions.filter(row => row.status === 'completed').length,
+    pending: sessions.filter(row => row.status === 'open' || row.status === 'pending_signature').length,
+    no_content: sessions.filter(row => row.status === 'completed' && !String(row.taught_content || '').trim()).length,
+    no_attendance: sessions.filter(row => row.status === 'completed' && !attendanceSessionIds.has(row.id)).length,
+    pending_signature: sessions.filter(row => row.status === 'pending_signature').length,
+    teachers: countDistinct(sessions, 'teacher_id'),
+    courses: countDistinct(sessions, 'course_id'),
+  };
+}
+
+function coordinatorReviewSummaryRow(state: MockDBState, boundArgs: unknown[]): Row {
+  const institutionId = boundArgs[0];
+  const rows = state.getTable('planning_reviews').filter(row => row.institution_id === institutionId);
+  return {
+    pending: rows.filter(row => row.status === 'pending').length,
+    observed: rows.filter(row => row.status === 'observed').length,
+  };
+}
+
+function coordinatorAttendanceSummaryRow(state: MockDBState, boundArgs: unknown[]): Row {
+  const institutionId = boundArgs[0];
+  const rows = state.getTable('attendance_records').filter(row => row.institution_id === institutionId);
+  return {
+    total_records: rows.length,
+    present_count: rows.filter(row => row.status === 'present').length,
+  };
+}
+
+function coordinatorObservationSummaryRow(state: MockDBState, boundArgs: unknown[]): Row {
+  const institutionId = boundArgs[0];
+  return {
+    count: state.getTable('student_observations').filter(row => row.institution_id === institutionId && !row.archived_at).length,
+  };
+}
+
+function coordinatorCoverageTotalRow(state: MockDBState, boundArgs: unknown[]): Row {
+  const institutionId = boundArgs[0];
+  const academicYearId = boundArgs[1];
+  const sessions = state.getTable('class_sessions').filter(row =>
+    row.institution_id === institutionId && (!academicYearId || row.academic_year_id === academicYearId)
+  );
+  const lessonPlanIds = new Set(sessions.map(row => row.lesson_plan_id).filter(Boolean));
+  const totalOA = new Set(
+    state.getTable('lesson_plan_curriculum')
+      .filter(row => lessonPlanIds.has(row.lesson_plan_id))
+      .map(row => row.objective_id)
+      .filter(Boolean)
+  );
+  return { total_oa: totalOA.size };
+}
+
+function coordinatorCoverageRows(state: MockDBState, sql: string, boundArgs: unknown[]): Row[] {
+  const sessions = filterCoordinatorSessions(state, sql, boundArgs);
+  const teacherClasses = state.getTable('teacher_classes');
+  const subjects = state.getTable('subjects');
+  const lessonPlanCurriculum = state.getTable('lesson_plan_curriculum');
+  const grouped = new Map<string, {
+    course_id: string;
+    course_name: string;
+    subject_name: string;
+    objectiveIds: Set<string>;
+  }>();
+
+  for (const session of sessions) {
+    const courseId = String(session.course_id || '');
+    if (!courseId) continue;
+    const subjectId = String(session.subject_id || '');
+    const key = `${courseId}::${subjectId}`;
+    const course = teacherClasses.find(row => row.id === courseId);
+    const subject = subjects.find(row => row.id === subjectId);
+    const current = grouped.get(key) ?? {
+      course_id: courseId,
+      course_name: String(course?.name || courseId),
+      subject_name: String(subject?.name || subjectId),
+      objectiveIds: new Set<string>(),
+    };
+
+    for (const curriculumRow of lessonPlanCurriculum) {
+      if (curriculumRow.lesson_plan_id === session.lesson_plan_id && curriculumRow.objective_id) {
+        current.objectiveIds.add(String(curriculumRow.objective_id));
+      }
+    }
+
+    grouped.set(key, current);
+  }
+
+  return [...grouped.values()]
+    .sort((a, b) => a.course_name.localeCompare(b.course_name) || a.subject_name.localeCompare(b.subject_name))
+    .map(row => ({
+      course_id: row.course_id,
+      course_name: row.course_name,
+      subject_name: row.subject_name,
+      total_oa: row.objectiveIds.size,
+    }));
+}
+
+function coordinatorCoverageWorkedRow(state: MockDBState, boundArgs: unknown[]): Row {
+  const isCourseScopedQuery = boundArgs.length >= 2;
+  const courseId = isCourseScopedQuery ? boundArgs[0] : null;
+  const institutionId = isCourseScopedQuery ? boundArgs[1] : boundArgs[0];
+  const academicYearId = isCourseScopedQuery ? null : boundArgs[1];
+  const workedOA = new Set<string>();
+  for (const row of state.getTable('class_sessions')) {
+    if (row.institution_id !== institutionId || row.status !== 'completed') continue;
+    if (courseId && row.course_id !== courseId) continue;
+    if (academicYearId && row.academic_year_id !== academicYearId) continue;
+    for (const objectiveId of parseJsonArray(row.objective_ids_json)) {
+      workedOA.add(objectiveId);
+    }
+  }
+  return { worked_oa: workedOA.size };
+}
+
+function coordinatorCoveragePlannedRow(state: MockDBState, boundArgs: unknown[]): Row {
+  const courseId = boundArgs[0];
+  const institutionId = boundArgs[1];
+  const plannedOA = new Set<string>();
+  const completedPlanIds = new Set(
+    state.getTable('class_sessions')
+      .filter(row => row.course_id === courseId && row.institution_id === institutionId && (row.status === 'completed' || row.status === 'signed'))
+      .map(row => row.lesson_plan_id)
+      .filter(Boolean)
+  );
+
+  for (const row of state.getTable('lesson_plan_curriculum')) {
+    if (completedPlanIds.has(row.lesson_plan_id) && row.objective_id) {
+      plannedOA.add(String(row.objective_id));
+    }
+  }
+
+  return { planned_oa: plannedOA.size };
+}
+
+function getTeacherName(state: MockDBState, teacherId: unknown): string {
+  return String(state.getTable('usuarios').find(row => row.id === teacherId)?.nombre || 'N/A');
+}
+
+function getCourseName(state: MockDBState, courseId: unknown): string {
+  return String(state.getTable('teacher_classes').find(row => row.id === courseId)?.name || 'N/A');
+}
+
+function coordinatorAlertRows(state: MockDBState, sql: string, boundArgs: unknown[]): Row[] | null {
+  const upper = sql.toUpperCase().replace(/\s+/g, ' ').trim();
+  const institutionId = boundArgs[0];
+  const scopedCourseIds = boundArgs.slice(1).map(String);
+  const inScope = (row: Row) =>
+    row.institution_id === institutionId &&
+    (scopedCourseIds.length === 0 || scopedCourseIds.includes(String(row.course_id)));
+
+  if (upper.includes('FROM CLASS_SESSIONS CS') && upper.includes("CS.STATUS = 'COMPLETED'") && upper.includes('SIGNATURE_EVENTS')) {
+    const signedSessionIds = new Set(
+      state.getTable('signature_events')
+        .filter(row => row.result === 'success')
+        .map(row => row.class_session_id)
+    );
+    return state.getTable('class_sessions')
+      .filter(row => inScope(row) && row.status === 'completed' && !signedSessionIds.has(row.id))
+      .slice(0, 20)
+      .map(row => ({
+        id: row.id,
+        date: row.date,
+        teacher_name: getTeacherName(state, row.teacher_id),
+        course_name: getCourseName(state, row.course_id),
+      }));
+  }
+
+  if (upper.includes('FROM CLASS_SESSIONS CS') && upper.includes("CS.STATUS = 'SCHEDULED'") && upper.includes("CS.DATE < DATE('NOW')")) {
+    const today = new Date().toISOString().slice(0, 10);
+    return state.getTable('class_sessions')
+      .filter(row => inScope(row) && row.status === 'scheduled' && String(row.date || '') < today)
+      .slice(0, 20)
+      .map(row => ({
+        id: row.id,
+        date: row.date,
+        teacher_name: getTeacherName(state, row.teacher_id),
+        course_name: getCourseName(state, row.course_id),
+      }));
+  }
+
+  if (upper.includes('FROM CLASS_SESSIONS CS') && upper.includes("CS.STATUS = 'COMPLETED'") && upper.includes('ATTENDANCE_RECORDS')) {
+    const attendedSessionIds = new Set(state.getTable('attendance_records').map(row => row.class_session_id));
+    return state.getTable('class_sessions')
+      .filter(row => inScope(row) && row.status === 'completed' && !attendedSessionIds.has(row.id))
+      .slice(0, 20)
+      .map(row => ({
+        id: row.id,
+        date: row.date,
+        teacher_name: getTeacherName(state, row.teacher_id),
+        course_name: getCourseName(state, row.course_id),
+      }));
+  }
+
+  if (upper.includes('FROM PLANNING_REVIEWS PR') && upper.includes("PR.STATUS = 'PENDING'")) {
+    return state.getTable('planning_reviews')
+      .filter(row => row.institution_id === institutionId && row.status === 'pending')
+      .map(row => {
+        const session = state.getTable('class_sessions').find(cs => cs.id === row.planning_id);
+        if (scopedCourseIds.length > 0 && !scopedCourseIds.includes(String(session?.course_id || ''))) return null;
+        return {
+          id: row.id,
+          created_at: row.created_at,
+          teacher_name: getTeacherName(state, session?.teacher_id),
+          course_name: getCourseName(state, session?.course_id),
+        };
+      })
+      .filter((row): row is Row => row !== null)
+      .slice(0, 20);
+  }
+
+  if (upper.includes('FROM STUDENT_OBSERVATIONS SO') && upper.includes('SO.FOLLOW_UP_DATE < DATE')) {
+    const today = new Date().toISOString().slice(0, 10);
+    return state.getTable('student_observations')
+      .filter(row =>
+        row.institution_id === institutionId &&
+        !row.archived_at &&
+        String(row.follow_up_date || '') < today &&
+        (scopedCourseIds.length === 0 || scopedCourseIds.includes(String(row.course_id || '')))
+      )
+      .slice(0, 20)
+      .map(row => ({
+        id: row.id,
+        follow_up_date: row.follow_up_date,
+        category: row.category,
+        teacher_name: getTeacherName(state, row.created_by),
+      }));
+  }
+
+  return null;
+}
+
 function createStatement(
   sql: string,
   state: MockDBState,
@@ -251,6 +544,34 @@ function createStatement(
     },
     async first<T = unknown>(): Promise<T | null> {
       const upper = sql.toUpperCase().replace(/\s+/g, ' ').trim();
+
+      if (upper.includes('FROM CLASS_SESSIONS CS') && upper.includes('SUM(CASE WHEN CS.STATUS')) {
+        return coordinatorDashboardSessionsRow(state, sql, boundArgs) as T;
+      }
+
+      if (upper.includes('FROM PLANNING_REVIEWS PR') && upper.includes('SUM(CASE WHEN PR.STATUS')) {
+        return coordinatorReviewSummaryRow(state, boundArgs) as T;
+      }
+
+      if (upper.includes('FROM ATTENDANCE_RECORDS AR') && upper.includes('PRESENT_COUNT')) {
+        return coordinatorAttendanceSummaryRow(state, boundArgs) as T;
+      }
+
+      if (upper.includes('FROM STUDENT_OBSERVATIONS SO') && upper.includes('SO.ARCHIVED_AT IS NULL')) {
+        return coordinatorObservationSummaryRow(state, boundArgs) as T;
+      }
+
+      if (upper.includes('COUNT(DISTINCT LPC.OBJECTIVE_ID) AS TOTAL_OA')) {
+        return coordinatorCoverageTotalRow(state, boundArgs) as T;
+      }
+
+      if (upper.includes('COUNT(DISTINCT JSON_EACH.VALUE) AS WORKED_OA')) {
+        return coordinatorCoverageWorkedRow(state, boundArgs) as T;
+      }
+
+      if (upper.includes('COUNT(DISTINCT LPC.OBJECTIVE_ID) AS PLANNED_OA')) {
+        return coordinatorCoveragePlannedRow(state, boundArgs) as T;
+      }
 
       if (upper.includes('SELECT COUNT(*)')) {
         const rows = state.findByWhere(sql, boundArgs);
@@ -312,6 +633,17 @@ function createStatement(
     },
 
     async all<T = unknown>(): Promise<{ results: T[]; success: boolean }> {
+      const upper = sql.toUpperCase().replace(/\s+/g, ' ').trim();
+
+      if (upper.includes('COUNT(DISTINCT LPC.OBJECTIVE_ID) AS TOTAL_OA') && upper.includes('GROUP BY CS.COURSE_ID')) {
+        return { results: coordinatorCoverageRows(state, sql, boundArgs) as T[], success: true };
+      }
+
+      const alertRows = coordinatorAlertRows(state, sql, boundArgs);
+      if (alertRows) {
+        return { results: alertRows as T[], success: true };
+      }
+
       const rows = state.findByWhere(sql, boundArgs);
       return { results: rows as T[], success: true };
     },
@@ -437,6 +769,17 @@ export function makeMockDB(
     lessonPlans?: Row[];
     classSessionVersions?: Row[];
     planningReviews?: Row[];
+    institution_members?: Row[];
+    coordinator_scopes?: Row[];
+    classSessions?: Row[];
+    attendanceRecords?: Row[];
+    signatureEvents?: Row[];
+    studentObservations?: Row[];
+    studentProfiles?: Row[];
+    courseEnrollments?: Row[];
+    lessonPlanCurriculum?: Row[];
+    objectives?: Row[];
+    courses?: Row[];
   } = {}
 ): MockD1Database {
   const data: Record<string, Row[]> = {};
@@ -468,25 +811,48 @@ export function makeMockDB(
     if (!im.status) im.status = 'active';
     data['institution_members'] = [im];
   }
+  if (options.institution_members) {
+    data['institution_members'] = options.institution_members;
+  }
   if (options.coordinatorScope) {
     const cs = { ...options.coordinatorScope };
     if (!cs.user_id) cs.user_id = userId;
     if (!cs.institution_id) cs.institution_id = options.institutionMember?.institution_id || 'inst-1';
+    if (cs.course_ids && !cs.course_ids_json) cs.course_ids_json = cs.course_ids;
+    if (cs.subject_ids && !cs.subject_ids_json) cs.subject_ids_json = cs.subject_ids;
+    if (cs.level_ids && !cs.level_ids_json) cs.level_ids_json = cs.level_ids;
     data['coordinator_scopes'] = [cs];
+  }
+  if (options.coordinator_scopes) {
+    data['coordinator_scopes'] = options.coordinator_scopes.map(row => ({
+      ...row,
+      course_ids_json: row.course_ids_json ?? row.course_ids ?? '[]',
+      subject_ids_json: row.subject_ids_json ?? row.subject_ids ?? '[]',
+      level_ids_json: row.level_ids_json ?? row.level_ids ?? '[]',
+    }));
   }
   if (options.academicYears) data['academic_years'] = options.academicYears;
   if (options.academicTerms) data['academic_terms'] = options.academicTerms;
   if (options.students) data['student_profiles'] = options.students;
+  if (options.studentProfiles) data['student_profiles'] = options.studentProfiles;
   if (options.enrollments) data['course_enrollments'] = options.enrollments;
+  if (options.courseEnrollments) data['course_enrollments'] = options.courseEnrollments;
   if (options.sessions) data['class_sessions'] = options.sessions;
+  if (options.classSessions) data['class_sessions'] = options.classSessions;
   if (options.attendance) data['attendance_records'] = options.attendance;
+  if (options.attendanceRecords) data['attendance_records'] = options.attendanceRecords;
   if (options.observations) data['student_observations'] = options.observations;
+  if (options.studentObservations) data['student_observations'] = options.studentObservations;
   if (options.reviews) data['planning_reviews'] = options.reviews;
   if (options.signatures) data['signature_events'] = Array.isArray(options.signatures) ? options.signatures : [options.signatures];
+  if (options.signatureEvents) data['signature_events'] = options.signatureEvents;
   if (options.teacherClasses) data['teacher_classes'] = options.teacherClasses;
+  if (options.courses) data['courses'] = options.courses;
   if (options.subjects) data['subjects'] = options.subjects;
   if (options.lessonInstances) data['lesson_instances'] = options.lessonInstances;
   if (options.lessonPlans) data['lesson_plans'] = options.lessonPlans;
+  if (options.lessonPlanCurriculum) data['lesson_plan_curriculum'] = options.lessonPlanCurriculum;
+  if (options.objectives) data['objectives'] = options.objectives;
   if (options.classSessionVersions) data['class_session_versions'] = options.classSessionVersions;
   if (options.planningReviews) data['planning_reviews'] = options.planningReviews;
 
@@ -527,7 +893,22 @@ export async function signToken(
   sub: string,
   email: string,
   secret: string
+): Promise<string>;
+export async function signToken(
+  payload: { sub: string; email?: string; role?: string; institutionId?: string },
+  secret: string
+): Promise<string>;
+export async function signToken(
+  payloadOrSub: { sub: string; email?: string; role?: string; institutionId?: string } | string,
+  emailOrSecret: string,
+  maybeSecret?: string
 ): Promise<string> {
+  const legacyPayload = typeof payloadOrSub === 'string';
+  const payload = legacyPayload
+    ? { sub: payloadOrSub, email: emailOrSecret, role: '', institutionId: '' }
+    : payloadOrSub;
+  const secret = legacyPayload ? maybeSecret || '' : emailOrSecret;
+  const { sub, email = '', role = '', institutionId = '' } = payload;
   function bytesToBase64Url(bytes: Uint8Array): string {
     let binary = '';
     for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -548,7 +929,8 @@ export async function signToken(
   }
   const now = Math.floor(Date.now() / 1000);
   const header = textToBase64Url({ alg: 'HS256', typ: 'JWT' });
-  const payload = textToBase64Url({ sub, email, iat: now, exp: now + 86400 });
-  const unsigned = `${header}.${payload}`;
+  const jwtPayload = textToBase64Url({ sub, email, role, institutionId, iat: now, exp: now + 86400 });
+  const unsigned = `${header}.${jwtPayload}`;
   return `${unsigned}.${await sig(unsigned)}`;
 }
+
