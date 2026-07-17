@@ -52,8 +52,8 @@ function AppContent() {
     if (path === '/admin-panel') return 'admin-panel';
     if (path === '/admin') return 'admin';
     if (path === '/libro-clases') return 'libro-clases';
-    if (path.startsWith('/libro-clases/')) return 'libro-clases-session';
     if (path === '/libro-clases/coordinacion') return 'coordinator-dashboard';
+    if (path.startsWith('/libro-clases/')) return 'libro-clases-session';
     return 'dashboard';
   })() as ViewType;
   const [activeView, setActiveView] = useState<ViewType>(initialView);

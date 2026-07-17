@@ -3,8 +3,9 @@ interface Env {
   JWT_SECRET: string;
 }
 
-import { requireActiveAuthContext, getAuthContextFromRequest } from '../../_lib/auth-adapter';
-import { type AuthenticatedUserContext } from '../../core/authorization';
+import { getAuthContextFromRequest } from '../../_lib/auth-adapter';
+import { AuthorizationError } from '../../core/authorization';
+import { getSessionMetadataFromRequest } from '../../_lib/session';
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
@@ -20,30 +21,36 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       return Response.json({ ok: false, error: 'INACTIVE_USER' }, { status: 409 });
     }
 
-    // Get session metadata if available
-    let sessionMeta = null;
-    // The sessionId would be available from the session if we had access to it
-    // For now, we keep the session metadata retrieval as-is but it needs the sessionId
-    // This is a placeholder - the sessionId would need to be passed from the auth adapter
+    const sessionMeta = await getSessionMetadataFromRequest(context.request, env);
 
     return Response.json({
       user: {
         id: authContext.userId,
         email: authContext.email,
         nombre: authContext.nombre,
-        rol: authContext.role,
-        active: authContext.isActive ? 1 : 0,
+        rol: authContext.legacyRole,
+        active: authContext.isActive,
         institutionId: authContext.institutionId,
         institutionalRole: authContext.role,
         permissions: authContext.permissions,
         scope: authContext.scope ? {
           courseIds: authContext.scope.courseIds,
           subjectIds: authContext.scope.subjectIds,
+          levelIds: authContext.scope.levelIds,
+          academicYearIds: authContext.scope.academicYearIds,
         } : undefined,
       },
-      session: null, // session metadata not available in new auth flow
+      session: sessionMeta?.sessionId ? {
+        id: sessionMeta.sessionId,
+        createdAt: sessionMeta.createdAt,
+        lastSeenAt: sessionMeta.lastSeenAt,
+        expiresAt: sessionMeta.expiresAt,
+      } : null,
     });
   } catch (err) {
+    if (err instanceof AuthorizationError) {
+      return Response.json({ ok: false, error: err.message }, { status: err.status });
+    }
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
   }
 }

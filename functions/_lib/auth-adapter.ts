@@ -1,6 +1,6 @@
 import { getSessionFromRequest, type SessionEnv } from './session';
 import {
-  requireAuthenticatedUser,
+  requireAuthenticatedUserById,
   type AuthEnv,
   type AuthenticatedUserContext,
   requireActiveUser,
@@ -30,20 +30,8 @@ export async function getAuthContextFromRequest(
     JWT_SECRET: env.JWT_SECRET,
   };
 
-  const authHeader = request.headers.get('Authorization');
-  let authToken: string | null = null;
-  
-  if (request.headers.get('Authorization')?.startsWith('Bearer ')) {
-    authToken = request.headers.get('Authorization')?.slice(7) || null;
-  }
-
-  const mockRequest = new Request(request.url, {
-    method: request.method,
-    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-  });
-
   try {
-    const context = await requireAuthenticatedUser(mockRequest, authEnv);
+    const context = await requireAuthenticatedUserById(session.userId, authEnv);
     return context;
   } catch (err) {
     if (err instanceof AuthorizationError) {
