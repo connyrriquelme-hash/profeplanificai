@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { classbookService } from '../../services/classbookService';
 
 interface Props {
+  institutionId: string;
   onComplete: () => void;
   onCancel: () => void;
 }
 
-export function SignaturePinSetup({ onComplete, onCancel }: Props) {
+export function SignaturePinSetup({ institutionId, onComplete, onCancel }: Props) {
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ export function SignaturePinSetup({ onComplete, onCancel }: Props) {
 
     setLoading(true);
     try {
-      await classbookService.setupSignaturePin(pin);
+      await classbookService.setupSignaturePin(pin, institutionId);
       onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al configurar PIN');

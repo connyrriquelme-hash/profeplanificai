@@ -4,11 +4,12 @@ import type { ClassbookSession } from '../../types/classbook';
 
 interface Props {
   session: ClassbookSession;
+  institutionId: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function SessionSignatureModal({ session, onSuccess, onCancel }: Props) {
+export function SessionSignatureModal({ session, institutionId, onSuccess, onCancel }: Props) {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export function SessionSignatureModal({ session, onSuccess, onCancel }: Props) {
 
     setLoading(true);
     try {
-      await classbookService.signSessionWithPin(session.id, contentHash, pin);
+      await classbookService.signSessionWithPin(session.id, contentHash, pin, institutionId);
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al firmar');

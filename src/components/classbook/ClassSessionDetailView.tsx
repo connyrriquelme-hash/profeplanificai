@@ -9,6 +9,7 @@ import { SessionSignatureModal } from './SessionSignatureModal';
 
 interface Props {
   sessionId: string;
+  institutionId: string;
   onBack: () => void;
   onRefresh: () => void;
 }
@@ -36,7 +37,7 @@ function parseJsonObject(value: unknown): Record<string, unknown>[] {
   try { const p = JSON.parse(value); return Array.isArray(p) ? p : []; } catch { return []; }
 }
 
-export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) {
+export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRefresh }: Props) {
   const { user } = useAuth();
   const [session, setSession] = useState<ClassbookSession | null>(null);
   const [attendance, setAttendance] = useState<ClassbookAttendanceRecord[]>([]);
@@ -68,12 +69,12 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
     const ctrl = new AbortController();
     setLoading(true);
     Promise.all([
-      classbookService.getClassSessionById(sessionId, ctrl.signal),
-      classbookService.getAttendance(sessionId, ctrl.signal).catch(() => []),
-      classbookService.getSignatureStatus(sessionId, ctrl.signal).catch(() => ({ signed: false })),
-      classbookService.getSessionVersions(sessionId, ctrl.signal).catch(() => []),
-      classbookService.getObservations('', { class_session_id: sessionId }, ctrl.signal).catch(() => []),
-      classbookService.getSignatureCredentialStatus(ctrl.signal).catch(() => null),
+      classbookService.getClassSessionById(sessionId, institutionId, ctrl.signal),
+      classbookService.getAttendance(sessionId, institutionId, ctrl.signal).catch(() => []),
+      classbookService.getSignatureStatus(sessionId, institutionId, ctrl.signal).catch(() => ({ signed: false })),
+      classbookService.getSessionVersions(sessionId, institutionId, ctrl.signal).catch(() => []),
+      classbookService.getObservations(institutionId, { class_session_id: sessionId }, ctrl.signal).catch(() => []),
+      classbookService.getSignatureCredentialStatus(institutionId, ctrl.signal).catch(() => null),
     ])
       .then(([s, att, sig, vers, obs, cred]) => {
         setSession(s);
@@ -94,7 +95,7 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
         if (err.name !== 'AbortError') setLoading(false);
       });
     return () => ctrl.abort();
-  }, [sessionId]);
+  }, [sessionId, institutionId]);
 
   const canEdit = session ? canEditSession(user, session.teacher_id, user?.id ?? '') : false;
   const canComplete = canCompleteSession(user);
@@ -111,13 +112,13 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
       await classbookService.updateClassSession(session.id, {
         taught_content: content,
         teacher_notes: notes,
-      });
+      }, institutionId);
       lastAutosave.current = sig;
       setSaving(false);
     } catch {
       setSaving(false);
     }
-  }, [session]);
+  }, [session, institutionId]);
 
   const handleContentChange = useCallback((value: string) => {
     editedContentRef.current = value;
@@ -150,13 +151,13 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
     setSaving(true);
     try {
       if (newStatus === 'completed' && session.status === 'scheduled') {
-        const updated = await classbookService.completeClassSession(session.id, false);
+        const updated = await classbookService.completeClassSession(session.id, false, institutionId);
         setSession(updated);
       } else if (newStatus === 'pending_signature' && session.status === 'completed') {
-        const updated = await classbookService.completeClassSession(session.id, true);
+        const updated = await classbookService.completeClassSession(session.id, true, institutionId);
         setSession(updated);
       } else {
-        const updated = await classbookService.updateClassSession(session.id, { status: newStatus as ClassbookSession['status'] });
+        const updated = await classbookService.updateClassSession(session.id, { status: newStatus as ClassbookSession['status'] }, institutionId);
         setSession(updated);
       }
       setMessage(`Estado cambiado a ${STATUS_FLOW.find(s => s.value === newStatus)?.label ?? newStatus}`);
@@ -167,7 +168,7 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
     } finally {
       setSaving(false);
     }
-  }, [session, onRefresh]);
+  }, [session, onRefresh, institutionId]);
 
   const handleAttendanceChange = useCallback((studentId: string, status: string) => {
     setAttendance(prev => {
@@ -184,7 +185,8 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
       await classbookService.saveAttendance(
         session.id,
         attendance.map(r => ({ student_id: r.student_id, status: r.status })),
-        user.id
+        user.id,
+        institutionId
       );
       setMessage('Asistencia guardada');
       setTimeout(() => setMessage(null), 3000);
@@ -193,7 +195,7 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
     } finally {
       setSaving(false);
     }
-  }, [session, attendance, user]);
+  }, [session, attendance, user, institutionId]);
 
   const handleCreateObservation = useCallback(async () => {
     if (!session || !newObsStudent.trim() || !newObsContent.trim()) return;
@@ -206,7 +208,7 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
         category: newObsCategory,
         content: newObsContent.trim(),
         class_session_id: session.id,
-      });
+      }, institutionId);
       setObservations(prev => [obs, ...prev]);
       setNewObsStudent('');
       setNewObsContent('');
@@ -217,7 +219,7 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
     } finally {
       setSaving(false);
     }
-  }, [session, newObsStudent, newObsContent, newObsCategory]);
+  }, [session, newObsStudent, newObsContent, newObsCategory, institutionId]);
 
   if (loading) {
     return (
@@ -609,11 +611,12 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
       {showSignModal && session && (
         <SessionSignatureModal
           session={session}
+          institutionId={institutionId}
           onSuccess={() => {
             setShowSignModal(false);
             setMessage('Sesión firmada correctamente');
             setTimeout(() => setMessage(null), 3000);
-            classbookService.getSignatureStatus(sessionId).then(setSignature);
+            classbookService.getSignatureStatus(sessionId, institutionId).then(setSignature);
             onRefresh();
           }}
           onCancel={() => setShowSignModal(false)}
@@ -624,11 +627,12 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPinSetup(false)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
             <SignaturePinSetup
+              institutionId={institutionId}
               onComplete={() => {
                 setShowPinSetup(false);
                 setMessage('PIN configurado correctamente');
                 setTimeout(() => setMessage(null), 3000);
-                classbookService.getSignatureCredentialStatus().then(setCredentialStatus);
+                classbookService.getSignatureCredentialStatus(institutionId).then(setCredentialStatus);
               }}
               onCancel={() => setShowPinSetup(false)}
             />
@@ -640,6 +644,7 @@ export function ClassSessionDetailView({ sessionId, onBack, onRefresh }: Props) 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPinChange(false)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
             <SignaturePinChange
+              institutionId={institutionId}
               onComplete={() => {
                 setShowPinChange(false);
                 setMessage('PIN cambiado correctamente');

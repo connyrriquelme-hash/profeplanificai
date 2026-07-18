@@ -30,7 +30,7 @@ export function AttendancePanel({ sessions, institutionId, onRefresh }: Props) {
     }
     const ctrl = new AbortController();
     setLoading(true);
-    classbookService.getAttendance(selectedSessionId, ctrl.signal)
+    classbookService.getAttendance(selectedSessionId, institutionId, ctrl.signal)
       .then(r => { setRecords(r); setLoading(false); })
       .catch(() => { if (!ctrl.signal.aborted) setLoading(false); });
     return () => ctrl.abort();
@@ -53,7 +53,8 @@ export function AttendancePanel({ sessions, institutionId, onRefresh }: Props) {
       await classbookService.saveAttendance(
         selectedSessionId,
         records.map(r => ({ student_id: r.student_id, status: r.status })),
-        user.id
+        user.id,
+        institutionId
       );
       setMessage('Asistencia guardada');
       setTimeout(() => setMessage(null), 3000);

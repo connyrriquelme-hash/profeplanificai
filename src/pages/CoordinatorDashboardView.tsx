@@ -138,7 +138,7 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
         observe: 'observed',
         return: 'returned',
       } as const;
-      await classbookService.updatePlanningReview(reviewId, { status: statusMap[action], comments: comment });
+      await classbookService.updatePlanningReview(reviewId, { status: statusMap[action], comments: comment }, effectiveInstitutionId);
       fetchData(filters);
     } catch (err) {
       console.error('Error updating review:', err);
