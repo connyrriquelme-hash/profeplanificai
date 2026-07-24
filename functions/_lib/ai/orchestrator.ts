@@ -19,6 +19,50 @@ Indicadores: ${indicators}
 Habilidades: ${skills}
 Generado por fallback local pedagogico. Para contenido enriquecido, configura una API key de IA (Gemini, Workers AI, OpenRouter o HuggingFace).`;
 
+  const premiumExtras = {
+    callouts: [
+      {
+        tipo: 'docente',
+        titulo: 'Decisión pedagógica sugerida',
+        texto: hasOA
+          ? `Usa el ${req.oaCode} como criterio de foco: modela primero, verifica durante la práctica y ajusta el apoyo según evidencia observable.`
+          : 'Antes de aplicar, selecciona un OA para mejorar la precisión curricular de la actividad.',
+      },
+      {
+        tipo: 'dua',
+        titulo: 'Ajuste DUA prioritario',
+        texto: 'Ofrece la consigna en formato oral, visual y escrito; permite responder con dibujo, explicación oral o texto breve según necesidad del curso.',
+      },
+    ],
+    tablas: [
+      {
+        titulo: 'Plan de uso docente',
+        columnas: ['Momento', 'Acción docente', 'Evidencia esperada'],
+        filas: [
+          ['Inicio', 'Activar conocimientos previos y explicitar el propósito.', 'Respuestas orales o lluvia de ideas.'],
+          ['Desarrollo', 'Modelar, acompañar práctica guiada y retroalimentar.', 'Producto parcial o resolución guiada.'],
+          ['Cierre', 'Sintetizar aprendizajes y tomar decisión pedagógica.', 'Ticket de salida o criterio de logro.'],
+        ],
+      },
+    ],
+    graficos: [
+      {
+        titulo: 'Distribución sugerida del tiempo',
+        datos: [
+          { label: 'Inicio', value: 15 },
+          { label: 'Desarrollo', value: 60 },
+          { label: 'Cierre', value: 15 },
+        ],
+      },
+    ],
+    checklist: [
+      'Revisar que el producto mencione el OA seleccionado.',
+      'Preparar apoyos visuales y vocabulario clave antes de la clase.',
+      'Definir una evidencia breve para tomar decisiones al cierre.',
+      'Ajustar la dificultad para estudiantes que requieren apoyo o desafío.',
+    ],
+  };
+
   if (agentType === 'actividades_clase' && taskType === 'generar') {
     return {
       content: base,
@@ -56,6 +100,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         extensionAvanzados: hasOA
           ? 'Actividades de profundizacion: proyectos de investigacion breve, produccion de material didactico para el curso, asumir rol de tutor de pares, conectar con situaciones reales del entorno.'
           : 'Problemas de mayor complejidad, proyectos breves, rol de tutores.',
+        ...premiumExtras,
       },
     };
   }
@@ -81,6 +126,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         tablaEspecificaciones: [],
         adecuacionesDUA: 'Permitir respuesta oral, escrita o grafica. Entregar pautas visuales. Tiempo adicional si se requiere.',
         reforzamientoSugerido: 'Repasar conceptos clave. Practicar con ejercicios similares.',
+        ...premiumExtras,
       },
     };
   }
@@ -102,6 +148,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         OA: req.oaCode || 'OA pendiente',
         justificacion: 'La alternativa A es correcta porque... Las demas son distractores basados en errores comunes.',
         tiempoEstimado: '3-5 min',
+        ...premiumExtras,
       },
     };
   }
@@ -132,6 +179,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
             { nivel: 'No logrado', puntaje: 1, descripcion: 'No se entiende la respuesta.' },
           ]},
         ],
+        ...premiumExtras,
       },
     };
   }
@@ -144,13 +192,14 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         sugerencias: ['Profundizar en la argumentacion', 'Conectar mas con experiencias personales'],
         proximoPaso: 'Trabajar en la estructuracion de respuestas escritas.',
         reflexionDocente: 'El grupo avanza bien. Considerar actividades de extension para los mas rapidos.',
+        ...premiumExtras,
       },
     };
   }
 
   return {
     content: base,
-    structured: { message: 'Contenido generado por fallback local. Configura una API key para resultados enriquecidos.' },
+    structured: { message: 'Contenido generado por fallback local. Configura una API key para resultados enriquecidos.', ...premiumExtras },
   };
 }
 

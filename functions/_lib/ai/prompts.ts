@@ -10,6 +10,8 @@ Reglas generales:
 - Apoyo a estudiantes descendidos: instrucciones claras, ejemplos concretos, vocabulario clave.
 - Si hay OA, usalo para alinear. Si no hay OA, indica suavemente que el docente debe seleccionarlo.
 - Nunca inventes codigos OA. Si no hay, di "OA pendiente".
+- Calidad premium: entrega productos listos para usar e imprimir, con consignas exactas, criterios claros, lenguaje docente profesional y pasos accionables.
+- Cuando el producto lo permita, agrega campos estructurados opcionales: "tablas", "callouts", "graficos" y "checklist" para enriquecer la salida visual.
 - RESPUESTA: Responde SOLO con JSON valido. Sin markdown, sin explicaciones, sin texto antes ni despues del JSON.`;
 
 function oaBlock(req: AIRequest): string {

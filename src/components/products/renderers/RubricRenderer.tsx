@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, RubricCriterion } from '../types';
 
 interface RubricRendererProps {
@@ -78,6 +79,8 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
           </div>
         )}
       </ProductSection>
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

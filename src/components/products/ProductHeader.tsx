@@ -35,9 +35,14 @@ export function ProductHeader({
   style,
 }: ProductHeaderProps) {
   return (
-    <header className={`product-header bg-white rounded-xl border border-gray-200 p-4 md:p-6 shadow-sm ${className || ''}`} style={style}>
+    <header className={`product-header overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-xl shadow-violet-100/50 print:shadow-none ${className || ''}`} style={style}>
+      <div className="h-2 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 print:hidden" />
+      <div className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
+          <span className="inline-flex items-center rounded-full bg-violet-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-violet-700 print:bg-transparent print:px-0">
+            ProfePlanificAI
+          </span>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h1>
           {subtitle && (
             <p className="text-gray-600 text-base">{subtitle}</p>
@@ -95,6 +100,7 @@ export function ProductHeader({
           )}
         </div>
       )}
+      </div>
     </header>
   );
 }

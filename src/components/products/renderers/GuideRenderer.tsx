@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, GuideSection } from '../types';
 
 interface GuideRendererProps {
@@ -91,6 +92,8 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
           <span className="text-amber-800 text-sm font-medium">Duración estimada: {duration}</span>
         </div>
       )}
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

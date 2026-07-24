@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct } from '../types';
 
 interface ScaleRendererProps {
@@ -76,6 +77,8 @@ export function ScaleRenderer({ product, className, style }: ScaleRendererProps)
           </div>
         )}
       </ProductSection>
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, EvaluationQuestion } from '../types';
 
 interface EvaluationRendererProps {
@@ -109,6 +110,8 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
           </div>
         )}
       </ProductSection>
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

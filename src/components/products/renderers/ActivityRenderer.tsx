@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, ActivityPhase } from '../types';
 
 interface ActivityRendererProps {
@@ -129,6 +130,8 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
           <span className="text-amber-800 text-sm font-medium">Duración total: {duration}</span>
         </div>
       )}
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

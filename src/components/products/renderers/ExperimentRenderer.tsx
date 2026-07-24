@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, ExperimentStep } from '../types';
 
 interface ExperimentRendererProps {
@@ -131,6 +132,8 @@ export function ExperimentRenderer({ product, className, style }: ExperimentRend
           <p className="text-gray-700 text-sm whitespace-pre-wrap">{conclusion}</p>
         </ProductSection>
       )}
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

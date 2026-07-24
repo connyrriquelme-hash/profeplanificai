@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeProduct, normalizeTicket, normalizeThreeTwoOne, normalizeChecklist, normalizeRubric, normalizeGuide, normalizeBitacora } from '../src/components/products/normalizers';
+import { sanitizeDownloadName } from '../src/utils/exportProductWord';
 import type { PedagogicalProduct } from '../src/components/products/types';
 
 describe('ProductRenderer registry normalizers', () => {
@@ -273,5 +274,47 @@ describe('FlujoDocenteView integration', () => {
 
     // Should use ProductRenderer in the result block
     expect(content).toContain('<ProductRenderer product={result}');
+  });
+
+  it('FlujoDocenteView exposes teacher-ready exports instead of JSON download', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const filePath = path.resolve(__dirname, '../src/components/FlujoDocenteView.tsx');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    expect(content).toContain('Exportar PDF');
+    expect(content).toContain('Exportar Word');
+    expect(content).not.toContain('Descargar JSON');
+  });
+
+  it('premium renderers do not stringify nested objects into raw JSON', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const files = [
+      '../src/components/products/ProductPremiumBlocks.tsx',
+      '../src/components/products/renderers/GenericProductRenderer.tsx',
+    ];
+
+    for (const file of files) {
+      const content = fs.readFileSync(path.resolve(__dirname, file), 'utf-8');
+      expect(content).not.toContain('JSON.stringify');
+      expect(content).not.toContain('[object Object]');
+    }
+  });
+
+  it('Word export creates DOCX filenames instead of raw HTML documents', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const filePath = path.resolve(__dirname, '../src/utils/exportProductWord.ts');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    expect(content).toContain('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    expect(content).toContain('.docx');
+    expect(content).not.toContain('application/msword');
+  });
+
+  it('download names are safe and descriptive', () => {
+    expect(sanitizeDownloadName('Guía DUA / 2° Básico / Lenguaje / OA 03')).toBe('guia-dua-2-basico-lenguaje-oa-03');
+    expect(sanitizeDownloadName('')).toBe('producto-profeplanificai');
   });
 });

@@ -16,6 +16,7 @@ import PremiumRubricPreview from './PremiumRubricPreview';
 import { enrichPresentationWithImages } from '../services/premiumPptAiService';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
+import { exportElementToWord, sanitizeDownloadName } from '../utils/exportProductWord';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -32,6 +33,8 @@ const PRODUCTOS = [
   { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#7c3aed' },
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#059669' },
 ];
+
+const PRODUCT_PREVIEW_EXPORT_ID = 'flujo-docente-premium-product-preview';
 
 interface D1Course { id: string; code: string; name: string; objective_count: number }
 interface D1Subject { id: string; name: string; objective_count: number }
@@ -63,6 +66,13 @@ export function FlujoDocenteView() {
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState<{ current: number; total: number } | null>(null);
   const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
+
+  const exportFileBaseName = useMemo(() => sanitizeDownloadName([
+    PRODUCTOS.find(p => p.id === selectedProducto)?.label || selectedProducto || 'producto',
+    selectedOA?.course_name,
+    selectedOA?.subject_name,
+    selectedOA?.code,
+  ].filter(Boolean).join('-')), [selectedProducto, selectedOA]);
 
   // Load courses
   useEffect(() => {
@@ -276,6 +286,23 @@ export function FlujoDocenteView() {
       });
     } catch {}
   }, [resourceId, result, selectedProducto, selectedOA]);
+
+  const handleExportPdf = useCallback(async () => {
+    try {
+      const { exportElementToPDF } = await import('../utils/exportPdf');
+      await exportElementToPDF(PRODUCT_PREVIEW_EXPORT_ID, exportFileBaseName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo exportar el PDF.');
+    }
+  }, [exportFileBaseName]);
+
+  const handleExportWord = useCallback(async () => {
+    try {
+      exportElementToWord(PRODUCT_PREVIEW_EXPORT_ID, exportFileBaseName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo exportar a Word.');
+    }
+  }, [exportFileBaseName]);
 
   const suggestedMethodologies = useMemo(() => {
     if (!selectedSubject) return [];
@@ -635,7 +662,7 @@ export function FlujoDocenteView() {
             </div>
           )}
 
-          <div className="prose prose-sm max-w-none">
+          <div id={PRODUCT_PREVIEW_EXPORT_ID} className="prose prose-sm max-w-none bg-white">
             {selectedProducto === 'presentacion' && premiumModel ? (
               <PremiumPptPreview
                 presentation={premiumModel}
@@ -651,6 +678,10 @@ export function FlujoDocenteView() {
 
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <Button variant="primary" iconLeft={Save} onClick={handleSave}>Guardar en Biblioteca</Button>
+            <Button variant="secondary" iconLeft={Download} onClick={handleExportPdf}>Exportar PDF</Button>
+            {selectedProducto !== 'presentacion' && (
+              <Button variant="secondary" iconLeft={Download} onClick={handleExportWord}>Exportar Word</Button>
+            )}
             {selectedProducto === 'presentacion' && (
               <>
                 <Button
@@ -675,14 +706,6 @@ export function FlujoDocenteView() {
                 </Button>
               </>
             )}
-            <Button variant="secondary" iconLeft={Download} onClick={() => {
-              const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${selectedProducto}-${selectedOA?.code}.json`;
-              a.click();
-            }}>Descargar JSON</Button>
             <Button variant="outline" iconLeft={RefreshCw} onClick={() => setStep('producto')}>Generar otro</Button>
             <Button variant="ghost" iconLeft={ArrowLeft} onClick={() => setStep('nivel')}>Nuevo recurso</Button>
           </div>
