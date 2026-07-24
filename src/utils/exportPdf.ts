@@ -240,6 +240,172 @@ function getPrintableElementText(element: HTMLElement): string {
     .trim();
 }
 
+function getCurrentPageStyles(): string {
+  const inlineRules = Array.from(document.styleSheets)
+    .map((sheet) => {
+      try {
+        return Array.from(sheet.cssRules)
+          .map((rule) => rule.cssText)
+          .join('\n');
+      } catch {
+        const owner = sheet.ownerNode;
+        return owner instanceof HTMLElement ? owner.outerHTML : '';
+      }
+    })
+    .filter(Boolean)
+    .join('\n');
+
+  const inlineStyles = Array.from(document.querySelectorAll('style'))
+    .map((node) => node.textContent || '')
+    .filter(Boolean)
+    .join('\n');
+
+  return `<style>${inlineRules}\n${inlineStyles}</style>`;
+}
+
+function sanitizeDocumentTitle(filename: string): string {
+  return filename
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120) || 'Producto pedagógico';
+}
+
+function openElementPrintPdf(element: HTMLElement, filename: string): boolean {
+  const printWindow = window.open('', '_blank', 'width=960,height=1200');
+  if (!printWindow) return false;
+
+  const printable = element.cloneNode(true) as HTMLElement;
+  printable.querySelectorAll('[data-export-hidden="true"], .print-toolbar, [role="toolbar"]').forEach((node) => node.remove());
+
+  const title = sanitizeDocumentTitle(filename);
+  const styles = getCurrentPageStyles();
+  const isLandscape = printable.querySelector('.rubric-renderer') !== null;
+  const pageSize = isLandscape ? 'A4 landscape' : 'A4';
+  const pageWidth = isLandscape ? '297mm' : '210mm';
+  const pageHeight = isLandscape ? '210mm' : '297mm';
+  const contentWidth = isLandscape ? '273mm' : '186mm';
+
+  printWindow.document.open();
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${title}</title>
+        ${styles}
+        <style>
+          @page {
+            size: ${pageSize};
+            margin: 12mm;
+          }
+          html, body {
+            width: ${pageWidth};
+            min-height: ${pageHeight};
+            margin: 0;
+            background: #ffffff !important;
+            color: #111827 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          body {
+            padding: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          }
+          main {
+            width: 100%;
+            max-width: ${contentWidth};
+            margin: 0 auto;
+          }
+          button,
+          .print-toolbar,
+          [role="toolbar"],
+          .print\\:hidden {
+            display: none !important;
+          }
+          .product-section button {
+            display: flex !important;
+            width: 100% !important;
+            cursor: default !important;
+            appearance: none !important;
+          }
+          .product-section,
+          table,
+          aside,
+          section,
+          article {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          h1, h2, h3 {
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+          table {
+            width: 100%;
+          }
+          .overflow-x-auto {
+            overflow: visible !important;
+          }
+          .rubric-renderer .overflow-x-auto {
+            overflow: hidden !important;
+          }
+          .rubric-renderer table {
+            table-layout: fixed !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            border-collapse: collapse !important;
+          }
+          .rubric-renderer th,
+          .rubric-renderer td {
+            min-width: 0 !important;
+            padding: 0.35rem !important;
+            font-size: 0.68rem !important;
+            line-height: 1.25 !important;
+            word-break: break-word !important;
+          }
+          .rubric-renderer th:first-child,
+          .rubric-renderer td:first-child {
+            width: 28% !important;
+          }
+          .product-header,
+          .product-section,
+          .dua-guide-renderer,
+          .evaluation-renderer,
+          .guide-renderer,
+          .rubric-renderer {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .product-header svg,
+          .product-section svg {
+            width: 0.875rem !important;
+            height: 0.875rem !important;
+            min-width: 0.875rem !important;
+            min-height: 0.875rem !important;
+            max-width: 0.875rem !important;
+            max-height: 0.875rem !important;
+            flex: 0 0 auto !important;
+          }
+          * {
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+        </style>
+      </head>
+      <body>
+        <main>${printable.outerHTML}</main>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.setTimeout(() => printWindow.print(), 250);
+
+  return true;
+}
+
 export async function exportToPDF(title: string, markdownContent: string): Promise<void> {
   const { default: jsPDF } = await import('jspdf');
   const html = mdToHtml(markdownContent);
@@ -306,6 +472,12 @@ export async function exportToPDF(title: string, markdownContent: string): Promi
 export async function exportElementToPDF(elementId: string, filename: string): Promise<void> {
   const element = document.getElementById(elementId);
   if (!element) throw new Error(`Elemento #${elementId} no encontrado`);
+
+  try {
+    if (openElementPrintPdf(element, filename)) return;
+  } catch (error) {
+    console.warn('No se pudo abrir la vista de impresión PDF. Se intentará exportación compatible.', error);
+  }
 
   const { default: html2canvas } = await import('html2canvas');
   const { default: jsPDF } = await import('jspdf');

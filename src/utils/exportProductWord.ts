@@ -62,7 +62,7 @@ function directText(element: Element): string {
 function elementToWordXml(element: Element): string {
   const tag = element.tagName.toLowerCase();
 
-  if (element.matches('button, [data-export-hidden="true"], .print\\:hidden')) return '';
+  if (element.matches('[data-export-hidden="true"], .print\\:hidden')) return '';
   if (tag === 'table') return tableFromElement(element as HTMLTableElement);
 
   if (tag === 'h1') return heading(element.textContent || '', 1);
@@ -71,7 +71,7 @@ function elementToWordXml(element: Element): string {
   if (tag === 'li') return paragraph(`• ${element.textContent || ''}`);
 
   const text = directText(element);
-  const ownParagraph = ['p', 'span'].includes(tag) ? paragraph(text) : '';
+  const ownParagraph = ['p', 'span', 'button'].includes(tag) ? paragraph(text) : '';
   const children = Array.from(element.children).map(elementToWordXml).join('');
 
   if (ownParagraph || children) return `${ownParagraph}${children}`;
@@ -229,7 +229,7 @@ export function exportElementToWord(elementId: string, filename: string): void {
   }
 
   const clone = element.cloneNode(true) as HTMLElement;
-  clone.querySelectorAll('button, [data-export-hidden="true"], .print\\:hidden').forEach((node) => node.remove());
+  clone.querySelectorAll('[data-export-hidden="true"], .print\\:hidden').forEach((node) => node.remove());
 
   const blob = createDocxBlob(buildDocumentXml(clone));
   const url = URL.createObjectURL(blob);

@@ -384,6 +384,27 @@ function addSlideNumber(slide: PptxGenJS.Slide, num: number, total: number) {
   });
 }
 
+function wrapCoverTitle(title: string): string {
+  if (title.length <= 42) return title;
+
+  const words = title.split(/\s+/);
+  const lines: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > 38 && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+
+  if (current) lines.push(current);
+  return lines.slice(0, 3).join('\n');
+}
+
 function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPresentation, theme: SubjectTheme) {
   const s = pptx.addSlide();
   const isChild = slide.isChildMode ?? isParvulariaContext(pres.nivel, pres.asignatura, pres.oa);
@@ -405,10 +426,12 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
     });
   }
 
-  s.addText(slide.title, {
+  const coverTitle = wrapCoverTitle(slide.title);
+  const titleFontSize = slide.title.length > 42 ? (isChild ? 28 : 24) : (isChild ? 40 : 44);
+  s.addText(coverTitle, {
     x: 1.0, y: isChild ? 1.8 : 1.6, w: 11.3, h: 2.2,
-    fontSize: isChild ? 40 : 44, bold: true, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
-    lineSpacing: 1.1,
+    fontSize: titleFontSize, bold: true, color: SAFE_TEXT.onLight, align: 'center', fontFace: 'Arial',
+    valign: 'middle',
   });
 
   s.addText(slide.subtitle || `${pres.nivel} — ${pres.asignatura}`, {
@@ -432,7 +455,9 @@ function buildCoverSlide(pptx: PptxGenJS, slide: PremiumSlide, pres: PremiumPres
     bold: true,
   });
 
-  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'center');
+  if (slide.imageUrl) {
+    addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'center');
+  }
   addSlideNumber(s, 1, pres.slides.length);
   addFooter(s, pres.nivel, pres.asignatura);
 }
@@ -666,11 +691,7 @@ function buildVisualExplanationSlide(pptx: PptxGenJS, slide: PremiumSlide, pres:
     addBullets(s, slide.bullets, { x: 0.6, y: isChild ? 1.8 : 1.6, w: isChild ? 11.5 : 5.8, h: 4.5, color: SAFE_TEXT.onLight, fontSize: isChild ? 18 : 16, isDarkBg: false });
   }
 
-  if (!isChild) {
-    addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'left');
-  } else {
-    addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'right');
-  }
+  addImageOrPlaceholder(s, slide.imageUrl, slide.visualKeyword || pres.tema, theme, 'right');
   addFooter(s, pres.nivel, pres.asignatura);
 }
 

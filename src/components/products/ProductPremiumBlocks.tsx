@@ -5,6 +5,8 @@ type TableLike = {
   titulo?: string;
   columns?: unknown[];
   columnas?: unknown[];
+  headers?: unknown[];
+  encabezados?: unknown[];
   rows?: unknown[][];
   filas?: unknown[][];
 };
@@ -109,7 +111,7 @@ export function PremiumCallout({ callout }: { callout: CalloutLike }) {
 
 export function PremiumTable({ table }: { table: TableLike }) {
   const title = asString(table.title || table.titulo || 'Tabla de trabajo');
-  const columns = (table.columns || table.columnas || []).map(asString).filter(Boolean);
+  const columns = (table.columns || table.columnas || table.headers || table.encabezados || []).map(asString).filter(Boolean);
   const rows = (table.rows || table.filas || []).map((row) => Array.isArray(row) ? row.map(asString) : []);
 
   if (columns.length === 0 || rows.length === 0) return null;
