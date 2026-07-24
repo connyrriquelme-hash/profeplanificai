@@ -13,6 +13,7 @@ import {
   ProductPremiumExtras,
   PremiumKeyValueGrid,
   formatProductLabel,
+  isTechnicalKey,
 } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct } from '../types';
 
@@ -46,7 +47,7 @@ export function GenericProductRenderer({ product, className, style }: GenericPro
   const { metadata, data } = product;
 
   const renderValue = (key: string, value: unknown): React.ReactNode => {
-    if (value === null || value === undefined || EXTRA_KEYS.has(key)) return null;
+    if (value === null || value === undefined || EXTRA_KEYS.has(key) || isTechnicalKey(key)) return null;
 
     if (typeof value === 'string' || typeof value === 'number') {
       return (
@@ -115,7 +116,7 @@ export function GenericProductRenderer({ product, className, style }: GenericPro
   };
 
   const sections = Object.entries(data).filter(
-    ([key, value]) => !EXTRA_KEYS.has(key) && hasRenderableValue(value),
+    ([key, value]) => !EXTRA_KEYS.has(key) && !isTechnicalKey(key) && hasRenderableValue(value),
   );
 
   return (

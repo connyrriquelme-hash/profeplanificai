@@ -31,21 +31,16 @@ type ChartLike = {
 
 const EXTRA_KEYS = new Set(['tablas', 'tables', 'callouts', 'graficos', 'charts', 'checklist', 'images', 'visuales', 'imagos']);
 const TECHNICAL_KEYS = new Set([
+  'id', 'resourceId', 'prompt', 'promptText', 'model', 'tokens', 'warnings',
+  'raw', 'rawPayload', 'rawResponse', 'debug', 'trace', 'latency',
+  'aiGenerated', 'teacherEditable', 'generatedAt', 'kind', 'action',
   'provider',
-  'model',
-  'warnings',
-  'raw',
-  'rawPayload',
-  'rawResponse',
-  'debug',
-  'trace',
-  'tokens',
-  'latency',
-  'aiGenerated',
-  'teacherEditable',
-  'generatedAt',
-  'kind',
-  'action',
+  'code', 'type', 'courseId', 'subjectId', 'axisId',
+  'officialText', 'normalizedText', 'skillTagsJson', 'attitudeTagsJson',
+  'sourceUrl', 'sourceName', 'licenseNote', 'updatedAt', 'importedAt', 'createdAt',
+  'course_id', 'subject_id', 'axis_id',
+  'official_text', 'normalized_text', 'skill_tags_json', 'attitude_tags_json',
+  'source_url', 'source_name', 'license_note', 'updated_at', 'imported_at', 'created_at',
 ]);
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -66,8 +61,11 @@ function isRenderableValue(value: unknown): boolean {
   return true;
 }
 
-function isTechnicalKey(key: string): boolean {
-  return EXTRA_KEYS.has(key) || TECHNICAL_KEYS.has(key);
+export function isTechnicalKey(key: string): boolean {
+  if (EXTRA_KEYS.has(key) || TECHNICAL_KEYS.has(key)) return true;
+  const lower = key.toLowerCase();
+  if (lower.endsWith('id') || lower.endsWith('json')) return true;
+  return false;
 }
 
 export function formatProductLabel(key: string): string {
