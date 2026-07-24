@@ -1,4 +1,6 @@
-interface Env { DB: D1Database }
+import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+
+interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
 interface RubricRequest {
   level: string;
@@ -48,6 +50,35 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       indicators: [...(body.indicators || []), ...indText],
       skills: body.skills || [],
     });
+
+    // Generate images for rubric criteria
+    const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
+    const criterionImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
+    const imageTitles: string[] = [];
+
+    for (const criterion of (rubric as any).criteria || []) {
+      try {
+        const result = await generateEducationalImage({
+          grade: nivel,
+          subject: asignatura,
+          oa: body.objectiveText || body.topic || body.objectiveCode,
+          resourceTitle: body.topic || 'Rúbrica de evaluación',
+          slideTitle: criterion.name || criterion.description || 'Criterio',
+          slideContent: (criterion.indicators || []).map((i: any) => i.descriptor).join('. ').slice(0, 300),
+        }, imageEnv);
+        if (result.ok) {
+          criterionImages.push({ url: result.url, alt: `Ilustración: ${criterion.name}`, source: result.source, attribution: result.attribution || '' });
+          imageTitles.push(criterion.name || 'Criterio');
+        }
+      } catch {
+        // Image generation failure is non-fatal
+      }
+    }
+
+    if (criterionImages.length > 0) {
+      (rubric as any).images = criterionImages;
+      (rubric as any).imageTitles = imageTitles;
+    }
 
     const resourceId = `rubric_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(

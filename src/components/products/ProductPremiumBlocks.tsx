@@ -29,12 +29,11 @@ type ChartLike = {
   datos?: Array<{ label?: string; value?: number }>;
 };
 
-const EXTRA_KEYS = new Set(['tablas', 'tables', 'callouts', 'graficos', 'charts', 'checklist']);
+const EXTRA_KEYS = new Set(['tablas', 'tables', 'callouts', 'graficos', 'charts', 'checklist', 'images', 'visuales', 'imagos']);
 const TECHNICAL_KEYS = new Set([
   'provider',
   'model',
   'warnings',
-  'metadata',
   'raw',
   'rawPayload',
   'rawResponse',
@@ -199,6 +198,58 @@ export function PremiumChecklist({ items }: { items: unknown[] }) {
   );
 }
 
+type ImageLike = {
+  url?: string;
+  src?: string;
+  image?: string;
+  alt?: string;
+  title?: string;
+  caption?: string;
+  attribution?: string;
+  source?: string;
+  width?: number;
+  height?: number;
+};
+
+export function ProductImage({ image, className }: { image: ImageLike; className?: string }) {
+  const src = image.url || image.src || image.image || '';
+  if (!src) return null;
+
+  const alt = asString(image.alt || image.title || 'Imagen educativa');
+  const caption = asString(image.caption || image.attribution || '');
+
+  return (
+    <figure className={`rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden break-inside-avoid ${className || ''}`}>
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-auto object-cover"
+        loading="lazy"
+      />
+      {caption && (
+        <figcaption className="px-4 py-2 text-[11px] text-slate-500 border-t border-slate-100">
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+export function ProductImageGallery({ images, titles }: { images: ImageLike[]; titles?: string[] }) {
+  if (!images.length) return null;
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {images.map((image, index) => (
+        <ProductImage
+          key={index}
+          image={{ ...image, title: titles?.[index] || image.title }}
+        />
+      ))}
+    </div>
+  );
+}
+
 const MAX_RENDER_DEPTH = 4;
 
 function renderNestedValue(value: unknown, depth: number): React.ReactNode {
@@ -256,11 +307,18 @@ export function ProductPremiumExtras({ data }: { data: Record<string, unknown> }
   const callouts = Array.isArray(data.callouts) ? data.callouts : [];
   const charts = [...(Array.isArray(data.graficos) ? data.graficos : []), ...(Array.isArray(data.charts) ? data.charts : [])];
   const checklist = Array.isArray(data.checklist) ? data.checklist : [];
+  const images = [...(Array.isArray(data.images) ? data.images : []), ...(Array.isArray(data.visuales) ? data.visuales : [])];
+  const imageTitles = Array.isArray(data.imageTitles) ? data.imageTitles.map(asString) : [];
 
-  if (tables.length === 0 && callouts.length === 0 && charts.length === 0 && checklist.length === 0) return null;
+  const hasAny = tables.length > 0 || callouts.length > 0 || charts.length > 0 || checklist.length > 0 || images.length > 0;
+  if (!hasAny) return null;
 
   return (
     <div className="space-y-4">
+      {images.length > 0 && (
+        <ProductImageGallery images={images.map(img => asRecord(img) || { url: asString(img) })} titles={imageTitles} />
+      )}
+
       {callouts.map((item, index) => {
         const callout = asRecord(item);
         return callout ? <PremiumCallout key={`callout-${index}`} callout={callout} /> : null;

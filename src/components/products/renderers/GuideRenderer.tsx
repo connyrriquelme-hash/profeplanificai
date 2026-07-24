@@ -4,7 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
-import { ProductPremiumExtras } from '../ProductPremiumBlocks';
+import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, GuideSection } from '../types';
 
 interface GuideRendererProps {
@@ -20,6 +20,8 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
   const materials = (data.materials as string[]) || [];
   const evaluation = data.evaluation as string | undefined;
   const duration = data.duration as string | undefined;
+  const guideImages = (data.images as Array<{ url: string; alt: string; source: string; attribution: string }>) || [];
+  const imageTitles = (data.imageTitles as string[]) || [];
 
   return (
     <div
@@ -62,6 +64,12 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
 
       {sections.map((section, index) => (
         <ProductSection key={index} title={section.title} icon="📖">
+          {guideImages[index] && (
+            <ProductImage
+              image={guideImages[index]}
+              className="mb-4"
+            />
+          )}
           <div className="prose prose-sm max-w-none">
             <p className="text-gray-700 text-sm whitespace-pre-wrap">{section.content}</p>
           </div>

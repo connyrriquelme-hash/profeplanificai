@@ -4,7 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
-import { ProductPremiumExtras } from '../ProductPremiumBlocks';
+import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, EvaluationQuestion } from '../types';
 
 interface EvaluationRendererProps {
@@ -19,6 +19,8 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
   const totalPoints = data.totalPoints as number | undefined;
   const instructions = data.instructions as string | undefined;
   const timeLimit = data.timeLimit as string | undefined;
+  const questionImages = (data.images as Array<{ url: string; alt: string; source: string; attribution: string }>) || [];
+  const imageTitles = (data.imageTitles as string[]) || [];
 
   return (
     <div
@@ -72,6 +74,15 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                     <p className="text-gray-800 font-medium text-sm">{q.question}</p>
                     {q.points && (
                       <span className="text-xs text-gray-500 mt-1 inline-block">({q.points} pts)</span>
+                    )}
+
+                    {questionImages[index] && (
+                      <div className="mt-3">
+                        <ProductImage
+                          image={questionImages[index]}
+                          className="max-w-sm"
+                        />
+                      </div>
                     )}
 
                     {q.type === 'closed' && (

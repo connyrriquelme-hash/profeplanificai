@@ -983,6 +983,96 @@ button {
   .no-print { display: none !important; }
 }
 
+/* Premium PDF print mode — window.print() strategy */
+@media print {
+  body.premium-pdf-print-mode > *:not(.premium-pdf-target) {
+    display: none !important;
+  }
+
+  body.premium-pdf-print-mode .premium-pdf-target {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .premium-pdf-target button,
+  .premium-pdf-target .no-print,
+  .premium-pdf-target .print-toolbar,
+  .premium-pdf-target [role="toolbar"] {
+    display: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  .premium-pdf-target .product-section,
+  .premium-pdf-target table,
+  .premium-pdf-target aside,
+  .premium-pdf-target section,
+  .premium-pdf-target article,
+  .premium-pdf-target figure {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .premium-pdf-target h1,
+  .premium-pdf-target h2,
+  .premium-pdf-target h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .premium-pdf-target img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .premium-pdf-target .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  .premium-pdf-target table {
+    width: 100%;
+  }
+
+  .premium-pdf-target .rubric-renderer table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+  }
+
+  .premium-pdf-target .rubric-renderer th,
+  .premium-pdf-target .rubric-renderer td {
+    min-width: 0 !important;
+    padding: 0.35rem !important;
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+    word-break: break-word !important;
+  }
+
+  .premium-pdf-target .rubric-renderer th:first-child,
+  .premium-pdf-target .rubric-renderer td:first-child {
+    width: 28% !important;
+  }
+
+  .premium-pdf-target .product-header,
+  .premium-pdf-target .product-section,
+  .premium-pdf-target .dua-guide-renderer,
+  .premium-pdf-target .evaluation-renderer,
+  .premium-pdf-target .guide-renderer,
+  .premium-pdf-target .rubric-renderer {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 /* Premium scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

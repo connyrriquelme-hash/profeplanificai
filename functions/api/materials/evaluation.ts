@@ -1,4 +1,6 @@
-interface Env { DB: D1Database }
+import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+
+interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
 interface EvaluationRequest {
   level: string;
@@ -31,6 +33,37 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     ).bind(body.objectiveCode).all();
 
     const evaluation = buildEvaluation(body, objective as any, (indicators as any)?.results || []);
+
+    // Generate images for open-ended questions
+    const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
+    const questionImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
+    const imageTitles: string[] = [];
+
+    for (const q of (evaluation as any).questions || []) {
+      if (q.type === 'open' || q.type === 'true_false') {
+        try {
+          const result = await generateEducationalImage({
+            grade: body.level,
+            subject: body.subject,
+            oa: body.objectiveText || body.topic || body.objectiveCode,
+            resourceTitle: body.topic || 'Evaluación',
+            slideTitle: q.question?.slice(0, 100) || 'Pregunta de evaluación',
+            slideContent: q.question?.slice(0, 300) || '',
+          }, imageEnv);
+          if (result.ok) {
+            questionImages.push({ url: result.url, alt: `Imagen: Pregunta ${q.number}`, source: result.source, attribution: result.attribution || '' });
+            imageTitles.push(`Pregunta ${q.number}`);
+          }
+        } catch {
+          // Image generation failure is non-fatal
+        }
+      }
+    }
+
+    if (questionImages.length > 0) {
+      (evaluation as any).images = questionImages;
+      (evaluation as any).imageTitles = imageTitles;
+    }
 
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(

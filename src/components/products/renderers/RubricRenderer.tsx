@@ -4,7 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
-import { ProductPremiumExtras } from '../ProductPremiumBlocks';
+import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, RubricCriterion } from '../types';
 
 interface RubricRendererProps {
@@ -18,6 +18,8 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
   const criteria = (data.criteria as RubricCriterion[]) || [];
   const levels = data.levels as string[] || [];
   const description = data.description as string | undefined;
+  const criterionImages = (data.images as Array<{ url: string; alt: string; source: string; attribution: string }>) || [];
+  const imageTitles = (data.imageTitles as string[]) || [];
 
   return (
     <div
@@ -46,36 +48,46 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
         {criteria.length === 0 ? (
           <p className="text-gray-500 text-sm italic">Sin criterios definidos.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse" role="grid" aria-label="Rúbrica">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[200px]">Criterio</th>
-                  {levels.map((level, i) => (
-                    <th key={i} scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase min-w-[150px]">{level}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {criteria.map((criterion, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-medium text-gray-800">{criterion.name}</div>
-                      {criterion.description && (
-                        <div className="text-xs text-gray-500 mt-1">{criterion.description}</div>
-                      )}
-                    </td>
-                    {criterion.levels.map((level, li) => (
-                      <td key={li} className="px-4 py-3 text-sm text-gray-700 text-center border-l border-gray-100">
-                        <div className="font-medium text-gray-800">{level.name}</div>
-                        <div className="text-xs text-gray-500 mt-1">{level.description}</div>
-                        <div className="text-xs font-semibold text-indigo-600 mt-1">{level.score} pts</div>
-                      </td>
+          <div className="space-y-4">
+            {criterionImages.length > 0 && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {criterionImages.map((image, index) => (
+                  <ProductImage key={index} image={image} />
+                ))}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse" role="grid" aria-label="Rúbrica">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[200px]">Criterio</th>
+                    {levels.map((level, i) => (
+                      <th key={i} scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase min-w-[150px]">{level}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {criteria.map((criterion, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-800">{criterion.name}</div>
+                        {criterion.description && (
+                          <div className="text-xs text-gray-500 mt-1">{criterion.description}</div>
+                        )}
+                      </td>
+                      {criterion.levels.map((level, li) => (
+                        <td key={li} className="px-4 py-3 text-sm text-gray-700 text-center border-l border-gray-100">
+                          <div className="font-medium text-gray-800">{level.name}</div>
+                          <div className="text-xs text-gray-500 mt-1">{level.description}</div>
+                          <div className="text-xs font-semibold text-indigo-600 mt-1">{level.score} pts</div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </ProductSection>
