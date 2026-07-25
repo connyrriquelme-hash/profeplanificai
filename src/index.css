@@ -1440,6 +1440,34 @@ input:focus, select:focus, textarea:focus {
     break-inside: avoid;
   }
 
+  /* Product images: compact float layout for print */
+  .product-image-frame {
+    float: right !important;
+    max-width: 200px !important;
+    width: 200px !important;
+    margin: 0 0 1rem 1rem !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+  }
+
+  .product-image-frame img {
+    filter: grayscale(20%) contrast(1.05);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Hide regenerate button in print */
+  .product-image-frame button {
+    display: none !important;
+  }
+
+  /* Skeleton loader: hide in print */
+  .product-image-skeleton {
+    display: none !important;
+  }
+
   /* Main content fill width */
   .main-content {
     width: 100% !important;

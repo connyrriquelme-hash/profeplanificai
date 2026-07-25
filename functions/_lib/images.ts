@@ -100,12 +100,13 @@ export function buildEducationalImagePrompt(context: EducationalImageContext): s
   const keywords = subjectKeywords(context.subject).slice(0, 6).join(', ');
   const scene = [context.slideTitle, context.slideContent, context.oa].filter(Boolean).join('. ');
   return [
-    `Ilustración educativa horizontal ${context.aspectRatio || '16:9'} para estudiantes de ${context.grade} en Chile.`,
-    `Asignatura: ${context.subject}. OA: ${context.oa}.`,
-    `Escena: ${scene}.`,
-    `Contexto visual sugerido: ${keywords}.`,
-    `Estilo ${style}, editorial escolar, composición limpia, colores cálidos, adecuada para una presentación educativa.`,
-    'Sin texto dentro de la imagen, sin logos, sin marcas de agua, sin personajes con copyright, sin rostros realistas de niñas o niños.',
+    `Educational illustration for ${context.grade} students in Chile.`,
+    `Subject: ${context.subject}. Learning objective: ${context.oa}.`,
+    `Scene: ${scene}.`,
+    `Visual context: ${keywords}.`,
+    `STYLE: ${style}, clean vector illustration, white/light background, soft rounded edges, warm friendly colors, high contrast, no gradients, flat design.`,
+    `REQUIREMENTS: Simple composition, central subject, minimal background details, child-friendly aesthetic, editorial quality for school materials.`,
+    `STRICTLY FORBIDDEN: Text, letters, words, logos, watermarks, copyrighted characters, realistic human faces, dark backgrounds, complex patterns, violence, scary elements.`,
   ].join(' ');
 }
 

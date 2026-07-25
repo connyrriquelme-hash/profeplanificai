@@ -224,6 +224,14 @@ export const EvaluacionSchema = z.object({
   })).optional(),
 
   checklist: z.array(z.string().min(5)).optional(),
+
+  // Imágenes educativas generadas
+  images: z.array(z.object({
+    url: z.string().url('La URL de la imagen es inválida'),
+    alt: z.string().min(5).max(200),
+    source: z.string().optional(),
+    attribution: z.string().optional(),
+  })).optional().describe('Imágenes educativas generadas para acompañar la evaluación'),
 });
 
 // ─── Tipos TypeScript inferidos ───

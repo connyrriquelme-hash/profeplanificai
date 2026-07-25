@@ -209,15 +209,35 @@ type ImageLike = {
   height?: number;
 };
 
-export function ProductImage({ image, className }: { image: ImageLike; className?: string }) {
+interface ProductImageProps {
+  image: ImageLike;
+  className?: string;
+  compact?: boolean;
+  loading?: boolean;
+  onRegenerate?: () => void;
+}
+
+export function ProductImage({ image, className, compact = false, loading = false, onRegenerate }: ProductImageProps) {
   const src = image.url || image.src || image.image || '';
-  if (!src) return null;
+  if (!src && !loading) return null;
 
   const alt = asString(image.alt || image.title || 'Imagen educativa');
   const caption = asString(image.caption || image.attribution || '');
 
+  if (loading) {
+    return (
+      <div className={`product-image-skeleton rounded-xl border border-slate-200 bg-slate-50 overflow-hidden animate-pulse ${compact ? 'float-right ml-4 mb-3 w-[220px]' : 'w-full'} ${className || ''}`}>
+        <div className="bg-slate-200 h-32 w-full" />
+        <div className="px-3 py-2 space-y-2">
+          <div className="bg-slate-200 h-3 rounded w-3/4" />
+          <div className="bg-slate-200 h-3 rounded w-1/2" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <figure className={`rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden break-inside-avoid ${className || ''}`}>
+    <figure className={`product-image-frame rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden break-inside-avoid group ${compact ? 'float-right ml-4 mb-3 w-[220px]' : 'w-full'} ${className || ''}`}>
       <img
         src={src}
         alt={alt}
@@ -225,9 +245,18 @@ export function ProductImage({ image, className }: { image: ImageLike; className
         loading="lazy"
       />
       {caption && (
-        <figcaption className="px-4 py-2 text-[11px] text-slate-500 border-t border-slate-100">
+        <figcaption className="px-3 py-1.5 text-[10px] text-slate-500 border-t border-slate-100 leading-tight">
           {caption}
         </figcaption>
+      )}
+      {onRegenerate && (
+        <button
+          onClick={onRegenerate}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm border border-slate-200 print:hidden"
+          title="Regenerar imagen"
+        >
+          ↻ Regenerar
+        </button>
       )}
     </figure>
   );
@@ -242,6 +271,7 @@ export function ProductImageGallery({ images, titles }: { images: ImageLike[]; t
         <ProductImage
           key={index}
           image={{ ...image, title: titles?.[index] || image.title }}
+          compact
         />
       ))}
     </div>
