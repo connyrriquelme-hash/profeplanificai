@@ -75,32 +75,111 @@ Requisitos: lenguaje accesible, máximo 3 actividades, contexto chileno/latinoam
 Contexto: ${baseContext}
 Requisitos: estructura clara inicio-desarrollo-cierre, tiempos realistas, adaptaciones DUA.`,
 
-    planificacion: `Genera una planificación clase a clase en formato JSON con:
+    planificacion: `Genera una planificación de unidad didáctica en formato JSON con EXACTAMENTE esta estructura:
 {
-  "unit": "Nombre de unidad",
+  "unit": "Nombre descriptivo de la unidad",
   "classes": [
-    {"number": 1, "objective": "OA específico", "opening": "...", "development": "...", "closure": "...", "duration": "min", "materials": ["..."], "assessment": "..."}
+    {
+      "number": 1,
+      "objective": "Objetivo de aprendizaje específico alineado al OA proporcionado",
+      "opening": "Momento de activación detallado (10-15 min): pregunta motivadora, conexión con contexto chileno, consigna exacta del docente",
+      "development": "Construcción detallada (55-65 min): modelamiento docente, práctica guiada, trabajo individual, andamiajes DUA",
+      "closure": "Cierre detallado (10-15 min): síntesis guiada, ticket de salida, criterio de logro observable",
+      "duration": "90 min",
+      "materials": ["Cuaderno del estudiante", "Pizarrón y tiza", "Fichas de trabajo impresas"],
+      "assessment": "Criterio de logro observable y evidencia esperada del estudiante"
+    }
   ],
-  "methodology": "metodología principal",
-  "dua": ["adaptaciones"],
-  "evaluation": "tipo de evaluación"
+  "methodology": "Metodología principal (ABP, Aprendizaje Activo, etc.)",
+  "dua": ["Adaptación DUA específica"],
+  "evaluation": "Tipo de evaluación: formativa, sumativa o diagnóstica"
 }
 Contexto: ${baseContext}
-Requisitos: 3-5 clases, progresión lógica, contexto chileno, DUA en cada clase.`,
+REGLAS OBLIGATORIAS:
+- Mínimo 3 clases, máximo 10 por unidad.
+- Cada clase DEBE tener opening, development y closure como campos de texto descriptivo.
+- Duración de cada clase: entre 40 y 120 minutos en formato "X min".
+- Materiales: SOLO materiales que existan en escuelas chilenas (cuaderno, pizarrón, fichas, tiza, marcadores, etc.).
+- Progresión lógica: cada clase debe avanzar sobre la anterior.
+- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.
+- DUA: incluye al menos 1 adaptación por clase (representación, acción o implicación).`,
 
-    evaluacion: `Genera una evaluación en formato JSON con:
+    evaluacion: `Genera una evaluación en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+
 {
-  "title": "Título de evaluación",
-  "objective": "OA evaluado",
-  "type": "formativa|sumativa|diagnóstica",
+  "metadata": {
+    "course": "Curso (ej: 3° Básico)",
+    "subject": "Asignatura",
+    "unit": "Nombre de la unidad",
+    "oa": "Código MINEDUC del OA evaluado",
+    "total_score": 20,
+    "type": "formativa|sumativa|diagnostica",
+    "time_limit": "45 minutos (opcional)"
+  },
+  "instructions": "Instrucciones claras para el estudiante, adaptadas al nivel. Ej: 'Lee atentamente cada pregunta. Marca solo una alternativa en las de selección múltiple.'",
   "questions": [
-    {"number": 1, "type": "multiple_choice|open|matching", "question": "...", "options": ["A)", "B)", "C)", "D)"], "correct": "A", "skill": "habilidad evaluada"}
+    {
+      "number": 1,
+      "type": "alternativa",
+      "text": "Enunciado claro de la pregunta",
+      "options": [
+        {"text": "Alternativa 1", "isCorrect": false},
+        {"text": "Alternativa 2", "isCorrect": true},
+        {"text": "Alternativa 3", "isCorrect": false},
+        {"text": "Alternativa 4", "isCorrect": false}
+      ],
+      "score": 2,
+      "indicator": "Indicador evaluado",
+      "skill": "Habilidad evaluada"
+    },
+    {
+      "number": 2,
+      "type": "verdadero_falso",
+      "text": "Afirmación para evaluar",
+      "answer": "V|F",
+      "justification_if_false": "Si es F, justificación que el estudiante debe dar (obligatorio si answer es F)",
+      "score": 2,
+      "indicator": "Indicador",
+      "skill": "Habilidad"
+    },
+    {
+      "number": 3,
+      "type": "desarrollo",
+      "text": "Pregunta abierta que requiere respuesta escrita",
+      "score": 5,
+      "indicator": "Indicador",
+      "skill": "Habilidad",
+      "teacher_rubric": {
+        "criteria": ["Criterio 1 para evaluar", "Criterio 2"],
+        "sample_answer": "Respuesta modelo orientativa para el docente",
+        "scoring_guide": "Cómo distribuir el puntaje"
+      }
+    }
   ],
-  "rubric": {"criteria": [{"name": "...", "levels": ["logrado", "en proceso", "no logrado"]}]},
-  "answerKey": "pauta de corrección"
+  "answerKey": {
+    "summary": "Resumen consolidado de la pauta para el docente",
+    "question_answers": [
+      {"number": 1, "correct_answer": "B", "explication": "Explicación de por qué es correcta"},
+      {"number": 2, "correct_answer": "V", "explication": "Explicación"},
+      {"number": 3, "correct_answer": "Respuesta modelo breve", "explication": "Puntos clave a buscar"}
+    ],
+    "total_points": 20
+  },
+  "tablas": [{"titulo": "Nombre", "columnas": ["col1", "col2"], "filas": [["val1", "val2"]]}],
+  "callouts": [{"tipo": "docente|familia|importante|dua|evaluacion", "titulo": "Título", "texto": "Contenido"}],
+  "checklist": ["Elemento 1 del checklist"]
 }
+
 Contexto: ${baseContext}
-Requisitos: 8-12 preguntas, progresión de dificultad, alineadas a indicadores, contexto chileno.`,
+REGLAS OBLIGATORIAS:
+- OPCIÓN A: 4 alternativas EXACTAS (A, B, C, D), solo 1 correcta (isCorrect: true). Distractores plausibles.
+- V/F: Si answer es "F", justification_if_false ES OBLIGATORIA (mín. 15 caracteres).
+- DESARROLLO: teacher_rubric CON OBLIGATORIO: array criteria (mín. 2), sample_answer, scoring_guide.
+- PAUTA: answerKey DEBE tener question_answers con el MISMO número de preguntas.
+- PUNTAJE: total_score en metadata DEBE coincidir con la suma de scores de questions y con answerKey.total_points.
+- Mínimo 3 preguntas, máximo 20. Mezclar tipos (alternativa + V/F + desarrollo).
+- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.
+- Progresión de dificultad: de menor a mayor complejidad.`,
 
     rubrica: `Genera una rúbrica en formato JSON con:
 {

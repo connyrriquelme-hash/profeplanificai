@@ -4,6 +4,9 @@ import { callProvider, statusProviders } from './providers';
 import { sanitizeOutput, scanContent, scanForSecrets } from './safety';
 import { checkRateLimit, sanitizeForPrompt, validateInputSize } from './limits';
 import { enrichAIRequestWithPedagogicalContext } from './context';
+import { getSchemaForAgent, getValidatorForAgent } from './schemas';
+
+const MAX_SCHEMA_RETRIES = 2;
 
 function localFallback(agentType: string, taskType: string, req: AIRequest): { content: string; structured: Record<string, unknown> } {
   const course = req.course || 'el curso';
@@ -255,6 +258,84 @@ function parseResponse(raw: string): { content: string; structured: Record<strin
   return { content: raw, structured: {} };
 }
 
+/**
+ * Llama al proveedor con validación Zod y retry automático.
+ * Solo aplica para agentType con schema registrado.
+ * Máximo 3 intentos (1 original + 2 reintentos).
+ */
+async function callWithSchemaValidation(
+  provider: ProviderName,
+  env: AIEnv,
+  originalPrompt: string,
+  agentType: string,
+  taskType: string,
+): Promise<{ content: string; structured: Record<string, unknown>; warnings: string[]; retriesUsed: number }> {
+  const warnings: string[] = [];
+  const validator = getValidatorForAgent(agentType);
+
+  // Si no hay validador registrado, usar parseo normal sin retry
+  if (!validator) {
+    const result = await callProvider(provider, env, originalPrompt);
+    if (!result.ok || !result.content) {
+      return { content: '', structured: {}, warnings: ['Proveedor no devolvió contenido'], retriesUsed: 0 };
+    }
+    const sanitized = sanitizeOutput(result.content);
+    const { content, structured } = parseResponse(sanitized);
+    return { content, structured, warnings, retriesUsed: 0 };
+  }
+
+  let currentPrompt = originalPrompt;
+
+  for (let attempt = 0; attempt <= MAX_SCHEMA_RETRIES; attempt++) {
+    const result = await callProvider(provider, env, currentPrompt);
+
+    if (!result.ok || !result.content) {
+      warnings.push(`Intento ${attempt + 1}: proveedor no devolvió contenido`);
+      continue;
+    }
+
+    const sanitized = sanitizeOutput(result.content);
+    const parsed = parseAIJsonSafely(sanitized);
+
+    if (!parsed) {
+      if (attempt < MAX_SCHEMA_RETRIES) {
+        currentPrompt = `${originalPrompt}\n\n⚠️ REINTENTO ${attempt + 1}: Tu respuesta anterior NO era JSON válido. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones, sin texto antes o después del JSON.`;
+        warnings.push(`Intento ${attempt + 1}: JSON inválido → reintentando`);
+        continue;
+      }
+      warnings.push('JSON inválido tras 3 intentos');
+      return { content: sanitized, structured: {}, warnings, retriesUsed: attempt + 1 };
+    }
+
+    // Validar con schema + reglas de negocio
+    const validation = validator(parsed);
+
+    if (validation.success) {
+      if (attempt > 0) {
+        warnings.push(`JSON válido y estructura correcta en intento ${attempt + 1}`);
+      }
+      // Agregar warnings de validación de negocio (tiempos, materiales, etc.)
+      if (validation.warnings.length > 0) {
+        warnings.push(...validation.warnings.map((w) => `[Planificación] ${w}`));
+      }
+      return { content: sanitized, structured: validation.data as Record<string, unknown>, warnings, retriesUsed: attempt + 1 };
+    }
+
+    // Validación falló — construir prompt de retry con errores específicos
+    if (attempt < MAX_SCHEMA_RETRIES) {
+      const errorSummary = validation.errors.slice(0, 5).join('\n  - ');
+      currentPrompt = `${originalPrompt}\n\n⚠️ REINTENTO ${attempt + 1}: Tu respuesta tiene errores de estructura:\n  - ${errorSummary}\n\nCorrige TODOS los errores y responde ÚNICAMENTE con JSON válido que cumpla exactamente la estructura solicitada.`;
+      warnings.push(`Intento ${attempt + 1}: validación Zod fallida → reintentando`);
+      continue;
+    }
+
+    warnings.push(`Validación Zod fallida tras ${MAX_SCHEMA_RETRIES + 1} intentos`);
+    return { content: sanitized, structured: parsed, warnings, retriesUsed: attempt + 1 };
+  }
+
+  return { content: '', structured: {}, warnings, retriesUsed: MAX_SCHEMA_RETRIES + 1 };
+}
+
 export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string): Promise<AIResponse> {
   const start = Date.now();
   const warnings: string[] = [];
@@ -308,23 +389,48 @@ export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string)
   const { providers, recommended } = await statusProviders(env);
   const providerOrder: ProviderName[] = ['gemini', 'workers-ai', 'openrouter', 'huggingface'];
 
+  // Determinar si aplica validación con schema (solo para 'generar')
+  const useSchemaValidation = req.taskType === 'generar' && getValidatorForAgent(req.agentType) !== null;
+
   for (const provider of providerOrder) {
     if (!providers[provider].available) continue;
 
     try {
-      const result = await callProvider(provider, env, prompt);
-      if (result.ok && result.content) {
-        const contentCheck = scanContent(result.content);
-        if (contentCheck.reason) warnings.push(contentCheck.reason);
+      if (useSchemaValidation) {
+        // Flujo con validación Zod + retry
+        const schemaResult = await callWithSchemaValidation(provider, env, prompt, req.agentType, req.taskType);
+        warnings.push(...schemaResult.warnings);
 
-        const sanitized = sanitizeOutput(result.content);
-        const { content, structured } = parseResponse(sanitized);
+        if (schemaResult.retriesUsed > 1) {
+          warnings.push(`Retry strategy activada: ${schemaResult.retriesUsed} intentos totales`);
+        }
 
-        return {
-          ok: true, provider, model: result.model, agentType: req.agentType, taskType: req.taskType,
-          content, structured: structured || result.structured || {}, warnings,
-          usedFallback: false, durationMs: Date.now() - start,
-        };
+        if (schemaResult.structured && Object.keys(schemaResult.structured).length > 0) {
+          const contentCheck = scanContent(schemaResult.content);
+          if (contentCheck.reason) warnings.push(contentCheck.reason);
+
+          return {
+            ok: true, provider, model: `${provider}-schema-validated`, agentType: req.agentType, taskType: req.taskType,
+            content: schemaResult.content, structured: schemaResult.structured, warnings,
+            usedFallback: false, durationMs: Date.now() - start,
+          };
+        }
+      } else {
+        // Flujo normal sin validación (mejorar, adaptar, otros)
+        const result = await callProvider(provider, env, prompt);
+        if (result.ok && result.content) {
+          const contentCheck = scanContent(result.content);
+          if (contentCheck.reason) warnings.push(contentCheck.reason);
+
+          const sanitized = sanitizeOutput(result.content);
+          const { content, structured } = parseResponse(sanitized);
+
+          return {
+            ok: true, provider, model: result.model, agentType: req.agentType, taskType: req.taskType,
+            content, structured: structured || result.structured || {}, warnings,
+            usedFallback: false, durationMs: Date.now() - start,
+          };
+        }
       }
     } catch (e) {
       warnings.push(`Error con ${provider}: ${e instanceof Error ? e.message : 'desconocido'}`);
