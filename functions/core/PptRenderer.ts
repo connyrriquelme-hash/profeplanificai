@@ -237,12 +237,140 @@ function renderQuoteSlide(pres: PptxPres, slide: RenderableSlide): void {
   }
 }
 
+function renderQuizPreguntaSlide(pres: PptxPres, slide: RenderableSlide): void {
+  if (slide.layout !== 'quiz_pregunta') return;
+  const pptxSlide = pres.addSlide();
+  pptxSlide.background = { fill: slide.background.replace('#', '') };
+
+  const titulo = asTextRect(slide.titulo);
+  addTextFromRect(pptxSlide, titulo, titulo.text ?? '');
+
+  const pregunta = asTextRect(slide.pregunta);
+  addTextFromRect(pptxSlide, pregunta, pregunta.text ?? '');
+
+  const opciones = slide.opciones.map((opt) => {
+    const rect = asTextRect(opt);
+    return {
+      text: rect.text ?? '',
+      options: {
+        fontSize: rect.fontSize,
+        color: rect.color.replace('#', ''),
+        fontFace: rect.fontFamily,
+        x: rect.x,
+        y: rect.y,
+        w: rect.width,
+        h: rect.height,
+      },
+    };
+  });
+
+  if (opciones.length > 0) {
+    pptxSlide.addText(opciones, { bullet: false });
+  }
+}
+
+function renderQuizRespuestaSlide(pres: PptxPres, slide: RenderableSlide): void {
+  if (slide.layout !== 'quiz_respuesta') return;
+  const pptxSlide = pres.addSlide();
+  pptxSlide.background = { fill: slide.background.replace('#', '') };
+
+  const titulo = asTextRect(slide.titulo);
+  addTextFromRect(pptxSlide, titulo, titulo.text ?? '');
+
+  const resultado = asTextRect(slide.resultado);
+  addTextFromRect(pptxSlide, resultado, resultado.text ?? '');
+
+  const explicacion = asTextRect(slide.explicacion);
+  addTextFromRect(pptxSlide, explicacion, explicacion.text ?? '');
+}
+
+function renderVerdaderoFalsoPreguntaSlide(pres: PptxPres, slide: RenderableSlide): void {
+  if (slide.layout !== 'verdadero_falso_pregunta') return;
+  const pptxSlide = pres.addSlide();
+  pptxSlide.background = { fill: slide.background.replace('#', '') };
+
+  const titulo = asTextRect(slide.titulo);
+  addTextFromRect(pptxSlide, titulo, titulo.text ?? '');
+
+  const afirmacion = asTextRect(slide.afirmacion);
+  addTextFromRect(pptxSlide, afirmacion, afirmacion.text ?? '');
+
+  const opciones = slide.opciones.map((opt) => {
+    const rect = asTextRect(opt);
+    return {
+      text: rect.text ?? '',
+      options: {
+        fontSize: rect.fontSize,
+        color: rect.color.replace('#', ''),
+        fontFace: rect.fontFamily,
+        x: rect.x,
+        y: rect.y,
+        w: rect.width,
+        h: rect.height,
+      },
+    };
+  });
+
+  if (opciones.length > 0) {
+    pptxSlide.addText(opciones, { bullet: false });
+  }
+}
+
+function renderVerdaderoFalsoRespuestaSlide(pres: PptxPres, slide: RenderableSlide): void {
+  if (slide.layout !== 'verdadero_falso_respuesta') return;
+  const pptxSlide = pres.addSlide();
+  pptxSlide.background = { fill: slide.background.replace('#', '') };
+
+  const titulo = asTextRect(slide.titulo);
+  addTextFromRect(pptxSlide, titulo, titulo.text ?? '');
+
+  const resultado = asTextRect(slide.resultado);
+  addTextFromRect(pptxSlide, resultado, resultado.text ?? '');
+
+  const explicacion = asTextRect(slide.explicacion);
+  addTextFromRect(pptxSlide, explicacion, explicacion.text ?? '');
+}
+
+function renderVocabularioSlide(pres: PptxPres, slide: RenderableSlide): void {
+  if (slide.layout !== 'vocabulario') return;
+  const pptxSlide = pres.addSlide();
+  pptxSlide.background = { fill: slide.background.replace('#', '') };
+
+  const titulo = asTextRect(slide.titulo);
+  addTextFromRect(pptxSlide, titulo, titulo.text ?? '');
+
+  for (const termino of slide.terminos) {
+    const rect = asTextRect(termino);
+    addTextFromRect(pptxSlide, rect, rect.text ?? '');
+  }
+}
+
+function renderCicloProcesoSlide(pres: PptxPres, slide: RenderableSlide): void {
+  if (slide.layout !== 'ciclo_proceso') return;
+  const pptxSlide = pres.addSlide();
+  pptxSlide.background = { fill: slide.background.replace('#', '') };
+
+  const titulo = asTextRect(slide.titulo);
+  addTextFromRect(pptxSlide, titulo, titulo.text ?? '');
+
+  for (const paso of slide.pasos) {
+    const rect = asTextRect(paso);
+    addTextFromRect(pptxSlide, rect, rect.text ?? '');
+  }
+}
+
 const RENDERERS: Record<string, (pres: PptxPres, slide: RenderableSlide) => void> = {
   title: renderTitleSlide,
   bullets: renderBulletsSlide,
   image_text: renderImageTextSlide,
   comparison: renderComparisonSlide,
   quote: renderQuoteSlide,
+  vocabulario: renderVocabularioSlide,
+  ciclo_proceso: renderCicloProcesoSlide,
+  quiz_pregunta: renderQuizPreguntaSlide,
+  quiz_respuesta: renderQuizRespuestaSlide,
+  verdadero_falso_pregunta: renderVerdaderoFalsoPreguntaSlide,
+  verdadero_falso_respuesta: renderVerdaderoFalsoRespuestaSlide,
 };
 
 export async function renderPptx(slides: RenderableSlide[], outputPath: string): Promise<string> {

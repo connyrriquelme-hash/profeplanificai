@@ -19,6 +19,76 @@ const FULL_DECK: PptDeck = {
   ],
 };
 
+const VOCAB_RENDERABLE_DECK: PptDeck = {
+  slides: [
+    { layout: 'title', title: 'Portada' },
+    { layout: 'bullets', title: 'Lista', bullets: ['A', 'B'] },
+    { layout: 'bullets', title: 'L2', bullets: ['C', 'D'] },
+    { layout: 'bullets', title: 'L3', bullets: ['E', 'F'] },
+    { layout: 'bullets', title: 'L4', bullets: ['G', 'H'] },
+    {
+      layout: 'vocabulario',
+      titulo: 'Palabras Nuevas',
+      terminos: [
+        { palabra: 'Célula', definicion: 'Unidad básica de la vida', imageQuery: 'célula microscopio' },
+        { palabra: 'Núcleo', definicion: 'Centro de la célula', imageQuery: 'núcleo celular' },
+      ],
+    },
+  ],
+};
+
+const CICLO_RENDERABLE_DECK: PptDeck = {
+  slides: [
+    { layout: 'title', title: 'Portada' },
+    { layout: 'bullets', title: 'Lista', bullets: ['A', 'B'] },
+    { layout: 'bullets', title: 'L2', bullets: ['C', 'D'] },
+    { layout: 'bullets', title: 'L3', bullets: ['E', 'F'] },
+    { layout: 'bullets', title: 'L4', bullets: ['G', 'H'] },
+    {
+      layout: 'ciclo_proceso',
+      titulo: 'Fotosíntesis',
+      pasos: [
+        { nombre: 'Captura', descripcion: 'Las hojas capturan luz solar', imageQuery: 'hojas sol' },
+        { nombre: 'Transformación', descripcion: 'Se convierte en energía', imageQuery: 'energía' },
+        { nombre: 'Almacenamiento', descripcion: 'Se guarda como glucosa', imageQuery: 'glucosa' },
+      ],
+    },
+  ],
+};
+
+const QUIZ_RENDERABLE_DECK: PptDeck = {
+  slides: [
+    { layout: 'title', title: 'Portada' },
+    { layout: 'bullets', title: 'Lista', bullets: ['A', 'B'] },
+    { layout: 'bullets', title: 'L2', bullets: ['C', 'D'] },
+    { layout: 'bullets', title: 'L3', bullets: ['E', 'F'] },
+    { layout: 'bullets', title: 'L4', bullets: ['G', 'H'] },
+    {
+      layout: 'quiz_opcion_multiple',
+      pregunta: '¿Cuál es la capital de Chile?',
+      opciones: ['Santiago', 'Lima', 'Bogotá', 'Buenos Aires'],
+      respuestaCorrectaIndex: 0,
+      explicacion: 'Santiago es la capital de Chile.',
+    },
+  ],
+};
+
+const VF_RENDERABLE_DECK: PptDeck = {
+  slides: [
+    { layout: 'title', title: 'Portada' },
+    { layout: 'bullets', title: 'Lista', bullets: ['A', 'B'] },
+    { layout: 'bullets', title: 'L2', bullets: ['C', 'D'] },
+    { layout: 'bullets', title: 'L3', bullets: ['E', 'F'] },
+    { layout: 'bullets', title: 'L4', bullets: ['G', 'H'] },
+    {
+      layout: 'verdadero_falso',
+      afirmacion: 'La Tierra gira alrededor del Sol',
+      esVerdadero: true,
+      explicacion: 'La Tierra orbita al Sol.',
+    },
+  ],
+};
+
 beforeAll(() => {
   if (!fs.existsSync(TMP_DIR)) {
     fs.mkdirSync(TMP_DIR, { recursive: true });
@@ -115,5 +185,69 @@ describe('PptRenderer.renderPptx', () => {
     expect(fs.existsSync(outputPath)).toBe(true);
     const stat = fs.statSync(outputPath);
     expect(stat.size).toBeGreaterThan(0);
+  });
+
+  it('should render a vocabulario deck to a non-empty .pptx file', async () => {
+    const outputPath = path.join(TMP_DIR, 'test-vocabulario.pptx');
+    const renderableSlides = buildRenderableDeck(VOCAB_RENDERABLE_DECK, defaultTheme);
+    const result = await renderPptx(renderableSlides, outputPath);
+
+    expect(result).toBe(outputPath);
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stat = fs.statSync(outputPath);
+    expect(stat.size).toBeGreaterThan(0);
+  });
+
+  it('should render a ciclo_proceso deck to a non-empty .pptx file', async () => {
+    const outputPath = path.join(TMP_DIR, 'test-ciclo-proceso.pptx');
+    const renderableSlides = buildRenderableDeck(CICLO_RENDERABLE_DECK, defaultTheme);
+    const result = await renderPptx(renderableSlides, outputPath);
+
+    expect(result).toBe(outputPath);
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stat = fs.statSync(outputPath);
+    expect(stat.size).toBeGreaterThan(0);
+  });
+
+  it('should render a quiz_opcion_multiple deck to a non-empty .pptx file', async () => {
+    const outputPath = path.join(TMP_DIR, 'test-quiz.pptx');
+    const renderableSlides = buildRenderableDeck(QUIZ_RENDERABLE_DECK, defaultTheme);
+    const result = await renderPptx(renderableSlides, outputPath);
+
+    expect(result).toBe(outputPath);
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stat = fs.statSync(outputPath);
+    expect(stat.size).toBeGreaterThan(0);
+  });
+
+  it('should render a verdadero_falso deck to a non-empty .pptx file', async () => {
+    const outputPath = path.join(TMP_DIR, 'test-verdadero-falso.pptx');
+    const renderableSlides = buildRenderableDeck(VF_RENDERABLE_DECK, defaultTheme);
+    const result = await renderPptx(renderableSlides, outputPath);
+
+    expect(result).toBe(outputPath);
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stat = fs.statSync(outputPath);
+    expect(stat.size).toBeGreaterThan(0);
+  });
+
+  it('should produce a valid ZIP for vocabulario deck', async () => {
+    const outputPath = path.join(TMP_DIR, 'test-vocab-zip.pptx');
+    const renderableSlides = buildRenderableDeck(VOCAB_RENDERABLE_DECK, defaultTheme);
+    await renderPptx(renderableSlides, outputPath);
+
+    const buffer = fs.readFileSync(outputPath);
+    const magicBytes = buffer.toString('ascii', 0, 4);
+    expect(magicBytes).toBe('PK\x03\x04');
+  });
+
+  it('should produce a valid ZIP for quiz deck', async () => {
+    const outputPath = path.join(TMP_DIR, 'test-quiz-zip.pptx');
+    const renderableSlides = buildRenderableDeck(QUIZ_RENDERABLE_DECK, defaultTheme);
+    await renderPptx(renderableSlides, outputPath);
+
+    const buffer = fs.readFileSync(outputPath);
+    const magicBytes = buffer.toString('ascii', 0, 4);
+    expect(magicBytes).toBe('PK\x03\x04');
   });
 });

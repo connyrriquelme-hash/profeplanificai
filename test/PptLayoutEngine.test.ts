@@ -367,6 +367,170 @@ describe('buildRenderableDeck — full deck integration', () => {
   });
 });
 
+describe('buildRenderableDeck — vocabulario slide', () => {
+  const VOCAB_DECK: PptDeck = {
+    slides: [
+      {
+        layout: 'vocabulario',
+        titulo: 'Palabras Nuevas',
+        terminos: [
+          { palabra: 'Célula', definicion: 'Unidad básica de la vida', imageQuery: 'célula microscopio' },
+          { palabra: 'Núcleo', definicion: 'Centro de la célula', imageQuery: 'núcleo celular' },
+        ],
+      },
+    ],
+  };
+
+  it('should map vocabulario slide to RenderableVocabularioSlide', () => {
+    const result = buildRenderableDeck(VOCAB_DECK);
+    expect(result).toHaveLength(1);
+    expect(result[0].layout).toBe('vocabulario');
+  });
+
+  it('should have valid coordinates for all terminos', () => {
+    const result = buildRenderableDeck(VOCAB_DECK);
+    const slide = result[0];
+    if (slide.layout === 'vocabulario') {
+      expect(isWithinBounds(slide.title.x, slide.title.y, slide.title.width, slide.title.height)).toBe(true);
+      for (const t of slide.terminos) {
+        expect(isWithinBounds(t.x, t.y, t.width, t.height)).toBe(true);
+        expect(t.fontSize).toBeGreaterThanOrEqual(defaultTheme.reglasDUA.tamanoFuenteMinimoPt);
+      }
+    }
+  });
+});
+
+describe('buildRenderableDeck — ciclo_proceso slide', () => {
+  const CICLO_DECK: PptDeck = {
+    slides: [
+      {
+        layout: 'ciclo_proceso',
+        titulo: 'Fotosíntesis',
+        pasos: [
+          { nombre: 'Captura', descripcion: 'Las hojas capturan luz solar', imageQuery: 'hojas sol' },
+          { nombre: 'Transformación', descripcion: 'Se convierte en energía', imageQuery: 'energía' },
+          { nombre: 'Almacenamiento', descripcion: 'Se guarda como glucosa', imageQuery: 'glucosa' },
+        ],
+      },
+    ],
+  };
+
+  it('should map ciclo_proceso slide to RenderableCicloProcesoSlide', () => {
+    const result = buildRenderableDeck(CICLO_DECK);
+    expect(result).toHaveLength(1);
+    expect(result[0].layout).toBe('ciclo_proceso');
+  });
+
+  it('should have valid coordinates for all pasos', () => {
+    const result = buildRenderableDeck(CICLO_DECK);
+    const slide = result[0];
+    if (slide.layout === 'ciclo_proceso') {
+      expect(isWithinBounds(slide.title.x, slide.title.y, slide.title.width, slide.title.height)).toBe(true);
+      for (const p of slide.pasos) {
+        expect(isWithinBounds(p.x, p.y, p.width, p.height)).toBe(true);
+        expect(p.fontSize).toBeGreaterThanOrEqual(defaultTheme.reglasDUA.tamanoFuenteMinimoPt);
+      }
+    }
+  });
+});
+
+describe('buildRenderableDeck — quiz_opcion_multiple expands to 2 slides', () => {
+  const QUIZ_DECK: PptDeck = {
+    slides: [
+      {
+        layout: 'quiz_opcion_multiple',
+        pregunta: '¿Cuál es la capital de Chile?',
+        opciones: ['Santiago', 'Lima', 'Bogotá', 'Buenos Aires'],
+        respuestaCorrectaIndex: 0,
+        explicacion: 'Santiago es la capital de Chile.',
+      },
+    ],
+  };
+
+  it('should expand quiz_opcion_multiple to exactly 2 RenderableSlides', () => {
+    const result = buildRenderableDeck(QUIZ_DECK);
+    expect(result).toHaveLength(2);
+    expect(result[0].layout).toBe('quiz_pregunta');
+    expect(result[1].layout).toBe('quiz_respuesta');
+  });
+
+  it('should mark the correct option in verde on the answer slide', () => {
+    const result = buildRenderableDeck(QUIZ_DECK);
+    const answerSlide = result[1];
+    if (answerSlide.layout === 'quiz_respuesta') {
+      expect(answerSlide.resultado.fontSize).toBeGreaterThanOrEqual(defaultTheme.reglasDUA.tamanoFuenteMinimoPt);
+    }
+  });
+});
+
+describe('buildRenderableDeck — verdadero_falso expands to 2 slides', () => {
+  const VF_DECK: PptDeck = {
+    slides: [
+      {
+        layout: 'verdadero_falso',
+        afirmacion: 'La Tierra gira alrededor del Sol',
+        esVerdadero: true,
+        explicacion: 'La Tierra orbita alrededor del Sol una vez al año.',
+      },
+    ],
+  };
+
+  it('should expand verdadero_falso to exactly 2 RenderableSlides', () => {
+    const result = buildRenderableDeck(VF_DECK);
+    expect(result).toHaveLength(2);
+    expect(result[0].layout).toBe('verdadero_falso_pregunta');
+    expect(result[1].layout).toBe('verdadero_falso_respuesta');
+  });
+});
+
+describe('buildRenderableDeck — empty/defensive data', () => {
+  it('should produce placeholders for vocabulario with empty terminos', () => {
+    const deck: PptDeck = {
+      slides: [
+        {
+          layout: 'vocabulario',
+          titulo: 'Vocabulario',
+          terminos: [],
+        },
+      ],
+    };
+    expect(() => buildRenderableDeck(deck)).not.toThrow();
+    const result = buildRenderableDeck(deck);
+    expect(result).toHaveLength(1);
+  });
+
+  it('should produce placeholders for ciclo_proceso with empty pasos', () => {
+    const deck: PptDeck = {
+      slides: [
+        {
+          layout: 'ciclo_proceso',
+          titulo: 'Proceso',
+          pasos: [],
+        },
+      ],
+    };
+    expect(() => buildRenderableDeck(deck)).not.toThrow();
+    const result = buildRenderableDeck(deck);
+    expect(result).toHaveLength(1);
+  });
+
+  it('should handle quiz_opcion_multiple with empty opciones defensively', () => {
+    const deck: PptDeck = {
+      slides: [
+        {
+          layout: 'quiz_opcion_multiple' as const,
+          pregunta: 'Pregunta?',
+          opciones: [],
+          respuestaCorrectaIndex: 0,
+        },
+      ],
+    };
+    expect(() => buildRenderableDeck(deck)).not.toThrow();
+    const result = buildRenderableDeck(deck);
+    expect(result).toHaveLength(2);
+  });
+});
+
 function extractRects(slide: import('../functions/core/PptLayoutEngine').RenderableSlide): Array<{ x: number; y: number; width: number; height: number; fontSize: number }> {
   const rects: Array<{ x: number; y: number; width: number; height: number; fontSize: number }> = [];
 
@@ -393,6 +557,34 @@ function extractRects(slide: import('../functions/core/PptLayoutEngine').Rendera
     case 'quote':
       rects.push(slide.text);
       if (slide.author) rects.push(slide.author);
+      break;
+    case 'vocabulario':
+      rects.push(slide.title);
+      rects.push(...slide.terminos);
+      break;
+    case 'ciclo_proceso':
+      rects.push(slide.title);
+      rects.push(...slide.pasos);
+      break;
+    case 'quiz_pregunta':
+      rects.push(slide.titulo);
+      rects.push(slide.pregunta);
+      rects.push(...slide.opciones);
+      break;
+    case 'quiz_respuesta':
+      rects.push(slide.titulo);
+      rects.push(slide.resultado);
+      rects.push(slide.explicacion);
+      break;
+    case 'verdadero_falso_pregunta':
+      rects.push(slide.titulo);
+      rects.push(slide.afirmacion);
+      rects.push(...slide.opciones);
+      break;
+    case 'verdadero_falso_respuesta':
+      rects.push(slide.titulo);
+      rects.push(slide.resultado);
+      rects.push(slide.explicacion);
       break;
   }
 
