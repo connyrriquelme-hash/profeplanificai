@@ -16,6 +16,7 @@ REGLAS OBLIGATORIAS:
 9. NO repitas el OA en todas las secciones. Usa el OA solo en "oa_a_trabajar" y "contexto_pedagogico_inclusivo".
 10. NO generes secciones con una sola palabra o letra.
 11. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones externas.
+12. "criterios_aprendizaje" es OBLIGATORIO: genera siempre entre 2 y 6 criterios observables, medibles y específicos al OA. Nunca lo dejes vacío ni como []. Cada criterio debe describir qué hace el estudiante para demostrar aprendizaje, no qué hace el docente.
 
 CONTEXTO POR NIVEL:
 - Parvularia/1° básico: pictogramas, tarjetas visuales, modelaje con objetos, elección entre alternativas, respuesta oral, dibujo, señalamiento, trabajo en pareja con roles simples, frases iniciadoras, rutinas breves de cierre.
@@ -505,6 +506,14 @@ function enrichDuaGuide(guide: DuaGuide, plan: PedagogicalPlan): DuaGuide {
   const fallback = buildFallbackDuaGuide(plan);
   const hasUsableSkills = [...(guide.habilidades || []), ...(guide.habilidades_sugeridas || [])].some((skill) => !isInvalidSkill(skill));
 
+  const aiCriterios = (guide.criterios_aprendizaje || []).filter((c) => c && c.trim().length > 3);
+  const fallbackCriterios = fallback.criterios_aprendizaje;
+  const finalCriterios = aiCriterios.length >= 2
+    ? aiCriterios
+    : fallbackCriterios.length >= 2
+      ? fallbackCriterios
+      : [...aiCriterios, ...fallbackCriterios].filter((c) => c && c.trim().length > 3);
+
   return {
     ...fallback,
     ...guide,
@@ -514,7 +523,7 @@ function enrichDuaGuide(guide: DuaGuide, plan: PedagogicalPlan): DuaGuide {
     interpretacion_pedagogica: guide.interpretacion_pedagogica || fallback.interpretacion_pedagogica,
     habilidades: hasUsableSkills ? (guide.habilidades || []).filter((skill) => !isInvalidSkill(skill)) : fallback.habilidades,
     habilidades_sugeridas: hasUsableSkills ? guide.habilidades_sugeridas || [] : fallback.habilidades_sugeridas,
-    criterios_aprendizaje: guide.criterios_aprendizaje?.length ? guide.criterios_aprendizaje : fallback.criterios_aprendizaje,
+    criterios_aprendizaje: finalCriterios,
     barreras_posibles: guide.barreras_posibles?.length ? guide.barreras_posibles : fallback.barreras_posibles,
     principios_dua: guide.principios_dua?.representacion?.length && guide.principios_dua.accion_expresion?.length && guide.principios_dua.implicacion?.length
       ? guide.principios_dua
@@ -584,7 +593,16 @@ export class AIEngine {
       }
 
       const parsedJson = JSON.parse(parsed) as unknown;
-      return enrichDuaGuide(validateDuaGuide(parsedJson), plan);
+      const result = enrichDuaGuide(validateDuaGuide(parsedJson), plan);
+
+      if (!result.criterios_aprendizaje || result.criterios_aprendizaje.length < 2) {
+        const fallbackCriterios = buildFallbackDuaGuide(plan).criterios_aprendizaje;
+        result.criterios_aprendizaje = result.criterios_aprendizaje?.length
+          ? [...result.criterios_aprendizaje, ...fallbackCriterios].filter((c) => c && c.trim().length > 3)
+          : fallbackCriterios;
+      }
+
+      return result;
     } catch (error) {
       console.error('[AIEngine] generateDuaGuide error:', error);
       return buildFallbackDuaGuide(plan);
