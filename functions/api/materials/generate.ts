@@ -47,8 +47,21 @@ function buildMaterialPrompt(type: string, req: GenerateRequest, context: any): 
     req.studentCount ? `Estudiantes: ${req.studentCount}` : '',
   ].filter(Boolean).join('\n');
 
+  const GLOBAL_DIRECTIVES = `
+═══ REGLAS GLOBALES ANTI-META (PRIORIDAD MÁXIMA — APLICAN A TODOS LOS PRODUCTOS) ═══
+
+1. ANTI-META / CONTENIDO DIRECTO: PROHIBIDO DESCRIBIR LA ACTIVIDAD. Debes ESCRIBIR el contenido exacto y listo para usar. Si es una lectura, redacta la lectura completa. Si es un Formato 3-2-1 o Ticket de Salida, redacta las preguntas contextualizadas específicamente sobre el OA (NUNCA uses placeholders vacíos como "Escribe aquí..." o "Ejemplo de..."). Si es una Guía DUA, redacta el texto exacto, la historia o el problema que leerá el estudiante, no las instrucciones metodológicas para el profesor. PROHIBIDOS: "Actividad 1: Modelaje docente", "Escribe aquí tu respuesta", "Describe la situación...", "[Insertar ejemplo]". Escribe SIEMPRE el contenido final, nunca la meta-descripción de lo que debería haber.
+
+2. FORMATO DE PÁRRAFO CONTINUO: Toda la secuencia didáctica, planificaciones y descripciones de clase DEBEN redactarse como texto continuo en formato párrafo. ESTÁ ESTRICTAMENTE PROHIBIDO el uso de formato de tabla para estructurar el contenido pedagógico o el desarrollo de las clases. Usa párrafos separados por saltos de línea doble. Las tablas SOLO se permiten en campos "tablas" del JSON para datos estructurados (calendarios, rúbricas, comparaciones), NUNCA para narrativa pedagógica.
+
+3. IDENTIDAD CHILENA PRECISA: Todo el material debe integrar elementos REALES de la geografía, flora, fauna, cultura y tradiciones chilenas. Si usas un ejemplo lúdico, utiliza un trompo tradicional chileno, una pelota de goma, o un juego de rayuela. Si hablas de ecosistemas, usa el bosque valdiviano, el desierto florido de Atacama, los fiordos patagónicos o los humedales del centro. Si mencionas comidas, usa sopaipillas, pastel de choclo, cazuela chilena, mote con huesillo. Cero abstracciones genéricas: nada de "países sudamericanos" cuando puedes decir Chile, nada de "animales salvajes" cuando puedes decir puma, cóndor o chungungo.
+
+4. REFERENCIAS VISUALES EN EVALUACIONES: Si el material (como la Evaluación Formativa) requiere que el estudiante observe una imagen, DEBES generar el campo "imagePrompt" en inglés para que el sistema renderice la ilustración real. NO escribas "Imagen 1: Un río con botellas..." en el texto del estudiante. Delega esa descripción al motor de imágenes y en el texto asume que la ilustración ya está presente: "Observa la imagen. Responde...".
+`;
+
   const prompts: Record<string, string> = {
-    guia_estudiante: `Genera una guía de estudiante en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+    guia_estudiante: `${GLOBAL_DIRECTIVES}
+Genera una guía de estudiante en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
 {
   "metadata": {
@@ -110,7 +123,8 @@ REGLAS OBLIGATORIAS:
 - Lenguaje accesible para el nivel del estudiante.
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
 
-    guia_docente: `Genera una guía docente en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+    guia_docente: `${GLOBAL_DIRECTIVES}
+Genera una guía docente en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
 {
   "metadata": {
@@ -170,7 +184,8 @@ REGLAS OBLIGATORIAS:
 - Incluir tiempos realistas para cada sección.
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
 
-    planificacion: `═══ PRIORIDAD ABSOLUTA: PROHIBIDO EL USO DE TEXTO GENÉRICO ═══
+    planificacion: `${GLOBAL_DIRECTIVES}
+═══ PRIORIDAD ABSOLUTA: PROHIBIDO EL USO DE TEXTO GENÉRICO ═══
 Cada "accionesEstudiante" y "estrategiasMediacion" DEBE estar INJECTADA con el contenido ESPECÍFICO del OA proporcionado.
 Si el OA trata sobre "fracciones", NO escribas "Los estudiantes resuelven un problema". DEBES escribir: "Los estudiantes suman fracciones con distinto denominador, buscando el MCM y simplificando el resultado."
 Si el OA trata sobre "fotosíntesis", NO escribas "Los estudiantes observan una planta". DEBES escribir: "Los estudiantes identifican en una lámina las partes de la planta involucradas en la fotosíntesis: hoja, tallo y raíz."
@@ -271,7 +286,8 @@ REGLAS PEDAGÓGICAS (UDD/PUC):
 
 Contexto: ${baseContext}`,
 
-    evaluacion: `Genera una evaluación en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+    evaluacion: `${GLOBAL_DIRECTIVES}
+Genera una evaluación en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
 {
   "metadata": {
@@ -348,7 +364,8 @@ REGLAS OBLIGATORIAS:
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.
 - Progresión de dificultad: de menor a mayor complejidad.`,
 
-    rubrica: `Genera una rúbrica en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+    rubrica: `${GLOBAL_DIRECTIVES}
+Genera una rúbrica en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
 {
   "metadata": {
@@ -389,7 +406,8 @@ REGLAS OBLIGATORIAS:
 - Las descripciones deben ser específicas y observables, no genéricas.
 - Contexto chileno: usa vocabulario y situaciones del contexto escolar chileno.`,
 
-    ticket_salida: `Genera un ticket de salida en formato JSON con:
+    ticket_salida: `${GLOBAL_DIRECTIVES}
+Genera un ticket de salida en formato JSON con:
 {
   "title": "Ticket de salida",
   "objective": "OA de la clase",
@@ -404,7 +422,8 @@ REGLAS OBLIGATORIAS:
 Contexto: ${baseContext}
 Requisitos: máximo 3 preguntas, breves, alineadas al OA, contexto chileno.`,
 
-    actividad_dua: `Genera una actividad DUA en formato JSON con:
+    actividad_dua: `${GLOBAL_DIRECTIVES}
+Genera una actividad DUA en formato JSON con:
 {
   "title": "Título de actividad",
   "objective": "OA",
@@ -418,7 +437,8 @@ Requisitos: máximo 3 preguntas, breves, alineadas al OA, contexto chileno.`,
 Contexto: ${baseContext}
 Requisitos: 3 principios DUA explícitos, accesible para todos, contexto chileno.`,
 
-    guia_dua: `Genera una guía DUA en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+    guia_dua: `${GLOBAL_DIRECTIVES}
+Genera una guía DUA en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
 {
   "metadata": {
@@ -492,7 +512,8 @@ REGLAS OBLIGATORIAS:
 - dua_summary DEBE resumir las estrategias DUA de toda la guía.
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
 
-    presentacion: `Genera una presentación educativa completa en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+    presentacion: `${GLOBAL_DIRECTIVES}
+Genera una presentación educativa completa en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
 REGLAS CRÍTICAS:
 1. SEPARACIÓN HABILIDAD/CONTENIDO: Si el OA dice "Observar mediante la exploración los animales invertebrados", el TEMA CENTRAL son "Los animales invertebrados", NO "la exploración". Las habilidades (observar, explorar) son ACCIONES, no contenido.
