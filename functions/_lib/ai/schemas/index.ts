@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import { PlanificationSchema, validatePlanification, type ValidationResult } from './planificacion';
 import { EvaluacionSchema, validateEvaluacion } from './evaluacion';
+import { RubricaSchema, validateRubrica } from './rubrica';
 
 // ─── Tipo de validador genérico ───
 
@@ -19,8 +20,8 @@ export type SchemaValidator = (data: unknown) => ValidationResult;
 export const SCHEMA_REGISTRY: Record<string, z.ZodSchema> = {
   planificacion: PlanificationSchema,
   evaluacion: EvaluacionSchema,
+  rubrica: RubricaSchema,
   // Próximamente:
-  // rubrica: RubricaSchema,
   // guia_dua: GuiaDuaSchema,
   // guia_estudiante: GuiaEstudianteSchema,
   // guia_docente: GuiaDocenteSchema,
@@ -31,8 +32,8 @@ export const SCHEMA_REGISTRY: Record<string, z.ZodSchema> = {
 export const VALIDATOR_REGISTRY: Record<string, SchemaValidator> = {
   planificacion: validatePlanification,
   evaluacion: validateEvaluacion,
+  rubrica: validateRubrica,
   // Próximamente:
-  // rubrica: validateRubric,
 };
 
 // ─── Helper: obtener schema para un agentType ───
@@ -53,3 +54,5 @@ export { PlanificationSchema, validatePlanification } from './planificacion';
 export type { Planification, PlanificationClass } from './planificacion';
 export { EvaluacionSchema, validateEvaluacion } from './evaluacion';
 export type { Evaluacion, Question, AlternativaQuestion, VFQuestion, DesarrolloQuestion, AnswerKey } from './evaluacion';
+export { RubricaSchema, validateRubrica } from './rubrica';
+export type { Rubrica, RubricLevel, RubricCriterion, RubricMetadata } from './rubrica';

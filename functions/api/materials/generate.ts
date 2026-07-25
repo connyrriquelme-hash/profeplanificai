@@ -181,23 +181,46 @@ REGLAS OBLIGATORIAS:
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.
 - Progresión de dificultad: de menor a mayor complejidad.`,
 
-    rubrica: `Genera una rúbrica en formato JSON con:
+    rubrica: `Genera una rúbrica en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+
 {
-  "title": "Título de rúbrica",
-  "objective": "OA evaluado",
-  "criteria": [
-    {"name": "Criterio 1", "description": "...", "levels": [
-      {"level": "Excelente", "description": "..."},
-      {"level": "Bueno", "description": "..."},
-      {"level": "Satisfactorio", "description": "..."},
-      {"level": "En proceso", "description": "..."}
-    ]}
+  "metadata": {
+    "course": "Curso (ej: 3° Básico)",
+    "subject": "Asignatura",
+    "unit": "Nombre de la unidad",
+    "oa": "Código MINEDUC del OA evaluado"
+  },
+  "title": "Título descriptivo de la rúbrica",
+  "levels": [
+    {"name": "Excelente", "score": 4, "color": "#10B981"},
+    {"name": "Bueno", "score": 3, "color": "#3B82F6"},
+    {"name": "Suficiente", "score": 2, "color": "#F59E0B"},
+    {"name": "Por mejorar", "score": 1, "color": "#EF4444"}
   ],
-  "scoring": "escala de puntaje",
-  "feedback": "espacio para retroalimentación"
+  "criteria": [
+    {
+      "name": "Dimensión a evaluar (ej: Contenido, Ortografía, Creatividad)",
+      "weight": 1,
+      "descriptions": [
+        "Descripción del nivel Excelente para esta dimensión",
+        "Descripción del nivel Bueno para esta dimensión",
+        "Descripción del nivel Suficiente para esta dimensión",
+        "Descripción del nivel Por mejorar para esta dimensión"
+      ]
+    }
+  ],
+  "instructions": "Instrucciones para el docente sobre cómo usar la rúbrica (opcional)",
+  "callouts": [{"tipo": "docente", "titulo": "Título", "texto": "Contenido"}],
+  "checklist": ["Elemento 1 del checklist"]
 }
+
 Contexto: ${baseContext}
-Requisitos: 3-5 criterios, descriptores claros por nivel, lenguaje accesible.`,
+REGLAS OBLIGATORIAS:
+- EXACTAMENTE 4 niveles ordenados de mayor a menor (score decreciente).
+- Cada criterio DEBE tener exactamente 4 descripciones (una por nivel).
+- Mínimo 2 criterios, máximo 10. Ejemplos: Contenido, Ortografía, Creatividad, Trabajo en equipo, Presentación.
+- Las descripciones deben ser específicas y observables, no genéricas.
+- Contexto chileno: usa vocabulario y situaciones del contexto escolar chileno.`,
 
     ticket_salida: `Genera un ticket de salida en formato JSON con:
 {
