@@ -170,34 +170,143 @@ REGLAS OBLIGATORIAS:
 - Incluir tiempos realistas para cada sección.
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
 
-    planificacion: `Genera una planificación de unidad didáctica en formato JSON con EXACTAMENTE esta estructura:
+    planificacion: `Genera una planificación de unidad didáctica en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura. Respetas la arquitectura pedagógica UDD/PUC:
+
 {
-  "unit": "Nombre descriptivo de la unidad",
+  "unit": "Nombre descriptivo de la unidad didáctica",
   "classes": [
     {
       "number": 1,
       "objective": "Objetivo de aprendizaje específico alineado al OA proporcionado",
-      "opening": "Momento de activación detallado (10-15 min): pregunta motivadora, conexión con contexto chileno, consigna exacta del docente",
-      "development": "Construcción detallada (55-65 min): modelamiento docente, práctica guiada, trabajo individual, andamiajes DUA",
-      "closure": "Cierre detallado (10-15 min): síntesis guiada, ticket de salida, criterio de logro observable",
       "duration": "90 min",
       "materials": ["Cuaderno del estudiante", "Pizarrón y tiza", "Fichas de trabajo impresas"],
-      "assessment": "Criterio de logro observable y evidencia esperada del estudiante"
+      "assessment": "Criterio de logro observable y evidencia esperada del estudiante",
+      "momentosClase": {
+        "inicio": {
+          "nombre": "Activación de conocimientos previos",
+          "accionesEstudiante": "Los estudiantes observan una imagen del entorno local y escriben en su cuaderno lo que recuerdan sobre el tema. Luego, conversan con un compañero sobre sus ideas.",
+          "estrategiasMediacion": "El docente proyecta una imagen del barrio, formula una pregunta abierta, circula entre las mesas escuchando respuestas y realiza preguntas socráticas para profundizar.",
+          "tiempoEsperado": "15 min",
+          "recursos": [
+            {"nombre": "Proyector", "tipo": "material_fisico", "imagePrompt": "Classroom projector screen showing a Chilean neighborhood landscape, clean educational illustration, no text no watermark"},
+            {"nombre": "Cuaderno rayado", "tipo": "material_fisico"}
+          ],
+          "medioVerificacion": "Observación directa: participación oral y escritura en cuaderno",
+          "imagePrompt": "Chilean classroom teacher projecting an image on screen while elementary students write in notebooks, warm educational illustration style, clean composition no text no watermark"
+        },
+        "desarrollo": {
+          "nombre": "Construcción con andamiaje",
+          "accionesEstudiante": "Los estudiantes leen un texto breve en parejas, subrayan ideas clave y elaboran un organizador gráfico en papelógrafo compartido.",
+          "estrategiasMediacion": "El docente modela la lectura guiada con un ejemplo, luego libera la práctica en parejas. Retroalimenta formativamente circulando y preguntando: ¿por qué creen que eso es importante?",
+          "tiempoEsperado": "50 min",
+          "recursos": [
+            {"nombre": "Textos impresos", "tipo": "material_fisico"},
+            {"nombre": "Papelógrafo", "tipo": "material_fisico"},
+            {"nombre": "Marcadores de colores", "tipo": "material_fisico"}
+          ],
+          "medioVerificacion": "Producto grupal: organizador gráfico con ideas clave del texto",
+          "imagePrompt": "Elementary students working in pairs at desks with printed texts and colorful markers making a graphic organizer on poster paper, Chilean classroom setting, warm educational illustration, clean no text no watermark"
+        },
+        "cierre": {
+          "nombre": "Síntesis y metacognición",
+          "accionesEstudiante": "Los estudiantes escriben un ticket de salida respondiendo: ¿Qué aprendí hoy? ¿Qué me falta por entender? ¿Qué haré diferente la próxima vez?",
+          "estrategiasMediacion": "El docente recoge los tickets, lee 2-3 ejemplos en voz alta y cierra conectando con la próxima clase.",
+          "tiempoEsperado": "15 min",
+          "recursos": [
+            {"nombre": "Fichas de ticket de salida", "tipo": "material_fisico"}
+          ],
+          "medioVerificacion": "Tickets de salida escritos por el estudiante",
+          "imagePrompt": "Close-up of student hands writing on a small exit ticket card at a classroom desk, Chilean elementary school setting, warm educational illustration, clean no text no watermark"
+        }
+      },
+      "practicasPedagogicas": {
+        "practicasAltoImpacto": ["Evaluación formativa mediante observación directa y retroalimentación en el momento"],
+        "practicasEticas": ["Respeto a los ritmos de aprendizaje de cada estudiante"],
+        "justificacion": "La evaluación formativa permite ajustar la enseñanza en tiempo real"
+      },
+      "anticipacionErrores": {
+        "posiblesDificultades": [
+          {"dificultad": "Confundir conceptos clave del texto", "tipo": "conceptual", "probabilidad": "alta"}
+        ],
+        "estrategiaAbordaje": "El docente anticipa la confusión usando un ejemplo concreto del entorno del estudiante, contrastando el concepto nuevo con el conocimiento previo, y usando un organizador gráfico para hacer visible la diferencia."
+      },
+      "preguntasClave": [
+        {"pregunta": "¿Por qué creen ustedes que es importante este tema para nuestra comunidad?", "tipo": "activacion", "momento": "Inicio"},
+        {"pregunta": "¿Qué diferencias encontraron entre las dos ideas del texto?", "tipo": "analisis", "momento": "Desarrollo"},
+        {"pregunta": "Si tuvieran que explicarle a alguien que no estuvo en clase, ¿cómo lo harían?", "tipo": "sintesis", "momento": "Cierre"}
+      ]
     }
   ],
-  "methodology": "Metodología principal (ABP, Aprendizaje Activo, etc.)",
-  "dua": ["Adaptación DUA específica"],
-  "evaluation": "Tipo de evaluación: formativa, sumativa o diagnóstica"
+  "methodology": "Metodología principal: ABP, Aprendizaje Activo, Investigación, etc.",
+  "totalDuration": "270 min",
+  "dua": ["Ajuste de representación: textos con imágenes y organizadores gráficos"],
+  "evaluation": "Tipo de evaluación: formativa, sumativa, diagnóstica o mixta"
 }
-Contexto: ${baseContext}
-REGLAS OBLIGATORIAS:
-- Mínimo 3 clases, máximo 10 por unidad.
-- Cada clase DEBE tener opening, development y closure como campos de texto descriptivo.
-- Duración de cada clase: entre 40 y 120 minutos en formato "X min".
-- Materiales: SOLO materiales que existan en escuelas chilenas (cuaderno, pizarrón, fichas, tiza, marcadores, etc.).
-- Progresión lógica: cada clase debe avanzar sobre la anterior.
-- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.
-- DUA: incluye al menos 1 adaptación por clase (representación, acción o implicación).`,
+
+═══ REGLAS PEDAGÓGICAS ESTRICTAS (UDD/PUC) ═══
+
+1. EXTRACCIÓN: Separa EXPLÍCITAMENTE la habilidad del contenido.
+   - HABILIDAD: qué saber hacer (ej: "Comparar fuentes primarias y secundarias")
+   - CONTENIDO: qué saber (ej: "La independencia de Chile y sus causas")
+   - El objetivo DEBE reflejar AMBOS: "Comparar fuentes primarias y secundarias sobre la independencia de Chile"
+
+2. PROTAGONISMO DEL ESTUDIANTE:
+   - accionesEstudiante: NUNCA incluir acciones del docente. El protagonista es el estudiante.
+   - Escrito en tercera persona plural: "Los estudiantes...", "Los alumnos...", "El grupo..."
+   - Verbos cognitivos de alto nivel: analizar, comparar, evaluar, crear, resolver, argumentar, diseñar, proponer
+   - NUNCA verbos pasivos: "escuchar", "observar", "copiar", "leer" (sin análisis)
+
+3. ANTEPCIÓN DE ERRORES:
+   - anticipacionErrores: DEBE incluir al menos 1 dificultad conceptual, procedimental o actitudinal
+   - tipo: "conceptual" | "procedimental" | "actitudinal" | "linguistico"
+   - probabilidad: "alta" | "media" | "baja"
+   - estrategiaAbordaje: Cómo el docente usará el error como oportunidad de aprendizaje
+
+4. PREGUNTAS CLAVE:
+   - Cada clase DEBE tener al menos 3 preguntas clave
+   - Niveles cognitivos: activacion, comprension, analisis, sintesis, evaluacion, metacognitiva
+   - NUNCA preguntas de sí/no. Siempre abiertas, analíticas, reflexivas
+   - Cada pregunta DEBE tener un "momento" indicando cuándo se formula
+
+5. MOMENTOS DE CLASE (estructura estricta):
+   - 3 momentos obligatorios: inicio, desarrollo, cierre
+   - Cada momento DEBE tener: nombre, accionesEstudiante, estrategiasMediacion, tiempoEsperado, recursos, medioVerificacion
+   - tiempoEsperado en formato "X min" (mínimo 5 min, máximo 90 min)
+   - La suma de tiempos DEBE ser coherente con la duración total de la clase
+   - recursos: al menos 1 recurso por momento, con tipo (material_fisico, digital, humano, ambiental)
+   - medioVerificación: evidencias observables del aprendizaje en ese momento
+
+6. IMAGEPROMPT (obligatorio para visualización premium):
+   - Cada momento DEBE tener un imagePrompt descriptivo
+   - En INGLÉS, estilo ilustración educativa limpia
+   - Sin emojis, sin texto incrustado, sin marcas de agua
+   - Describe la escena: qué, dónde, cómo, estilo visual
+   - Ejemplo: "Chilean classroom teacher projecting an image on screen while elementary students write in notebooks, warm educational illustration style, clean composition no text no watermark"
+
+7. PRÁCTICAS DE ALTO IMPACTO (PAI):
+   - Cada clase DEBE tener al menos 1 PAI
+   - PAI comunes: evaluación formativa, retroalimentación específica, comprensión profunda, organización del aula, instrucción efectiva, tutoría entre pares
+   - DEBE incluir prácticas éticas (respeto a diversidad, igualdad de oportunidades, formación en valores)
+
+8. MATERIALES REALISTAS PARA CHILE:
+   - SOLO materiales que existan en escuelas chilenas
+   - Permitidos: cuaderno, pizarrón, tiza, fichas, marcadores, colores, lápiz, goma, tijeras, pegamento, hojas, papel bond, cartulina, atlas, mapa, globo terráqueo, calculadora, regla, compás, bandejita de semillas, tierra
+   - PROHIBIDOS: tablets, computadores (a menos que sean del laboratorio de la escuela), materiales costosos
+
+9. PROGRESIÓN LÓGICA:
+   - Clase 1: Activación y exploración inicial
+   - Clases 2-N-1: Construcción progresiva con andamiaje decreciente
+   - Clase N: Síntesis, aplicación autónoma y evaluación sumativa
+   - Cada clase DEBE avanzar sobre la anterior
+
+10. VALIDACIÓN DE ESTRUCTURA:
+    - unit: string obligatorio
+    - classes: array mínimo 3, máximo 10
+    - Cada clase DEBE tener: number, objective, duration, materials, assessment, momentosClase, practicasPedagogicas, anticipacionErrores, preguntasClave
+    - duration en formato "X min" (mínimo 20, máximo 150)
+    - materials: array mínimo 2, máximo 12
+
+Contexto: ${baseContext}`,
 
     evaluacion: `Genera una evaluación en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 

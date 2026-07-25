@@ -9,7 +9,7 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
-import { buildPremiumPptModel, type PremiumPresentation } from '../utils/premiumPptModel';
+import { buildPremiumPptModel, type PremiumPresentation, type PremiumInput } from '../utils/premiumPptModel';
 import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
 import PremiumPptPreview from './PremiumPptPreview';
 import PremiumRubricPreview from './PremiumRubricPreview';
@@ -219,7 +219,7 @@ export function FlujoDocenteView() {
             indicators,
             skills,
             additionalContext,
-            aiSlides: res?.slides || undefined,
+            aiSlides: (res?.slides as PremiumInput['aiSlides']) || undefined,
           });
           setPremiumModel(model);
           setPptxLoading(true);
