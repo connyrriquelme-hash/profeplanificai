@@ -48,32 +48,127 @@ function buildMaterialPrompt(type: string, req: GenerateRequest, context: any): 
   ].filter(Boolean).join('\n');
 
   const prompts: Record<string, string> = {
-    guia_estudiante: `Genera una guía de estudiante en formato JSON con:
-{
-  "title": "Título atractivo",
-  "objective": "Objetivo de aprendizaje",
-  "instructions": "Instrucciones claras",
-  "activities": [{"name": "...", "description": "...", "steps": ["..."]}],
-  "vocabulary": ["término: definición"],
-  "selfAssessment": ["preguntas de autoevaluación"]
-}
-Contexto: ${baseContext}
-Requisitos: lenguaje accesible, máximo 3 actividades, contexto chileno/latinoamericano, DUA implícito.`,
+    guia_estudiante: `Genera una guía de estudiante en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
 
-    guia_docente: `Genera una guía docente en formato JSON con:
 {
-  "title": "Título",
-  "objective": "OA completo",
-  "duration": "tiempo estimado",
-  "materials": ["lista de materiales"],
-  "opening": {"activity": "...", "time": "min"},
-  "development": {"activity": "...", "time": "min"},
-  "closure": {"activity": "...", "time": "min"},
-  "differentiation": ["adaptaciones DUA"],
-  "assessment": "criterios de evaluación"
+  "metadata": {
+    "course": "Curso (ej: 3° Básico)",
+    "subject": "Asignatura",
+    "unit": "Nombre de la unidad",
+    "oa": "Código MINEDUC del OA"
+  },
+  "title": "Título atractivo para el estudiante",
+  "student_objective": "Objetivo redactado en lenguaje amigable (ej: 'Aprenderemos a...')",
+  "sections": [
+    {
+      "title": "Inicio",
+      "theory_content": "Texto explicativo breve para activar conocimientos previos",
+      "activities": [
+        {
+          "title": "Nombre de la actividad",
+          "instructions": "Instrucciones paso a paso claras",
+          "materials_needed": ["material 1"],
+          "estimated_time": "10 minutos"
+        }
+      ],
+      "key_question": "Pregunta reflexiva para cerrar la sección (opcional)"
+    },
+    {
+      "title": "Desarrollo",
+      "theory_content": "Contenido teórico principal explicado de forma simple",
+      "activities": [
+        {
+          "title": "Actividad de práctica",
+          "instructions": "Instrucciones detalladas",
+          "estimated_time": "25 minutos"
+        }
+      ]
+    },
+    {
+      "title": "Cierre",
+      "theory_content": "Síntesis de lo aprendido",
+      "activities": [
+        {
+          "title": "Actividad de cierre",
+          "instructions": "Instrucciones para cerrar la clase",
+          "estimated_time": "10 minutos"
+        }
+      ]
+    }
+  ],
+  "vocabulary": [{"term": "Término", "definition": "Definición clara"}],
+  "selfAssessment": ["¿Qué aprendí hoy?", "¿Qué me resultó fácil?", "¿Qué puedo mejorar?"],
+  "instructions": "Instrucciones generales para la guía",
+  "callouts": [{"tipo": "docente", "titulo": "Título", "texto": "Contenido"}],
+  "checklist": ["Elemento 1"]
 }
+
 Contexto: ${baseContext}
-Requisitos: estructura clara inicio-desarrollo-cierre, tiempos realistas, adaptaciones DUA.`,
+REGLAS OBLIGATORIAS:
+- EXACTAMENTE 3 secciones: Inicio, Desarrollo, Cierre.
+- Cada sección DEBE tener theory_content y al menos 1 activity.
+- Lenguaje accesible para el nivel del estudiante.
+- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
+
+    guia_docente: `Genera una guía docente en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+
+{
+  "metadata": {
+    "course": "Curso (ej: 3° Básico)",
+    "subject": "Asignatura",
+    "unit": "Nombre de la unidad",
+    "oa": "Código MINEDUC del OA"
+  },
+  "title": "Guía Docente: Título descriptivo",
+  "student_objective": "Objetivo del estudiante en lenguaje amigable",
+  "sections": [
+    {
+      "title": "Inicio",
+      "theory_content": "Contenido para activar conocimientos previos + metodología sugerida",
+      "activities": [
+        {
+          "title": "Activación de conocimientos",
+          "instructions": "Instrucciones para el docente sobre cómo iniciar la clase",
+          "estimated_time": "15 minutos"
+        }
+      ],
+      "key_question": "Pregunta provocadora para iniciar"
+    },
+    {
+      "title": "Desarrollo",
+      "theory_content": "Contenido teórico principal + metodología de enseñanza",
+      "activities": [
+        {
+          "title": "Explicación y práctica",
+          "instructions": "Instrucciones detalladas para el docente",
+          "estimated_time": "50 minutos"
+        }
+      ]
+    },
+    {
+      "title": "Cierre",
+      "theory_content": "Síntesis y evaluación formativa",
+      "activities": [
+        {
+          "title": "Síntesis y ticket de salida",
+          "instructions": "Instrucciones para cerrar la clase",
+          "estimated_time": "15 minutos"
+        }
+      ]
+    }
+  ],
+  "vocabulary": [{"term": "Término clave", "definition": "Definición para el docente"}],
+  "instructions": "Instrucciones generales para el docente",
+  "callouts": [{"tipo": "docente", "titulo": "Título", "texto": "Contenido"}],
+  "checklist": ["Elemento 1"]
+}
+
+Contexto: ${baseContext}
+REGLAS OBLIGATORIAS:
+- EXACTAMENTE 3 secciones: Inicio, Desarrollo, Cierre.
+- Cada sección DEBE tener theory_content con metodología y al menos 1 activity.
+- Incluir tiempos realistas para cada sección.
+- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
 
     planificacion: `Genera una planificación de unidad didáctica en formato JSON con EXACTAMENTE esta estructura:
 {
@@ -250,6 +345,80 @@ Requisitos: máximo 3 preguntas, breves, alineadas al OA, contexto chileno.`,
 }
 Contexto: ${baseContext}
 Requisitos: 3 principios DUA explícitos, accesible para todos, contexto chileno.`,
+
+    guia_dua: `Genera una guía DUA en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+
+{
+  "metadata": {
+    "course": "Curso (ej: 3° Básico)",
+    "subject": "Asignatura",
+    "unit": "Nombre de la unidad",
+    "oa": "Código MINEDUC del OA"
+  },
+  "title": "Guía DUA: Título descriptivo",
+  "student_objective": "Objetivo del estudiante en lenguaje amigable",
+  "sections": [
+    {
+      "title": "Inicio",
+      "theory_content": "Contenido para activar conocimientos previos",
+      "activities": [
+        {
+          "title": "Actividad de inicio",
+          "instructions": "Instrucciones paso a paso",
+          "representation": "Cómo presentar esta información de forma múltiple (ej: apoyo visual, lectura en voz alta, diagrama)",
+          "expression": "Opciones para que el estudiante demuestre el aprendizaje (ej: dibujar, escribir, grabar audio, construir)",
+          "engagement": "Estrategia explícita para captar el interés o dar autonomía"
+        }
+      ],
+      "key_question": "Pregunta reflexiva para cerrar la sección"
+    },
+    {
+      "title": "Desarrollo",
+      "theory_content": "Contenido teórico principal",
+      "activities": [
+        {
+          "title": "Actividad de desarrollo",
+          "instructions": "Instrucciones detalladas",
+          "representation": "Estrategia DUA de representación",
+          "expression": "Estrategia DUA de expresión",
+          "engagement": "Estrategia DUA de compromiso"
+        }
+      ]
+    },
+    {
+      "title": "Cierre",
+      "theory_content": "Síntesis de lo aprendido",
+      "activities": [
+        {
+          "title": "Actividad de cierre",
+          "instructions": "Instrucciones para cerrar la clase",
+          "representation": "Estrategia DUA de representación",
+          "expression": "Estrategia DUA de expresión",
+          "engagement": "Estrategia DUA de compromiso"
+        }
+      ]
+    }
+  ],
+  "vocabulary": [{"term": "Término", "definition": "Definición clara"}],
+  "selfAssessment": ["¿Qué aprendí hoy?", "¿Qué me resultó fácil?", "¿Qué puedo mejorar?"],
+  "instructions": "Instrucciones generales para la guía",
+  "dua_summary": {
+    "representation": "Resumen de estrategias de representación aplicadas en toda la guía",
+    "expression": "Resumen de opciones de expresión aplicadas en toda la guía",
+    "engagement": "Resumen de estrategias de compromiso aplicadas en toda la guía"
+  },
+  "callouts": [{"tipo": "dua", "titulo": "Título", "texto": "Contenido"}],
+  "checklist": ["Elemento 1"]
+}
+
+Contexto: ${baseContext}
+REGLAS OBLIGATORIAS:
+- CADA actividad DEBE tener los 3 principios DUA: representation, expression, engagement.
+- Los principios DUA deben ser ESPECÍFICOS y OBSERVABLES, no genéricos.
+- EXACTAMENTE 3 secciones: Inicio, Desarrollo, Cierre.
+- Cada sección DEBE tener theory_content y al menos 1 activity.
+- dua_summary DEBE resumir las estrategias DUA de toda la guía.
+- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
   };
 
   return prompts[type] || prompts.guia_estudiante;

@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { PlanificationSchema, validatePlanification, type ValidationResult } from './planificacion';
 import { EvaluacionSchema, validateEvaluacion } from './evaluacion';
 import { RubricaSchema, validateRubrica } from './rubrica';
+import { GuiaEstandarSchema, GuiaDuaSchema, validateGuiaEstandar, validateGuiaDua } from './guia';
 
 // ─── Tipo de validador genérico ───
 
@@ -21,10 +22,9 @@ export const SCHEMA_REGISTRY: Record<string, z.ZodSchema> = {
   planificacion: PlanificationSchema,
   evaluacion: EvaluacionSchema,
   rubrica: RubricaSchema,
-  // Próximamente:
-  // guia_dua: GuiaDuaSchema,
-  // guia_estudiante: GuiaEstudianteSchema,
-  // guia_docente: GuiaDocenteSchema,
+  guia_estudiante: GuiaEstandarSchema,
+  guia_docente: GuiaEstandarSchema,
+  guia_dua: GuiaDuaSchema,
 };
 
 // ─── Registry de validadores con lógica de negocio ───
@@ -33,7 +33,9 @@ export const VALIDATOR_REGISTRY: Record<string, SchemaValidator> = {
   planificacion: validatePlanification,
   evaluacion: validateEvaluacion,
   rubrica: validateRubrica,
-  // Próximamente:
+  guia_estudiante: validateGuiaEstandar,
+  guia_docente: validateGuiaEstandar,
+  guia_dua: validateGuiaDua,
 };
 
 // ─── Helper: obtener schema para un agentType ───
@@ -56,3 +58,5 @@ export { EvaluacionSchema, validateEvaluacion } from './evaluacion';
 export type { Evaluacion, Question, AlternativaQuestion, VFQuestion, DesarrolloQuestion, AnswerKey } from './evaluacion';
 export { RubricaSchema, validateRubrica } from './rubrica';
 export type { Rubrica, RubricLevel, RubricCriterion, RubricMetadata } from './rubrica';
+export { GuiaEstandarSchema, GuiaDuaSchema, validateGuiaEstandar, validateGuiaDua } from './guia';
+export type { GuiaEstandar, GuiaDua, GuideMetadata, GuideSection, DUAGuideSection, StandardActivity, DUAActivity } from './guia';
