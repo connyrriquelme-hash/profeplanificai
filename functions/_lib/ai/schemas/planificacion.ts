@@ -1,10 +1,14 @@
 import { z } from 'zod';
 
 /**
- * Contrato pedagógico estricto para Planificación (Unidad Didáctica).
+ * Contrato pedagógico resiliente para Planificación (Unidad Didáctica).
  *
  * Estructura UDD/PUC: PAI, anticipación de errores, protagonismo del estudiante,
  * momentos de clase con acciones cognitivas, mediación docente, verificación.
+ *
+ * DISEÑO ELÁSTICO: Usa .catch() y .default() en nodos frágiles para que
+ * imperfecciones del LLM no rompan toda la generación. Si un campo anidado
+ * falla, se devuelve un valor por defecto razonable en vez de rechazar el JSON.
  */
 
 // ─── Materiales realistas para escuelas chilenas ───
@@ -26,207 +30,174 @@ const MATERIALES_CHILENOS = [
   'alarma', 'celular', 'tablet', 'cuaderno de actas',
 ];
 
-// ─── Sub-schemas para momentos de clase ───
+// ─── Helpers para normalizar strings del LLM ───
+
+function safeString(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function safeTrim(value: unknown, maxLen: number): string {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, maxLen);
+}
+
+// ─── Sub-schemas para momentos de clase (ELÁSTICOS) ───
 
 const RecursoMomentoSchema = z.object({
-  nombre: z.string().min(3, 'El nombre del recurso es requerido'),
-  tipo: z.enum(['material_fisico', 'digital', 'humano', 'ambiental']).describe('Tipo de recurso'),
-  descripcion: z.string().min(5).optional().describe('Descripción breve del recurso'),
-  imagePrompt: z.string().min(10).optional()
-    .describe('Instrucción visual en inglés para generar imagen del recurso. Sin emojis, sin texto incrustado.'),
+  nombre: z.string().min(1).max(100).catch('Material de aula'),
+  tipo: z.enum(['material_fisico', 'digital', 'humano', 'ambiental']).catch('material_fisico'),
+  descripcion: z.string().max(200).optional(),
+  imagePrompt: z.string().max(300).optional(),
 });
 
 const MomentoClaseSchema = z.object({
-  nombre: z.string()
-    .min(3, 'El nombre del momento es requerido')
-    .max(60)
-    .describe('Nombre del momento (ej: "Activación de conocimientos previos")'),
+  nombre: z.string().max(80).catch('Momento de la clase'),
 
-  accionesEstudiante: z.string()
-    .min(30, 'Las acciones del estudiante deben ser descriptivas (mín. 30 caracteres)')
-    .max(2000)
-    .describe('Qué hará cognitivamente el alumno. NUNCA respuestas pasivas. Ejemplo: "Los estudiantes comparan dos muestras de suelo..."'),
+  accionesEstudiante: z.string().max(2000)
+    .describe('Qué hará cognitivamente el alumno. NUNCA respuestas pasivas.'),
 
-  estrategiasMediacion: z.string()
-    .min(20, 'Las estrategias de mediación deben ser concretas (mín. 20 caracteres)')
-    .max(2000)
-    .describe('Qué hará el docente para andamiar ese aprendizaje: preguntas guía, modelamiento, retroalimentación formativa'),
+  estrategiasMediacion: z.string().max(2000)
+    .describe('Qué hará el docente para andamiar ese aprendizaje'),
 
-  tiempoEsperado: z.string()
-    .regex(/^\d+\s*(minutos?|min|m)$/i, 'Formato inválido. Ejemplo: "15 min"')
-    .refine((val) => {
-      const mins = parseInt(val.match(/\d+/)?.[0] || '0');
-      return mins >= 3 && mins <= 90;
-    }, 'El tiempo debe ser entre 3 y 90 minutos')
+  tiempoEsperado: z.string().max(20).catch('15 min')
     .describe('Estimación en minutos'),
 
-  recursos: z.array(RecursoMomentoSchema)
-    .min(1, 'Debe incluir al menos 1 recurso')
-    .max(8)
-    .describe('Materiales necesarios para este momento'),
+  recursos: z.array(RecursoMomentoSchema).max(8).default([
+    { nombre: 'Cuaderno del estudiante', tipo: 'material_fisico' },
+  ]),
 
-  medioVerificacion: z.string()
-    .min(15, 'El medio de verificación debe ser específico (mín. 15 caracteres)')
-    .max(1000)
-    .describe('Cómo se evidenciará el aprendizaje en ese momento específico (evidencias/indicadores observables)'),
+  medioVerificacion: z.string().max(500).catch('Participación oral y escrita en cuaderno'),
 
-  imagePrompt: z.string().min(15).optional()
-    .describe('Prompt visual en inglés para ilustrar este momento de la clase. Sin emojis, estilo ilustración educativa limpia.'),
+  imagePrompt: z.string().max(300).optional(),
 });
 
-// ─── Prácticas pedagógicas ───
+// ─── Prácticas pedagógicas (ELÁSTICO) ───
 
 const PracticasPedagogicasSchema = z.object({
-  practicasAltoImpacto: z.array(z.string().min(10))
-    .min(1, 'Debe incluir al menos 1 Práctica de Alto Impacto (PAI)')
-    .max(5)
-    .describe('PAI seleccionadas: evaluación formativa, retroalimentación específica, comprensión profunda, organización del aula, etc.'),
+  practicasAltoImpacto: z.array(z.string().min(1).max(200)).min(1).max(5)
+    .catch(['Evaluación formativa mediante observación directa']),
 
-  practicasEticas: z.array(z.string().min(10))
-    .min(1, 'Debe incluir al menos 1 práctica ética')
-    .max(5)
-    .describe('Prácticas éticas: respeto a la diversidad, igualdad de oportunidades, formación en valores'),
+  practicasEticas: z.array(z.string().min(1).max(200)).min(1).max(5)
+    .catch(['Respeto a los ritmos de aprendizaje de cada estudiante']),
 
-  justificacion: z.string()
-    .min(20, 'Justifique por qué estas PAI son apropiadas para esta clase')
-    .max(500)
-    .optional()
-    .describe('Breve justificación de la selección de PAI para el contexto específico'),
+  justificacion: z.string().max(500).optional(),
 });
 
-// ─── Anticipación de errores ───
+// ─── Anticipación de errores (ELÁSTICO) ───
+
+const DificultadSchema = z.object({
+  dificultad: z.string().max(200).catch('Dificultad conceptual por complejidad del tema'),
+  tipo: z.enum(['conceptual', 'procedimental', 'actitudinal', 'linguistico']).catch('conceptual'),
+  probabilidad: z.enum(['alta', 'media', 'baja']).catch('media'),
+});
 
 const AnticipacionErroresSchema = z.object({
-  posiblesDificultades: z.array(z.object({
-    dificultad: z.string().min(10).max(200)
-      .describe('Dificultad conceptual o procedimental esperada'),
-    tipo: z.enum(['conceptual', 'procedimental', 'actitudinal', 'linguistico'])
-      .describe('Tipo de dificultad'),
-    probabilidad: z.enum(['alta', 'media', 'baja'])
-      .describe('Probabilidad de que ocurra'),
-  }))
-    .min(1, 'Debe anticipar al menos 1 dificultad')
-    .max(6)
-    .describe('Errores conceptuales o procedimentales esperados según el contenido'),
+  posiblesDificultades: z.array(DificultadSchema).min(1).max(6)
+    .catch([{ dificultad: 'Dificultad conceptual por complejidad del tema', tipo: 'conceptual', probabilidad: 'media' }]),
 
-  estrategiaAbordaje: z.string()
-    .min(30, 'La estrategia de abordaje debe ser concreta (mín. 30 caracteres)')
-    .max(1500)
-    .describe('Cómo el docente usará el error como oportunidad de aprendizaje: diagnóstico, andamiaje, reenseñanza'),
+  estrategiaAbordaje: z.string().max(1500)
+    .catch('El docente anticipa dificultades usando ejemplos concretos del entorno del estudiante, contrastando conceptos y usando organizadores gráficos para hacer visible la diferencia.'),
 });
 
-// ─── Preguntas clave ───
+// ─── Preguntas clave (ELÁSTICO) ───
 
-const PreguntasClaveSchema = z.array(z.object({
-  pregunta: z.string().min(15).max(300)
-    .describe('Pregunta abierta, analítica o reflexiva (NUNCA de sí/no)'),
-  tipo: z.enum(['activacion', 'comprension', 'analisis', 'sintesis', 'evaluacion', 'metacognitiva'])
-    .describe('Nivel cognitivo de la pregunta (taxonomía de Bloom)'),
-  momento: z.string().min(3).max(60)
-    .describe('Momento de la clase donde se formula'),
-}))
-  .min(3, 'Debe incluir al menos 3 preguntas clave')
-  .max(10)
-  .describe('Preguntas diseñadas para hacer visible el pensamiento del estudiante');
+const PreguntaClaveSchema = z.object({
+  pregunta: z.string().max(300)
+    .catch('¿Qué observan en esta situación y por qué creen que ocurre?'),
+  tipo: z.enum(['activacion', 'comprension', 'analisis', 'sintesis', 'evaluacion', 'metacognitiva']).catch('analisis'),
+  momento: z.string().max(60).catch('Desarrollo'),
+});
+
+const PreguntasClaveSchema = z.array(PreguntaClaveSchema).max(10)
+  .default([
+    { pregunta: '¿Qué saben sobre este tema y cómo lo aprendieron?', tipo: 'activacion', momento: 'Inicio' },
+    { pregunta: '¿Qué diferencias o semejanzas encuentran en esta situación?', tipo: 'analisis', momento: 'Desarrollo' },
+    { pregunta: '¿Cómo explicarían lo aprendido a alguien que no estuvo en clase?', tipo: 'sintesis', momento: 'Cierre' },
+  ]);
 
 // ─── Clase individual dentro de la planificación ───
 
 export const PlanificationClassSchema = z.object({
-  number: z.number()
-    .int('El número de clase debe ser entero')
-    .positive('El número debe ser positivo'),
+  number: z.number().int().positive().catch(1),
 
-  objective: z.string()
-    .min(15, 'El objetivo debe ser descriptivo (mín. 15 caracteres)')
-    .max(300, 'El objetivo es demasiado largo')
-    .describe('Objetivo de aprendizaje específico alineado al OA proporcionado'),
+  objective: z.string().max(300)
+    .catch('Objetivo de aprendizaje alineado al OA'),
 
-  // Momentos de clase estructurados (nueva estructura UDD/PUC)
+  // Momentos de clase estructurados
   momentosClase: z.object({
-    inicio: MomentoClaseSchema
-      .describe('Momento de activación: conexión con conocimientos previos, motivación, exploración inicial'),
-    desarrollo: MomentoClaseSchema
-      .describe('Momento de construcción: modelamiento, práctica guiada, trabajo colaborativo, profundización'),
-    cierre: MomentoClaseSchema
-      .describe('Momento de síntesis: metacognición, ticket de salida, retroalimentación, conexión con próxima clase'),
-  })
-    .describe('Estructura estricta de los 3 momentos de la clase'),
+    inicio: MomentoClaseSchema.catch({
+      nombre: 'Activación de conocimientos previos',
+      accionesEstudiante: 'Los estudiantes exploran una situación del entorno local que conecta con el tema de la clase.',
+      estrategiasMediacion: 'El docente presenta una imagen o situación motivadora, formula una pregunta abierta y escucha las primeras ideas.',
+      tiempoEsperado: '15 min',
+      recursos: [{ nombre: 'Pizarrón', tipo: 'material_fisico' }],
+      medioVerificacion: 'Participación oral y escritura inicial en cuaderno',
+    }),
+    desarrollo: MomentoClaseSchema.catch({
+      nombre: 'Construcción con andamiaje',
+      accionesEstudiante: 'Los estudiantes trabajan en parejas o pequeños grupos para resolver una tarea guiada relacionada con el OA.',
+      estrategiasMediacion: 'El docente modela la tarea con un ejemplo, libera la práctica en parejas y retroalimenta circulando.',
+      tiempoEsperado: '50 min',
+      recursos: [{ nombre: 'Fichas de trabajo', tipo: 'material_fisico' }],
+      medioVerificacion: 'Producto grupal y observación directa del trabajo en equipo',
+    }),
+    cierre: MomentoClaseSchema.catch({
+      nombre: 'Síntesis y metacognición',
+      accionesEstudiante: 'Los estudiantes escriben un ticket de salida reflexionando sobre lo aprendido.',
+      estrategiasMediacion: 'El docente recoge los tickets, destaca 2-3 ejemplos y cierra conectando con la próxima clase.',
+      tiempoEsperado: '15 min',
+      recursos: [{ nombre: 'Fichas de ticket de salida', tipo: 'material_fisico' }],
+      medioVerificacion: 'Tickets de salida escritos',
+    }),
+  }),
 
   // Prácticas de alto impacto
-  practicasPedagogicas: PracticasPedagogicasSchema
-    .describe('PAI y prácticas éticas aplicadas en esta clase'),
+  practicasPedagogicas: PracticasPedagogicasSchema,
 
   // Anticipación de errores
-  anticipacionErrores: AnticipacionErroresSchema
-    .describe('Dificultades esperadas y estrategia de abordaje'),
+  anticipacionErrores: AnticipacionErroresSchema,
 
   // Preguntas clave
-  preguntasClave: PreguntasClaveSchema
-    .describe('Preguntas para hacer visible el pensamiento del estudiante'),
+  preguntasClave: PreguntasClaveSchema,
 
   // Evaluación
-  assessment: z.string()
-    .min(15, 'La evaluación debe ser descriptiva (mín. 15 caracteres)')
-    .max(500, 'La evaluación es demasiado larga')
-    .describe('Criterio de logro observable y evidencia esperada del estudiante'),
+  assessment: z.string().max(500)
+    .catch('Criterio de logro observable alineado al OA'),
 
   // DUA
-  duaAccommodations: z.array(z.string().min(10))
-    .optional()
-    .describe('Ajustes DUA: representación, acción/expresión, implicación'),
+  duaAccommodations: z.array(z.string().max(200)).optional(),
 
   // Backward compatibility: campos de texto plano (opcionales)
-  opening: z.string().optional()
-    .describe('[Legacy] Texto del momento de inicio'),
-  development: z.string().optional()
-    .describe('[Legacy] Texto del momento de desarrollo'),
-  closure: z.string().optional()
-    .describe('[Legacy] Texto del momento de cierre'),
+  opening: z.string().optional(),
+  development: z.string().optional(),
+  closure: z.string().optional(),
 
-  duration: z.string()
-    .regex(/^\d+\s*(minutos?|min|m)$/i, 'Formato inválido. Ejemplo: "90 min"')
-    .refine((val) => {
-      const mins = parseInt(val.match(/\d+/)?.[0] || '0');
-      return mins >= 20 && mins <= 150;
-    }, 'La duración debe ser entre 20 y 150 minutos')
-    .describe('Duración total de la clase'),
+  duration: z.string().max(20).catch('90 min'),
 
-  materials: z.array(z.string().min(3, 'Cada material debe tener nombre'))
-    .min(2, 'Debe incluir al menos 2 materiales')
-    .max(12, 'Máximo 12 materiales por clase')
-    .describe('Materiales realistas disponibles en escuelas chilenas'),
+  materials: z.array(z.string().min(1).max(100)).min(1).max(12)
+    .catch(['Cuaderno del estudiante', 'Pizarrón y tiza']),
 });
 
-// ─── Esquema principal de Planificación ───
+// ─── Esquema principal de Planificación (ELÁSTICO) ───
 
 export const PlanificationSchema = z.object({
-  unit: z.string()
-    .min(5, 'El nombre de la unidad es requerido')
-    .max(120, 'Máximo 120 caracteres para el nombre de la unidad')
-    .describe('Nombre descriptivo de la unidad didáctica'),
+  unit: z.string().max(120)
+    .catch('Unidad Didáctica'),
 
   classes: z.array(PlanificationClassSchema)
-    .min(3, 'Debe haber al menos 3 clases en la unidad')
-    .max(10, 'Máximo 10 clases por unidad')
-    .describe('Lista de clases progresivas de la unidad'),
+    .min(1, 'Debe haber al menos 1 clase')
+    .max(10)
+    .catch([]),
 
-  methodology: z.string()
-    .min(5, 'La metodología es requerida')
-    .max(200, 'Máximo 200 caracteres para la metodología')
-    .describe('Metodología principal: ABP, Aprendizaje Activo, Investigación, etc.'),
+  methodology: z.string().max(200)
+    .catch('Metodología activa'),
 
-  totalDuration: z.string()
-    .optional()
-    .describe('Duración total estimada de la unidad'),
+  totalDuration: z.string().optional(),
 
-  dua: z.array(z.string().min(10))
-    .optional()
-    .describe('Adaptaciones DUA generales para la unidad'),
+  dua: z.array(z.string().max(200)).optional(),
 
-  evaluation: z.string()
-    .min(10, 'Tipo de evaluación requerido')
-    .max(500, 'La evaluación es demasiado larga')
-    .describe('Tipo de evaluación: formativa, sumativa, diagnóstica, mixta'),
+  evaluation: z.string().max(500)
+    .catch('Evaluación formativa'),
 
   // Extras visuales (opcionales para premium)
   tablas: z.array(z.object({
@@ -249,8 +220,7 @@ export const PlanificationSchema = z.object({
     alt: z.string().min(5),
     source: z.string(),
     attribution: z.string().optional(),
-  })).optional()
-    .describe('Imágenes generadas automáticamente a partir de imagePrompt en momentosClase'),
+  })).optional(),
 });
 
 // ─── Tipos TypeScript inferidos ───
@@ -285,7 +255,7 @@ export function validatePlanification(data: unknown): ValidationResult {
     };
   }
 
-  // ── Validaciones de negocio adicionales ──
+  // ── Validaciones de negocio (solo warnings, no bloquea) ──
   const warnings: string[] = [];
   const validated = result.data;
 
@@ -296,10 +266,10 @@ export function validatePlanification(data: unknown): ValidationResult {
     totalMinutes += mins;
 
     if (mins < 30) {
-      warnings.push(`Clase ${cls.number}: duración corta (${mins} min) — considere 40+ min para desarrollo profundo`);
+      warnings.push(`Clase ${cls.number}: duración corta (${mins} min) — considere 40+ min`);
     }
     if (mins > 120) {
-      warnings.push(`Clase ${cls.number}: duración excesiva (${mins} min) — considere dividir en dos sesiones`);
+      warnings.push(`Clase ${cls.number}: duración excesiva (${mins} min) — considere dividir`);
     }
 
     // Verificar que momentos tengan tiempo coherente
@@ -308,23 +278,25 @@ export function validatePlanification(data: unknown): ValidationResult {
     const mCierre = parseInt(cls.momentosClase.cierre.tiempoEsperado.match(/\d+/)?.[0] || '0');
     const sumaMomentos = mInicio + mDesarrollo + mCierre;
 
-    if (Math.abs(sumaMomentos - mins) > mins * 0.3) {
+    if (mins > 0 && Math.abs(sumaMomentos - mins) > mins * 0.4) {
       warnings.push(`Clase ${cls.number}: suma de momentos (${sumaMomentos} min) no coincide con duración total (${mins} min)`);
     }
 
-    // Verificar que haya imagePrompt en al menos 2 momentos
+    // imagePrompt como warning
     const conImage = [cls.momentosClase.inicio, cls.momentosClase.desarrollo, cls.momentosClase.cierre]
       .filter(m => m.imagePrompt && m.imagePrompt.length > 10).length;
     if (conImage < 1) {
-      warnings.push(`Clase ${cls.number}: considere agregar imagePrompt en al menos 1 momento para enriquecer visualmente`);
+      warnings.push(`Clase ${cls.number}: considere agregar imagePrompt en al menos 1 momento`);
     }
   }
 
-  // 2. Verificar progresión lógica (objetivos distintos)
-  const objectives = validated.classes.map((c) => c.objective.toLowerCase().slice(0, 50));
-  const uniqueObjectives = new Set(objectives);
-  if (uniqueObjectives.size < objectives.length * 0.7) {
-    warnings.push('Algunas clases tienen objetivos muy similares — verifique la progresión de aprendizaje');
+  // 2. Progresión lógica (objetivos distintos)
+  if (validated.classes.length > 1) {
+    const objectives = validated.classes.map((c) => c.objective.toLowerCase().slice(0, 50));
+    const uniqueObjectives = new Set(objectives);
+    if (uniqueObjectives.size < objectives.length * 0.6) {
+      warnings.push('Algunas clases tienen objetivos muy similares — verifique la progresión');
+    }
   }
 
   // 3. Materiales realistas para Chile
@@ -333,31 +305,18 @@ export function validatePlanification(data: unknown): ValidationResult {
       const matLower = mat.toLowerCase();
       const isRealistic = MATERIALES_CHILENOS.some((m) => matLower.includes(m));
       if (!isRealistic && matLower.length > 3) {
-        warnings.push(`Clase ${cls.number}: material "${mat}" podría no estar disponible en todas las escuelas chilenas`);
+        warnings.push(`Clase ${cls.number}: material "${mat}" podría no estar en escuelas chilenas`);
       }
     }
   }
 
-  // 4. TotalDuration coherente
-  if (validated.totalDuration) {
-    const stated = parseInt(validated.totalDuration.match(/\d+/)?.[0] || '0');
-    if (stated > 0 && Math.abs(stated - totalMinutes) > totalMinutes * 0.3) {
-      warnings.push(
-        `Duración total declarada (${validated.totalDuration}) no coincide con la suma de clases (${totalMinutes} min)`,
-      );
-    }
-  }
-
-  // 5. Verificar que cada clase tenga PAI
+  // 4. PAI mínimo
   for (const cls of validated.classes) {
     if (cls.practicasPedagogicas.practicasAltoImpacto.length === 0) {
-      warnings.push(`Clase ${cls.number}: no tiene Prácticas de Alto Impacto (PAI) definidas`);
-    }
-    if (cls.anticipacionErrores.posiblesDificultades.length === 0) {
-      warnings.push(`Clase ${cls.number}: no tiene anticipación de errores — el error es una oportunidad de aprendizaje`);
+      warnings.push(`Clase ${cls.number}: sin PAI definidas`);
     }
     if (cls.preguntasClave.length < 2) {
-      warnings.push(`Clase ${cls.number}: tiene menos de 2 preguntas clave — agregue más para hacer visible el pensamiento`);
+      warnings.push(`Clase ${cls.number}: menos de 2 preguntas clave`);
     }
   }
 

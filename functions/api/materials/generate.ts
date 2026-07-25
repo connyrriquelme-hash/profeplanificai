@@ -170,141 +170,104 @@ REGLAS OBLIGATORIAS:
 - Incluir tiempos realistas para cada sección.
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
 
-    planificacion: `Genera una planificación de unidad didáctica en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura. Respetas la arquitectura pedagógica UDD/PUC:
+    planificacion: `═══ PRIORIDAD ABSOLUTA: PROHIBIDO EL USO DE TEXTO GENÉRICO ═══
+Cada "accionesEstudiante" y "estrategiasMediacion" DEBE estar INJECTADA con el contenido ESPECÍFICO del OA proporcionado.
+Si el OA trata sobre "fracciones", NO escribas "Los estudiantes resuelven un problema". DEBES escribir: "Los estudiantes suman fracciones con distinto denominador, buscando el MCM y simplificando el resultado."
+Si el OA trata sobre "fotosíntesis", NO escribas "Los estudiantes observan una planta". DEBES escribir: "Los estudiantes identifican en una lámina las partes de la planta involucradas en la fotosíntesis: hoja, tallo y raíz."
+Cada nodo del JSON DEBE contener el vocabulario específico del OA, los conceptos clave y los procedimientos concretos. NUNCA uses frases genéricas como "resuelve un problema", "completa una actividad", "analiza la información".
+
+Genera una planificación de unidad didáctica en formato JSON válido. Respetas la arquitectura pedagógica UDD/PUC.
+
+═══ EJEMPLO DE ESTRUCTURA (few-shot) ═══
+Muestra exactamente cómo se ve el JSON. Tu respuesta DEBE seguir esta forma exacta, pero con contenido específico del OA:
 
 {
-  "unit": "Nombre descriptivo de la unidad didáctica",
+  "unit": "Suma y resta de fracciones con distinto denominador",
   "classes": [
     {
       "number": 1,
-      "objective": "Objetivo de aprendizaje específico alineado al OA proporcionado",
+      "objective": "Sumar fracciones con distinto denominador aplicando el MCM en problemas del entorno",
       "duration": "90 min",
-      "materials": ["Cuaderno del estudiante", "Pizarrón y tiza", "Fichas de trabajo impresas"],
-      "assessment": "Criterio de logro observable y evidencia esperada del estudiante",
+      "materials": ["Cuaderno rayado", "Pizarrón y tiza", "Fichas de fracciones impresas", "Regla"],
+      "assessment": "El estudiante resuelve correctamente al menos 3 de 4 problemas de suma de fracciones con distinto denominador, mostrando el procedimiento de búsqueda de MCM",
       "momentosClase": {
         "inicio": {
-          "nombre": "Activación de conocimientos previos",
-          "accionesEstudiante": "Los estudiantes observan una imagen del entorno local y escriben en su cuaderno lo que recuerdan sobre el tema. Luego, conversan con un compañero sobre sus ideas.",
-          "estrategiasMediacion": "El docente proyecta una imagen del barrio, formula una pregunta abierta, circula entre las mesas escuchando respuestas y realiza preguntas socráticas para profundizar.",
+          "nombre": "Activación: ¿Qué sabemos de las fracciones?",
+          "accionesEstudiante": "Los estudiantes observan dos rectas de chocolate de diferentes tamaños marcadas en partes desiguales y escriben en su cuaderno: ¿cuánto representa cada trozo? ¿Se pueden sumar directamente?",
+          "estrategiasMediacion": "El docente dibuja las rectas en el pizarrón, pregunta '¿Qué pasa si intentamos sumar 1/3 + 1/4 directamente?' y guía la discusión hacia la necesidad de un denominador común",
           "tiempoEsperado": "15 min",
-          "recursos": [
-            {"nombre": "Proyector", "tipo": "material_fisico", "imagePrompt": "Classroom projector screen showing a Chilean neighborhood landscape, clean educational illustration, no text no watermark"},
-            {"nombre": "Cuaderno rayado", "tipo": "material_fisico"}
-          ],
-          "medioVerificacion": "Observación directa: participación oral y escritura en cuaderno",
-          "imagePrompt": "Chilean classroom teacher projecting an image on screen while elementary students write in notebooks, warm educational illustration style, clean composition no text no watermark"
+          "recursos": [{"nombre": "Pizarrón", "tipo": "material_fisico"}, {"nombre": "Tiza", "tipo": "material_fisico"}],
+          "medioVerificacion": "Escritura en cuaderno con respuesta inicial y participación oral en la discusión",
+          "imagePrompt": "Chilean classroom teacher drawing fraction bars on blackboard while elementary students write in notebooks, warm educational illustration, clean no text no watermark"
         },
         "desarrollo": {
-          "nombre": "Construcción con andamiaje",
-          "accionesEstudiante": "Los estudiantes leen un texto breve en parejas, subrayan ideas clave y elaboran un organizador gráfico en papelógrafo compartido.",
-          "estrategiasMediacion": "El docente modela la lectura guiada con un ejemplo, luego libera la práctica en parejas. Retroalimenta formativamente circulando y preguntando: ¿por qué creen que eso es importante?",
+          "nombre": "Construcción: Hallar el MCM y sumar",
+          "accionesEstudiante": "Los estudiantes, en parejas, resuelven 4 ejercicios de suma de fracciones con distinto denominador: primero buscan el MCM de los denominadores, luego convierten las fracciones y finalmente suman los numeradores",
+          "estrategiasMediacion": "El docente modela el primer ejercicio en el pizarrón mostrando cada paso (MCM, conversión, suma), luego circula entre las parejas verificando el procedimiento y retroalimentando con preguntas: ¿cómo encontraste el MCM? ¿por qué multiplicas el numerador?",
           "tiempoEsperado": "50 min",
-          "recursos": [
-            {"nombre": "Textos impresos", "tipo": "material_fisico"},
-            {"nombre": "Papelógrafo", "tipo": "material_fisico"},
-            {"nombre": "Marcadores de colores", "tipo": "material_fisico"}
-          ],
-          "medioVerificacion": "Producto grupal: organizador gráfico con ideas clave del texto",
-          "imagePrompt": "Elementary students working in pairs at desks with printed texts and colorful markers making a graphic organizer on poster paper, Chilean classroom setting, warm educational illustration, clean no text no watermark"
+          "recursos": [{"nombre": "Fichas de fracciones", "tipo": "material_fisico"}, {"nombre": "Regla", "tipo": "material_fisico"}],
+          "medioVerificacion": "Producto en parejas: 4 ejercicios resueltos con procedimiento visible (MCM, conversión, suma)",
+          "imagePrompt": "Two Chilean elementary students working together at desk with fraction worksheets and ruler, warm educational illustration style, clean composition no text no watermark"
         },
         "cierre": {
-          "nombre": "Síntesis y metacognición",
-          "accionesEstudiante": "Los estudiantes escriben un ticket de salida respondiendo: ¿Qué aprendí hoy? ¿Qué me falta por entender? ¿Qué haré diferente la próxima vez?",
-          "estrategiasMediacion": "El docente recoge los tickets, lee 2-3 ejemplos en voz alta y cierra conectando con la próxima clase.",
+          "nombre": "Síntesis: ¿Para qué nos sirve sumar fracciones?",
+          "accionesEstudiante": "Los estudiantes escriben un ticket de salida respondiendo: ¿En qué situación de la vida real necesitarías sumar fracciones? Resuelve un ejemplo diferente al de la clase",
+          "estrategiasMediacion": "El docente recoge los tickets, lee 2 ejemplos de situaciones reales mencionadas por los estudiantes y cierra conectando con la próxima clase (resta de fracciones)",
           "tiempoEsperado": "15 min",
-          "recursos": [
-            {"nombre": "Fichas de ticket de salida", "tipo": "material_fisico"}
-          ],
-          "medioVerificacion": "Tickets de salida escritos por el estudiante",
-          "imagePrompt": "Close-up of student hands writing on a small exit ticket card at a classroom desk, Chilean elementary school setting, warm educational illustration, clean no text no watermark"
+          "recursos": [{"nombre": "Fichas de ticket de salida", "tipo": "material_fisico"}],
+          "medioVerificacion": "Ticket de salida escrito con situación real y ejemplo resuelto",
+          "imagePrompt": "Close-up of student hands writing on a small exit ticket card, warm educational illustration, clean no text no watermark"
         }
       },
       "practicasPedagogicas": {
-        "practicasAltoImpacto": ["Evaluación formativa mediante observación directa y retroalimentación en el momento"],
-        "practicasEticas": ["Respeto a los ritmos de aprendizaje de cada estudiante"],
-        "justificacion": "La evaluación formativa permite ajustar la enseñanza en tiempo real"
+        "practicasAltoImpacto": ["Evaluación formativa: observación del procedimiento durante la práctica en parejas"],
+        "practicasEticas": ["Respeto a los ritmos: los estudiantes avanzan a su propio paso con ejercicios progresivos"],
+        "justificacion": "La evaluación formativa permite ajustar el andamiaje durante la práctica"
       },
       "anticipacionErrores": {
         "posiblesDificultades": [
-          {"dificultad": "Confundir conceptos clave del texto", "tipo": "conceptual", "probabilidad": "alta"}
+          {"dificultad": "No saber encontrar el MCM de dos números", "tipo": "procedimental", "probabilidad": "alta"},
+          {"dificultad": "Sumar directamente los denominadores en vez de usar el MCM", "tipo": "conceptual", "probabilidad": "media"}
         ],
-        "estrategiaAbordaje": "El docente anticipa la confusión usando un ejemplo concreto del entorno del estudiante, contrastando el concepto nuevo con el conocimiento previo, y usando un organizador gráfico para hacer visible la diferencia."
+        "estrategiaAbordaje": "El docente anticipa la confusión mostrando explícitamente por qué 1/3 + 1/4 no es 2/7, usando las rectas de chocolate como modelo concreto antes de pasar al procedimiento abstracto"
       },
       "preguntasClave": [
-        {"pregunta": "¿Por qué creen ustedes que es importante este tema para nuestra comunidad?", "tipo": "activacion", "momento": "Inicio"},
-        {"pregunta": "¿Qué diferencias encontraron entre las dos ideas del texto?", "tipo": "analisis", "momento": "Desarrollo"},
-        {"pregunta": "Si tuvieran que explicarle a alguien que no estuvo en clase, ¿cómo lo harían?", "tipo": "sintesis", "momento": "Cierre"}
+        {"pregunta": "¿Por qué no podemos sumar 1/3 + 1/4 directamente como 2/7?", "tipo": "activacion", "momento": "Inicio"},
+        {"pregunta": "¿Qué representan los denominadores en una fracción y por qué deben ser iguales para sumar?", "tipo": "analisis", "momento": "Desarrollo"},
+        {"pregunta": "¿En qué situaciones del supermercado o la cocina necesitarías sumar fracciones?", "tipo": "sintesis", "momento": "Cierre"}
       ]
     }
   ],
-  "methodology": "Metodología principal: ABP, Aprendizaje Activo, Investigación, etc.",
+  "methodology": "Aprendizaje Activo con andamiaje progresivo",
   "totalDuration": "270 min",
-  "dua": ["Ajuste de representación: textos con imágenes y organizadores gráficos"],
-  "evaluation": "Tipo de evaluación: formativa, sumativa, diagnóstica o mixta"
+  "evaluation": "Evaluación formativa con rúbrica de procedimiento"
 }
 
-═══ REGLAS PEDAGÓGICAS ESTRICTAS (UDD/PUC) ═══
+═══ FIN DEL EJEMPLO ═══
 
-1. EXTRACCIÓN: Separa EXPLÍCITAMENTE la habilidad del contenido.
-   - HABILIDAD: qué saber hacer (ej: "Comparar fuentes primarias y secundarias")
-   - CONTENIDO: qué saber (ej: "La independencia de Chile y sus causas")
-   - El objetivo DEBE reflejar AMBOS: "Comparar fuentes primarias y secundarias sobre la independencia de Chile"
+REGLAS PEDAGÓGICAS (UDD/PUC):
 
-2. PROTAGONISMO DEL ESTUDIANTE:
-   - accionesEstudiante: NUNCA incluir acciones del docente. El protagonista es el estudiante.
-   - Escrito en tercera persona plural: "Los estudiantes...", "Los alumnos...", "El grupo..."
-   - Verbos cognitivos de alto nivel: analizar, comparar, evaluar, crear, resolver, argumentar, diseñar, proponer
-   - NUNCA verbos pasivos: "escuchar", "observar", "copiar", "leer" (sin análisis)
+1. PROHIBICIÓN ABSOLUTA DE TEXTO GENÉRICO: Cada accionesEstudiante DEBE mencionar el concepto específico del OA. NO uses "resuelve problemas" — USA "suma fracciones con distinto denominador buscando el MCM". NO uses "analiza la información" — USA "identifica las partes de la planta involucradas en la fotosíntesis".
 
-3. ANTEPCIÓN DE ERRORES:
-   - anticipacionErrores: DEBE incluir al menos 1 dificultad conceptual, procedimental o actitudinal
-   - tipo: "conceptual" | "procedimental" | "actitudinal" | "linguistico"
-   - probabilidad: "alta" | "media" | "baja"
-   - estrategiaAbordaje: Cómo el docente usará el error como oportunidad de aprendizaje
+2. PROTAGONISMO: accionesEstudiante en tercera persona plural. NUNCA incluir acciones del docente en ese campo. Verbos cognitivos de alto nivel: comparar, evaluar, crear, argumentar, diseñar, proponer.
 
-4. PREGUNTAS CLAVE:
-   - Cada clase DEBE tener al menos 3 preguntas clave
-   - Niveles cognitivos: activacion, comprension, analisis, sintesis, evaluacion, metacognitiva
-   - NUNCA preguntas de sí/no. Siempre abiertas, analíticas, reflexivas
-   - Cada pregunta DEBE tener un "momento" indicando cuándo se formula
+3. ESTRUCTURA POR CLASE: number, objective, duration, materials, assessment, momentosClase (inicio/desarrollo/cierre con accionesEstudiante, estrategiasMediacion, tiempoEsperado, recursos, medioVerificacion), practicasPedagogicas, anticipacionErrores, preguntasClave.
 
-5. MOMENTOS DE CLASE (estructura estricta):
-   - 3 momentos obligatorios: inicio, desarrollo, cierre
-   - Cada momento DEBE tener: nombre, accionesEstudiante, estrategiasMediacion, tiempoEsperado, recursos, medioVerificacion
-   - tiempoEsperado en formato "X min" (mínimo 5 min, máximo 90 min)
-   - La suma de tiempos DEBE ser coherente con la duración total de la clase
-   - recursos: al menos 1 recurso por momento, con tipo (material_fisico, digital, humano, ambiental)
-   - medioVerificación: evidencias observables del aprendizaje en ese momento
+4. MOMENTOS: tiempoEsperado en "X min" (5-90). La suma DEBE ser coherente con duration. Cada momento DEBE tener al menos 1 recurso.
 
-6. IMAGEPROMPT (obligatorio para visualización premium):
-   - Cada momento DEBE tener un imagePrompt descriptivo
-   - En INGLÉS, estilo ilustración educativa limpia
-   - Sin emojis, sin texto incrustado, sin marcas de agua
-   - Describe la escena: qué, dónde, cómo, estilo visual
-   - Ejemplo: "Chilean classroom teacher projecting an image on screen while elementary students write in notebooks, warm educational illustration style, clean composition no text no watermark"
+5. IMAGEPROMPT: En INGLÉS, ilustración educativa limpia. Sin emojis, sin texto incrustado. Ejemplo: "Chilean elementary students working with fraction worksheets at desk, warm educational illustration, clean no text no watermark".
 
-7. PRÁCTICAS DE ALTO IMPACTO (PAI):
-   - Cada clase DEBE tener al menos 1 PAI
-   - PAI comunes: evaluación formativa, retroalimentación específica, comprensión profunda, organización del aula, instrucción efectiva, tutoría entre pares
-   - DEBE incluir prácticas éticas (respeto a diversidad, igualdad de oportunidades, formación en valores)
+6. PAI: Al menos 1 práctica de alto impacto + 1 ética por clase.
 
-8. MATERIALES REALISTAS PARA CHILE:
-   - SOLO materiales que existan en escuelas chilenas
-   - Permitidos: cuaderno, pizarrón, tiza, fichas, marcadores, colores, lápiz, goma, tijeras, pegamento, hojas, papel bond, cartulina, atlas, mapa, globo terráqueo, calculadora, regla, compás, bandejita de semillas, tierra
-   - PROHIBIDOS: tablets, computadores (a menos que sean del laboratorio de la escuela), materiales costosos
+7. ANTEPCIÓN DE ERRORES: Al menos 1 dificultad conceptual o procedimental con probabilidad (alta/media/baja) + estrategiaAbordaje concreta.
 
-9. PROGRESIÓN LÓGICA:
-   - Clase 1: Activación y exploración inicial
-   - Clases 2-N-1: Construcción progresiva con andamiaje decreciente
-   - Clase N: Síntesis, aplicación autónoma y evaluación sumativa
-   - Cada clase DEBE avanzar sobre la anterior
+8. PREGUNTAS CLAVE: Al menos 3 por clase. Niveles: activacion, comprension, analisis, sintesis, evaluacion, metacognitiva. NUNCA preguntas de sí/no.
 
-10. VALIDACIÓN DE ESTRUCTURA:
-    - unit: string obligatorio
-    - classes: array mínimo 3, máximo 10
-    - Cada clase DEBE tener: number, objective, duration, materials, assessment, momentosClase, practicasPedagogicas, anticipacionErrores, preguntasClave
-    - duration en formato "X min" (mínimo 20, máximo 150)
-    - materials: array mínimo 2, máximo 12
+9. MATERIALES: SOLO existentes en escuelas chilenas. PROHIBIDOS tablets, computadores caros.
+
+10. PROGRESIÓN: Clase 1 = activación, Clases 2-N-1 = construcción progresiva, Clase N = síntesis y evaluación.
+
+11. MÍNIMO 3 clases, máximo 10. Cada clase avanza sobre la anterior.
 
 Contexto: ${baseContext}`,
 
