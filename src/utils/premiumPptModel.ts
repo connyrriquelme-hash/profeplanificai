@@ -84,6 +84,23 @@ export type PremiumInput = {
   indicators?: string[];
   skills?: string[];
   additionalContext?: string;
+  aiSlides?: Array<{
+    type?: string;
+    layout?: string;
+    title?: string;
+    titulo?: string;
+    subtitle?: string;
+    contenido?: string;
+    bullets?: string[];
+    activity?: string;
+    example?: string;
+    questions?: string[];
+    speakerNotes?: string;
+    notasDocente?: string;
+    imagePrompt?: string;
+    ejemplosClave?: string[];
+    actividadOral?: string;
+  }>;
 };
 
 const SUBJECT_THEMES: Record<string, SubjectTheme> = {
@@ -933,6 +950,27 @@ function buildClosureBullets(oaText: string, isLower: boolean): string[] {
   ];
 }
 
+function mapAiLayoutToPremium(aiLayout: string): PremiumSlideLayout {
+  const layoutMap: Record<string, PremiumSlideLayout> = {
+    cover: 'cover',
+    hook: 'hook',
+    objective: 'objective',
+    concept_cards: 'concept_cards',
+    visual_explanation: 'visual_explanation',
+    guided_activity: 'guided_activity',
+    collaborative_activity: 'collaborative_activity',
+    dua_supports: 'dua_supports',
+    formative_assessment: 'formative_assessment',
+    closure: 'closure',
+    activation: 'hook',
+    explanation: 'visual_explanation',
+    'guided-practice': 'guided_activity',
+    'independent-practice': 'collaborative_activity',
+    'formative-assessment': 'formative_assessment',
+  };
+  return layoutMap[aiLayout] || 'visual_explanation';
+}
+
 export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
   const theme = getSubjectTheme(input.subject);
   const nivelLabel = input.level;
@@ -946,6 +984,53 @@ export function buildPremiumPptModel(input: PremiumInput): PremiumPresentation {
 
   const skillSlice = (input.skills || []).filter(s => s && s.trim().length > 1).slice(0, 4);
 
+  // If AI-generated slides are provided, use them directly
+  if (input.aiSlides && input.aiSlides.length >= 7) {
+    const aiSlides: PremiumSlide[] = input.aiSlides.map((s, i) => {
+      const layout = mapAiLayoutToPremium(s.layout || s.type || 'explanation');
+      const title = s.titulo || s.title || `Slide ${i + 1}`;
+      const contenido = s.contenido || '';
+      const bullets = s.bullets && s.bullets.length > 0
+        ? s.bullets
+        : s.ejemplosClave && s.ejemplosClave.length > 0
+          ? s.ejemplosClave
+          : contenido ? [contenido] : [];
+      const notasDocente = s.notasDocente || s.speakerNotes || '';
+      const imagePrompt = s.imagePrompt || '';
+      const actividadOral = s.actividadOral || s.activity || '';
+
+      return {
+        slideNumber: i + 1,
+        layout,
+        title,
+        subtitle: s.subtitle || '',
+        bullets: adaptBulletsForLevel(bullets, nivelLabel),
+        studentPrompt: isLower
+          ? `Hoy vamos a aprender sobre ${truncate(title, 50)}`
+          : `Nuestro objetivo es comprender: ${truncate(title, 60)}`,
+        teacherNotes: notasDocente,
+        visualKeyword: extractOaConcepts(oaText).slice(0, 2).join(', ') || title,
+        visualPrompt: imagePrompt || generateSlideImagePrompt(layout, oaText, input.subject, isLower),
+        icon: ICONS[layout] || '📚',
+        colorTheme: theme.primary,
+        pictogram: getPictogramForSlide(layout, title),
+        isChildMode: childMode,
+      };
+    });
+
+    return {
+      title: input.aiSlides[0]?.titulo || input.aiSlides[0]?.title || topicLabel,
+      subtitle: `${nivelLabel} — ${input.subject}`,
+      nivel: nivelLabel,
+      asignatura: input.subject,
+      oa: input.objectiveCode,
+      oaText,
+      tema: topicLabel,
+      slides: aiSlides,
+    };
+  }
+
+  // Fallback: build from templates
   const oaTable = buildOaTable(oaText, input.subject, isLower);
 
   const slides: PremiumSlide[] = [

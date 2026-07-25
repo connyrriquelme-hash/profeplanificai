@@ -219,6 +219,7 @@ export function FlujoDocenteView() {
             indicators,
             skills,
             additionalContext,
+            aiSlides: res?.slides || undefined,
           });
           setPremiumModel(model);
           setPptxLoading(true);

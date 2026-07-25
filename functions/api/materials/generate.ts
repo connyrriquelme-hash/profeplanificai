@@ -419,6 +419,136 @@ REGLAS OBLIGATORIAS:
 - Cada sección DEBE tener theory_content y al menos 1 activity.
 - dua_summary DEBE resumir las estrategias DUA de toda la guía.
 - Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.`,
+
+    presentacion: `Genera una presentación educativa completa en formato JSON válido que cumpla ESTRICTAMENTE con esta estructura:
+
+REGLAS CRÍTICAS:
+1. SEPARACIÓN HABILIDAD/CONTENIDO: Si el OA dice "Observar mediante la exploración los animales invertebrados", el TEMA CENTRAL son "Los animales invertebrados", NO "la exploración". Las habilidades (observar, explorar) son ACCIONES, no contenido.
+2. PROFUNDIDAD: Cada slide DEBE tener contenido explicativo REAL (mínimo 2-3 oraciones). PROHIBIDO frases genéricas.
+3. IMAGEPROMPT: DEBE ser en INGLÉS y describir la escena visual de forma específica. PROHIBIDO placeholders con emojis.
+4. NUNCA TRUNCAR: Prohibido usar "..." para cortar oraciones. Escribe oraciones completas.
+
+{
+  "titulo": "Título específico de la clase",
+  "metadata": {
+    "course": "Curso",
+    "subject": "Asignatura",
+    "oa": "Código OA"
+  },
+  "diapositivas": [
+    {
+      "numero": 1,
+      "layout": "cover",
+      "titulo": "Título atractivo de la clase",
+      "contenido": "Subtítulo con el tema específico de la clase",
+      "notasDocente": "Instrucciones para presentar la clase",
+      "imagePrompt": "Educational presentation cover, [tema específico], Chilean context, professional colorful design, no text",
+      "ejemplosClave": [],
+      "actividadOral": ""
+    },
+    {
+      "numero": 2,
+      "layout": "hook",
+      "titulo": "Activación de conocimientos previos",
+      "contenido": "Pregunta motivadora concreta. Ejemplo real y específico al tema.",
+      "notasDocente": "Tiempo y estrategia de activación",
+      "imagePrompt": "Engaging motivational image of [tema], educational, thought-provoking, no text",
+      "ejemplosClave": ["Pregunta específica 1", "Pregunta específica 2"],
+      "actividadOral": "Pregunta oral específica"
+    },
+    {
+      "numero": 3,
+      "layout": "objective",
+      "titulo": "Objetivo de aprendizaje",
+      "contenido": "Objetivo en lenguaje estudiantil. Por qué es importante. Mínimo 2 oraciones.",
+      "notasDocente": "Cómo presentar el objetivo",
+      "imagePrompt": "Objective illustration, [concepto], educational, no text",
+      "ejemplosClave": [],
+      "actividadOral": "Hoy aprenderemos sobre [tema]. Es importante porque [razón]."
+    },
+    {
+      "numero": 4,
+      "layout": "concept_cards",
+      "titulo": "Conceptos clave",
+      "contenido": "2-4 conceptos con definición clara y ejemplo concreto cada uno.",
+      "notasDocente": "Cómo explicar cada concepto",
+      "imagePrompt": "Concept cards infographic, [conceptos], educational design, no text",
+      "ejemplosClave": ["Concepto 1: definición + ejemplo", "Concepto 2: definición + ejemplo"],
+      "actividadOral": "¿Pueden dar un ejemplo de [concepto]?"
+    },
+    {
+      "numero": 5,
+      "layout": "visual_explanation",
+      "titulo": "Desarrollo del contenido",
+      "contenido": "Explicación detallada del contenido principal. Mínimo 3-4 oraciones con información científica/humanista específica.",
+      "notasDocente": "Estrategia de explicación visual",
+      "imagePrompt": "Detailed educational diagram of [contenido], infographic, professional, no text",
+      "ejemplosClave": ["Ejemplo 1 concreto", "Ejemplo 2 concreto"],
+      "actividadOral": "¿Qué observan? ¿Cómo se relaciona con [concepto]?"
+    },
+    {
+      "numero": 6,
+      "layout": "guided_activity",
+      "titulo": "Actividad guiada",
+      "contenido": "Instrucciones paso a paso. Materiales. Tiempo. Producto esperado.",
+      "notasDocente": "Cómo modelar la actividad",
+      "imagePrompt": "Students hands-on activity with teacher, [tema], Chilean classroom, no text",
+      "ejemplosClave": ["Paso 1: instrucción", "Paso 2: instrucción"],
+      "actividadOral": "Vamos a hacer: paso 1 [instrucción]."
+    },
+    {
+      "numero": 7,
+      "layout": "collaborative_activity",
+      "titulo": "Actividad colaborativa",
+      "contenido": "Actividad grupal. Roles. Producto esperado. Tiempo.",
+      "notasDocente": "Cómo organizar los grupos",
+      "imagePrompt": "Students teamwork, [tema], collaborative learning, classroom, no text",
+      "ejemplosClave": ["Rol 1", "Rol 2"],
+      "actividadOral": "Trabajen en grupo. Cada uno tiene un rol."
+    },
+    {
+      "numero": 8,
+      "layout": "dua_supports",
+      "titulo": "Apoyos DUA",
+      "contenido": "Estrategias DUA específicas para este tema: representación, acción, implicación.",
+      "notasDocente": "Cómo implementar los apoyos DUA",
+      "imagePrompt": "Universal Design for Learning, inclusive classroom, [tema], no text",
+      "ejemplosClave": ["Representación: [estrategia]", "Acción: [estrategia]", "Implicación: [estrategia]"],
+      "actividadOral": ""
+    },
+    {
+      "numero": 9,
+      "layout": "formative_assessment",
+      "titulo": "Evaluación formativa",
+      "contenido": "Preguntas específicas al OA. Criterios de éxito. Instrumento de evaluación.",
+      "notasDocente": "Cómo aplicar la evaluación",
+      "imagePrompt": "Formative assessment, students reflecting, educational evaluation, no text",
+      "ejemplosClave": ["Pregunta 1 específica", "Pregunta 2 específica"],
+      "actividadOral": "Responde: ¿Qué aprendiste hoy sobre [tema]?"
+    },
+    {
+      "numero": 10,
+      "layout": "closure",
+      "titulo": "Cierre de la clase",
+      "contenido": "Síntesis de aprendizajes. Conexión con próxima clase. Pregunta metacognitiva.",
+      "notasDocente": "Cómo cerrar la clase",
+      "imagePrompt": "Reflection summary, [tema], educational achievement, inspiring, no text",
+      "ejemplosClave": ["Aprendizaje 1", "Aprendizaje 2"],
+      "actividadOral": "¿Qué fue lo más interesante? ¿Cómo usarás esto fuera de la escuela?"
+    }
+  ],
+  "tiempoTotalMin": 45
+}
+
+Contexto: ${baseContext}
+REGLAS OBLIGATORIAS:
+- EXACTAMENTE 10 diapositivas con los layouts indicados.
+- Cada slide DEBE tener contenido real desarrollado (mín. 50 palabras).
+- imagePrompt DEBE estar en INGLÉS y ser descriptivo (sin emojis, sin placeholders).
+- NUNCA usar "..." para truncar. Escribe oraciones completas.
+- Separar habilidades (acciones) del contenido (conceptos).
+- Contexto chileno: usa referencias geográficas, culturales e históricas de Chile.
+- Prohibido frases genéricas como "Contenido breve" o "Título del slide".`
   };
 
   return prompts[type] || prompts.guia_estudiante;

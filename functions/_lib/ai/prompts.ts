@@ -462,12 +462,168 @@ JSON: {"titulo":"","resumen":""}`,
 
   presentacion: {
     generar: (req) => `${BASE_CONTEXT}
-TAREA: Crea estructura de presentacion para clase.
+
+TAREA: Genera una presentación educativa completa y pedagógicamente profunda para una clase.
+
 ${classBlock(req)}
 ${oaBlock(req)}
-INSTRUCCIONES: ${req.instructions || ''}
-Cada diapositiva debe ser especifica al OA. Incluye titulo, contenido breve, notas del docente, sugerencia visual y actividad oral.
-JSON: {"titulo":"","diapositivas":[{"numero":1,"titulo":"","contenido":"","notasDocente":"","imagenSugerida":"","actividadOral":""}],"tiempoTotalMin":45}`,
+
+INSTRUCCIONES ADICIONALES: ${req.instructions || 'Ninguna'}
+
+REGLAS CRÍTICAS — LEE CON CUIDADO:
+
+1. SEPARACIÓN HABILIDAD/CONTENIDO:
+   - Si el OA dice "Observar mediante la exploración los animales invertebrados", el TEMA CENTRAL son "Los animales invertebrados", NO "la exploración" ni "observar".
+   - Las habilidades (observar, explorar, analizar, comparar) son ACCIONES PEDAGÓGICAS, no contenido temático.
+   - El contenido son los CONCEPTOS CIENTÍFICOS/HUMANISTAS: animales invertebrados, células, Revolución Francesa, fracciones, etc.
+
+2. PROFUNDIDAD CONTENIDO:
+   - Cada slide DEBE tener contenido explicativo REAL y desarrollado (mínimo 2-3 oraciones por slide).
+   - PROHIBIDO usar frases genéricas como "Contenido breve", "Título del slide", "Conceptos clave".
+   - Desarrolla el contenido científico/humanista apropiado para el nivel del estudiante.
+   - Ejemplo para Ciencias Naturales 1° Básico sobre invertebrados: "Los animales invertebrados son aquellos que NO tienen columna vertebral. Ejemplos: insectos (mariposas, hormigas), arácnidos (arañas), moluscos (caracoles). Se diferencian de los vertebrados porque su cuerpo es más pequeño y flexible."
+
+3. ESTRUCTURA DEL JSON — EXACTAMENTE 10 DIAPOSITIVAS:
+   - slide 1: cover (portada con título de la clase)
+   - slide 2: hook (activación de conocimientos previos con pregunta motivadora)
+   - slide 3: objective (objetivo de aprendizaje alineado al OA)
+   - slide 4: concept_cards (2-4 conceptos clave desarrollados)
+   - slide 5: visual_explanation (explicación detallada del contenido principal)
+   - slide 6: guided_activity (actividad guiada paso a paso)
+   - slide 7: collaborative_activity (actividad colaborativa)
+   - slide 8: dua_supports (adaptaciones DUA)
+   - slide 9: formative_assessment (evaluación formativa)
+   - slide 10: closure (cierre y metacognición)
+
+4. PARA CADA DIAPOSITIVA, INCLUYE:
+   - "titulo": Título descriptivo específico al contenido (nunca genérico)
+   - "contenido": Texto explicativo desarrollado (mínimo 50 palabras por slide de contenido)
+   - "notasDocente": Guía específica para el docente sobre qué decir y cómo explicar
+   - "imagePrompt": Instrucción visual descriptiva EN INGLÉS para generar imagen (estilo editorial educativo, sin texto, sin personas realistas)
+   - "ejemplosClave": 2-3 ejemplos concretos y específicos al tema
+   - "actividadOral": Pregunta o consigna oral específica
+
+5. IMAGEPROMPT — REGLAS ESTRICTAS:
+   - DEBE ser en INGLÉS
+   - DEBE describir la escena visual de forma específica (no genérica)
+   - PROHIBIDO usar placeholders como "🎨exploración" o "Contenido visual premium"
+   - Ejemplo bueno: "Colorful educational illustration of a butterfly, ant, and snail on a green leaf, Chilean classroom context, flat design, no text, child-friendly"
+   - Ejemplo malo: "🎨 exploración, características"
+
+6. NUNCA TRUNCAR TEXTO:
+   - PROHIBIDO usar puntos suspensivos "..." para cortar oraciones
+   - Escribe oraciones completas y coherentes
+   - Si un texto es largo, desarrolla el contenido en el slide apropiado
+
+JSON EXACTO:
+{
+  "titulo": "Título de la clase específico al tema",
+  "diapositivas": [
+    {
+      "numero": 1,
+      "layout": "cover",
+      "titulo": "Título atractivo de la clase",
+      "contenido": "Subtítulo con el tema específico",
+      "notasDocente": "Instrucciones específicas para presentar la clase",
+      "imagePrompt": "Educational presentation cover illustration, [tema específico], Chilean classroom context, professional colorful design, no text",
+      "ejemplosClave": [],
+      "actividadOral": ""
+    },
+    {
+      "numero": 2,
+      "layout": "hook",
+      "titulo": "Activación de conocimientos previos",
+      "contenido": "Pregunta motivadora concreta relacionada con el tema. Ejemplo: '¿Alguna vez han visto una mariposa en el jardín de la escuela? ¿Cómo creen que se mueven sin huesos?'",
+      "notasDocente": "Dar 2 minutos para pensar individualmente. Luego compartir en parejas.",
+      "imagePrompt": "Engaging motivational image of [tema], educational context, thought-provoking composition, no text",
+      "ejemplosClave": ["Pregunta 1 específica", "Pregunta 2 específica", "Pregunta 3 específica"],
+      "actividadOral": "Pregunta oral específica para activar conocimientos previos"
+    },
+    {
+      "numero": 3,
+      "layout": "objective",
+      "titulo": "Objetivo de aprendizaje",
+      "contenido": "Objetivo escrito en lenguaje comprensible para el estudiante. Mínimo 2 oraciones explicando qué aprenderán y por qué es importante.",
+      "notasDocente": "Leer el OA en voz alta. Explicar con palabras simples qué van a aprender.",
+      "imagePrompt": "Objective slide illustration, [concepto principal], educational infographic style, no text",
+      "ejemplosClave": [],
+      "actividadOral": "Hoy vamos a aprender sobre [tema específico]. Es importante porque [razón concreta]."
+    },
+    {
+      "numero": 4,
+      "layout": "concept_cards",
+      "titulo": "Conceptos clave: [tema específico]",
+      "contenido": "Desarrollo de 2-4 conceptos fundamentales. Cada concepto debe tener definición clara y ejemplo concreto.",
+      "notasDocente": "Explicar cada concepto con ejemplos visuales y conexiones con la vida diaria.",
+      "imagePrompt": "Visual concept map of [conceptos clave], educational infographic, clean design, Chilean context, no text",
+      "ejemplosClave": ["Concepto 1: definición + ejemplo", "Concepto 2: definición + ejemplo"],
+      "actividadOral": "¿Pueden nombrar un ejemplo de [concepto]?"
+    },
+    {
+      "numero": 5,
+      "layout": "visual_explanation",
+      "titulo": "Desarrollo del contenido",
+      "contenido": "Explicación detallada del contenido principal del OA. Mínimo 3-4 oraciones desarrollando el tema científico/humanista.",
+      "notasDocente": "Usar pizarra o pantalla para reforzar visualmente. Hacer preguntas de comprensión.",
+      "imagePrompt": "Detailed educational diagram of [contenido específico], infographic style with labels, professional illustration, no text",
+      "ejemplosClave": ["Ejemplo 1 concreto", "Ejemplo 2 concreto", "Ejemplo 3 concreto"],
+      "actividadOral": "¿Qué observan en esta imagen? ¿Cómo se relaciona con [concepto]?"
+    },
+    {
+      "numero": 6,
+      "layout": "guided_activity",
+      "titulo": "Actividad guiada: [nombre específico]",
+      "contenido": "Instrucciones paso a paso para la actividad. Materiales necesarios. Tiempo estimado.",
+      "notasDocente": "Modelar el procedimiento primero. Luego guiar a los estudiantes paso a paso.",
+      "imagePrompt": "Students hands-on activity with teacher guidance, [tema específico], Chilean classroom, collaborative learning, no text",
+      "ejemplosClave": ["Paso 1: instrucción específica", "Paso 2: instrucción específica", "Paso 3: instrucción específica"],
+      "actividadOral": "Vamos a hacer juntos: primer paso, [instrucción]. Segundo paso, [instrucción]."
+    },
+    {
+      "numero": 7,
+      "layout": "collaborative_activity",
+      "titulo": "Actividad colaborativa: [nombre específico]",
+      "contenido": "Actividad en parejas o grupos pequeños. Rol de cada integrante. Producto esperado.",
+      "notasDocente": "Formar grupos de 3-4. Monitorear y hacer preguntas de profundización.",
+      "imagePrompt": "Students teamwork activity, [tema específico], collaborative learning, classroom setting, no text",
+      "ejemplosClave": ["Instrucción para grupo 1", "Instrucción para grupo 2"],
+      "actividadOral": "Trabajen en grupo. Cada uno tiene un rol: [describir roles]."
+    },
+    {
+      "numero": 8,
+      "layout": "dua_supports",
+      "titulo": "Apoyos DUA para esta clase",
+      "contenido": "Estrategias de representación, acción/expresión e implicación específicas para el tema.",
+      "notasDocente": "Recordar que todo estudiante puede acceder al contenido de múltiples formas.",
+      "imagePrompt": "Universal Design for Learning inclusive classroom, diverse learners, [tema], Chilean educational context, no text",
+      "ejemplosClave": ["Representación: [estrategia específica]", "Acción: [estrategia específica]", "Implicación: [estrategia específica]"],
+      "actividadOral": ""
+    },
+    {
+      "numero": 9,
+      "layout": "formative_assessment",
+      "titulo": "Evaluación formativa",
+      "contenido": "Preguntas o actividades para verificar comprensión. Criterios de éxito observables.",
+      "notasDocente": "Aplicar durante la actividad o al final. Revisar individualmente.",
+      "imagePrompt": "Formative assessment illustration, students reflecting on learning, educational evaluation, no text",
+      "ejemplosClave": ["Pregunta 1 para evaluar", "Pregunta 2 para evaluar", "Pregunta 3 para evaluar"],
+      "actividadOral": "Antes de terminar, responde: ¿Qué aprendiste hoy sobre [tema]?"
+    },
+    {
+      "numero": 10,
+      "layout": "closure",
+      "titulo": "Cierre de la clase",
+      "contenido": "Síntesis de aprendizajes clave. Conexión con la próxima clase. Pregunta metacognitiva.",
+      "notasDocente": "Dar tiempo para que 2-3 estudiantes compartan. Cerrar con entusiasmo.",
+      "imagePrompt": "Reflection learning summary illustration, [tema], educational achievement, inspiring, no text",
+      "ejemplosClave": ["Aprendizaje clave 1", "Aprendizaje clave 2"],
+      "actividadOral": "¿Qué fue lo más interesante que aprendiste hoy? ¿Cómo puedes usar esto fuera de la escuela?"
+    }
+  ],
+  "tiempoTotalMin": 45
+}
+
+RECUERDA: Responde SOLO con JSON válido. Sin markdown, sin explicaciones.`,
     mejorar: (req) => `${BASE_CONTEXT}
 TAREA: Mejora presentacion.
 CONTENIDO: ${req.existingContent || ''}
