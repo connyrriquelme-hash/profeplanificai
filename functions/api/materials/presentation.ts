@@ -1,4 +1,8 @@
-interface Env { DB: D1Database }
+import { generateDeckContent } from '../../core/PptContentEngine';
+import type { PedagogicalPlan, AIEngineEnv } from '../../core/types';
+import type { PptDeck, Slide as PptDeckSlide } from '../../../schemas/PptDeckSchema';
+
+interface Env { DB: D1Database; AI?: any }
 
 interface PresentationRequest {
   title: string;
@@ -22,6 +26,89 @@ interface PresentationRequest {
   }>;
 }
 
+interface OldSlide {
+  type: string;
+  title: string;
+  subtitle?: string;
+  bullets?: string[];
+  activity?: string;
+  example?: string;
+  questions?: string[];
+  speakerNotes?: string;
+}
+
+function pptDeckToLegacySlides(deck: PptDeck): OldSlide[] {
+  return deck.slides.map((slide: PptDeckSlide): OldSlide => {
+    switch (slide.layout) {
+      case 'title':
+        return { type: 'cover', title: slide.title, subtitle: slide.subtitle };
+      case 'bullets':
+        return { type: 'content', title: slide.title, bullets: slide.bullets };
+      case 'image_text':
+        return { type: 'content', title: slide.title, subtitle: slide.body };
+      case 'comparison':
+        return {
+          type: 'content',
+          title: slide.title,
+          bullets: [
+            `${slide.left.label}: ${slide.left.points[0] || ''}`,
+            `${slide.right.label}: ${slide.right.points[0] || ''}`,
+          ],
+        };
+      case 'quote':
+        return { type: 'content', title: slide.text, subtitle: slide.author };
+      case 'vocabulario':
+        return {
+          type: 'content',
+          title: slide.titulo,
+          bullets: slide.terminos.map(t => `${t.palabra}: ${t.definicion}`),
+        };
+      case 'ciclo_proceso':
+        return {
+          type: 'content',
+          title: slide.titulo,
+          bullets: slide.pasos.map(p => `${p.nombre}: ${p.descripcion}`),
+        };
+      case 'quiz_opcion_multiple':
+        return {
+          type: 'content',
+          title: slide.pregunta,
+          bullets: slide.opciones.map((o, i) => `${i === slide.respuestaCorrectaIndex ? '✓ ' : ''}${o}`),
+        };
+      case 'verdadero_falso':
+        return {
+          type: 'content',
+          title: slide.afirmacion,
+          bullets: [slide.esVerdadero ? 'Verdadero' : 'Falso', slide.explicacion || ''].filter(Boolean),
+        };
+      default:
+        return { type: 'content', title: (slide as any).title || 'Slide' };
+    }
+  });
+}
+
+function buildPlanFromRequest(body: PresentationRequest, objective: any, indicators: any[]): PedagogicalPlan {
+  const indTexts = (indicators || []).map((i: any) => i.indicator_text).filter(Boolean);
+  const objectiveText = objective?.descripcion || body.objectiveText || body.objectiveCode;
+
+  return {
+    tema: body.topic || body.objectiveCode,
+    curso: objective?.course_name || body.level || '',
+    asignatura: objective?.subject_name || body.subject || '',
+    objetivo_aprendizaje: objectiveText,
+    habilidades: (body.skills || []).join(', '),
+    taxonomia_bloom_sugerida: 'comprender',
+    indicadores_seleccionados: indTexts,
+    criterios_seleccionados: [],
+    habilidades_curriculares: body.skills || [],
+    estructura_clase: {
+      inicio: { tiempo_minutos: 15, descripcion: 'Activación de conocimientos previos y motivación' },
+      desarrollo: { tiempo_minutos: 45, descripcion: 'Desarrollo de la clase con actividades' },
+      cierre: { tiempo_minutos: 15, descripcion: 'Síntesis y ticket de salida' },
+    },
+  };
+}
+
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const body = await context.request.json() as PresentationRequest;
@@ -43,11 +130,44 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `SELECT ci.indicator_text FROM curriculum_indicators ci WHERE ci.oa_code = ? LIMIT 10`
     ).bind(body.objectiveCode).all();
 
-    // Build presentation structure if not provided
-    const slides = body.slides || buildDefaultSlides(body, objective as any, (indicators as any)?.results || []);
+    const indicatorResults = (indicators as any)?.results || [];
+
+    let slides: OldSlide[];
+    let pptDeck: PptDeck | undefined;
+
+    if (body.slides) {
+      // Legacy path: use provided slides directly
+      slides = body.slides;
+    } else {
+      // AI path: build PedagogicalPlan and call generateDeckContent
+      const plan = buildPlanFromRequest(body, objective as any, indicatorResults);
+      const deck = await generateDeckContent(
+        { AI: context.env.AI } as AIEngineEnv,
+        plan,
+        { modo: 'docente' },
+      );
+      pptDeck = deck;
+      slides = pptDeckToLegacySlides(deck);
+    }
 
     // Save to D1
     const resourceId = `pptx_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+    // content_json stores metadata + full PptDeck (when AI-generated) to avoid
+    // a new migration column. Legacy consumers read generated_resources.content
+    // (old-format slides) and generated_presentations.slides_json as before.
+    const contentJsonPayload: Record<string, unknown> = {
+      slideCount: slides.length,
+      designStyle: body.designStyle || 'claro',
+    };
+    if (pptDeck) {
+      contentJsonPayload.pptDeck = pptDeck;
+    }
+
+    const promptUsed = pptDeck
+      ? `Presentación generada con IA para ${body.objectiveCode} — ${body.subject}`
+      : `Presentación generada para ${body.objectiveCode} — ${body.subject}`;
+
     await db.prepare(
       `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
        VALUES (?, ?, 'presentacion', ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
@@ -55,13 +175,13 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       resourceId,
       body.title || `Presentación: ${body.objectiveCode}`,
       JSON.stringify(slides),
-      JSON.stringify({ slideCount: slides.length, designStyle: body.designStyle || 'claro' }),
+      JSON.stringify(contentJsonPayload),
       body.level,
       body.subject,
       body.objectiveCode,
       JSON.stringify(body.indicators || []),
       JSON.stringify(body.skills || []),
-      `Presentación generada para ${body.objectiveCode} — ${body.subject}`
+      promptUsed,
     ).run();
 
     // Save presentation metadata
@@ -74,7 +194,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       JSON.stringify(slides),
       slides.length,
       body.designStyle || 'claro',
-      JSON.stringify(slides.map((s: any) => s.title))
+      JSON.stringify(slides.map((s) => s.title)),
     ).run();
 
     return Response.json({
@@ -83,9 +203,10 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       slides,
       metadata: {
         objective,
-        indicators: (indicators as any)?.results || [],
+        indicators: indicatorResults,
         slideCount: slides.length,
-      }
+      },
+      ...(pptDeck ? { pptDeck } : {}),
     });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar presentación', details: err.message }, { status: 500 });
