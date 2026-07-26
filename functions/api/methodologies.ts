@@ -2,95 +2,57 @@ import type { Env } from '../_middleware';
 
 interface Methodology {
   id: string;
-  code: string;
   name: string;
+  short_name?: string;
   description?: string;
-  educational_focus?: string;
-  target_levels?: string;
-  target_subjects?: string;
-  pedagogical_approach?: string;
-  status?: string;
+  when_to_use?: string;
+  steps_json?: string;
+  advantages_json?: string;
+  risks_json?: string;
+  dua_accommodations_json?: string;
+  suggested_evaluations_json?: string;
+  classroom_examples_json?: string;
+  source_type?: string;
+  source_url?: string;
 }
 
 interface MethodologyWithFit extends Methodology {
-  fit_level?: string;
-  adaptation_notes?: string;
+  fit_score?: number;
+  notes?: string;
 }
+
+const BASE_COLUMNS = `m.id, m.name, m.short_name, m.description, m.when_to_use, m.steps_json,
+       m.advantages_json, m.risks_json, m.dua_accommodations_json, m.suggested_evaluations_json,
+       m.classroom_examples_json, m.source_type, m.source_url`;
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   const url = new URL(context.request.url);
   const subject = url.searchParams.get('subject') || '';
-  const level = url.searchParams.get('level') || '';
   const q = url.searchParams.get('q')?.trim() || '';
-  const fit_level = url.searchParams.get('fit_level') || '';
 
   let query = '';
   const params: unknown[] = [];
 
   if (subject) {
     query = `
-      SELECT m.id, m.code, m.name, m.description, m.educational_focus, m.target_levels, m.target_subjects, m.pedagogical_approach, m.status,
-             ms.fit_level, ms.adaptation_notes
+      SELECT ${BASE_COLUMNS}, ms.fit_score, ms.notes
       FROM methodologies m
       JOIN methodology_subject_fit ms ON ms.methodology_id = m.id
       JOIN subjects s ON ms.subject_id = s.id
-      JOIN education_levels e ON s.education_level_id = e.id
-      WHERE s.name LIKE ? OR e.name LIKE ?
+      WHERE s.name LIKE ?
+      ORDER BY ms.fit_score DESC, m.name
     `;
-    params.push(`%${subject}%`, `%${subject}%`);
-
-    if (fit_level) {
-      query += ` AND ms.fit_level = ?`;
-      params.push(fit_level);
-    }
-
-    query += ` ORDER BY ms.fit_level, m.name`;
-  } else if (level) {
-    query = `
-      SELECT m.id, m.code, m.name, m.description, m.educational_focus, m.target_levels, m.target_subjects, m.pedagogical_approach, m.status,
-             ms.fit_level, ms.adaptation_notes
-      FROM methodologies m
-      JOIN methodology_subject_fit ms ON ms.methodology_id = m.id
-      JOIN subjects s ON ms.subject_id = s.id
-      JOIN education_levels e ON s.education_level_id = e.id
-      WHERE e.name LIKE ?
-    `;
-    params.push(`%${level}%`);
-
-    if (fit_level) {
-      query += ` AND ms.fit_level = ?`;
-      params.push(fit_level);
-    }
-
-    query += ` ORDER BY ms.fit_level, m.name`;
+    params.push(`%${subject}%`);
   } else if (q) {
     query = `
-      SELECT m.id, m.code, m.name, m.description, m.educational_focus, m.target_levels, m.target_subjects, m.pedagogical_approach, m.status,
-             ms.fit_level, ms.adaptation_notes
+      SELECT ${BASE_COLUMNS}
       FROM methodologies m
-      JOIN methodology_subject_fit ms ON ms.methodology_id = m.id
-      JOIN subjects s ON ms.subject_id = s.id
-      JOIN education_levels e ON s.education_level_id = e.id
-      WHERE m.name LIKE ? OR m.description LIKE ? OR m.code LIKE ? OR e.name LIKE ? OR s.name LIKE ?
+      WHERE m.name LIKE ? OR m.description LIKE ? OR m.short_name LIKE ?
+      ORDER BY m.name
     `;
-    params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
-
-    if (fit_level) {
-      query += ` AND ms.fit_level = ?`;
-      params.push(fit_level);
-    }
-
-    query += ` ORDER BY ms.fit_level, m.name`;
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
   } else {
-    query = `
-      SELECT m.id, m.code, m.name, m.description, m.educational_focus, m.target_levels, m.target_subjects, m.pedagogical_approach, m.status,
-             ms.fit_level, ms.adaptation_notes
-      FROM methodologies m
-      JOIN methodology_subject_fit ms ON ms.methodology_id = m.id
-      JOIN subjects s ON ms.subject_id = s.id
-      JOIN education_levels e ON s.education_level_id = e.id
-      ORDER BY ms.fit_level, m.name
-    `;
+    query = `SELECT ${BASE_COLUMNS} FROM methodologies m ORDER BY m.name`;
   }
 
   const { results } = await context.env.DB.prepare(query).bind(...params).all();
