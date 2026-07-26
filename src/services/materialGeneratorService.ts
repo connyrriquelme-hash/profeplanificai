@@ -39,6 +39,7 @@ export interface MaterialResult {
   evaluation?: unknown;
   rubric?: unknown;
   slides?: unknown[];
+  pptDeck?: unknown;
   prompt?: string;
   context?: unknown;
   error?: string;
