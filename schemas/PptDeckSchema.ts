@@ -14,6 +14,13 @@ const MIN_POINTS = 1;
 const MAX_POINTS = 5;
 const MIN_SLIDES = 5;
 const MAX_SLIDES = 20;
+const TERMINO_PALABRA_MAX = 60;
+const TERMINO_DEFINICION_MAX = 200;
+const PASO_NOMBRE_MAX = 60;
+const PASO_DESCRIPCION_MAX = 200;
+const PREGUNTA_MAX = 200;
+const EXPLICACION_MAX = 300;
+const AFIRMACION_MAX = 300;
 
 const TitleSlideSchema = z.object({
   layout: z.literal('title'),
@@ -52,12 +59,58 @@ const QuoteSlideSchema = z.object({
   author: z.string().max(AUTHOR_MAX).optional(),
 });
 
+const VocabularioTerminoSchema = z.object({
+  palabra: z.string().min(1).max(TERMINO_PALABRA_MAX),
+  definicion: z.string().min(1).max(TERMINO_DEFINICION_MAX),
+  imageQuery: z.string().max(IMAGE_QUERY_MAX).optional(),
+});
+
+const VocabularioSlideSchema = z.object({
+  layout: z.literal('vocabulario'),
+  titulo: z.string().min(1).max(TITLE_MAX),
+  terminos: z.array(VocabularioTerminoSchema).min(2).max(4),
+});
+
+const CicloProcesoSchema = z.object({
+  nombre: z.string().min(1).max(PASO_NOMBRE_MAX),
+  descripcion: z.string().min(1).max(PASO_DESCRIPCION_MAX),
+  imageQuery: z.string().max(IMAGE_QUERY_MAX).optional(),
+});
+
+const CicloProcesoSlideSchema = z.object({
+  layout: z.literal('ciclo_proceso'),
+  titulo: z.string().min(1).max(TITLE_MAX),
+  pasos: z.array(CicloProcesoSchema).min(3).max(6),
+});
+
+const QuizOpcionMultipleSlideSchema = z.object({
+  layout: z.literal('quiz_opcion_multiple'),
+  pregunta: z.string().min(1).max(PREGUNTA_MAX),
+  opciones: z.array(z.string().min(1).max(BULLET_MAX)).min(3).max(5),
+  respuestaCorrectaIndex: z.number().int().nonnegative(),
+  explicacion: z.string().max(EXPLICACION_MAX).optional(),
+}).refine(
+  (data) => data.respuestaCorrectaIndex < data.opciones.length,
+  { message: 'respuestaCorrectaIndex debe ser menor que la cantidad de opciones' },
+);
+
+const VerdaderoFalsoSlideSchema = z.object({
+  layout: z.literal('verdadero_falso'),
+  afirmacion: z.string().min(1).max(AFIRMACION_MAX),
+  esVerdadero: z.boolean(),
+  explicacion: z.string().max(EXPLICACION_MAX).optional(),
+});
+
 export const SlideSchema = z.discriminatedUnion('layout', [
   TitleSlideSchema,
   BulletsSlideSchema,
   ImageTextSlideSchema,
   ComparisonSlideSchema,
   QuoteSlideSchema,
+  VocabularioSlideSchema,
+  CicloProcesoSlideSchema,
+  QuizOpcionMultipleSlideSchema,
+  VerdaderoFalsoSlideSchema,
 ]);
 
 export const PptDeckSchema = z.object({
@@ -70,4 +123,8 @@ export type BulletsSlide = z.infer<typeof BulletsSlideSchema>;
 export type ImageTextSlide = z.infer<typeof ImageTextSlideSchema>;
 export type ComparisonSlide = z.infer<typeof ComparisonSlideSchema>;
 export type QuoteSlide = z.infer<typeof QuoteSlideSchema>;
+export type VocabularioSlide = z.infer<typeof VocabularioSlideSchema>;
+export type CicloProcesoSlide = z.infer<typeof CicloProcesoSlideSchema>;
+export type QuizOpcionMultipleSlide = z.infer<typeof QuizOpcionMultipleSlideSchema>;
+export type VerdaderoFalsoSlide = z.infer<typeof VerdaderoFalsoSlideSchema>;
 export type PptDeck = z.infer<typeof PptDeckSchema>;
