@@ -205,17 +205,26 @@ export function buildFallbackUnidad(opciones: UnidadDidacticaOptions): UnidadDid
   };
 }
 
+export interface UnidadDidacticaResult {
+  unidad: UnidadDidactica;
+  // true cuando se usó buildFallbackUnidad (la IA no respondió, respondió
+  // JSON inválido, o el resultado no pasó UnidadDidacticaSchema). El
+  // consumidor (endpoint → frontend) debe mostrarlo con claridad — no es
+  // el resultado esperado normal.
+  usedFallback: boolean;
+}
+
 export async function generateUnidadDidactica(
   env: AIEngineEnv,
   opciones: UnidadDidacticaOptions,
-): Promise<UnidadDidactica> {
+): Promise<UnidadDidacticaResult> {
   try {
     const raw = await callAI(env, buildSystemPrompt(opciones), opciones);
     const parsed = extractJsonFromText(raw);
 
     if (!parsed) {
       console.warn('[UnidadDidacticaEngine] respuesta vacía, usando fallback');
-      return buildFallbackUnidad(opciones);
+      return { unidad: buildFallbackUnidad(opciones), usedFallback: true };
     }
 
     const parsedJson: unknown = JSON.parse(parsed);
@@ -223,12 +232,12 @@ export async function generateUnidadDidactica(
 
     if (!result.success) {
       console.warn('[UnidadDidacticaEngine] validación falló, usando fallback:', result.error.issues);
-      return buildFallbackUnidad(opciones);
+      return { unidad: buildFallbackUnidad(opciones), usedFallback: true };
     }
 
-    return result.data;
+    return { unidad: result.data, usedFallback: false };
   } catch (error) {
     console.error('[UnidadDidacticaEngine] error:', error);
-    return buildFallbackUnidad(opciones);
+    return { unidad: buildFallbackUnidad(opciones), usedFallback: true };
   }
 }

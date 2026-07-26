@@ -56,7 +56,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       return Response.json({ error: 'Al menos un OA debe tener texto de objetivo' }, { status: 400 });
     }
 
-    const unidad = await generateUnidadDidactica(
+    const { unidad, usedFallback } = await generateUnidadDidactica(
       { AI: context.env.AI } as AIEngineEnv,
       {
         nivel: body.nivel,
@@ -81,13 +81,49 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       unidad.metodologiaActiva,
       unidad.clases.length,
       JSON.stringify(unidad),
-      '@cf/meta/llama-3.2-3b-instruct',
+      usedFallback ? null : '@cf/meta/llama-3.2-3b-instruct',
     ).run();
 
-    return Response.json({ ok: true, id, unidad });
+    return Response.json({ ok: true, id, unidad, usedFallback });
   } catch (err: unknown) {
     return Response.json({
       error: 'Error al generar unidad didáctica',
+      details: err instanceof Error ? err.message : String(err),
+    }, { status: 500 });
+  }
+}
+
+interface UnidadDidacticaRow {
+  id: string;
+  content_json: string;
+  created_at: string;
+}
+
+export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
+  try {
+    const userId = await getAuthenticatedUserId(context.request, context.env.JWT_SECRET);
+    if (!userId) {
+      return Response.json({ error: 'Sesión inválida o expirada' }, { status: 401 });
+    }
+
+    const { results } = await context.env.DB.prepare(
+      `SELECT id, content_json, created_at FROM unidades_didacticas WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`,
+    ).bind(userId).all<UnidadDidacticaRow>();
+
+    const data = results
+      .map((row) => {
+        try {
+          return { id: row.id, createdAt: row.created_at, unidad: JSON.parse(row.content_json) };
+        } catch {
+          return null;
+        }
+      })
+      .filter((row): row is { id: string; createdAt: string; unidad: unknown } => row !== null);
+
+    return Response.json({ ok: true, data });
+  } catch (err: unknown) {
+    return Response.json({
+      error: 'Error al listar unidades didácticas',
       details: err instanceof Error ? err.message : String(err),
     }, { status: 500 });
   }

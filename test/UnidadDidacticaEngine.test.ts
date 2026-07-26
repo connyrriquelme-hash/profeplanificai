@@ -73,43 +73,47 @@ function mockAINoAI(): AIEngineEnv {
 }
 
 describe('UnidadDidacticaEngine.generateUnidadDidactica', () => {
-  it('debe devolver la unidad generada cuando la IA responde con JSON válido', async () => {
+  it('debe devolver la unidad generada cuando la IA responde con JSON válido, con usedFallback=false', async () => {
     const env = mockAI(VALID_AI_RESPONSE);
-    const result = await generateUnidadDidactica(env, MOCK_OPCIONES);
+    const { unidad, usedFallback } = await generateUnidadDidactica(env, MOCK_OPCIONES);
 
-    expect(result.titulo).toBe('Investigando a los pueblos originarios de Chile');
-    expect(result.clases.length).toBe(2);
-    const validation = UnidadDidacticaSchema.safeParse(result);
+    expect(usedFallback).toBe(false);
+    expect(unidad.titulo).toBe('Investigando a los pueblos originarios de Chile');
+    expect(unidad.clases.length).toBe(2);
+    const validation = UnidadDidacticaSchema.safeParse(unidad);
     expect(validation.success).toBe(true);
   });
 
-  it('debe activar el fallback cuando la IA responde JSON inválido (nunca lanza excepción)', async () => {
+  it('debe activar el fallback (usedFallback=true) cuando la IA responde JSON inválido, nunca lanza excepción', async () => {
     const env = mockAIParseError();
-    const result = await generateUnidadDidactica(env, MOCK_OPCIONES);
+    const { unidad, usedFallback } = await generateUnidadDidactica(env, MOCK_OPCIONES);
 
-    expect(result).toBeDefined();
-    expect(result.clases.length).toBeGreaterThanOrEqual(2);
-    const validation = UnidadDidacticaSchema.safeParse(result);
+    expect(usedFallback).toBe(true);
+    expect(unidad).toBeDefined();
+    expect(unidad.clases.length).toBeGreaterThanOrEqual(2);
+    const validation = UnidadDidacticaSchema.safeParse(unidad);
     expect(validation.success).toBe(true);
   });
 
-  it('debe activar el fallback cuando la IA no está configurada (nunca lanza excepción)', async () => {
+  it('debe activar el fallback (usedFallback=true) cuando la IA no está configurada, nunca lanza excepción', async () => {
     const env = mockAINoAI();
-    const result = await generateUnidadDidactica(env, MOCK_OPCIONES);
+    const { unidad, usedFallback } = await generateUnidadDidactica(env, MOCK_OPCIONES);
 
-    expect(result).toBeDefined();
-    const validation = UnidadDidacticaSchema.safeParse(result);
+    expect(usedFallback).toBe(true);
+    expect(unidad).toBeDefined();
+    const validation = UnidadDidacticaSchema.safeParse(unidad);
     expect(validation.success).toBe(true);
   });
 
-  it('debe activar el fallback cuando la IA devuelve una unidad que viola el schema (ej. faseAsociada inexistente)', async () => {
+  it('debe activar el fallback (usedFallback=true) cuando la IA devuelve una unidad que viola el schema (ej. faseAsociada inexistente)', async () => {
     const invalidResponse = JSON.parse(VALID_AI_RESPONSE);
     invalidResponse.clases[0].faseAsociada = 'Fase Inventada Que No Existe';
     const env = mockAI(JSON.stringify(invalidResponse));
 
-    const result = await generateUnidadDidactica(env, MOCK_OPCIONES);
+    const { unidad, usedFallback } = await generateUnidadDidactica(env, MOCK_OPCIONES);
 
-    const validation = UnidadDidacticaSchema.safeParse(result);
+    expect(usedFallback).toBe(true);
+    const validation = UnidadDidacticaSchema.safeParse(unidad);
     expect(validation.success).toBe(true);
   });
 
@@ -140,8 +144,8 @@ describe('UnidadDidacticaEngine.generateUnidadDidactica', () => {
   it('no debe copiar el texto crudo del OA en el título del fallback más allá de TITULO_MAX', async () => {
     const largoOA = { ...MOCK_OPCIONES, temaSugerido: 'A'.repeat(200) };
     const env = mockAINoAI();
-    const result = await generateUnidadDidactica(env, largoOA);
+    const { unidad } = await generateUnidadDidactica(env, largoOA);
 
-    expect(result.titulo.length).toBeLessThanOrEqual(120);
+    expect(unidad.titulo.length).toBeLessThanOrEqual(120);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { onRequestPost } from '../functions/api/materials/unidad-didactica';
+import { onRequestPost, onRequestGet } from '../functions/api/materials/unidad-didactica';
 import { createMockD1, signToken } from './helpers/mockD1';
 
 const TEST_SECRET = 'test-jwt-secret-with-at-least-32-characters!!';
@@ -89,18 +89,20 @@ describe('POST /api/materials/unidad-didactica', () => {
 
     expect(res.status).toBe(200);
     expect(json.ok).toBe(true);
+    expect(json.usedFallback).toBe(false);
     expect(json.unidad.titulo).toBe('Investigando a los pueblos originarios de Chile');
     expect(json.unidad.clases.length).toBe(2);
     expect(json.id).toMatch(/^unidad_/);
   });
 
-  it('IA no configurada → nunca lanza excepción, cae al fallback y sigue devolviendo 200', async () => {
+  it('IA no configurada → nunca lanza excepción, cae al fallback (usedFallback=true) y sigue devolviendo 200', async () => {
     const ctx = await makeContext({ ai: undefined });
     const res = await onRequestPost(ctx);
     const json = await res.json() as any;
 
     expect(res.status).toBe(200);
     expect(json.ok).toBe(true);
+    expect(json.usedFallback).toBe(true);
     expect(json.unidad.clases.length).toBeGreaterThanOrEqual(2);
     expect(json.unidad.fases.length).toBeGreaterThanOrEqual(2);
   });
@@ -161,5 +163,73 @@ describe('POST /api/materials/unidad-didactica', () => {
     const res = await onRequestPost(ctx);
 
     expect(res.status).toBe(400);
+  });
+});
+
+async function makeGetContext(options: {
+  tokenSub?: string | null;
+  mockDB?: ReturnType<typeof createMockD1>;
+}) {
+  const mockDB = options.mockDB ?? createMockD1({});
+  const headers: Record<string, string> = {};
+
+  if (options.tokenSub !== null) {
+    const tokenSub = options.tokenSub ?? 'user-1';
+    const token = await signToken(tokenSub, `${tokenSub}@test.cl`, TEST_SECRET);
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return {
+    request: new Request('http://localhost/api/materials/unidad-didactica', { method: 'GET', headers }),
+    env: { DB: mockDB, JWT_SECRET: TEST_SECRET },
+  } as any;
+}
+
+describe('GET /api/materials/unidad-didactica', () => {
+  it('sin token → 401', async () => {
+    const ctx = await makeGetContext({ tokenSub: null });
+    const res = await onRequestGet(ctx);
+    const json = await res.json() as any;
+
+    expect(res.status).toBe(401);
+    expect(json.error).toContain('Sesión');
+  });
+
+  it('devuelve solo las unidades del usuario autenticado, nunca las de otro', async () => {
+    const mockDB = createMockD1({
+      unidades_didacticas: [
+        {
+          id: 'unidad-mia',
+          user_id: 'user-1',
+          content_json: JSON.stringify({ titulo: 'Mi unidad', clases: [] }),
+          created_at: '2026-07-26 10:00:00',
+        },
+        {
+          id: 'unidad-de-otro',
+          user_id: 'user-2',
+          content_json: JSON.stringify({ titulo: 'Unidad de otro docente', clases: [] }),
+          created_at: '2026-07-26 09:00:00',
+        },
+      ],
+    });
+
+    const ctx = await makeGetContext({ mockDB, tokenSub: 'user-1' });
+    const res = await onRequestGet(ctx);
+    const json = await res.json() as any;
+
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.data.length).toBe(1);
+    expect(json.data[0].id).toBe('unidad-mia');
+    expect(json.data[0].unidad.titulo).toBe('Mi unidad');
+  });
+
+  it('usuario sin unidades guardadas → data vacío, no 500', async () => {
+    const ctx = await makeGetContext({ tokenSub: 'user-sin-unidades' });
+    const res = await onRequestGet(ctx);
+    const json = await res.json() as any;
+
+    expect(res.status).toBe(200);
+    expect(json.data).toEqual([]);
   });
 });

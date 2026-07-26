@@ -1,43 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Sparkles, Printer, FileDown, BookOpen, CheckCircle,
-  ChevronLeft, ChevronRight, Trash, Accessibility, Loader2
+  Sparkles, Printer, FileDown, BookOpen,
+  Trash, Accessibility, Loader2, AlertTriangle
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
+import { api } from '../services/apiClient';
+import type { UnidadDidactica, MetodologiaActiva } from '../../schemas/UnidadDidacticaSchema';
 
 type NivelEducativo = '2 basico' | '5 basico' | '8 basico' | '1 medio' | '2 medio';
 type Asignatura = 'Lenguaje y Comunicacion' | 'Matematica' | 'Ciencias Naturales' | 'Historia, Geografia y Cs. Sociales';
-type MetodologiaActiva = 'Tradicional' | 'ABP' | 'Gamificacion' | 'Aula Invertida' | 'Design Thinking';
 
-interface UnidadGenerada {
+interface UnidadGuardada {
   id: string;
-  titulo: string;
-  niveles: NivelEducativo[];
-  oas: { subject: Asignatura; objective: string }[];
-  enfoque: string;
-  productoFinal: string;
-  clases: ClaseUnidad[];
-}
-
-interface ClaseUnidad {
-  id: string;
-  numero: number;
-  fase: string;
-  asignaturas: string;
-  inicio: FaseClase;
-  desarrollo: FaseClase;
-  cierre: FaseClase;
-}
-
-interface FaseClase {
-  tiempo: number;
-  dinamica: string;
-  descripcion: string;
-  rolDocente: string;
-  rolEstudiante: string;
-  evaluacion?: string;
+  createdAt: string;
+  unidad: UnidadDidactica;
 }
 
 const NIVELES: NivelEducativo[] = ['2 basico', '5 basico', '8 basico', '1 medio', '2 medio'];
@@ -62,12 +40,15 @@ export function UnidadesDidacticasView() {
   const [includeDua, setIncludeDua] = useState(true);
 
   const [generating, setGenerating] = useState(false);
-  const [unidad, setUnidad] = useState<UnidadGenerada | null>(null);
-  const [unidadesGuardadas, setUnidadesGuardadas] = useState<UnidadGenerada[]>([]);
+  const [generateError, setGenerateError] = useState('');
+  const [usedFallback, setUsedFallback] = useState(false);
+  const [unidad, setUnidad] = useState<UnidadDidactica | null>(null);
+  const [unidadesGuardadas, setUnidadesGuardadas] = useState<UnidadGuardada[]>([]);
+  const [loadingGuardadas, setLoadingGuardadas] = useState(false);
+  const [errorGuardadas, setErrorGuardadas] = useState('');
   const [vistaActiva, setVistaActiva] = useState<'generador' | 'organizador'>('generador');
   const [filtroAsignatura, setFiltroAsignatura] = useState('Matematica');
   const [d1Subjects, setD1Subjects] = useState<{name: string; objective_count: number}[]>([]);
-  const [d1Courses, setD1Courses] = useState<{id: string; name: string; code: string}[]>([]);
   const [loadingD1, setLoadingD1] = useState(false);
   const [d1Error, setD1Error] = useState('');
 
@@ -75,13 +56,31 @@ export function UnidadesDidacticasView() {
   useEffect(() => {
     setLoadingD1(true);
     Promise.all([
-      fetch('/api/courses').then(r => r.json()).then(d => setD1Courses(d.data || [])).catch(() => {}),
+      fetch('/api/courses').then(r => r.json()).catch(() => {}),
       fetch('/api/subjects').then(r => r.json()).then(d => {
         const withObj = (d.data || []).filter((s: any) => s.objective_count > 0);
         setD1Subjects(withObj);
       }).catch(() => setD1Error('No se pudieron cargar asignaturas desde D1. Se usará lista local de emergencia.')),
     ]).finally(() => setLoadingD1(false));
   }, []);
+
+  const cargarUnidadesGuardadas = useCallback(async () => {
+    setLoadingGuardadas(true);
+    setErrorGuardadas('');
+    try {
+      const res = await api.get<{ ok: boolean; data: UnidadGuardada[] }>('/api/materials/unidad-didactica');
+      setUnidadesGuardadas(res.data || []);
+    } catch (err) {
+      setErrorGuardadas(err instanceof Error ? err.message : 'No se pudieron cargar las unidades guardadas.');
+    } finally {
+      setLoadingGuardadas(false);
+    }
+  }, []);
+
+  // Load previously generated units (persisted in D1) on mount
+  useEffect(() => {
+    cargarUnidadesGuardadas();
+  }, [cargarUnidadesGuardadas]);
 
   // Available subjects: D1 if available, fallback if empty
   const availableSubjects = d1Subjects.length > 0
@@ -105,57 +104,29 @@ export function UnidadesDidacticasView() {
 
   const handleGenerate = async () => {
     setGenerating(true);
+    setGenerateError('');
+    setUsedFallback(false);
 
     try {
-      await new Promise(r => setTimeout(r, 1500));
+      const res = await api.post<{ ok: boolean; id: string; unidad: UnidadDidactica; usedFallback: boolean }>(
+        '/api/materials/unidad-didactica',
+        {
+          titulo: unitName || undefined,
+          nivel,
+          metodologiaActiva: metodologia,
+          oas,
+          instructions: instructions || undefined,
+        },
+      );
 
-      let fases = ['Fase 1', 'Fase 2', 'Fase 3', 'Fase 4'];
-      if (metodologia === 'Design Thinking') fases = ['Empatizar', 'Definir', 'Idear', 'Prototipar'];
-      else if (metodologia === 'Gamificacion') fases = ['El Llamado', 'Mision 1', 'Mision 2', 'Jefe Final'];
-      else if (metodologia === 'ABP') fases = ['Pregunta Guia', 'Investigacion', 'Desarrollo', 'Presentacion'];
-
-      const newUnidad: UnidadGenerada = {
-        id: `unidad-${Date.now()}`,
-        titulo: unitName || `Unidad Integrada: ${oas.map(o => o.subject).join(', ')}`,
-        niveles: [nivel],
-        oas,
-        enfoque: `Implementacion de ${metodologia} para lograr el aprendizaje integrado.`,
-        productoFinal: 'Proyecto interdisciplinario final.',
-        clases: fases.map((fase, idx) => ({
-          id: `clase-${idx}`,
-          numero: idx + 1,
-          fase: `Clase ${idx + 1}: ${fase}`,
-          asignaturas: oas.map(o => o.subject).join(', '),
-          inicio: {
-            tiempo: 15,
-            dinamica: `Activacion ${metodologia}`,
-            descripcion: 'Se presenta el desafio central o la narrativa al curso.',
-            rolDocente: 'Facilitador.',
-            rolEstudiante: 'Participante activo.',
-          },
-          desarrollo: {
-            tiempo: 60,
-            dinamica: 'Trabajo Colaborativo',
-            descripcion: 'Desarrollo de actividades enfocadas en la fase metodologica. Uso intensivo de herramientas creativas.',
-            rolDocente: 'Mediador.',
-            rolEstudiante: 'Investigador y colaborador.',
-          },
-          cierre: {
-            tiempo: 15,
-            dinamica: 'Plenario',
-            descripcion: 'Compartir avances.',
-            evaluacion: 'Ticket de salida.',
-            rolDocente: 'Moderador.',
-            rolEstudiante: 'Expositor.',
-          },
-        })),
-      };
-
-      setUnidad(newUnidad);
-      setUnidadesGuardadas(prev => [...prev, newUnidad]);
+      setUnidad(res.unidad);
+      setUsedFallback(res.usedFallback);
       setVistaActiva('generador');
-    } catch {
-      // silent
+      // Refresca la lista guardada para que la unidad recién generada
+      // aparezca en el Organizador sin tener que recargar la página.
+      cargarUnidadesGuardadas();
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'No se pudo generar la unidad. Intenta nuevamente.');
     } finally {
       setGenerating(false);
     }
@@ -302,7 +273,7 @@ export function UnidadesDidacticasView() {
               onClick={handleGenerate}
               className="w-full"
             >
-              {generating ? 'Estructurando Fase...' : 'Disenar Unidad con IA'}
+              {generating ? 'Generando con IA (puede tardar unos segundos)...' : 'Disenar Unidad con IA'}
             </Button>
           </Card>
         </aside>
@@ -363,39 +334,50 @@ export function UnidadesDidacticasView() {
                     </div>
                   </div>
 
+                  {loadingGuardadas && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500 px-1">
+                      <Loader2 size={14} className="animate-spin" /> Cargando unidades guardadas...
+                    </div>
+                  )}
+                  {errorGuardadas && (
+                    <div className="flex items-center gap-2 text-xs text-rose-600 bg-rose-50 border border-rose-200/60 rounded-lg px-3 py-2">
+                      <AlertTriangle size={14} /> {errorGuardadas}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     {[0, 1, 2, 3, 4].map(slotIndex => {
-                      const unidadesFiltradas = unidadesGuardadas.filter(u =>
-                        u.oas.some(o => o.subject === filtroAsignatura)
+                      const unidadesFiltradas = unidadesGuardadas.filter(item =>
+                        item.unidad.asignatura.includes(filtroAsignatura)
                       );
-                      const unit = unidadesFiltradas[slotIndex];
+                      const item = unidadesFiltradas[slotIndex];
 
                       return (
                         <div key={slotIndex} className={`flex flex-col border rounded-xl overflow-hidden ${
-                          unit ? 'bg-white border-indigo-200 shadow-sm' : 'bg-gray-50 border-dashed border-gray-300 items-center justify-center min-h-[200px]'
+                          item ? 'bg-white border-indigo-200 shadow-sm' : 'bg-gray-50 border-dashed border-gray-300 items-center justify-center min-h-[200px]'
                         }`}>
-                          {unit ? (
+                          {item ? (
                             <>
                               <div className="p-3 border-b border-gray-100 bg-indigo-50/50">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">Unidad {slotIndex + 1}</span>
-                                <h3 className="font-bold text-theme-text text-sm mt-0.5 truncate">{unit.titulo}</h3>
+                                <h3 className="font-bold text-theme-text text-sm mt-0.5 truncate">{item.unidad.titulo}</h3>
                               </div>
                               <div className="p-3 space-y-2 flex-1 text-xs">
                                 <p className="text-gray-600">
-                                  <strong className="text-gray-800 block mb-0.5">Niveles:</strong>
-                                  {unit.niveles.join(', ')}
+                                  <strong className="text-gray-800 block mb-0.5">Nivel:</strong>
+                                  {item.unidad.nivel}
                                 </p>
                                 <p className="text-gray-600 line-clamp-2">
                                   <strong className="text-gray-800 block mb-0.5">Metodologia:</strong>
-                                  {unit.enfoque}
+                                  {item.unidad.metodologiaActiva}
                                 </p>
                                 <span className="inline-block px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-600">
-                                  {unit.clases.length} Clases
+                                  {item.unidad.clases.length} Clases
                                 </span>
                               </div>
                               <div className="p-2 border-t border-gray-100">
                                 <button
-                                  onClick={() => { setUnidad(unit); setVistaActiva('generador'); }}
+                                  onClick={() => { setUnidad(item.unidad); setUsedFallback(false); setVistaActiva('generador'); }}
                                   className="w-full py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-semibold transition-colors"
                                 >
                                   Ver Unidad
@@ -414,53 +396,73 @@ export function UnidadesDidacticasView() {
                     })}
                   </div>
                 </div>
+              ) : generateError ? (
+                <div className="h-full flex flex-col items-center justify-center text-center py-20 px-6">
+                  <AlertTriangle size={40} className="mb-3 text-rose-400" />
+                  <p className="text-sm font-semibold text-rose-600 mb-1">No se pudo generar la unidad</p>
+                  <p className="text-xs text-gray-500 max-w-md">{generateError}</p>
+                  <Button variant="ghost" size="sm" className="mt-4" onClick={handleGenerate}>Reintentar</Button>
+                </div>
               ) : unidad ? (
                 <div className="space-y-5">
+                  {usedFallback && (
+                    <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200/70 rounded-xl px-3 py-2.5">
+                      <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                      <span>
+                        Esta unidad se generó con una plantilla de respaldo porque la IA no pudo completar la generación esta vez.
+                        El contenido es genérico — revisalo o presioná "Disenar Unidad con IA" de nuevo para intentar con la IA real.
+                      </span>
+                    </div>
+                  )}
+
                   <div className="border-b border-gray-200/60 pb-4">
                     <h1 className="text-xl font-bold text-theme-text">{unidad.titulo}</h1>
                     <p className="text-indigo-600 font-medium text-sm mt-1">
-                      Asignaturas: {unidad.oas.map(o => o.subject).join(', ')} · Niveles: {unidad.niveles.join(', ')}
+                      Asignatura: {unidad.asignatura} · Nivel: {unidad.nivel}
                     </p>
                     <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200/60 rounded-xl">
-                      <p className="font-bold text-indigo-700 text-xs uppercase tracking-wider mb-1">Enfoque Metodologico</p>
-                      <p className="text-indigo-600 text-sm leading-relaxed">{unidad.enfoque}</p>
+                      <p className="font-bold text-indigo-700 text-xs uppercase tracking-wider mb-1">Metodologia Activa</p>
+                      <p className="text-indigo-600 text-sm leading-relaxed">{unidad.metodologiaActiva}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h2 className="text-base font-bold text-theme-text">Fases de la Unidad</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[...unidad.fases].sort((a, b) => a.orden - b.orden).map((fase) => (
+                        <div key={fase.nombre} className="bg-gray-50 border border-gray-200/80 rounded-lg p-3">
+                          <p className="font-bold text-xs text-theme-text mb-0.5">{fase.nombre}</p>
+                          <p className="text-gray-600 text-xs leading-relaxed">{fase.descripcion}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <h2 className="text-base font-bold text-theme-text">Secuencia de Clases</h2>
-                    {unidad.clases.map((clase) => (
-                      <div key={clase.id} className="border border-gray-200/80 rounded-xl overflow-hidden">
+                    {[...unidad.clases].sort((a, b) => a.numero - b.numero).map((clase) => (
+                      <div key={clase.numero} className="border border-gray-200/80 rounded-xl overflow-hidden">
                         <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                          <h3 className="font-bold text-sm text-theme-text">{clase.fase}</h3>
+                          <h3 className="font-bold text-sm text-theme-text">Clase {clase.numero}: {clase.tema}</h3>
                           <p className="text-gray-500 text-xs mt-0.5">
-                            <strong className="text-gray-700">Asignaturas:</strong> {clase.asignaturas}
+                            <strong className="text-gray-700">Fase:</strong> {clase.faseAsociada}
+                          </p>
+                          <p className="text-gray-500 text-xs mt-0.5">
+                            <strong className="text-gray-700">Objetivo:</strong> {clase.objetivoEspecifico}
                           </p>
                         </div>
 
                         <div className="p-4 space-y-4">
                           {[
-                            { label: 'Inicio', data: clase.inicio, borderClass: 'border-emerald-400' },
-                            { label: 'Desarrollo', data: clase.desarrollo, borderClass: 'border-indigo-400' },
-                            { label: 'Cierre', data: clase.cierre, borderClass: 'border-rose-400' },
+                            { label: 'Inicio', data: clase.estructuraClase.inicio, borderClass: 'border-emerald-400' },
+                            { label: 'Desarrollo', data: clase.estructuraClase.desarrollo, borderClass: 'border-indigo-400' },
+                            { label: 'Cierre', data: clase.estructuraClase.cierre, borderClass: 'border-rose-400' },
                           ].map(({ label, data, borderClass }) => (
                             <section key={label} className={`space-y-1.5 border-l-2 ${borderClass} pl-4 py-1`}>
                               <h4 className={`font-bold text-xs ${getFaseColor(label)} flex items-center gap-1.5`}>
-                                {label} ({data.tiempo} min)
+                                {label} ({data.tiempoMinutos} min)
                               </h4>
-                              <div className="space-y-0.5">
-                                <p className="font-semibold text-gray-800 text-[11px]">{data.dinamica}</p>
-                                <p className="text-gray-600 text-xs leading-relaxed">{data.descripcion}</p>
-                                <div className="flex gap-4 mt-1.5 text-[10px] text-gray-500">
-                                  <span><strong className="text-gray-700">Docente:</strong> {data.rolDocente}</span>
-                                  <span><strong className="text-gray-700">Estudiante:</strong> {data.rolEstudiante}</span>
-                                </div>
-                                {data.evaluacion && (
-                                  <div className="mt-1.5 text-[10px] text-rose-600 bg-rose-50 p-2 rounded border border-rose-200/60">
-                                    <strong>Evaluacion Formativa:</strong> {data.evaluacion}
-                                  </div>
-                                )}
-                              </div>
+                              <p className="text-gray-600 text-xs leading-relaxed">{data.descripcion}</p>
                             </section>
                           ))}
                         </div>
