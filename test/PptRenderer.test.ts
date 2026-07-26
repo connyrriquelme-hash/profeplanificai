@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import JSZip from 'jszip';
 import { renderPptx } from '../functions/core/PptRenderer';
-import { buildRenderableDeck } from '../functions/core/PptLayoutEngine';
+import { buildRenderableDeck, SLIDE_WIDTH, SLIDE_HEIGHT } from '../functions/core/PptLayoutEngine';
 import { defaultTheme } from '../schemas/PptThemeSchema';
 import type { PptDeck } from '../schemas/PptDeckSchema';
 import type { RenderableSlide } from '../functions/core/PptLayoutEngine';
+
+const EMU_PER_INCH = 914400;
 
 const FULL_DECK: PptDeck = {
   slides: [
@@ -76,6 +79,46 @@ const VF_RENDERABLE_DECK: PptDeck = {
     { layout: 'bullets', title: 'L2', bullets: ['C', 'D'] },
     { layout: 'bullets', title: 'L3', bullets: ['E', 'F'] },
     { layout: 'bullets', title: 'L4', bullets: ['G', 'H'] },
+    {
+      layout: 'verdadero_falso',
+      afirmacion: 'La Tierra gira alrededor del Sol',
+      esVerdadero: true,
+      explicacion: 'La Tierra orbita al Sol.',
+    },
+  ],
+};
+
+const ALL_LAYOUTS_DECK: PptDeck = {
+  slides: [
+    { layout: 'title', title: 'Presentación de Ejemplo', subtitle: '5° Básico — Ciencias Naturales' },
+    { layout: 'bullets', title: 'Objetivo de Aprendizaje', bullets: ['Describir la estructura celular', 'Identificar orgánulos', 'Comparar célula vegetal y animal', 'Explicar la función de cada orgánulo'] },
+    { layout: 'image_text', title: 'Estructura Celular', body: 'La célula es la unidad básica de la vida.', imageQuery: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Epidermis_en.svg/200px-Epidermis_en.svg.png' },
+    { layout: 'comparison', title: 'Célula Vegetal vs Animal', left: { label: 'Vegetal', points: ['Pared celular', 'Cloroplastos', 'Vacuola grande'] }, right: { label: 'Animal', points: ['Sin pared', 'Centriolos', 'Vacuolas pequeñas'] } },
+    { layout: 'quote', text: 'La vida es un fenómeno emergente de la complejidad molecular.', author: 'Francisco Varela' },
+    {
+      layout: 'vocabulario',
+      titulo: 'Palabras Nuevas',
+      terminos: [
+        { palabra: 'Célula', definicion: 'Unidad básica de la vida' },
+        { palabra: 'Núcleo', definicion: 'Centro de control de la célula' },
+      ],
+    },
+    {
+      layout: 'ciclo_proceso',
+      titulo: 'Fotosíntesis',
+      pasos: [
+        { nombre: 'Captura', descripcion: 'Las hojas capturan luz solar' },
+        { nombre: 'Transformación', descripcion: 'Se convierte en energía' },
+        { nombre: 'Almacenamiento', descripcion: 'Se guarda como glucosa' },
+      ],
+    },
+    {
+      layout: 'quiz_opcion_multiple',
+      pregunta: '¿Cuál es la capital de Chile?',
+      opciones: ['Santiago', 'Lima', 'Bogotá', 'Buenos Aires'],
+      respuestaCorrectaIndex: 0,
+      explicacion: 'Santiago es la capital de Chile.',
+    },
     {
       layout: 'verdadero_falso',
       afirmacion: 'La Tierra gira alrededor del Sol',
@@ -208,5 +251,79 @@ describe('PptRenderer.renderPptx', () => {
     const result = await renderPptx(renderableSlides);
 
     expect(isZipBuffer(result)).toBe(true);
+  });
+
+  describe('geometría real del XML (los 9 layouts)', () => {
+    async function renderAndUnzip() {
+      const renderableSlides = buildRenderableDeck(ALL_LAYOUTS_DECK, defaultTheme);
+      const buffer = await renderPptx(renderableSlides);
+      return JSZip.loadAsync(buffer);
+    }
+
+    it('el tamaño del lienzo en presentation.xml coincide EXACTO con SLIDE_WIDTH/SLIDE_HEIGHT', async () => {
+      const zip = await renderAndUnzip();
+      const presentationXml = await zip.file('ppt/presentation.xml')?.async('string');
+      expect(presentationXml).toBeDefined();
+
+      const match = presentationXml!.match(/<p:sldSz cx="(\d+)" cy="(\d+)"/);
+      expect(match).not.toBeNull();
+
+      const [, cx, cy] = match!;
+      expect(Number(cx)).toBe(Math.round(SLIDE_WIDTH * EMU_PER_INCH));
+      expect(Number(cy)).toBe(Math.round(SLIDE_HEIGHT * EMU_PER_INCH));
+    });
+
+    it('ninguna shape tiene height=0 (ni width=0) en ningún slide, en los 9 layouts', async () => {
+      const zip = await renderAndUnzip();
+      const slideFiles = Object.keys(zip.files)
+        .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+        .sort();
+
+      expect(slideFiles.length).toBeGreaterThanOrEqual(9);
+
+      const zeroSizeShapes: string[] = [];
+      for (const fileName of slideFiles) {
+        const xml = await zip.file(fileName)!.async('string');
+        // pptxgenjs siempre emite <p:grpSpPr><a:xfrm><a:ext cx="0" cy="0">
+        // para el árbol raíz de shapes (PowerPoint no lo usa para renderizar);
+        // hay que excluirlo o cualquier slide da "falso positivo".
+        const withoutRootGroup = xml.replace(/<p:grpSpPr>.*?<\/p:grpSpPr>/s, '');
+        const extents = [...withoutRootGroup.matchAll(/<a:ext cx="(\d+)" cy="(\d+)"\/>/g)];
+        expect(extents.length).toBeGreaterThan(0);
+        for (const [, cx, cy] of extents) {
+          if (Number(cx) === 0 || Number(cy) === 0) {
+            zeroSizeShapes.push(`${fileName}: cx=${cx} cy=${cy}`);
+          }
+        }
+      }
+
+      expect(zeroSizeShapes).toEqual([]);
+    });
+
+    it('el contenido ocupa proporcionalmente el lienzo, no solo una esquina', async () => {
+      const zip = await renderAndUnzip();
+      const slideFiles = Object.keys(zip.files)
+        .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+        .sort();
+
+      const widthEmu = SLIDE_WIDTH * EMU_PER_INCH;
+      const heightEmu = SLIDE_HEIGHT * EMU_PER_INCH;
+
+      for (const fileName of slideFiles) {
+        const xml = await zip.file(fileName)!.async('string');
+        const withoutRootGroup = xml.replace(/<p:grpSpPr>.*?<\/p:grpSpPr>/s, '');
+        const offsets = [...withoutRootGroup.matchAll(/<a:off x="(\d+)" y="(\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/>/g)];
+        expect(offsets.length).toBeGreaterThan(0);
+
+        const maxX = Math.max(...offsets.map(([, x, , cx]) => Number(x) + Number(cx)));
+        const maxY = Math.max(...offsets.map(([, , y, , cy]) => Number(y) + Number(cy)));
+
+        // El contenido debe extenderse más allá de un cuarto del lienzo en
+        // al menos una dimensión — si todo cupiera en la esquina superior
+        // izquierda (el bug original), maxX/maxY serían una fracción chica
+        // del ancho/alto real del lienzo.
+        expect(maxX > widthEmu * 0.25 || maxY > heightEmu * 0.25).toBe(true);
+      }
+    });
   });
 });

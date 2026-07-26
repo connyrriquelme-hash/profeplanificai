@@ -12,8 +12,8 @@ import type {
   VerdaderoFalsoSlide,
 } from '../../schemas/PptDeckSchema';
 
-const SLIDE_WIDTH = 10;
-const SLIDE_HEIGHT = 5.63;
+export const SLIDE_WIDTH = 10;
+export const SLIDE_HEIGHT = 5.63;
 const MARGIN = 0.5;
 const CONTENT_WIDTH = SLIDE_WIDTH - 2 * MARGIN;
 const CONTENT_HEIGHT = SLIDE_HEIGHT - 2 * MARGIN;

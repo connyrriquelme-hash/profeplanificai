@@ -1,4 +1,4 @@
-import type { RenderableSlide } from './PptLayoutEngine';
+import { SLIDE_WIDTH, SLIDE_HEIGHT, type RenderableSlide } from './PptLayoutEngine';
 
 // Minimal types for pptxgenjs to avoid static import issues
 interface PptxSlide {
@@ -11,10 +11,15 @@ interface PptxPres {
   layout: string;
   author: string;
   title: string;
+  defineLayout(layout: { name: string; width: number; height: number }): void;
   addSlide(): PptxSlide;
   write(options: { outputType: 'uint8array' }): Promise<Uint8Array>;
   writeFile(options: { fileName: string }): Promise<void>;
 }
+
+// Debe coincidir EXACTAMENTE con SLIDE_WIDTH/SLIDE_HEIGHT de PptLayoutEngine.ts:
+// todas las coordenadas de las shapes se calculan asumiendo este tamaño de lienzo.
+const PPTX_LAYOUT_NAME = 'PLANIFICAIA';
 
 async function createPres(): Promise<PptxPres> {
   const mod = await import('pptxgenjs');
@@ -91,6 +96,42 @@ function addTextFromRect(pptxSlide: PptxSlide, rect: LocalTextRect, text: string
   });
 }
 
+// pptxgenjs.addText(arrayDeRuns, opts) crea UNA sola caja de texto con varios
+// párrafos: la posición/tamaño de esa caja sale del 2do argumento (`opts`),
+// no de cada item del array. Por eso hay que calcular el bounding box real
+// de todos los rects (cada uno ya viene bien posicionado desde
+// PptLayoutEngine) y pasarlo como la caja compartida — si no, pptxgenjs
+// no recibe x/y/w/h y la caja termina con height 0.
+function addBulletListFromRects(pptxSlide: PptxSlide, rects: LocalTextRect[], bullet: boolean): void {
+  if (rects.length === 0) return;
+
+  const minX = Math.min(...rects.map((r) => r.x));
+  const minY = Math.min(...rects.map((r) => r.y));
+  const maxX = Math.max(...rects.map((r) => r.x + r.width));
+  const maxY = Math.max(...rects.map((r) => r.y + r.height));
+
+  const runs = rects.map((rect) => ({
+    text: rect.text ?? '',
+    options: {
+      fontSize: rect.fontSize,
+      color: rect.color.replace('#', ''),
+      fontFace: rect.fontFamily,
+      bold: rect.bold,
+      align: pptxAlign(rect.align),
+      breakLine: true,
+    },
+  }));
+
+  pptxSlide.addText(runs, {
+    x: minX,
+    y: minY,
+    w: maxX - minX,
+    h: maxY - minY,
+    valign: 'top',
+    bullet,
+  });
+}
+
 function renderTitleSlide(pres: PptxPres, slide: RenderableSlide): void {
   if (slide.layout !== 'title') return;
   const pptxSlide = pres.addSlide();
@@ -113,28 +154,7 @@ function renderBulletsSlide(pres: PptxPres, slide: RenderableSlide): void {
   const title = asTextRect(slide.title);
   addTextFromRect(pptxSlide, title, title.text ?? '');
 
-  const bulletTexts = slide.bullets.map((b) => {
-    const rect = asTextRect(b);
-    return {
-      text: rect.text ?? '',
-      options: {
-        fontSize: rect.fontSize,
-        color: rect.color.replace('#', ''),
-        fontFace: rect.fontFamily,
-        bold: rect.bold,
-        align: pptxAlign(rect.align),
-        valign: pptxValign(rect.valign),
-        x: rect.x,
-        y: rect.y,
-        w: rect.width,
-        h: rect.height,
-      },
-    };
-  });
-
-  if (bulletTexts.length > 0) {
-    pptxSlide.addText(bulletTexts, { bullet: true });
-  }
+  addBulletListFromRects(pptxSlide, slide.bullets.map(asTextRect), true);
 }
 
 function isValidImageSource(src: string): boolean {
@@ -185,43 +205,8 @@ function renderComparisonSlide(pres: PptxPres, slide: RenderableSlide): void {
   const rightLabel = asTextRect(slide.rightLabel);
   addTextFromRect(pptxSlide, rightLabel, rightLabel.text ?? '');
 
-  const leftBullets = slide.leftPoints.map((p) => {
-    const rect = asTextRect(p);
-    return {
-      text: rect.text ?? '',
-      options: {
-        fontSize: rect.fontSize,
-        color: rect.color.replace('#', ''),
-        fontFace: rect.fontFamily,
-        x: rect.x,
-        y: rect.y,
-        w: rect.width,
-        h: rect.height,
-      },
-    };
-  });
-  if (leftBullets.length > 0) {
-    pptxSlide.addText(leftBullets, { bullet: true });
-  }
-
-  const rightBullets = slide.rightPoints.map((p) => {
-    const rect = asTextRect(p);
-    return {
-      text: rect.text ?? '',
-      options: {
-        fontSize: rect.fontSize,
-        color: rect.color.replace('#', ''),
-        fontFace: rect.fontFamily,
-        x: rect.x,
-        y: rect.y,
-        w: rect.width,
-        h: rect.height,
-      },
-    };
-  });
-  if (rightBullets.length > 0) {
-    pptxSlide.addText(rightBullets, { bullet: true });
-  }
+  addBulletListFromRects(pptxSlide, slide.leftPoints.map(asTextRect), true);
+  addBulletListFromRects(pptxSlide, slide.rightPoints.map(asTextRect), true);
 }
 
 function renderQuoteSlide(pres: PptxPres, slide: RenderableSlide): void {
@@ -249,25 +234,7 @@ function renderQuizPreguntaSlide(pres: PptxPres, slide: RenderableSlide): void {
   const pregunta = asTextRect(slide.pregunta);
   addTextFromRect(pptxSlide, pregunta, pregunta.text ?? '');
 
-  const opciones = slide.opciones.map((opt) => {
-    const rect = asTextRect(opt);
-    return {
-      text: rect.text ?? '',
-      options: {
-        fontSize: rect.fontSize,
-        color: rect.color.replace('#', ''),
-        fontFace: rect.fontFamily,
-        x: rect.x,
-        y: rect.y,
-        w: rect.width,
-        h: rect.height,
-      },
-    };
-  });
-
-  if (opciones.length > 0) {
-    pptxSlide.addText(opciones, { bullet: false });
-  }
+  addBulletListFromRects(pptxSlide, slide.opciones.map(asTextRect), false);
 }
 
 function renderQuizRespuestaSlide(pres: PptxPres, slide: RenderableSlide): void {
@@ -296,24 +263,9 @@ function renderVerdaderoFalsoPreguntaSlide(pres: PptxPres, slide: RenderableSlid
   const afirmacion = asTextRect(slide.afirmacion);
   addTextFromRect(pptxSlide, afirmacion, afirmacion.text ?? '');
 
-  const opciones = slide.opciones.map((opt) => {
+  for (const opt of slide.opciones) {
     const rect = asTextRect(opt);
-    return {
-      text: rect.text ?? '',
-      options: {
-        fontSize: rect.fontSize,
-        color: rect.color.replace('#', ''),
-        fontFace: rect.fontFamily,
-        x: rect.x,
-        y: rect.y,
-        w: rect.width,
-        h: rect.height,
-      },
-    };
-  });
-
-  if (opciones.length > 0) {
-    pptxSlide.addText(opciones, { bullet: false });
+    addTextFromRect(pptxSlide, rect, rect.text ?? '');
   }
 }
 
@@ -376,7 +328,8 @@ const RENDERERS: Record<string, (pres: PptxPres, slide: RenderableSlide) => void
 
 export async function renderPptx(slides: RenderableSlide[]): Promise<Uint8Array> {
   const pres = await createPres();
-  pres.layout = 'LAYOUT_WIDE';
+  pres.defineLayout({ name: PPTX_LAYOUT_NAME, width: SLIDE_WIDTH, height: SLIDE_HEIGHT });
+  pres.layout = PPTX_LAYOUT_NAME;
   pres.author = 'PlanificaIA Chile';
   pres.title = 'Presentación educativa';
 

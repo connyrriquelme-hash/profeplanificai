@@ -3,12 +3,11 @@ import {
   buildRenderableDeck,
   calcularContraste,
   validarContraste,
+  SLIDE_WIDTH,
+  SLIDE_HEIGHT,
 } from '../functions/core/PptLayoutEngine';
 import { defaultTheme, type PptTheme } from '../schemas/PptThemeSchema';
 import type { PptDeck } from '../schemas/PptDeckSchema';
-
-const SLIDE_WIDTH = 10;
-const SLIDE_HEIGHT = 5.63;
 
 const FULL_DECK: PptDeck = {
   slides: [
