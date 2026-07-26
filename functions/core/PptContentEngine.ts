@@ -1,4 +1,4 @@
-import { PptDeckSchema, type PptDeck, type Slide } from '../../schemas/PptDeckSchema';
+import { PptDeckSchema, TITLE_MAX, SUBTITLE_MAX, BULLET_MAX, type PptDeck, type Slide } from '../../schemas/PptDeckSchema';
 import type { AIEngineEnv, PedagogicalPlan } from './types';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
@@ -6,7 +6,7 @@ const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 const SYSTEM_PROMPT_PPT = `Eres un profesor experto en didáctica y diseño de presentaciones educativas para el currículum chileno. Generas contenido para presentaciones PPT que serán usadas en clase.
 
 REGLAS OBLIGATORIAS:
-1. Cada slide debe tener un título claro y conciso (máximo 80 caracteres).
+1. Cada slide debe tener un título claro y conciso (máximo 80 caracteres). El slide "title" puede tener además un subtitle breve (máximo 120 caracteres) — nunca copies ahí el objetivo de aprendizaje completo, eso va en su propio slide de bullets.
 2. Los slides de tipo "bullets" deben tener entre 2 y 6 bullets. Cada bullet máximo 140 caracteres.
 3. Los slides de tipo "image_text" deben tener un imageQuery descriptivo (máximo 100 caracteres) para buscar una imagen relacionada.
 4. Los slides de tipo "comparison" deben tener left y right con label y al menos 1 point cada uno.
@@ -45,6 +45,14 @@ function extractJsonFromText(raw: string): string {
   return candidate;
 }
 
+function truncate(text: string, max: number): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  const cut = trimmed.slice(0, max - 1).trimEnd();
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut}…`;
+}
+
 function splitTextToBullets(text: string, maxItems: number): string[] {
   const trimmed = text.trim();
   if (!trimmed) return ['Sin contenido disponible', 'Consultar planificación para más detalles'];
@@ -75,8 +83,8 @@ function buildFallbackDeck(plan: PedagogicalPlan): PptDeck {
   const slides: Slide[] = [
     {
       layout: 'title',
-      title: `${tema} — ${asignatura}`,
-      subtitle: `${curso} | ${oa}`,
+      title: truncate(`${tema} — ${asignatura}`, TITLE_MAX),
+      subtitle: truncate([curso, asignatura].filter(Boolean).join(' | '), SUBTITLE_MAX),
     },
     {
       layout: 'bullets',
@@ -86,7 +94,7 @@ function buildFallbackDeck(plan: PedagogicalPlan): PptDeck {
         ...(indicadores ? [indicadores] : []),
         `Asignatura: ${asignatura}`,
         `Curso: ${curso}`,
-      ].slice(0, 6),
+      ].slice(0, 6).map((b) => truncate(b, BULLET_MAX)),
     },
   ];
 

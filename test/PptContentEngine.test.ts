@@ -218,4 +218,24 @@ describe('PptContentEngine.generateDeckContent', () => {
     const validation = PptDeckSchema.safeParse(result);
     expect(validation.success).toBe(true);
   });
+
+  it('should truncate a long real-world OA text instead of overflowing title/subtitle/bullets', async () => {
+    const longPlan: PedagogicalPlan = {
+      ...MOCK_PLAN,
+      objetivo_aprendizaje: 'Identificar las regiones naturales de Chile y describir sus características geográficas, climáticas y de vegetación, relacionándolas con las actividades económicas de la población que las habita.',
+      asignatura: 'Historia, Geografía y Ciencias Sociales',
+    };
+    const env = mockAINoAI();
+    const result = await generateDeckContent(env, longPlan);
+
+    const validation = PptDeckSchema.safeParse(result);
+    expect(validation.success).toBe(true);
+
+    const titleSlide = result.slides[0];
+    expect(titleSlide.layout).toBe('title');
+    if (titleSlide.layout === 'title') {
+      expect(titleSlide.title.length).toBeLessThanOrEqual(80);
+      expect(titleSlide.subtitle?.length ?? 0).toBeLessThanOrEqual(120);
+    }
+  });
 });

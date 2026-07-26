@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-const TITLE_MAX = 80;
-const SUBTITLE_MAX = 120;
-const BULLET_MAX = 140;
+export const TITLE_MAX = 80;
+export const SUBTITLE_MAX = 120;
+export const BULLET_MAX = 140;
 const BODY_MAX = 300;
 const IMAGE_QUERY_MAX = 100;
 const QUOTE_MAX = 200;
