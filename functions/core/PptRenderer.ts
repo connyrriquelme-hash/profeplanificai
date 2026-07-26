@@ -12,6 +12,7 @@ interface PptxPres {
   author: string;
   title: string;
   addSlide(): PptxSlide;
+  write(options: { outputType: 'uint8array' }): Promise<Uint8Array>;
   writeFile(options: { fileName: string }): Promise<void>;
 }
 
@@ -373,7 +374,7 @@ const RENDERERS: Record<string, (pres: PptxPres, slide: RenderableSlide) => void
   verdadero_falso_respuesta: renderVerdaderoFalsoRespuestaSlide,
 };
 
-export async function renderPptx(slides: RenderableSlide[], outputPath: string): Promise<string> {
+export async function renderPptx(slides: RenderableSlide[]): Promise<Uint8Array> {
   const pres = await createPres();
   pres.layout = 'LAYOUT_WIDE';
   pres.author = 'PlanificaIA Chile';
@@ -408,6 +409,5 @@ export async function renderPptx(slides: RenderableSlide[], outputPath: string):
     });
   }
 
-  await pres.writeFile({ fileName: outputPath });
-  return outputPath;
+  return pres.write({ outputType: 'uint8array' });
 }

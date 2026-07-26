@@ -1,13 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderPptx } from '../functions/core/PptRenderer';
 import { buildRenderableDeck } from '../functions/core/PptLayoutEngine';
 import { defaultTheme } from '../schemas/PptThemeSchema';
 import type { PptDeck } from '../schemas/PptDeckSchema';
 import type { RenderableSlide } from '../functions/core/PptLayoutEngine';
-import fs from 'fs';
-import path from 'path';
-
-const TMP_DIR = path.resolve(__dirname, '../tmp');
 
 const FULL_DECK: PptDeck = {
   slides: [
@@ -89,43 +85,25 @@ const VF_RENDERABLE_DECK: PptDeck = {
   ],
 };
 
-beforeAll(() => {
-  if (!fs.existsSync(TMP_DIR)) {
-    fs.mkdirSync(TMP_DIR, { recursive: true });
-  }
-});
-
-afterAll(() => {
-  const files = fs.readdirSync(TMP_DIR).filter((f) => f.endsWith('.pptx'));
-  for (const file of files) {
-    const stat = fs.statSync(path.join(TMP_DIR, file));
-    if (stat.size === 0) {
-      fs.unlinkSync(path.join(TMP_DIR, file));
-    }
-  }
-});
+function isZipBuffer(buf: Uint8Array): boolean {
+  return buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b;
+}
 
 describe('PptRenderer.renderPptx', () => {
-  it('should render a complete 5-slide deck to a non-empty .pptx file', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-full-deck.pptx');
+  it('should render a complete 5-slide deck to a non-empty Uint8Array', async () => {
     const renderableSlides = buildRenderableDeck(FULL_DECK, defaultTheme);
-    const result = await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
   it('should produce a valid ZIP file (.pptx is ZIP)', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-zip-valid.pptx');
     const renderableSlides = buildRenderableDeck(FULL_DECK, defaultTheme);
-    await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    const buffer = fs.readFileSync(outputPath);
-    const magicBytes = buffer.toString('ascii', 0, 4);
-    expect(magicBytes).toBe('PK\x03\x04');
+    expect(isZipBuffer(result)).toBe(true);
   });
 
   it('should not crash when image source is invalid (file path)', async () => {
@@ -136,13 +114,12 @@ describe('PptRenderer.renderPptx', () => {
         { layout: 'bullets', title: 'Después de imagen', bullets: ['A', 'B'] },
       ],
     };
-    const outputPath = path.join(TMP_DIR, 'test-bad-image.pptx');
     const renderableSlides = buildRenderableDeck(deckWithBadImage, defaultTheme);
 
-    await expect(renderPptx(renderableSlides, outputPath)).resolves.toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    const result = await renderPptx(renderableSlides);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
   it('should skip a corrupted slide and render the rest', async () => {
@@ -168,86 +145,68 @@ describe('PptRenderer.renderPptx', () => {
       ],
     };
 
-    const outputPath = path.join(TMP_DIR, 'test-corrupted-slide.pptx');
-    const result = await renderPptx([goodSlide, badSlide, goodSlide2], outputPath);
+    const result = await renderPptx([goodSlide, badSlide, goodSlide2]);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
   it('should handle an empty slides array gracefully', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-empty.pptx');
-    const result = await renderPptx([], outputPath);
+    const result = await renderPptx([]);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
-  it('should render a vocabulario deck to a non-empty .pptx file', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-vocabulario.pptx');
+  it('should render a vocabulario deck to a non-empty Uint8Array', async () => {
     const renderableSlides = buildRenderableDeck(VOCAB_RENDERABLE_DECK, defaultTheme);
-    const result = await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
-  it('should render a ciclo_proceso deck to a non-empty .pptx file', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-ciclo-proceso.pptx');
+  it('should render a ciclo_proceso deck to a non-empty Uint8Array', async () => {
     const renderableSlides = buildRenderableDeck(CICLO_RENDERABLE_DECK, defaultTheme);
-    const result = await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
-  it('should render a quiz_opcion_multiple deck to a non-empty .pptx file', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-quiz.pptx');
+  it('should render a quiz_opcion_multiple deck to a non-empty Uint8Array', async () => {
     const renderableSlides = buildRenderableDeck(QUIZ_RENDERABLE_DECK, defaultTheme);
-    const result = await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
-  it('should render a verdadero_falso deck to a non-empty .pptx file', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-verdadero-falso.pptx');
+  it('should render a verdadero_falso deck to a non-empty Uint8Array', async () => {
     const renderableSlides = buildRenderableDeck(VF_RENDERABLE_DECK, defaultTheme);
-    const result = await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    expect(result).toBe(outputPath);
-    expect(fs.existsSync(outputPath)).toBe(true);
-    const stat = fs.statSync(outputPath);
-    expect(stat.size).toBeGreaterThan(0);
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(result.length).toBeGreaterThan(0);
+    expect(isZipBuffer(result)).toBe(true);
   });
 
   it('should produce a valid ZIP for vocabulario deck', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-vocab-zip.pptx');
     const renderableSlides = buildRenderableDeck(VOCAB_RENDERABLE_DECK, defaultTheme);
-    await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    const buffer = fs.readFileSync(outputPath);
-    const magicBytes = buffer.toString('ascii', 0, 4);
-    expect(magicBytes).toBe('PK\x03\x04');
+    expect(isZipBuffer(result)).toBe(true);
   });
 
   it('should produce a valid ZIP for quiz deck', async () => {
-    const outputPath = path.join(TMP_DIR, 'test-quiz-zip.pptx');
     const renderableSlides = buildRenderableDeck(QUIZ_RENDERABLE_DECK, defaultTheme);
-    await renderPptx(renderableSlides, outputPath);
+    const result = await renderPptx(renderableSlides);
 
-    const buffer = fs.readFileSync(outputPath);
-    const magicBytes = buffer.toString('ascii', 0, 4);
-    expect(magicBytes).toBe('PK\x03\x04');
+    expect(isZipBuffer(result)).toBe(true);
   });
 });

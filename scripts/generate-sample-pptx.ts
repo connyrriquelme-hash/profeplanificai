@@ -2,6 +2,7 @@ import { buildRenderableDeck } from '../functions/core/PptLayoutEngine';
 import { renderPptx } from '../functions/core/PptRenderer';
 import { defaultTheme } from '../schemas/PptThemeSchema';
 import type { PptDeck } from '../schemas/PptDeckSchema';
+import fs from 'fs';
 
 const deck: PptDeck = {
   slides: [
@@ -11,7 +12,7 @@ const deck: PptDeck = {
       title: 'Objetivo de Aprendizaje',
       bullets: [
         'Describir la estructura celular y sus partes',
-        'Identificar orgánulos: membrana, citoplasma, núcleo',
+        'Identificar organelos: membrana, citoplasma, núcleo',
         'Comparar célula vegetal y animal',
         'Relacionar estructura con función',
       ],
@@ -39,5 +40,19 @@ const deck: PptDeck = {
 };
 
 const renderables = buildRenderableDeck(deck, defaultTheme);
-const out = await renderPptx(renderables, 'tmp/ejemplo-la-celula.pptx');
-console.log('Generado:', out);
+
+// renderPptx now returns a Uint8Array buffer (Cloudflare Workers compatible).
+// This script runs in Node for local development only — writing to disk here
+// is for manual inspection, NOT part of the production pipeline.
+const buffer = await renderPptx(renderables);
+const outputPath = 'tmp/ejemplo-la-celula.pptx';
+
+fs.mkdirSync('tmp', { recursive: true });
+fs.writeFileSync(outputPath, buffer);
+
+// Verify it's a valid ZIP (.pptx)
+const magicBytes = buffer.slice(0, 2);
+const isZip = magicBytes[0] === 0x50 && magicBytes[1] === 0x4b;
+console.log('Generado:', outputPath);
+console.log('Tamaño:', buffer.length, 'bytes');
+console.log('Firma ZIP válida:', isZip);
