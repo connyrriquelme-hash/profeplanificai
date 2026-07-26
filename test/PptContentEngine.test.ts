@@ -178,6 +178,17 @@ describe('PptContentEngine.generateDeckContent', () => {
     expect(result.slides.some((s) => s.layout === 'bullets')).toBe(true);
   });
 
+  it('REGRESIÓN: debe parsear correctamente cuando env.AI.run() resuelve a { response: string }, la forma real de Cloudflare Workers AI (no solo un string plano)', async () => {
+    const env: AIEngineEnv = {
+      AI: { run: vi.fn().mockResolvedValue({ response: VALID_AI_RESPONSE }) } as unknown as Ai,
+    };
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    expect(result.slides.length).toBeGreaterThanOrEqual(5);
+    expect(result.slides[0].layout).toBe('title');
+    expect(result.slides.some((s) => s.layout === 'bullets')).toBe(true);
+  });
+
   it('should activate fallback when AI returns invalid JSON', async () => {
     const env = mockAIParseError();
     const result = await generateDeckContent(env, MOCK_PLAN);

@@ -275,7 +275,15 @@ function callAI(
   }).then((response: unknown) => {
     if (typeof response === 'string') return response;
     if (typeof response === 'object' && response !== null) {
-      return JSON.stringify((response as Record<string, unknown>).response ?? response);
+      // env.AI.run(...) con mensajes de chat normalmente resuelve a
+      // { response: "<texto plano del modelo>" } — ese campo YA es el texto
+      // a parsear, nunca hay que re-stringify-arlo (JSON.stringify de un
+      // string produce un literal JSON con comillas/backslashes escapados,
+      // que rompe JSON.parse en extractJsonFromText). Confirmado con
+      // evidencia real contra el servidor: sin este chequeo, generateDeckContent
+      // caía a buildFallbackDeck en el 100% de las llamadas reales probadas.
+      const inner = (response as Record<string, unknown>).response;
+      return typeof inner === 'string' ? inner : JSON.stringify(inner ?? response);
     }
     return String(response);
   });
