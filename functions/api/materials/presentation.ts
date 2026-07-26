@@ -1,8 +1,9 @@
 import { generateDeckContent } from '../../core/PptContentEngine';
 import type { PedagogicalPlan, AIEngineEnv } from '../../core/types';
 import type { PptDeck, Slide as PptDeckSlide } from '../../../schemas/PptDeckSchema';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; AI?: any }
+interface Env { DB: D1Database; AI?: any; JWT_SECRET: string }
 
 interface PresentationRequest {
   title: string;
@@ -150,20 +151,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     // Extract user from JWT for ownership tracking
-    // TODO(seguridad): esto decodifica el payload del JWT sin verificar su
-    // firma. Cualquiera puede fabricar un token con cualquier sub/institutionId
-    // y pasar esta verificación. Reemplazar por una verificación real de firma
-    // (ej. la misma librería/función que ya use functions/core/authorization.ts
-    // para otros endpoints, si existe una) antes de considerar este endpoint
-    // seguro para producción con datos reales de estudiantes/profesores.
-    const authHeader = context.request.headers.get('Authorization');
-    let userId: string | undefined;
-    if (authHeader?.startsWith('Bearer ')) {
-      try {
-        const payload = JSON.parse(atob(authHeader.slice(7).split('.')[1]));
-        userId = payload.sub;
-      } catch { /* token no válido, seguir sin userId */ }
-    }
+    const userId = await getAuthenticatedUserId(context.request, context.env.JWT_SECRET);
 
     // Save to D1
     const resourceId = `pptx_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;

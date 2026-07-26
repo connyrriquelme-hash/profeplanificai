@@ -2,29 +2,13 @@ import { PptDeckSchema } from '../../../../schemas/PptDeckSchema';
 import type { PptDeck } from '../../../../schemas/PptDeckSchema';
 import { buildRenderableDeck } from '../../../core/PptLayoutEngine';
 import { renderPptx } from '../../../core/PptRenderer';
+import { getAuthenticatedUserId } from '../../../_lib/auth';
 
-interface Env { DB: D1Database; JWT_SECRET?: string }
+interface Env { DB: D1Database; JWT_SECRET: string }
 
 interface RenderRequest {
   resourceId?: string;
   deck?: PptDeck;
-}
-
-// TODO(seguridad): esto decodifica el payload del JWT sin verificar su
-// firma. Cualquiera puede fabricar un token con cualquier sub/institutionId
-// y pasar esta verificación. Reemplazar por una verificación real de firma
-// (ej. la misma librería/función que ya use functions/core/authorization.ts
-// para otros endpoints, si existe una) antes de considerar este endpoint
-// seguro para producción con datos reales de estudiantes/profesores.
-function getUserId(request: Request): string | null {
-  const auth = request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  try {
-    const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-    return payload.sub || null;
-  } catch {
-    return null;
-  }
 }
 
 async function getUserInstitution(db: D1Database, userId: string): Promise<string | null> {
@@ -45,7 +29,7 @@ function slugify(text: string): string {
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
-    const userId = getUserId(context.request);
+    const userId = await getAuthenticatedUserId(context.request, context.env.JWT_SECRET);
     if (!userId) {
       return Response.json({ error: 'Sesión inválida o expirada' }, { status: 401 });
     }

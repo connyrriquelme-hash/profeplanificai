@@ -69,7 +69,8 @@ async function makeContext(overrides: {
 }) {
   const mockDB = overrides.mockDB ?? seededDB();
   const tokenSub = overrides.tokenSub ?? 'user-1';
-  const token = await signToken({ sub: tokenSub, email: `${tokenSub}@test.cl` }, 'test-secret');
+  const TEST_SECRET = 'test-jwt-secret-with-at-least-32-characters!!';
+  const token = await signToken(tokenSub, `${tokenSub}@test.cl`, TEST_SECRET);
 
   return {
     request: new Request('http://localhost/api/materials/presentation/render', {
@@ -80,7 +81,7 @@ async function makeContext(overrides: {
       },
       body: JSON.stringify(overrides.body ?? { resourceId: 'res-valid' }),
     }),
-    env: { DB: mockDB, JWT_SECRET: 'test-secret' },
+    env: { DB: mockDB, JWT_SECRET: TEST_SECRET },
   } as any;
 }
 
@@ -165,7 +166,7 @@ describe('POST /api/materials/presentation/render', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resourceId: 'res-valid' }),
       }),
-      env: { DB: seededDB(), JWT_SECRET: 'test-secret' },
+      env: { DB: seededDB(), JWT_SECRET: 'test-jwt-secret-with-at-least-32-characters!!' },
     } as any;
     const res = await onRequestPost(ctx);
 
