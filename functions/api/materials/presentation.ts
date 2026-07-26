@@ -39,51 +39,49 @@ interface OldSlide {
 }
 
 function pptDeckToLegacySlides(deck: PptDeck): OldSlide[] {
-  return deck.slides.map((slide: PptDeckSlide): OldSlide => {
+  return deck.slides.flatMap((slide: PptDeckSlide): OldSlide[] => {
     switch (slide.layout) {
       case 'title':
-        return { type: 'cover', title: slide.title, subtitle: slide.subtitle };
+        return [{ type: 'cover', title: slide.title, subtitle: slide.subtitle }];
       case 'bullets':
-        return { type: 'content', title: slide.title, bullets: slide.bullets };
+        return [{ type: 'content', title: slide.title, bullets: slide.bullets }];
       case 'image_text':
-        return { type: 'content', title: slide.title, subtitle: slide.body };
+        return [{ type: 'content', title: slide.title, subtitle: slide.body }];
       case 'comparison':
-        return {
+        return [{
           type: 'content',
           title: slide.title,
           bullets: [
             `${slide.left.label}: ${slide.left.points[0] || ''}`,
             `${slide.right.label}: ${slide.right.points[0] || ''}`,
           ],
-        };
+        }];
       case 'quote':
-        return { type: 'content', title: slide.text, subtitle: slide.author };
+        return [{ type: 'content', title: slide.text, subtitle: slide.author }];
       case 'vocabulario':
-        return {
+        return [{
           type: 'content',
           title: slide.titulo,
           bullets: slide.terminos.map(t => `${t.palabra}: ${t.definicion}`),
-        };
+        }];
       case 'ciclo_proceso':
-        return {
+        return [{
           type: 'content',
           title: slide.titulo,
           bullets: slide.pasos.map(p => `${p.nombre}: ${p.descripcion}`),
-        };
+        }];
       case 'quiz_opcion_multiple':
-        return {
-          type: 'content',
-          title: slide.pregunta,
-          bullets: slide.opciones.map((o, i) => `${i === slide.respuestaCorrectaIndex ? '✓ ' : ''}${o}`),
-        };
+        return [
+          { type: 'content', title: slide.pregunta, bullets: slide.opciones },
+          { type: 'content', title: slide.pregunta, bullets: slide.opciones.map((o, i) => `${i === slide.respuestaCorrectaIndex ? '✓ ' : ''}${o}`) },
+        ];
       case 'verdadero_falso':
-        return {
-          type: 'content',
-          title: slide.afirmacion,
-          bullets: [slide.esVerdadero ? 'Verdadero' : 'Falso', slide.explicacion || ''].filter(Boolean),
-        };
+        return [
+          { type: 'content', title: slide.afirmacion, bullets: ['¿Verdadero o falso?'] },
+          { type: 'content', title: slide.afirmacion, bullets: [slide.esVerdadero ? 'Verdadero' : 'Falso', slide.explicacion || ''].filter(Boolean) },
+        ];
       default:
-        return { type: 'content', title: (slide as any).title || 'Slide' };
+        return [{ type: 'content', title: (slide as any).title || 'Slide' }];
     }
   });
 }

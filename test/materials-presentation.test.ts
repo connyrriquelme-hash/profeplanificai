@@ -233,7 +233,56 @@ describe('POST /api/materials/presentation', () => {
     expect(layouts).toContain('quiz_opcion_multiple');
     expect(layouts).toContain('verdadero_falso');
 
-    expect(json.slides.length).toBe(9);
+    expect(json.slides.length).toBe(11);
     expect(json.slides[0].type).toBe('cover');
+  });
+
+  it('quiz_opcion_multiple y verdadero_falso se dividen en pregunta (sin respuesta) y respuesta (marcada)', async () => {
+    const quizAi = {
+      run: async () => JSON.stringify({
+        slides: [
+          { layout: 'title', title: 'Quiz', subtitle: 'Test' },
+          { layout: 'bullets', title: 'Repaso', bullets: ['Punto 1', 'Punto 2'] },
+          { layout: 'image_text', title: 'Diagrama', body: 'Texto', imageQuery: 'diagrama' },
+          { layout: 'quiz_opcion_multiple', pregunta: '¿Cuál es la capital?', opciones: ['París', 'Londres', 'Berlín', 'Madrid'], respuestaCorrectaIndex: 0, explicacion: 'Es la capital de Francia' },
+          { layout: 'verdadero_falso', afirmacion: 'El agua hierve a 100°C', esVerdadero: true, explicacion: 'A nivel del mar' },
+        ],
+      }),
+    };
+    const ctx = makeContext({
+      mockDB: seededDB,
+      mockAi: quizAi,
+      body: {
+        level: '5° Básico',
+        subject: 'Ciencias Naturales',
+        objectiveCode: 'OA01',
+        topic: 'Test',
+        audiencia: 'estudiante',
+      },
+    });
+    const res = await onRequestPost(ctx);
+    const json = await res.json() as any;
+
+    expect(res.status).toBe(200);
+    // 3 normal + 2 quiz + 2 VF = 7 legacy slides, 5 pptDeck slides
+    expect(json.slides.length).toBe(7);
+    expect(json.pptDeck.slides.length).toBe(5);
+
+    // Quiz pregunta (slide 3): NINGUNA opción tiene ✓
+    expect(json.slides[3].title).toBe('¿Cuál es la capital?');
+    expect(json.slides[3].bullets.every((b: string) => !b.includes('✓'))).toBe(true);
+
+    // Quiz respuesta (slide 4): la opción correcta tiene ✓
+    expect(json.slides[4].title).toBe('¿Cuál es la capital?');
+    expect(json.slides[4].bullets[0]).toMatch(/^✓/);
+    expect(json.slides[4].bullets.slice(1).every((b: string) => !b.includes('✓'))).toBe(true);
+
+    // VF pregunta (slide 5): solo dice "¿Verdadero o falso?"
+    expect(json.slides[5].title).toBe('El agua hierve a 100°C');
+    expect(json.slides[5].bullets).toEqual(['¿Verdadero o falso?']);
+
+    // VF respuesta (slide 6): revela la respuesta
+    expect(json.slides[6].title).toBe('El agua hierve a 100°C');
+    expect(json.slides[6].bullets[0]).toBe('Verdadero');
   });
 });
