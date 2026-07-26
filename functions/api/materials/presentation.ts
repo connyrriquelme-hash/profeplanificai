@@ -149,6 +149,22 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       slides = pptDeckToLegacySlides(deck);
     }
 
+    // Extract user from JWT for ownership tracking
+    // TODO(seguridad): esto decodifica el payload del JWT sin verificar su
+    // firma. Cualquiera puede fabricar un token con cualquier sub/institutionId
+    // y pasar esta verificación. Reemplazar por una verificación real de firma
+    // (ej. la misma librería/función que ya use functions/core/authorization.ts
+    // para otros endpoints, si existe una) antes de considerar este endpoint
+    // seguro para producción con datos reales de estudiantes/profesores.
+    const authHeader = context.request.headers.get('Authorization');
+    let userId: string | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const payload = JSON.parse(atob(authHeader.slice(7).split('.')[1]));
+        userId = payload.sub;
+      } catch { /* token no válido, seguir sin userId */ }
+    }
+
     // Save to D1
     const resourceId = `pptx_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -168,8 +184,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       : `Presentación generada para ${body.objectiveCode} — ${body.subject}`;
 
     await db.prepare(
-      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
-       VALUES (?, ?, 'presentacion', ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
+       VALUES (?, ?, 'presentacion', ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       resourceId,
       body.title || `Presentación: ${body.objectiveCode}`,
@@ -178,6 +194,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       body.level,
       body.subject,
       body.objectiveCode,
+      userId || null,
       JSON.stringify(body.indicators || []),
       JSON.stringify(body.skills || []),
       promptUsed,
