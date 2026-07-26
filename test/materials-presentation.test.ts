@@ -178,4 +178,62 @@ describe('POST /api/materials/presentation', () => {
     expect(json.metadata.indicators).toBeDefined();
     expect(json.metadata.indicators.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('audiencia: estudiante habilita los 9 layouts (vocabulario, ciclo_proceso, quiz, verdadero_falso, etc.)', async () => {
+    const estudianteAi = {
+      run: async () => JSON.stringify({
+        slides: [
+          { layout: 'title', title: '¡La Célula!', subtitle: 'Ciencias Naturales — 5° Básico' },
+          { layout: 'bullets', title: 'Objetivo', bullets: ['Identificar partes', 'Comprender función'] },
+          { layout: 'image_text', title: 'Membrana', body: 'Barrera selectiva', imageQuery: 'membrana celular' },
+          { layout: 'comparison', title: 'Tipos', left: { label: 'Procariota', points: ['Sin núcleo'] }, right: { label: 'Eucariota', points: ['Con núcleo'] } },
+          { layout: 'quote', text: 'La célula es vida', author: 'Schleiden' },
+          { layout: 'vocabulario', titulo: 'Palabras clave', terminos: [
+            { palabra: 'Núcleo', definicion: 'Centro de la célula', imageQuery: 'núcleo celular' },
+            { palabra: 'Membrana', definicion: 'Capa externa', imageQuery: 'membrana' },
+          ]},
+          { layout: 'ciclo_proceso', titulo: 'Pasos', pasos: [
+            { nombre: 'Observar', descripcion: 'Mirar la célula', imageQuery: 'observar' },
+            { nombre: 'Identificar', descripcion: 'Reconocer partes', imageQuery: 'identificar' },
+            { nombre: 'Concluir', descripcion: 'Sacar conclusiones', imageQuery: 'concluir' },
+          ]},
+          { layout: 'quiz_opcion_multiple', pregunta: '¿Qué es la célula?', opciones: ['Unidad de vida', 'Un órgano', 'Un tejido', 'Un sistema'], respuestaCorrectaIndex: 0, explicacion: 'Es la unidad fundamental' },
+          { layout: 'verdadero_falso', afirmacion: 'Toda célula tiene núcleo', esVerdadero: false, explicacion: 'Las procariotas no tienen núcleo' },
+        ],
+      }),
+    };
+    const ctx = makeContext({
+      mockDB: seededDB,
+      mockAi: estudianteAi,
+      body: {
+        level: '5° Básico',
+        subject: 'Ciencias Naturales',
+        objectiveCode: 'OA01',
+        objectiveText: 'Identificar las partes de la célula',
+        topic: 'La célula',
+        audiencia: 'estudiante',
+      },
+    });
+    const res = await onRequestPost(ctx);
+    const json = await res.json() as any;
+
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.pptDeck).toBeDefined();
+    expect(json.pptDeck.slides.length).toBe(9);
+
+    const layouts = json.pptDeck.slides.map((s: any) => s.layout);
+    expect(layouts).toContain('title');
+    expect(layouts).toContain('bullets');
+    expect(layouts).toContain('image_text');
+    expect(layouts).toContain('comparison');
+    expect(layouts).toContain('quote');
+    expect(layouts).toContain('vocabulario');
+    expect(layouts).toContain('ciclo_proceso');
+    expect(layouts).toContain('quiz_opcion_multiple');
+    expect(layouts).toContain('verdadero_falso');
+
+    expect(json.slides.length).toBe(9);
+    expect(json.slides[0].type).toBe('cover');
+  });
 });

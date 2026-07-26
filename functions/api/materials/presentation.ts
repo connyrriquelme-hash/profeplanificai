@@ -14,6 +14,7 @@ interface PresentationRequest {
   skills?: string[];
   topic: string;
   designStyle?: string;
+  audiencia?: 'docente' | 'estudiante';
   slides?: Array<{
     type: string;
     title: string;
@@ -144,7 +145,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       const deck = await generateDeckContent(
         { AI: context.env.AI } as AIEngineEnv,
         plan,
-        { modo: 'docente' },
+        { modo: body.audiencia || 'docente' },
       );
       pptDeck = deck;
       slides = pptDeckToLegacySlides(deck);
