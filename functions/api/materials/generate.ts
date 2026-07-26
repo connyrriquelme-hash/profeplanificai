@@ -1,4 +1,7 @@
-interface Env { DB: D1Database; AI?: any }
+import { generatePlanificacion } from '../../core/PlanificacionEngine';
+import type { AIEngineEnv } from '../../core/types';
+
+interface Env { DB: D1Database; AI?: Ai }
 
 interface GenerateRequest {
   level: string;
@@ -85,6 +88,7 @@ Requisitos: estructura clara inicio-desarrollo-cierre, tiempos realistas, adapta
   "dua": ["adaptaciones"],
   "evaluation": "tipo de evaluación"
 }
+REGLA MÁS IMPORTANTE: el OA citado arriba en "Contexto" es el objetivo curricular formal, escrito para docentes — NUNCA lo copies literalmente en el campo "objective" de una clase. Reformúlalo siempre con tus propias palabras, en lenguaje simple y concreto, adaptado a estudiantes de ${req.level}.
 Contexto: ${baseContext}
 Requisitos: 3-5 clases, progresión lógica, contexto chileno, DUA en cada clase.`,
 
@@ -166,9 +170,52 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const db = context.env.DB;
     const ctx = await getContextFromD1(db, body);
     const prompt = buildMaterialPrompt(type, body, ctx);
+    const resourceId = `res_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+    if (type === 'planificacion') {
+      const { planificacion, usedFallback } = await generatePlanificacion(
+        { AI: context.env.AI } as AIEngineEnv,
+        prompt,
+        {
+          level: body.level,
+          subject: body.subject,
+          objectiveText: body.objectiveText,
+          topic: body.topic,
+          methodology: body.methodology,
+          indicators: body.indicators,
+        },
+      );
+
+      await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
+        .bind(
+          resourceId,
+          `${type} — ${body.objectiveCode}`,
+          type,
+          JSON.stringify(planificacion),
+          JSON.stringify(planificacion),
+          body.level,
+          body.subject,
+          body.objectiveCode,
+          JSON.stringify(body.indicators || []),
+          JSON.stringify(body.skills || []),
+          prompt.substring(0, 2000)
+        ).run();
+
+      return Response.json({
+        ok: true,
+        resourceId,
+        planificacion,
+        usedFallback,
+        context: {
+          objective: ctx[0],
+          indicators: (ctx[1] as any)?.results || [],
+          methodologies: (ctx[2] as any)?.results || [],
+        }
+      });
+    }
 
     // Save to generated_resources
-    const resourceId = `res_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
       .bind(
