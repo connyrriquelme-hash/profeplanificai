@@ -102,6 +102,24 @@ describe('AIEngine.generateDuaGuide', () => {
     expect(result.nivel_apoyo.length).toBeGreaterThan(0);
   });
 
+  it('REGRESIÓN: debe parsear correctamente cuando env.AI.run() resuelve a { response: string }, la forma real de Cloudflare Workers AI (no solo un string plano)', async () => {
+    const aiResponse = JSON.stringify({
+      titulo_guia: 'Guía La Célula',
+      contexto_motivacional: 'La célula es la unidad básica de la vida.',
+      nivel_apoyo: ['Fichas con vocabulario'],
+      nivel_estandar: ['Explicación guiada'],
+      nivel_desafio: ['Análisis crítico'],
+    });
+    const env: AIEngineEnv = {
+      AI: { run: vi.fn().mockResolvedValue({ response: aiResponse }) } as unknown as Ai,
+    };
+
+    const result = await AIEngine.generateDuaGuide(env, MOCK_PLAN);
+
+    expect(result.titulo_guia).toBe('Guía La Célula');
+    expect(result.nivel_apoyo).toEqual(['Fichas con vocabulario']);
+  });
+
   it('should return fallback when AI is not configured', async () => {
     const env = mockAINoAI();
     const result = await AIEngine.generateDuaGuide(env, MOCK_PLAN);
