@@ -14,7 +14,10 @@ export interface SessionUser {
 export interface SessionPayload {
   userId: string;
   sessionId: string;
-  email: string;
+  email?: string;
+  createdAt?: string;
+  lastSeenAt?: string | null;
+  expiresAt?: string;
 }
 
 const SESSION_COOKIE = 'pia_session';
@@ -64,8 +67,15 @@ async function getSessionFromCookie(request: Request, env: SessionEnv): Promise<
 
   const hash = await hashValue(sessionId);
   const session = await env.DB.prepare(
-    'SELECT id, user_id, email, expires_at, revoked_at FROM user_sessions WHERE session_hash = ?'
-  ).bind(hash).first<{ id: string; user_id: string; email: string; expires_at: string; revoked_at: string | null }>();
+    'SELECT id, user_id, created_at, last_seen_at, expires_at, revoked_at FROM user_sessions WHERE session_hash = ?'
+  ).bind(hash).first<{
+    id: string;
+    user_id: string;
+    created_at: string;
+    last_seen_at: string | null;
+    expires_at: string;
+    revoked_at: string | null;
+  }>();
 
   if (!session || session.revoked_at) return null;
   if (new Date(session.expires_at) < new Date()) return null;
@@ -76,8 +86,17 @@ async function getSessionFromCookie(request: Request, env: SessionEnv): Promise<
   return {
     userId: session.user_id,
     sessionId: session.id,
-    email: session.email,
+    createdAt: session.created_at,
+    lastSeenAt: session.last_seen_at,
+    expiresAt: session.expires_at,
   };
+}
+
+export async function getSessionMetadataFromRequest(
+  request: Request,
+  env: SessionEnv
+): Promise<SessionPayload | null> {
+  return getSessionFromCookie(request, env);
 }
 
 export async function requireSession(request: Request, env: SessionEnv): Promise<SessionPayload> {

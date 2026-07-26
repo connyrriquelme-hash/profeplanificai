@@ -24,6 +24,7 @@ export interface AuthenticatedUserContext {
   userId: string;
   institutionId: string | null;
   role: InstitutionalRole;
+  legacyRole: string;
   isActive: boolean;
   email?: string;
   nombre?: string;
@@ -197,23 +198,29 @@ async function getCoordinatorScope(
 ): Promise<CoordinatorScope | null> {
   try {
     const membership = await db.prepare(
-      `SELECT course_ids, subject_ids, level_ids, academic_year_ids
+      `SELECT *
        FROM coordinator_scopes WHERE user_id = ? AND institution_id = ?`
     ).bind(userId, institutionId).first<{
-      course_ids: string | null;
-      subject_ids: string | null;
-      level_ids: string | null;
-      academic_year_ids: string | null;
+      course_ids?: string | null;
+      subject_ids?: string | null;
+      level_ids?: string | null;
+      academic_year_ids?: string | null;
+      course_ids_json?: string | null;
+      subject_ids_json?: string | null;
+      level_ids_json?: string | null;
+      academic_year_id?: string | null;
     }>();
 
     if (!membership) return null;
 
     return {
       institutionId,
-      courseIds: membership.course_ids ? JSON.parse(membership.course_ids) : [],
-      subjectIds: membership.subject_ids ? JSON.parse(membership.subject_ids) : [],
-      levelIds: membership.level_ids ? JSON.parse(membership.level_ids) : [],
-      academicYearIds: membership.academic_year_ids ? JSON.parse(membership.academic_year_ids) : [],
+      courseIds: parseScopeIds(membership.course_ids ?? membership.course_ids_json),
+      subjectIds: parseScopeIds(membership.subject_ids ?? membership.subject_ids_json),
+      levelIds: parseScopeIds(membership.level_ids ?? membership.level_ids_json),
+      academicYearIds: membership.academic_year_ids
+        ? parseScopeIds(membership.academic_year_ids)
+        : (membership.academic_year_id ? [String(membership.academic_year_id)] : []),
     };
   } catch {
     return null;
@@ -258,9 +265,16 @@ export async function requireAuthenticatedUser(
     throw unauthorized('Token inválido o expirado');
   }
 
+  return requireAuthenticatedUserById(payload.sub, env);
+}
+
+export async function requireAuthenticatedUserById(
+  userId: string,
+  env: AuthEnv
+): Promise<AuthenticatedUserContext> {
   const user = await env.DB.prepare(
     'SELECT id, email, nombre, rol, active FROM usuarios WHERE id = ?'
-  ).bind(payload.sub).first<{ id: string; email: string; nombre: string; rol: string; active: number }>();
+  ).bind(userId).first<{ id: string; email: string; nombre: string; rol: string; active: number }>();
 
   if (!user) {
     throw unauthorized('Usuario no encontrado');
@@ -273,49 +287,18 @@ export async function requireAuthenticatedUser(
   let institutionId: string | null = null;
   let institutionalRole: InstitutionalRole = 'teacher';
 
-  if (user.rol === 'admin') {
-    const globalAdmin = await env.DB.prepare(
-      'SELECT 1 FROM usuarios WHERE id = ? AND rol = ? LIMIT 1'
-    ).bind(user.id, 'admin').first();
-    if (globalAdmin) {
-      institutionalRole = 'super_admin';
-      const membership = await env.DB.prepare(
-        `SELECT institution_id, role FROM institution_members
-         WHERE user_id = ? AND status = 'active'
-         ORDER BY CASE role WHEN 'institution_admin' THEN 1 WHEN 'coordinator' THEN 2 ELSE 3 END
-         LIMIT 1`
-      ).bind(user.id).first<{ institution_id: string; role: string }>();
+  const membership = await env.DB.prepare(
+    `SELECT institution_id, role FROM institution_members
+     WHERE user_id = ? AND status = 'active'
+     ORDER BY CASE role WHEN 'super_admin' THEN 0 WHEN 'institution_admin' THEN 1 WHEN 'coordinator' THEN 2 ELSE 3 END
+     LIMIT 1`
+  ).bind(user.id).first<{ institution_id: string; role: string }>();
 
-      if (membership) {
-        institutionId = membership.institution_id;
-      }
-    } else {
-      const membership = await env.DB.prepare(
-        `SELECT institution_id, role FROM institution_members
-         WHERE user_id = ? AND status = 'active'
-         ORDER BY CASE role WHEN 'institution_admin' THEN 1 WHEN 'coordinator' THEN 2 ELSE 3 END
-         LIMIT 1`
-      ).bind(user.id).first<{ institution_id: string; role: string }>();
-
-      if (membership) {
-        institutionId = membership.institution_id;
-        institutionalRole = validateInstitutionalRole(membership.role);
-      }
-    }
+  if (membership) {
+    institutionId = membership.institution_id;
+    institutionalRole = validateInstitutionalRole(membership.role);
   } else {
-    const membership = await env.DB.prepare(
-      `SELECT institution_id, role FROM institution_members
-       WHERE user_id = ? AND status = 'active'
-       ORDER BY CASE role WHEN 'institution_admin' THEN 1 WHEN 'coordinator' THEN 2 ELSE 3 END
-       LIMIT 1`
-    ).bind(user.id).first<{ institution_id: string; role: string }>();
-
-    if (membership) {
-      institutionId = membership.institution_id;
-      institutionalRole = validateInstitutionalRole(membership.role);
-    } else {
-      institutionalRole = mapLegacyRole(user.rol, null);
-    }
+    institutionalRole = mapLegacyRole(user.rol, null);
   }
 
   const permissions = await getUserPermissions(env.DB, user.id, institutionalRole, institutionId);
@@ -327,6 +310,7 @@ export async function requireAuthenticatedUser(
     userId: user.id,
     institutionId,
     role: institutionalRole,
+    legacyRole: user.rol,
     isActive: true,
     email: user.email,
     nombre: user.nombre,
@@ -599,23 +583,29 @@ export async function requireCoordinatorScope(
 
   // Fallback: query coordinator_scopes
   const scopeRow = await env.DB.prepare(
-    `SELECT course_ids, subject_ids, level_ids, academic_year_ids
+    `SELECT *
      FROM coordinator_scopes WHERE user_id = ? AND institution_id = ?`
   ).bind(context.userId, context.institutionId).first<{
-    course_ids: string | null;
-    subject_ids: string | null;
-    level_ids: string | null;
-    academic_year_ids: string | null;
+    course_ids?: string | null;
+    subject_ids?: string | null;
+    level_ids?: string | null;
+    academic_year_ids?: string | null;
+    course_ids_json?: string | null;
+    subject_ids_json?: string | null;
+    level_ids_json?: string | null;
+    academic_year_id?: string | null;
   }>();
 
   if (!scopeRow) {
     throw forbidden('Curso fuera del alcance del coordinador');
   }
 
-  const courseIds = parseScopeIds(scopeRow.course_ids) || [];
-  const subjectIds = parseScopeIds(scopeRow.subject_ids) || [];
-  const levelIds = parseScopeIds(scopeRow.level_ids) || [];
-  const academicYearIds = parseScopeIds(scopeRow.academic_year_ids) || [];
+  const courseIds = parseScopeIds(scopeRow.course_ids ?? scopeRow.course_ids_json);
+  const subjectIds = parseScopeIds(scopeRow.subject_ids ?? scopeRow.subject_ids_json);
+  const levelIds = parseScopeIds(scopeRow.level_ids ?? scopeRow.level_ids_json);
+  const academicYearIds = scopeRow.academic_year_ids
+    ? parseScopeIds(scopeRow.academic_year_ids)
+    : (scopeRow.academic_year_id ? [String(scopeRow.academic_year_id)] : []);
 
   if (courseIds.length === 0 || !courseIds.includes(courseId)) {
     throw forbidden('Curso fuera del alcance del coordinador');

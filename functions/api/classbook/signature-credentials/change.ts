@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId } from '../../../_lib/auth-adapter';
 import { SignatureCredentialsService } from '../../../services/classbook';
 import { ClassbookAuditService } from '../../../services/classbook';
 
@@ -10,9 +10,7 @@ interface Env {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    const institutionCtx = await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
 
     const body = await context.request.json() as { current_pin?: string; new_pin?: string };
     if (!body.current_pin || !body.new_pin) {
@@ -22,14 +20,14 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const credentialsService = new SignatureCredentialsService(env);
     await credentialsService.changePin(
       authContext.userId,
-      institutionCtx.institutionId,
+      institutionId,
       body.current_pin,
       body.new_pin
     );
 
     const auditService = new ClassbookAuditService(env);
     await auditService.log({
-      institution_id: institutionCtx.institutionId,
+      institution_id: institutionId,
       actor_user_id: authContext.userId,
       action: 'signature_pin_changed',
       resource_type: 'teacher_signature_credential',

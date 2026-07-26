@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../../_lib/auth-adapter';
 import { SignaturesService, SignatureCredentialsService } from '../../../../services/classbook';
 import { ClassbookAuditService } from '../../../../services/classbook';
 
@@ -10,9 +10,7 @@ interface Env {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    const institutionCtx = await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:sign');
 
     const { id } = context.params;
@@ -28,7 +26,6 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const signaturesService = new SignaturesService(env);
     const credentialsService = new SignatureCredentialsService(env);
     const auditService = new ClassbookAuditService(env);
-    const institutionId = institutionCtx.institutionId;
 
     const sigStatus = await signaturesService.getSessionSignatureStatus(id);
 
@@ -95,14 +92,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:read');
 
     const signaturesService = new SignaturesService(env);
     const credentialsService = new SignatureCredentialsService(env);
-    const institutionId = authContext.institutionId;
     const { id } = context.params;
 
     const sigStatus = await signaturesService.getSessionSignatureStatus(id);

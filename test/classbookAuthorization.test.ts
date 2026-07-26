@@ -19,17 +19,32 @@ describe('Classbook Authorization', () => {
   });
 
   describe('SUPER_ADMIN', () => {
+    const INST_1 = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    const INST_2 = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
+
     it('has all classbook permissions', async () => {
-      const mockDB = makeMockDB({ userId: 'super-1', institutionMember: { institution_id: 'inst-1', role: 'super_admin' } });
+      const mockDB = makeMockDB({
+        userId: 'super-1',
+        institutionMember: { institution_id: INST_1, role: 'super_admin' },
+        institutions: [{ id: INST_1, name: 'Inst 1', status: 'active' }],
+      });
       const mod = await import('../functions/api/classbook/academic-years/index');
-      const resp = await mod.onRequestGet(makeContext(superAdminToken, mockDB, 'inst-1'));
+      const ctx = makeContext(superAdminToken, mockDB, INST_1);
+      ctx.request = new Request(`http://localhost/api/classbook/test?institution_id=${INST_1}`, { method: 'GET', headers: { Authorization: `Bearer ${superAdminToken}` } });
+      const resp = await mod.onRequestGet(ctx);
       expect(resp.status).toBe(200);
     });
 
     it('can access any institution', async () => {
-      const mockDB = makeMockDB({ userId: 'super-1', institutionMember: { institution_id: 'inst-2', role: 'super_admin' } });
+      const mockDB = makeMockDB({
+        userId: 'super-1',
+        institutionMember: { institution_id: INST_2, role: 'super_admin' },
+        institutions: [{ id: INST_2, name: 'Inst 2', status: 'active' }],
+      });
       const mod = await import('../functions/api/classbook/academic-years/index');
-      const resp = await mod.onRequestGet(makeContext(superAdminToken, mockDB, 'inst-2'));
+      const ctx = makeContext(superAdminToken, mockDB, INST_2);
+      ctx.request = new Request(`http://localhost/api/classbook/test?institution_id=${INST_2}`, { method: 'GET', headers: { Authorization: `Bearer ${superAdminToken}` } });
+      const resp = await mod.onRequestGet(ctx);
       expect(resp.status).toBe(200);
     });
   });

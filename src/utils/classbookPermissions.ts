@@ -88,3 +88,28 @@ export function canReadClassbook(user: AuthUser | null): boolean {
   if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
   return user.permissions?.includes('classbook:read') ?? user.permissions?.includes('classbook:read_own') ?? false;
 }
+
+export function canViewCoordinatorDashboard(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const role = user.institutionalRole;
+  if (role === 'super_admin' || role === 'institution_admin' || role === 'coordinator') return true;
+  return user.permissions?.includes('report:scope') ?? false;
+}
+
+export function canApproveReview(user: AuthUser | null): boolean {
+  if (!user) return false;
+  if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
+  return user.permissions?.includes('plan:approve') ?? false;
+}
+
+export function canObserveReview(user: AuthUser | null): boolean {
+  if (!user) return false;
+  if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
+  return user.permissions?.includes('plan:observe') ?? false;
+}
+
+export function canReturnReview(user: AuthUser | null): boolean {
+  if (!user) return false;
+  if (user.institutionalRole === 'super_admin' || user.institutionalRole === 'institution_admin') return true;
+  return user.permissions?.includes('plan:review') ?? false;
+}

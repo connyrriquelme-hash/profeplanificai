@@ -10,6 +10,17 @@ import type {
   ClassbookPlanningReview,
   ClassbookSignatureStatus,
 } from '../types/classbook';
+import type {
+  CoordinatorDashboardSummary,
+  CoordinatorTeacherSummary,
+  CoordinatorCourseSummary,
+  CoordinatorSessionSummary,
+  CoordinatorPlanningSummary,
+  CoordinatorSignatureSummary,
+  CoordinatorCoverageSummary,
+  CoordinatorAlert,
+  CoordinatorDashboardFilters,
+} from '../types/classbookCoordinator';
 
 interface ApiListResponse<T> {
   ok: boolean;
@@ -260,5 +271,132 @@ export const classbookService = {
       signal
     );
     return res.data;
+  },
+
+  async getCoordinatorDashboard(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorDashboardSummary> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorDashboardSummary }>(
+      `/api/classbook/coordinator/dashboard${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorTeachers(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorTeacherSummary[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorTeacherSummary[] }>(
+      `/api/classbook/coordinator/teachers${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorCourses(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorCourseSummary[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorCourseSummary[] }>(
+      `/api/classbook/coordinator/courses${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorSessions(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorSessionSummary[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorSessionSummary[] }>(
+      `/api/classbook/coordinator/sessions${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorPlanningReviews(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorPlanningSummary[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorPlanningSummary[] }>(
+      `/api/classbook/coordinator/planning-reviews${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorPendingSignatures(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorSignatureSummary[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorSignatureSummary[] }>(
+      `/api/classbook/coordinator/signatures${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorCoverage(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorCoverageSummary[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorCoverageSummary[] }>(
+      `/api/classbook/coordinator/coverage${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorAlerts(filters: CoordinatorDashboardFilters = {}, institutionId?: string, signal?: AbortSignal): Promise<CoordinatorAlert[]> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: CoordinatorAlert[] }>(
+      `/api/classbook/coordinator/alerts${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getCoordinatorFilterOptions(institutionId?: string, signal?: AbortSignal): Promise<{
+    academicYears: { id: string; name: string }[];
+    terms: { id: string; name: string }[];
+    courses: { id: string; name: string }[];
+    subjects: { id: string; name: string }[];
+    teachers: { id: string; name: string }[];
+  }> {
+    const params = new URLSearchParams();
+    if (institutionId) params.set('institution_id', institutionId);
+    const qs = params.toString();
+    const res = await api.get<{ ok: boolean; data: {
+      academicYears: { id: string; name: string }[];
+      terms: { id: string; name: string }[];
+      courses: { id: string; name: string }[];
+      subjects: { id: string; name: string }[];
+      teachers: { id: string; name: string }[];
+    } }>(
+      `/api/classbook/coordinator/filter-options${qs ? `?${qs}` : ''}`,
+      signal
+    );
+    return res.data;
+  },
+
+  async getInstitutions(signal?: AbortSignal): Promise<{ id: string; name: string }[]> {
+    const res = await api.get<{ ok: boolean; data: { id: string; name: string }[] }>(
+      '/api/classbook/institutions',
+      signal
+    );
+    return res.data ?? [];
   },
 };

@@ -273,6 +273,7 @@ export type ViewType =
   | 'admin-panel'
   | 'libro-clases'
   | 'libro-clases-session'
+  | 'coordinator-dashboard'
   | 'print';
 
 export type SharedDocumentPermission = 'view' | 'comment' | 'edit';

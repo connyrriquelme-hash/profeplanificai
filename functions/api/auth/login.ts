@@ -5,6 +5,7 @@ interface Env {
 
 import { verifyPassword } from '../../_lib/auth';
 import { createSession, serializeSessionCookie, type SessionEnv } from '../../_lib/session';
+import { requireAuthenticatedUserById } from '../../core/authorization';
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
@@ -33,12 +34,28 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const env: SessionEnv = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
     const { token, sessionId } = await createSession({ id: user.id, email: user.email }, context.request, env);
+    const authContext = await requireAuthenticatedUserById(user.id, env);
 
     const expiresAt = new Date(Date.now() + 86400 * 30 * 1000);
     const cookie = serializeSessionCookie(sessionId, expiresAt);
 
     return new Response(JSON.stringify({
-      user: { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol, active: user.active },
+      user: {
+        id: user.id,
+        email: user.email,
+        nombre: user.nombre,
+        rol: user.rol,
+        active: user.active,
+        institutionId: authContext.institutionId,
+        institutionalRole: authContext.role,
+        permissions: authContext.permissions,
+        scope: authContext.scope ? {
+          courseIds: authContext.scope.courseIds,
+          subjectIds: authContext.scope.subjectIds,
+          levelIds: authContext.scope.levelIds,
+          academicYearIds: authContext.scope.academicYearIds,
+        } : undefined,
+      },
       token,
       session: { id: sessionId, createdAt: new Date().toISOString(), expiresAt: expiresAt.toISOString() },
     }), {

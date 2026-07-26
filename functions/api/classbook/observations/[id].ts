@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../_lib/auth-adapter';
 import { ObservationService } from '../../../services/classbook';
 
 interface Env {
@@ -9,10 +9,8 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:observe');
-    await requireInstitutionContext(context.request, env);
 
     const observationService = new ObservationService(env);
     const { id } = context.params;
@@ -23,7 +21,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
       return Response.json({ ok: false, error: 'Observación no encontrada' }, { status: 404 });
     }
 
-    if (observation.institution_id !== authContext.institutionId) {
+    if (observation.institution_id !== institutionId) {
       return Response.json({ ok: false, error: 'No tienes acceso a esta observación' }, { status: 403 });
     }
 
@@ -37,9 +35,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 export async function onRequestPatch(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:observe');
 
     const { id } = context.params;
@@ -58,7 +54,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       return Response.json({ ok: false, error: 'Observación no encontrada' }, { status: 404 });
     }
 
-    if (observation.institution_id !== authContext.institutionId) {
+    if (observation.institution_id !== institutionId) {
       return Response.json({ ok: false, error: 'No tienes acceso a esta observación' }, { status: 403 });
     }
 
@@ -78,9 +74,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
 export async function onRequestDelete(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:observe');
 
     const { id } = context.params;
@@ -92,7 +86,7 @@ export async function onRequestDelete(context: EventContext<Env>): Promise<Respo
       return Response.json({ ok: false, error: 'Observación no encontrada' }, { status: 404 });
     }
 
-    if (observation.institution_id !== authContext.institutionId) {
+    if (observation.institution_id !== institutionId) {
       return Response.json({ ok: false, error: 'No tienes acceso a esta observación' }, { status: 403 });
     }
 

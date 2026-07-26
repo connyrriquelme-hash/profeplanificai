@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import type { PlanFormData, MaterialSaved } from '../types';
 import { useConfigOptions } from '../hooks/useConfigOptions';
 import { generatePlan } from '../services/localGenerator';
@@ -16,6 +16,36 @@ import ReactMarkdown from 'react-markdown';
 interface PlanificadorViewProps {
   onNavigate?: (view: string) => void;
 }
+
+type MarkdownComponentProps = {
+  children?: ReactNode;
+};
+
+type MarkdownComponents = Record<string, (props: MarkdownComponentProps) => ReactNode>;
+
+const markdownComponents: MarkdownComponents = {
+  h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 border-b-2 border-violet-500 pb-2">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-xl font-bold text-slate-800 mt-6 mb-3 text-violet-700">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-lg font-semibold text-slate-700 mt-4 mb-2">{children}</h3>,
+  p: ({ children }) => <p className="text-sm text-slate-700 leading-relaxed mb-3">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ol>,
+  li: ({ children }) => <li className="text-sm text-slate-700">{children}</li>,
+  strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
+  em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-violet-300 pl-4 italic text-slate-600 my-3">{children}</blockquote>
+  ),
+  table: ({ children }) => (
+    <table className="w-full text-sm border-collapse my-3">{children}</table>
+  ),
+  th: ({ children }) => (
+    <th className="border border-slate-300 bg-violet-50 px-3 py-2 text-left font-bold text-slate-700">{children}</th>
+  ),
+  td: ({ children }) => (
+    <td className="border border-slate-200 px-3 py-2 text-slate-700">{children}</td>
+  ),
+};
 
 export function PlanificadorView({ onNavigate }: PlanificadorViewProps = {}) {
   const { getOptions } = useConfigOptions();
@@ -499,29 +529,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
             style={{ maxWidth: '816px', margin: '0 auto' }}
           >
             <ReactMarkdown
-              components={{
-                h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 border-b-2 border-violet-500 pb-2">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-xl font-bold text-slate-800 mt-6 mb-3 text-violet-700">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-lg font-semibold text-slate-700 mt-4 mb-2">{children}</h3>,
-                p: ({ children }) => <p className="text-sm text-slate-700 leading-relaxed mb-3">{children}</p>,
-                ul: ({ children }) => <ul className="list-disc list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ol>,
-                li: ({ children }) => <li className="text-sm text-slate-700">{children}</li>,
-                strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
-                em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
-                blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-violet-300 pl-4 italic text-slate-600 my-3">{children}</blockquote>
-                ),
-                table: ({ children }) => (
-                  <table className="w-full text-sm border-collapse my-3">{children}</table>
-                ),
-                th: ({ children }) => (
-                  <th className="border border-slate-300 bg-violet-50 px-3 py-2 text-left font-bold text-slate-700">{children}</th>
-                ),
-                td: ({ children }) => (
-                  <td className="border border-slate-200 px-3 py-2 text-slate-700">{children}</td>
-                ),
-              }}
+              components={markdownComponents}
             >
               {output}
             </ReactMarkdown>

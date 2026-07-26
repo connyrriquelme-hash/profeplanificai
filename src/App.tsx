@@ -30,6 +30,7 @@ import { DuaGuideGenerator } from './pages/DuaGuideGenerator';
 import { ProjectCopilot } from './components/ProjectCopilot';
 import { ActiveLessonProvider } from './contexts/ActiveLessonContext';
 import { ClassbookView } from './pages/ClassbookView';
+import { CoordinatorDashboardView } from './pages/CoordinatorDashboardView';
 import { ClassSessionDetailView } from './components/classbook/ClassSessionDetailView';
 
 const pageVariants = {
@@ -51,6 +52,7 @@ function AppContent() {
     if (path === '/admin-panel') return 'admin-panel';
     if (path === '/admin') return 'admin';
     if (path === '/libro-clases') return 'libro-clases';
+    if (path === '/libro-clases/coordinacion') return 'coordinator-dashboard';
     if (path.startsWith('/libro-clases/')) return 'libro-clases-session';
     return 'dashboard';
   })() as ViewType;
@@ -76,6 +78,8 @@ function AppContent() {
       window.history.pushState(null, '', '/admin');
     } else if (nextView === 'libro-clases' && window.location.pathname !== '/libro-clases') {
       window.history.pushState(null, '', '/libro-clases');
+    } else if (nextView === 'coordinator-dashboard' && window.location.pathname !== '/libro-clases/coordinacion') {
+      window.history.pushState(null, '', '/libro-clases/coordinacion');
     }
   }, []);
 
@@ -144,6 +148,8 @@ function AppContent() {
         return <AdminPanelView />;
       case 'libro-clases':
         return <ClassbookView onNavigate={handleViewChange} />;
+      case 'coordinator-dashboard':
+        return <CoordinatorDashboardView onNavigate={handleViewChange} />;
       case 'libro-clases-session':
         return (
           <ClassSessionDetailView

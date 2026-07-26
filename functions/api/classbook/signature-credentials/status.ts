@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId } from '../../../_lib/auth-adapter';
 import { SignatureCredentialsService } from '../../../services/classbook';
 
 interface Env {
@@ -9,12 +9,10 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    const institutionCtx = await requireInstitutionContext(context.request, env);
+    const { institutionId, authContext } = await resolveEffectiveInstitutionId(context.request, env);
 
     const credentialsService = new SignatureCredentialsService(env);
-    const status = await credentialsService.getCredentialStatus(authContext.userId, institutionCtx.institutionId);
+    const status = await credentialsService.getCredentialStatus(authContext.userId, institutionId);
 
     return Response.json({ ok: true, data: status });
   } catch (err) {

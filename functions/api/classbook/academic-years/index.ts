@@ -1,4 +1,4 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionContext } from '../../../_lib/auth-adapter';
+import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../_lib/auth-adapter';
 import { AcademicYearService } from '../../../services/classbook';
 
 interface Env {
@@ -9,13 +9,10 @@ interface Env {
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:read');
-    await requireInstitutionContext(context.request, env);
 
     const academicYearService = new AcademicYearService(env);
-    const institutionId = authContext.institutionId;
 
     const { results, total } = await academicYearService.list(
       { institution_id: institutionId },
@@ -32,9 +29,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const env = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
-    const authContext = await requireAuthContext(context.request, env);
-    await requireActiveAuthContext(context.request, env);
-    await requireInstitutionContext(context.request, env);
+    const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:create');
 
     const body = await context.request.json() as {
@@ -49,7 +44,6 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const academicYearService = new AcademicYearService(env);
-    const institutionId = authContext.institutionId;
 
     const year = await academicYearService.create({
       institution_id: institutionId,
