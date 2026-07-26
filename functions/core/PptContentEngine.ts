@@ -3,11 +3,46 @@ import type { AIEngineEnv, PedagogicalPlan } from './types';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
-const SYSTEM_PROMPT_PPT = `Eres un profesor experto en didáctica y diseño de presentaciones educativas para el currículum chileno. Generas contenido para presentaciones PPT que serán usadas en clase.
+// Rangos etarios aproximados por curso, usados para adaptar el lenguaje del
+// contenido generado. No son edades legales/exactas, son una guía de
+// complejidad de vocabulario y largo de oraciones para el prompt de la IA.
+export function inferRangoEtario(curso: string): string {
+  const c = (curso || '').toLowerCase();
+  const grado = Number(c.match(/(\d+)/)?.[1] ?? NaN);
+
+  if (/sala cuna|nivel medio|nivel transici|prekinder|pre-kinder|prekínder|kinder|kínder|parvularia/.test(c)) {
+    return '3-5 años: frases de una sola idea, vocabulario muy concreto y cotidiano (cosas que se ven, tocan o hacen), apoyo constante en ejemplos y juego, sin conceptos abstractos';
+  }
+  if (c.includes('medio')) {
+    return '12-18 años (Educación Media): vocabulario más técnico permitido, siempre explicado con claridad la primera vez que aparece; se puede profundizar y usar términos disciplinares';
+  }
+  if (c.includes('básico') || c.includes('basico')) {
+    if (!Number.isNaN(grado) && grado <= 2) {
+      return '6-8 años (1°-2° Básico): oraciones muy cortas y simples, vocabulario cotidiano, evitar términos abstractos';
+    }
+    if (!Number.isNaN(grado) && grado <= 6) {
+      return '8-12 años (3°-6° Básico): oraciones simples, algunos términos técnicos permitidos si se explican con un ejemplo concreto';
+    }
+    return '12-18 años (7°-8° Básico): vocabulario más técnico permitido pero siempre explicado con claridad';
+  }
+  return '8-12 años: oraciones simples, algunos términos técnicos explicados con un ejemplo concreto';
+}
+
+export function buildSystemPrompt(plan: PedagogicalPlan): string {
+  const rangoEtario = inferRangoEtario(plan.curso);
+
+  return `Eres un profesor experto en didáctica y diseño de presentaciones educativas para el currículum chileno. Generas contenido para presentaciones PPT que serán usadas en clase.
+
+CONTEXTO DE ESTA CLASE:
+- Tema: ${plan.tema}
+- Curso: ${plan.curso} — rango etario aproximado: ${rangoEtario}
+- Objetivo de Aprendizaje (OA) oficial MINEDUC a cubrir: "${plan.objetivo_aprendizaje}"
+
+REGLA MÁS IMPORTANTE: el texto del OA de arriba es el objetivo curricular formal, escrito para docentes — NUNCA lo copies literalmente en un título o bullet. Reformúlalo siempre con tus propias palabras, en lenguaje simple y concreto, adaptado exactamente al rango etario indicado arriba. Todo el contenido (títulos, bullets, ejemplos) debe estar atado al tema y al OA reales de esta clase, no ser genérico.
 
 REGLAS OBLIGATORIAS:
-1. Cada slide debe tener un título claro y conciso (máximo 80 caracteres). El slide "title" puede tener además un subtitle breve (máximo 120 caracteres) — nunca copies ahí el objetivo de aprendizaje completo, eso va en su propio slide de bullets.
-2. Los slides de tipo "bullets" deben tener entre 2 y 6 bullets. Cada bullet máximo 140 caracteres.
+1. Cada slide debe tener un título claro y conciso (máximo 80 caracteres). El slide "title" puede tener además un subtitle breve (máximo 120 caracteres) — nunca copies ahí el objetivo de aprendizaje completo, eso va en su propio slide de bullets, y siempre reformulado.
+2. Los slides de tipo "bullets" deben tener ENTRE 2 Y 6 bullets, nunca menos de 2 ni más de 6. Cada bullet máximo 140 caracteres, en lenguaje simple (no copiado del OA).
 3. Los slides de tipo "image_text" deben tener un imageQuery descriptivo (máximo 100 caracteres) para buscar una imagen relacionada.
 4. Los slides de tipo "comparison" deben tener left y right con label y al menos 1 point cada uno.
 5. Los slides de tipo "quote" deben tener text (máximo 200 caracteres) y author opcional.
@@ -25,6 +60,7 @@ ESTRUCTURA JSON OBLIGATORIA:
     { "layout": "quote", "text": "Cita educativa", "author": "Autor" }
   ]
 }`;
+}
 
 function extractJsonFromText(raw: string): string {
   if (!raw || typeof raw !== 'string') return '';
@@ -53,6 +89,20 @@ function truncate(text: string, max: number): string {
   return `${lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
+// CAMINO DE EMERGENCIA: se usa solo cuando la IA no entregó contenido
+// válido (buildFallbackDeck). No es una reformulación pedagógica real —
+// solo evita mostrar el texto curricular formal completo, con sus
+// enumeraciones, tal cual en un bullet. El resultado esperado normal es
+// que la IA reformule el contenido en lenguaje simple (ver
+// buildSystemPrompt); esto es un mínimo aceptable, no un reemplazo.
+function simplificarTextoCurricular(texto: string): string {
+  const primeraClausula = texto.split(/(?<=[.;])\s+/)[0] || texto;
+  return primeraClausula
+    .replace(/,?\s*\b(incluyendo|considerando|tales como|entre otros?|entre otras?|así como)\b.*$/i, '')
+    .replace(/[.,;]\s*$/, '')
+    .trim();
+}
+
 function splitTextToBullets(text: string, maxItems: number): string[] {
   const trimmed = text.trim();
   if (!trimmed) return ['Sin contenido disponible', 'Consultar planificación para más detalles'];
@@ -68,7 +118,7 @@ function splitTextToBullets(text: string, maxItems: number): string[] {
 }
 
 function buildFallbackDeck(plan: PedagogicalPlan): PptDeck {
-  const oa = plan.objetivo_aprendizaje || plan.tema;
+  const oa = simplificarTextoCurricular(plan.objetivo_aprendizaje || plan.tema);
   const tema = plan.tema || 'el tema de la clase';
   const asignatura = plan.asignatura || 'la asignatura';
   const curso = plan.curso || 'el curso';
@@ -145,7 +195,9 @@ function isBulletsSlideValid(slide: Slide): boolean {
 }
 
 function safeguardBulletsFromPlan(deck: PptDeck, plan: PedagogicalPlan): PptDeck {
-  const oa = plan.objetivo_aprendizaje || plan.tema;
+  // CAMINO DE EMERGENCIA (ver simplificarTextoCurricular): solo se alcanza
+  // si un slide de bullets queda con <2 items válidos después de la IA.
+  const oa = simplificarTextoCurricular(plan.objetivo_aprendizaje || plan.tema);
   const indicadores = plan.indicadores_seleccionados || [];
   const criterios = plan.criterios_seleccionados || [];
 
@@ -237,7 +289,7 @@ export async function generateDeckContent(
   const maxSlides = opciones?.maxSlides ?? 20;
 
   try {
-    const raw = await callAI(env, SYSTEM_PROMPT_PPT, plan);
+    const raw = await callAI(env, buildSystemPrompt(plan), plan);
     const parsed = extractJsonFromText(raw);
 
     if (!parsed) {

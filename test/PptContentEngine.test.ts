@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { generateDeckContent } from '../functions/core/PptContentEngine';
+import { generateDeckContent, buildSystemPrompt, inferRangoEtario } from '../functions/core/PptContentEngine';
 import { PptDeckSchema } from '../schemas/PptDeckSchema';
 import type { AIEngineEnv, PedagogicalPlan } from '../functions/core/types';
 
@@ -111,6 +111,60 @@ describe('PptDeckSchema', () => {
     });
     const result = PptDeckSchema.safeParse({ slides });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('inferRangoEtario', () => {
+  it('1°-2° Básico → 6-8 años', () => {
+    expect(inferRangoEtario('1° Básico')).toContain('6-8 años');
+    expect(inferRangoEtario('2° Básico')).toContain('6-8 años');
+  });
+
+  it('3°-6° Básico → 8-12 años', () => {
+    expect(inferRangoEtario('3° Básico')).toContain('8-12 años');
+    expect(inferRangoEtario('6° Básico')).toContain('8-12 años');
+  });
+
+  it('7°-8° Básico → 12-18 años', () => {
+    expect(inferRangoEtario('7° Básico')).toContain('12-18 años');
+    expect(inferRangoEtario('8° Básico')).toContain('12-18 años');
+  });
+
+  it('Educación Media → 12-18 años', () => {
+    expect(inferRangoEtario('1° Medio')).toContain('12-18 años');
+    expect(inferRangoEtario('4° Medio')).toContain('12-18 años');
+  });
+
+  it('Educación Parvularia → 3-5 años', () => {
+    expect(inferRangoEtario('Kínder')).toContain('3-5 años');
+    expect(inferRangoEtario('Sala Cuna')).toContain('3-5 años');
+    expect(inferRangoEtario('Nivel Transición')).toContain('3-5 años');
+  });
+
+  it('curso vacío o irreconocible cae en un rango por defecto razonable', () => {
+    expect(inferRangoEtario('')).toMatch(/años/);
+    expect(inferRangoEtario('curso raro')).toMatch(/años/);
+  });
+});
+
+describe('buildSystemPrompt', () => {
+  it('incluye el tema y el objetivo de aprendizaje reales del plan', () => {
+    const prompt = buildSystemPrompt(MOCK_PLAN);
+    expect(prompt).toContain(MOCK_PLAN.tema);
+    expect(prompt).toContain(MOCK_PLAN.objetivo_aprendizaje);
+  });
+
+  it('instruye explícitamente a no copiar el OA literal', () => {
+    const prompt = buildSystemPrompt(MOCK_PLAN).toLowerCase();
+    expect(prompt).toContain('nunca lo copies literalmente');
+  });
+
+  it('incluye el rango etario correspondiente al curso del plan', () => {
+    const promptBasico = buildSystemPrompt({ ...MOCK_PLAN, curso: '1° Básico' });
+    expect(promptBasico).toContain('6-8 años');
+
+    const promptMedio = buildSystemPrompt({ ...MOCK_PLAN, curso: '3° Medio' });
+    expect(promptMedio).toContain('12-18 años');
   });
 });
 
@@ -236,6 +290,44 @@ describe('PptContentEngine.generateDeckContent', () => {
     if (titleSlide.layout === 'title') {
       expect(titleSlide.title.length).toBeLessThanOrEqual(80);
       expect(titleSlide.subtitle?.length ?? 0).toBeLessThanOrEqual(120);
+    }
+  });
+
+  it('should send age-appropriate instructions to the AI based on the plan\'s curso', async () => {
+    const env = mockAI(VALID_AI_RESPONSE);
+    const plan1Basico: PedagogicalPlan = { ...MOCK_PLAN, curso: '1° Básico' };
+
+    await generateDeckContent(env, plan1Basico);
+
+    const runMock = env.AI!.run as unknown as ReturnType<typeof vi.fn>;
+    expect(runMock).toHaveBeenCalledTimes(1);
+    const [, callArgs] = runMock.mock.calls[0] as [string, { messages: Array<{ role: string; content: string }> }];
+    const systemMessage = callArgs.messages.find((m) => m.role === 'system');
+
+    expect(systemMessage?.content).toContain('6-8 años');
+    expect(systemMessage?.content).toContain(plan1Basico.objetivo_aprendizaje);
+    expect(systemMessage?.content.toLowerCase()).toContain('nunca lo copies literalmente');
+  });
+
+  it('should simplify long formal OA text in the fallback instead of copying it verbatim', async () => {
+    const longOA = 'Describir los modos de vida de algunos pueblos originarios de Chile en el periodo precolombino, incluyendo ubicación geográfica, medio natural en que habitaban, vida nómada o sedentaria, roles de hombres y mujeres, herramientas y tecnología, principales actividades, vivienda, costumbres, idioma, creencias, alimentación y fiestas, entre otros.';
+    const plan: PedagogicalPlan = {
+      ...MOCK_PLAN,
+      tema: 'Pueblos originarios de Chile',
+      curso: '2° Básico',
+      objetivo_aprendizaje: longOA,
+      indicadores_seleccionados: [],
+    };
+    const env = mockAINoAI();
+    const result = await generateDeckContent(env, plan);
+
+    const oaSlide = result.slides.find((s) => s.layout === 'bullets' && s.title === 'Objetivo de Aprendizaje');
+    expect(oaSlide?.layout).toBe('bullets');
+    if (oaSlide?.layout === 'bullets') {
+      const oaBullet = oaSlide.bullets[0];
+      expect(oaBullet).not.toBe(longOA);
+      expect(oaBullet.toLowerCase()).not.toContain('incluyendo');
+      expect(oaBullet.length).toBeLessThan(longOA.length);
     }
   });
 });
