@@ -14,8 +14,26 @@ Este modo levanta frontend, login, D1 local, biblioteca, recursos y `/api/images
 ```powershell
 npm install
 npm run local:setup
+npm run seed:objectives:local
 npm run local:dev
 ```
+
+### `seed:objectives:local` — currículum completo (courses/subjects/objectives)
+
+`local:setup` solo aplica migraciones: no trae el contenido curricular en
+inglés (`courses`/`subjects`/`axes`/`objectives`/`skills`/`attitudes`),
+porque en producción esas tablas se llenan con un crawler en vivo contra
+curriculumnacional.cl, no con una migración. Sin este paso, el selector de
+Objetivos de Aprendizaje en Flujo Docente solo muestra un puñado de OA
+(un fallback legacy mucho más chico), no los ~2600 reales.
+
+`npm run seed:objectives:local` exporta esas tablas en vivo desde la D1 de
+producción (`wrangler d1 export --remote`, solo lectura) y las carga en tu
+D1 local. Requiere `wrangler` autenticado con acceso a esa base
+(`npx wrangler whoami`). No es un seed de una sola vez: el currículum de
+producción puede cambiar, así que conviene re-correrlo si notás que faltan
+objetivos o si reseteaste tu D1 local. Ver el comentario al inicio de
+`scripts/seed-objectives-en.mjs` para más detalle.
 
 ## Validación
 
