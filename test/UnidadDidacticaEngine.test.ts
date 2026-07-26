@@ -84,6 +84,17 @@ describe('UnidadDidacticaEngine.generateUnidadDidactica', () => {
     expect(validation.success).toBe(true);
   });
 
+  it('REGRESIÓN: debe parsear correctamente cuando env.AI.run() resuelve a { response: string }, la forma real de Cloudflare Workers AI (no solo un string plano)', async () => {
+    const env: AIEngineEnv = {
+      AI: { run: vi.fn().mockResolvedValue({ response: VALID_AI_RESPONSE }) } as unknown as Ai,
+    };
+    const { unidad, usedFallback } = await generateUnidadDidactica(env, MOCK_OPCIONES);
+
+    expect(usedFallback).toBe(false);
+    expect(unidad.titulo).toBe('Investigando a los pueblos originarios de Chile');
+    expect(unidad.clases.length).toBe(2);
+  });
+
   it('debe activar el fallback (usedFallback=true) cuando la IA responde JSON inválido, nunca lanza excepción', async () => {
     const env = mockAIParseError();
     const { unidad, usedFallback } = await generateUnidadDidactica(env, MOCK_OPCIONES);
