@@ -8,10 +8,8 @@ import {
   type UnidadDidactica,
   type MetodologiaActiva,
 } from '../../schemas/UnidadDidacticaSchema';
-import { extractJsonFromText, resolveAIResponseText } from './AIEngine';
+import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-
-const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
 export interface ObjetivoAprendizajeInput {
   code: string;
@@ -92,36 +90,21 @@ ESTRUCTURA JSON OBLIGATORIA:
 }`;
 }
 
-function callAI(env: AIEngineEnv, systemPrompt: string, opciones: UnidadDidacticaOptions): Promise<string> {
-  if (!env.AI) {
-    throw new Error('AI no está configurado en el entorno.');
-  }
-
-  // El mensaje "user" NO debe usar el nombre "objetivosAprendizaje" para
-  // los OA de entrada: es exactamente el mismo nombre de campo que el
-  // schema exige en la SALIDA (ahí como array de strings/códigos, acá
-  // como array de {code, text}). Con el mismo nombre, el modelo tendía a
-  // copiar la forma del input en la salida en vez de aplanarla —
-  // confirmado en un caso real contra el servidor. Renombrar a
-  // "objetivosDisponibles" elimina esa colisión.
-  const contextoParaIA = {
+// El mensaje "user" NO debe usar el nombre "objetivosAprendizaje" para los
+// OA de entrada: es exactamente el mismo nombre de campo que el schema
+// exige en la SALIDA (ahí como array de strings/códigos, acá como array
+// de {code, text}). Con el mismo nombre, el modelo tendía a copiar la
+// forma del input en la salida en vez de aplanarla — confirmado en un
+// caso real contra el servidor. Renombrar a "objetivosDisponibles"
+// elimina esa colisión.
+function buildContextoParaIA(opciones: UnidadDidacticaOptions) {
+  return {
     nivel: opciones.nivel,
     asignatura: opciones.asignatura,
     metodologiaActiva: opciones.metodologiaActiva,
     objetivosDisponibles: opciones.objetivosAprendizaje.map((o) => ({ codigo: o.code, textoOficialOA: o.text })),
     temaSugerido: opciones.temaSugerido,
   };
-
-  const messages = [
-    { role: 'system' as const, content: systemPrompt },
-    { role: 'user' as const, content: JSON.stringify(contextoParaIA, null, 2) },
-  ];
-
-  return env.AI.run(MODEL, {
-    messages,
-    temperature: 0.2,
-    max_tokens: 4000,
-  }).then(resolveAIResponseText);
 }
 
 // Fases de referencia por metodología, usadas SOLO por el fallback de
@@ -213,23 +196,14 @@ export async function generateUnidadDidactica(
   opciones: UnidadDidacticaOptions,
 ): Promise<UnidadDidacticaResult> {
   try {
-    const raw = await callAI(env, buildSystemPrompt(opciones), opciones);
-    const parsed = extractJsonFromText(raw);
-
-    if (!parsed) {
-      console.warn('[UnidadDidacticaEngine] respuesta vacía, usando fallback');
-      return { unidad: buildFallbackUnidad(opciones), usedFallback: true };
-    }
-
-    const parsedJson: unknown = JSON.parse(parsed);
-    const result = UnidadDidacticaSchema.safeParse(parsedJson);
-
-    if (!result.success) {
-      console.warn('[UnidadDidacticaEngine] validación falló, usando fallback:', result.error.issues);
-      return { unidad: buildFallbackUnidad(opciones), usedFallback: true };
-    }
-
-    return { unidad: result.data, usedFallback: false };
+    const { data } = await callAIConValidacion(
+      env,
+      buildSystemPrompt(opciones),
+      JSON.stringify(buildContextoParaIA(opciones), null, 2),
+      UnidadDidacticaSchema,
+      { maxTokens: 4000 },
+    );
+    return { unidad: data, usedFallback: false };
   } catch (error) {
     console.error('[UnidadDidacticaEngine] error:', error);
     return { unidad: buildFallbackUnidad(opciones), usedFallback: true };

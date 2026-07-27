@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { AIEngineEnv, DuaGuide, LessonContent, PedagogicalPlan } from './types';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
@@ -92,6 +93,104 @@ export function resolveAIResponseText(response: unknown): string {
     return typeof inner === 'string' ? inner : JSON.stringify(inner ?? response);
   }
   return String(response);
+}
+
+// Se agota cuando callAIConValidacion() reintentó maxReintentos veces y la
+// IA nunca produjo una respuesta que pasara el schema. callAIConValidacion
+// no conoce los fallbacks pedagógicos de cada dominio (cada engine tiene su
+// propio buildFallback*()), así que en vez de inventar uno arroja este
+// error: el caller ya tiene un try/catch alrededor de su llamada a la IA
+// (mismo patrón que usaban antes de existir el retry) y solo necesita
+// capturarlo y aplicar su propio fallback, como ya hacía.
+export class AIValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly intentos: number,
+    public readonly ultimoError: string,
+  ) {
+    super(message);
+    this.name = 'AIValidationError';
+  }
+}
+
+export interface CallAIConValidacionOptions {
+  maxReintentos?: number;
+  maxTokens?: number;
+  temperature?: number;
+}
+
+// Llama a env.AI.run(), valida la respuesta contra `schema` y, si falla
+// (JSON inválido o schema.safeParse() rechaza), reintenta hasta
+// maxReintentos veces (default 2, o sea 3 intentos en total) agregando al
+// prompt los errores específicos de Zod para que el modelo se corrija en
+// el siguiente intento. Es el mismo mecanismo de
+// callWithSchemaValidation() en el orchestrator de main, pero reusando
+// resolveAIResponseText() (ya probada contra el servidor real) en vez de
+// la extracción de main, que tiene el mismo bug de doble-serialización
+// repetido en 3 lugares distintos.
+export async function callAIConValidacion<T>(
+  env: AIEngineEnv,
+  systemPrompt: string,
+  userPrompt: string,
+  schema: z.ZodType<T>,
+  opciones?: CallAIConValidacionOptions,
+): Promise<{ data: T; usedFallback: false; intentos: number }> {
+  if (!env.AI) {
+    throw new Error('AI no está configurado en el entorno.');
+  }
+
+  const maxReintentos = opciones?.maxReintentos ?? 2;
+  const maxTokens = opciones?.maxTokens ?? 3000;
+  const temperature = opciones?.temperature ?? 0.2;
+  const maxIntentos = maxReintentos + 1;
+
+  let currentUserPrompt = userPrompt;
+  let ultimoError = 'Sin detalle.';
+
+  for (let intento = 1; intento <= maxIntentos; intento++) {
+    const messages = systemPrompt
+      ? [
+          { role: 'system' as const, content: systemPrompt },
+          { role: 'user' as const, content: currentUserPrompt },
+        ]
+      : [{ role: 'user' as const, content: currentUserPrompt }];
+
+    const response = await env.AI.run(MODEL, { messages, temperature, max_tokens: maxTokens });
+    const raw = resolveAIResponseText(response);
+    const candidate = extractJsonFromText(raw);
+
+    let parsedJson: unknown;
+    try {
+      if (!candidate) throw new Error('La respuesta no contenía JSON.');
+      parsedJson = JSON.parse(candidate);
+    } catch {
+      ultimoError = 'La respuesta anterior no era JSON válido.';
+      if (intento < maxIntentos) {
+        currentUserPrompt = `${userPrompt}\n\n⚠️ REINTENTO ${intento}: Tu respuesta anterior NO era JSON válido. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones, sin texto antes o después del JSON.`;
+      }
+      continue;
+    }
+
+    const result = schema.safeParse(parsedJson);
+    if (result.success) {
+      return { data: result.data, usedFallback: false, intentos: intento };
+    }
+
+    const issues = result.error.issues
+      .slice(0, 5)
+      .map((issue) => `${issue.path.length ? issue.path.join('.') : '(raíz)'}: ${issue.message}`);
+    ultimoError = issues.join('; ');
+
+    if (intento < maxIntentos) {
+      currentUserPrompt = `${userPrompt}\n\n⚠️ REINTENTO ${intento}: Tu respuesta anterior tiene errores de estructura:\n  - ${issues.join('\n  - ')}\n\nCorrige TODOS los errores y responde ÚNICAMENTE con JSON válido que cumpla exactamente la estructura solicitada.`;
+    }
+  }
+
+  throw new AIValidationError(
+    `Validación de esquema falló tras ${maxIntentos} intentos: ${ultimoError}`,
+    maxIntentos,
+    ultimoError,
+  );
 }
 
 function ensureStringArray(value: unknown, fieldName: string): string[] {
@@ -367,6 +466,25 @@ function validateDuaGuide(value: unknown): DuaGuide {
   };
 }
 
+// Envuelve validateDuaGuide() (normalización + reglas de negocio ya
+// probadas) en un schema Zod, sin duplicar su lógica: reusa la función tal
+// cual y traduce el Error que lanza a un issue de Zod. Esto es lo que le
+// permite a callAIConValidacion() reintentar generateDuaGuide con el
+// mensaje de error específico en el prompt, en vez de ir directo al
+// fallback ante el primer campo mal formado — el problema documentado
+// para SYSTEM_PROMPT_DUA (12 campos, malformación frecuente del modelo).
+const DuaGuideValidationSchema: z.ZodType<DuaGuide> = z.unknown().transform((value, ctx) => {
+  try {
+    return validateDuaGuide(value);
+  } catch (error) {
+    ctx.addIssue({
+      code: 'custom',
+      message: error instanceof Error ? error.message : 'La respuesta de IA no cumple la estructura esperada.',
+    });
+    return z.NEVER;
+  }
+});
+
 function validateLessonContent(value: unknown): LessonContent {
   if (!value || typeof value !== 'object') {
     throw new Error('La respuesta de IA no es un objeto.');
@@ -596,15 +714,14 @@ async function callAI(
 export class AIEngine {
   static async generateDuaGuide(env: AIEngineEnv, plan: PedagogicalPlan): Promise<DuaGuide> {
     try {
-      const raw = await callAI(env, SYSTEM_PROMPT_DUA, plan);
-      const parsed = extractJsonFromText(raw);
-      if (!parsed) {
-        console.warn('[AIEngine] generateDuaGuide: respuesta vacía, usando fallback');
-        return buildFallbackDuaGuide(plan);
-      }
-
-      const parsedJson = JSON.parse(parsed) as unknown;
-      const result = enrichDuaGuide(validateDuaGuide(parsedJson), plan);
+      const { data } = await callAIConValidacion(
+        env,
+        SYSTEM_PROMPT_DUA,
+        JSON.stringify(plan, null, 2),
+        DuaGuideValidationSchema,
+        { maxTokens: 2500 },
+      );
+      const result = enrichDuaGuide(data, plan);
 
       if (!result.criterios_aprendizaje || result.criterios_aprendizaje.length < 2) {
         const fallbackCriterios = buildFallbackDuaGuide(plan).criterios_aprendizaje;

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AIEngine, extractJsonFromText, resolveAIResponseText } from '../functions/core/AIEngine';
+import { z } from 'zod';
+import { AIEngine, AIValidationError, callAIConValidacion, extractJsonFromText, resolveAIResponseText } from '../functions/core/AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from '../functions/core/types';
 
 const MOCK_PLAN: PedagogicalPlan = {
@@ -128,6 +129,86 @@ describe('resolveAIResponseText', () => {
   it('debe convertir a String() cualquier otro tipo primitivo (null, number, etc.)', () => {
     expect(resolveAIResponseText(null)).toBe('null');
     expect(resolveAIResponseText(42)).toBe('42');
+  });
+});
+
+describe('callAIConValidacion', () => {
+  const SimpleSchema = z.object({ foo: z.string().min(3) });
+
+  it('reintenta cuando la validación de schema falla, incluye los errores de Zod en el prompt del reintento, y resuelve usedFallback: false cuando el reintento finalmente tiene éxito', async () => {
+    const run = vi.fn()
+      .mockResolvedValueOnce(JSON.stringify({ foo: 'ab' })) // falla: min 3 caracteres
+      .mockResolvedValueOnce(JSON.stringify({ foo: 'abcdef' })); // pasa
+
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    const result = await callAIConValidacion(env, 'system prompt', 'user prompt original', SimpleSchema);
+
+    expect(result.usedFallback).toBe(false);
+    expect(result.intentos).toBe(2);
+    expect(result.data).toEqual({ foo: 'abcdef' });
+    expect(run).toHaveBeenCalledTimes(2);
+
+    const [, segundoLlamado] = run.mock.calls[1] as [string, { messages: Array<{ role: string; content: string }> }];
+    const segundoMensajeUsuario = segundoLlamado.messages.find((m) => m.role === 'user');
+
+    // El prompt del reintento debe incluir el prompt original Y los
+    // errores específicos de Zod del intento anterior (mismo mecanismo
+    // que callWithSchemaValidation() en orchestrator.ts de main).
+    expect(segundoMensajeUsuario?.content).toContain('user prompt original');
+    expect(segundoMensajeUsuario?.content).toContain('REINTENTO');
+    expect(segundoMensajeUsuario?.content).toContain('foo');
+  });
+
+  it('reintenta cuando la respuesta no es JSON válido, agregando instrucciones de formato en el reintento', async () => {
+    const run = vi.fn()
+      .mockResolvedValueOnce('esto no es JSON en absoluto')
+      .mockResolvedValueOnce(JSON.stringify({ foo: 'valido' }));
+
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+    const result = await callAIConValidacion(env, '', 'user prompt', SimpleSchema);
+
+    expect(result.usedFallback).toBe(false);
+    expect(result.intentos).toBe(2);
+    expect(result.data).toEqual({ foo: 'valido' });
+    expect(run).toHaveBeenCalledTimes(2);
+
+    const [, segundoLlamado] = run.mock.calls[1] as [string, { messages: Array<{ role: string; content: string }> }];
+    expect(segundoLlamado.messages[0].content).toContain('JSON válido');
+  });
+
+  it('arroja AIValidationError tras agotar maxReintentos (3 intentos totales por defecto), sin construir ningún fallback propio', async () => {
+    const run = vi.fn().mockResolvedValue(JSON.stringify({ foo: 'ab' })); // siempre falla min 3
+
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    await expect(
+      callAIConValidacion(env, '', 'user prompt', SimpleSchema),
+    ).rejects.toThrow(AIValidationError);
+
+    expect(run).toHaveBeenCalledTimes(3);
+  });
+
+  it('respeta un maxReintentos personalizado (0 = un solo intento, sin reintentos)', async () => {
+    const run = vi.fn().mockResolvedValue(JSON.stringify({ foo: 'ab' }));
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    await expect(
+      callAIConValidacion(env, '', 'user prompt', SimpleSchema, { maxReintentos: 0 }),
+    ).rejects.toThrow(AIValidationError);
+
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it('no reintenta cuando el primer intento ya es válido', async () => {
+    const run = vi.fn().mockResolvedValue(JSON.stringify({ foo: 'valido desde el inicio' }));
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    const result = await callAIConValidacion(env, '', 'user prompt', SimpleSchema);
+
+    expect(result.usedFallback).toBe(false);
+    expect(result.intentos).toBe(1);
+    expect(run).toHaveBeenCalledTimes(1);
   });
 });
 

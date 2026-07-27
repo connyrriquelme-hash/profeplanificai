@@ -1,8 +1,6 @@
 import { PlanificacionSchema, type Planificacion } from '../../schemas/PlanificacionSchema';
-import { extractJsonFromText, resolveAIResponseText } from './AIEngine';
+import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-
-const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
 export interface PlanificacionOptions {
   level: string;
@@ -24,18 +22,6 @@ function truncate(text: string, max: number): string {
   const cut = trimmed.slice(0, max - 1).trimEnd();
   const lastSpace = cut.lastIndexOf(' ');
   return `${lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut}…`;
-}
-
-function callAI(env: AIEngineEnv, prompt: string): Promise<string> {
-  if (!env.AI) {
-    throw new Error('AI no está configurado en el entorno.');
-  }
-
-  return env.AI.run(MODEL, {
-    messages: [{ role: 'user' as const, content: prompt }],
-    temperature: 0.2,
-    max_tokens: 3000,
-  }).then(resolveAIResponseText);
 }
 
 // CAMINO DE EMERGENCIA: se usa solo cuando la IA no responde, responde JSON
@@ -102,23 +88,8 @@ export async function generatePlanificacion(
   opciones: PlanificacionOptions,
 ): Promise<PlanificacionResult> {
   try {
-    const raw = await callAI(env, prompt);
-    const parsed = extractJsonFromText(raw);
-
-    if (!parsed) {
-      console.warn('[PlanificacionEngine] respuesta vacía, usando fallback');
-      return { planificacion: buildFallbackPlanificacion(opciones), usedFallback: true };
-    }
-
-    const parsedJson: unknown = JSON.parse(parsed);
-    const result = PlanificacionSchema.safeParse(parsedJson);
-
-    if (!result.success) {
-      console.warn('[PlanificacionEngine] validación falló, usando fallback:', result.error.issues);
-      return { planificacion: buildFallbackPlanificacion(opciones), usedFallback: true };
-    }
-
-    return { planificacion: result.data, usedFallback: false };
+    const { data } = await callAIConValidacion(env, '', prompt, PlanificacionSchema, { maxTokens: 3000 });
+    return { planificacion: data, usedFallback: false };
   } catch (error) {
     console.error('[PlanificacionEngine] error:', error);
     return { planificacion: buildFallbackPlanificacion(opciones), usedFallback: true };

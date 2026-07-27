@@ -1,8 +1,6 @@
 import { PptDeckSchema, TITLE_MAX, SUBTITLE_MAX, BULLET_MAX, type PptDeck, type Slide } from '../../schemas/PptDeckSchema';
-import { resolveAIResponseText } from './AIEngine';
+import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from './types';
-
-const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
 // Rangos etarios aproximados por curso, usados para adaptar el lenguaje del
 // contenido generado. No son edades legales/exactas, son una guía de
@@ -61,25 +59,6 @@ ESTRUCTURA JSON OBLIGATORIA:
     { "layout": "quote", "text": "Cita educativa", "author": "Autor" }
   ]
 }`;
-}
-
-function extractJsonFromText(raw: string): string {
-  if (!raw || typeof raw !== 'string') return '';
-
-  let candidate = raw.trim();
-
-  const mdMatch = candidate.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
-  if (mdMatch?.[1]) {
-    candidate = mdMatch[1].trim();
-  }
-
-  const jsonStart = candidate.indexOf('{');
-  const jsonEnd = candidate.lastIndexOf('}');
-  if (jsonStart !== -1 && jsonEnd > jsonStart) {
-    candidate = candidate.substring(jsonStart, jsonEnd + 1);
-  }
-
-  return candidate;
 }
 
 function truncate(text: string, max: number): string {
@@ -255,27 +234,6 @@ function safeguardEmptyArrays(deck: PptDeck): PptDeck {
   return { slides };
 }
 
-function callAI(
-  env: AIEngineEnv,
-  systemPrompt: string,
-  plan: PedagogicalPlan,
-): Promise<string> {
-  if (!env.AI) {
-    throw new Error('AI no está configurado en el entorno.');
-  }
-
-  const messages = [
-    { role: 'system' as const, content: systemPrompt },
-    { role: 'user' as const, content: JSON.stringify(plan, null, 2) },
-  ];
-
-  return env.AI.run(MODEL, {
-    messages,
-    temperature: 0.2,
-    max_tokens: 3000,
-  }).then(resolveAIResponseText);
-}
-
 export async function generateDeckContent(
   env: AIEngineEnv,
   plan: PedagogicalPlan,
@@ -284,38 +242,15 @@ export async function generateDeckContent(
   const maxSlides = opciones?.maxSlides ?? 20;
 
   try {
-    const raw = await callAI(env, buildSystemPrompt(plan), plan);
-    const parsed = extractJsonFromText(raw);
+    const { data } = await callAIConValidacion(
+      env,
+      buildSystemPrompt(plan),
+      JSON.stringify(plan, null, 2),
+      PptDeckSchema,
+      { maxTokens: 3000 },
+    );
 
-    if (!parsed) {
-      console.warn('[PptContentEngine] respuesta vacía, usando fallback');
-      return buildFallbackDeck(plan);
-    }
-
-    const parsedJson = JSON.parse(parsed) as unknown;
-    const result = PptDeckSchema.safeParse(parsedJson);
-
-    if (!result.success) {
-      console.warn('[PptContentEngine] validación falló, aplicando safeguard:', result.error.issues);
-      let deck = buildFallbackDeck(plan);
-
-      if (parsedJson && typeof parsedJson === 'object' && 'slides' in parsedJson) {
-        const partial = parsedJson as { slides: unknown[] };
-        if (Array.isArray(partial.slides) && partial.slides.length > 0) {
-          const parsedDeck = PptDeckSchema.partial().safeParse({ slides: partial.slides });
-          if (parsedDeck.success && parsedDeck.data.slides) {
-            deck = { slides: parsedDeck.data.slides as Slide[] };
-          }
-        }
-      }
-
-      deck = safeguardBulletsFromPlan(deck, plan);
-      deck = safeguardEmptyArrays(deck);
-      deck.slides = deck.slides.slice(0, maxSlides);
-      return deck;
-    }
-
-    let deck = result.data;
+    let deck = data;
     deck = safeguardBulletsFromPlan(deck, plan);
     deck = safeguardEmptyArrays(deck);
     deck.slides = deck.slides.slice(0, maxSlides);
