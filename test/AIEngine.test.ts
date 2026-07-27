@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AIEngine, extractJsonFromText } from '../functions/core/AIEngine';
+import { AIEngine, extractJsonFromText, resolveAIResponseText } from '../functions/core/AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from '../functions/core/types';
 
 const MOCK_PLAN: PedagogicalPlan = {
@@ -72,6 +72,62 @@ describe('extractJsonFromText', () => {
   it('should handle nested JSON', () => {
     const result = extractJsonFromText('prefix {"a":{"b":1}} suffix');
     expect(result).toBe('{"a":{"b":1}}');
+  });
+});
+
+describe('resolveAIResponseText', () => {
+  // Hallazgo real de esta sesión: contra el mismo binding y el mismo
+  // modelo (@cf/meta/llama-3.2-3b-instruct), env.AI.run() resolvió, en
+  // llamadas consecutivas al servidor real, unas veces a un string plano
+  // y otras a { response: "<texto>" } — de forma NO determinista, no
+  // según el archivo/prompt que llamaba. Un fix probado solo contra
+  // strings planos (la única forma que mockeaban los tests originales de
+  // los 3 engines) dejó pasar el bug de doble-serialización sin ser
+  // detectado. Estos tests cubren ambas formas y ambos órdenes.
+
+  it('debe devolver el string sin cambios cuando la respuesta ya es un string plano', () => {
+    const plano = '{"titulo":"Clase de prueba"}';
+    expect(resolveAIResponseText(plano)).toBe(plano);
+  });
+
+  it('debe extraer .response sin re-stringify-arlo cuando la respuesta es { response: string } (forma real de Cloudflare Workers AI)', () => {
+    const textoOriginal = '{"titulo":"Clase de prueba","bullets":["uno","dos"]}';
+    const resultado = resolveAIResponseText({ response: textoOriginal });
+
+    expect(resultado).toBe(textoOriginal);
+    // La firma exacta del bug: JSON.stringify de un string ya formado
+    // antepone una comilla al resultado y escapa las comillas internas.
+    expect(resultado.startsWith('"')).toBe(false);
+    expect(resultado).not.toContain('\\"');
+  });
+
+  it('debe manejar CUALQUIER ORDEN entre las dos formas para el mismo binding/modelo, sin arrastrar estado entre llamadas', () => {
+    const stringPlano = '{"a":1}';
+    const objetoConResponse = { response: '{"b":2}' };
+
+    // string plano, luego objeto
+    expect(resolveAIResponseText(stringPlano)).toBe(stringPlano);
+    expect(resolveAIResponseText(objetoConResponse)).toBe('{"b":2}');
+
+    // objeto, luego string plano (orden invertido)
+    expect(resolveAIResponseText(objetoConResponse)).toBe('{"b":2}');
+    expect(resolveAIResponseText(stringPlano)).toBe(stringPlano);
+  });
+
+  it('debe stringify-ar cuando .response no es un string (forma inesperada, no el caso normal)', () => {
+    const resultado = resolveAIResponseText({ response: { anidado: true } });
+    expect(resultado).toBe(JSON.stringify({ anidado: true }));
+  });
+
+  it('debe stringify-ar el objeto completo cuando no existe el campo .response', () => {
+    const objetoSinResponse = { otraCosa: 'valor' };
+    const resultado = resolveAIResponseText(objetoSinResponse);
+    expect(resultado).toBe(JSON.stringify(objetoSinResponse));
+  });
+
+  it('debe convertir a String() cualquier otro tipo primitivo (null, number, etc.)', () => {
+    expect(resolveAIResponseText(null)).toBe('null');
+    expect(resolveAIResponseText(42)).toBe('42');
   });
 });
 

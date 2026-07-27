@@ -76,6 +76,24 @@ export function extractJsonFromText(raw: string): string {
   return candidate;
 }
 
+// env.AI.run(...) con mensajes de chat puede resolver a un string plano o a
+// { response: "<texto plano del modelo>" } — confirmado con evidencia real
+// contra el servidor que, para el MISMO binding y modelo
+// (@cf/meta/llama-3.2-3b-instruct), la forma varía de una llamada a otra de
+// manera no determinista. Si .response ya es un string, hay que devolverlo
+// tal cual: volver a hacerle JSON.stringify() lo escapa una segunda vez
+// (comillas/backslashes) y rompe el JSON.parse posterior en
+// extractJsonFromText. Solo se stringifica cuando .response no es un string
+// (forma inesperada) o cuando el campo no existe.
+export function resolveAIResponseText(response: unknown): string {
+  if (typeof response === 'string') return response;
+  if (typeof response === 'object' && response !== null) {
+    const inner = (response as Record<string, unknown>).response;
+    return typeof inner === 'string' ? inner : JSON.stringify(inner ?? response);
+  }
+  return String(response);
+}
+
 function ensureStringArray(value: unknown, fieldName: string): string[] {
   if (!Array.isArray(value)) {
     throw new Error(`El campo ${fieldName} debe ser un arreglo de strings.`);
@@ -572,18 +590,7 @@ async function callAI(
     max_tokens: 2500,
   });
 
-  if (typeof response === 'string') return response;
-  if (typeof response === 'object' && response !== null) {
-    // env.AI.run(...) con mensajes de chat normalmente resuelve a
-    // { response: "<texto plano del modelo>" } — ese campo YA es el texto
-    // a parsear, nunca hay que re-stringify-arlo (JSON.stringify de un
-    // string produce un literal JSON con comillas/backslashes escapados,
-    // que rompe JSON.parse en extractJsonFromText). Confirmado con
-    // evidencia real: 2/3 llamadas reales caian a fallback por este bug.
-    const inner = (response as Record<string, unknown>).response;
-    return typeof inner === 'string' ? inner : JSON.stringify(inner ?? response);
-  }
-  return String(response);
+  return resolveAIResponseText(response);
 }
 
 export class AIEngine {

@@ -8,7 +8,7 @@ import {
   type UnidadDidactica,
   type MetodologiaActiva,
 } from '../../schemas/UnidadDidacticaSchema';
-import { extractJsonFromText } from './AIEngine';
+import { extractJsonFromText, resolveAIResponseText } from './AIEngine';
 import type { AIEngineEnv } from './types';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
@@ -121,20 +121,7 @@ function callAI(env: AIEngineEnv, systemPrompt: string, opciones: UnidadDidactic
     messages,
     temperature: 0.2,
     max_tokens: 4000,
-  }).then((response: unknown) => {
-    if (typeof response === 'string') return response;
-    if (typeof response === 'object' && response !== null) {
-      // env.AI.run(...) con mensajes de chat normalmente resuelve a
-      // { response: "<texto plano del modelo>" } — ese campo YA es el texto
-      // a parsear, nunca hay que re-stringify-arlo (JSON.stringify de un
-      // string produce un literal JSON con comillas/backslashes escapados,
-      // que rompe JSON.parse en extractJsonFromText). Mismo bug confirmado
-      // con evidencia real en PptContentEngine.ts y AIEngine.ts.
-      const inner = (response as Record<string, unknown>).response;
-      return typeof inner === 'string' ? inner : JSON.stringify(inner ?? response);
-    }
-    return String(response);
-  });
+  }).then(resolveAIResponseText);
 }
 
 // Fases de referencia por metodología, usadas SOLO por el fallback de
