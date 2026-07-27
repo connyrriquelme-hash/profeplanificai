@@ -40,6 +40,55 @@ real contra datos reales — es un endpoint incompleto, no una implementación
 alternativa funcional. Nuestra versión sí genera contenido real hoy, con
 retry+validación Zod (ver `callAIConValidacion` en `AIEngine.ts`).
 
+## RESUELTO: `functions/api/materials/presentation.ts` — adoptar nuestra versión tal cual
+
+**Decisión:** al mergear, quedarse con la versión de `feature/libro-clases-digital`
+sin modificarla. Descartar la de `main`.
+
+**Evidencia (2026-07-27):**
+
+- El `presentation.ts` de `main` (`e56b135`) llama a IA directo con
+  `env.AI.run('@cf/meta/llama-3.1-8b-instruct', ...)` — sin pasar por ningún
+  orchestrator, con su propia extracción ad-hoc de la respuesta. Invocando su
+  `onRequestPost` real HOY contra el binding de IA real de producción (D1
+  mockeada para no escribir nada, `getPlatformProxy`):
+  ```
+  [presentation] AI generation failed, using defaults: Error: 5028: This
+  model was deprecated on 2026-05-30. Please use an alternative model.
+  HTTP status: 200
+  ok: true
+  ¿Parecen los slides de buildDefaultSlides (fallback), no de IA?: true
+  ```
+  El modelo `@cf/meta/llama-3.1-8b-instruct` está deprecado por Cloudflare
+  desde el 30 de mayo — ~2 meses antes de esta verificación. Cualquier
+  llamada real a este endpoint falla garantizadamente en el paso de IA, cae
+  a `buildDefaultSlides()` (plantilla estática genérica) y responde
+  `HTTP 200 {ok:true}` — indistinguible de un éxito real para el frontend.
+  Hoy, este endpoint SIEMPRE devuelve contenido fabricado sin que nada lo
+  delate.
+- Esquema D1 (`generated_resources` y `generated_presentations`) sí es
+  compatible con producción — el problema es exclusivamente el modelo
+  muerto, no la base de datos.
+- **Chequeo explícito de si NOSOTROS usamos el mismo modelo deprecado:**
+  `grep "MODEL\s*=" functions/core/*.ts` confirma que las 4 engines
+  (`AIEngine`, `PptContentEngine`, `PlanificacionEngine`,
+  `UnidadDidacticaEngine` — las 3 últimas ya migradas a
+  `callAIConValidacion()`, que centraliza el modelo en `AIEngine.ts`) usan
+  **`@cf/meta/llama-3.2-3b-instruct`** — un modelo distinto, NO deprecado.
+  Confirmado con corrida en vivo hoy (`PptContentEngine.generateDeckContent`,
+  vía `getPlatformProxy`, invocación aislada del engine sin tocar D1 real):
+  ```
+  usedFallback (heurística): false (6492ms)
+  slideCount: 6
+  slides[0]: {"layout":"title","title":"La Propagación del Sonido", ...}
+  ```
+  Nuestro modelo funciona hoy — no heredamos el problema de main.
+
+**Conclusión:** el `presentation.ts` de main está roto en producción hoy por
+un modelo deprecado, silenciosamente enmascarado por su propio try/catch.
+Nuestra versión usa un modelo distinto y funcional, confirmado con una
+llamada real.
+
 ## RESUELTO: `functions/api/methodologies.ts` — adoptar nuestra versión tal cual
 
 **Decisión:** al mergear, quedarse con la versión de `feature/libro-clases-digital`
