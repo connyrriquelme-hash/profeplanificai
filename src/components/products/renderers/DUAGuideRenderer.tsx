@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, DUASection } from '../types';
 
 interface DUAGuideRendererProps {
@@ -110,6 +111,8 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
           <p className="text-gray-700 text-sm whitespace-pre-wrap">{inclusiveAssessment}</p>
         </ProductSection>
       )}
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

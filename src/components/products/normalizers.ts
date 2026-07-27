@@ -29,6 +29,15 @@ function extractMetadata(raw: Record<string, unknown>): ProductMetadata {
   };
 }
 
+function extractPremiumExtras(raw: Record<string, unknown>): Record<string, unknown> {
+  return {
+    tablas: Array.isArray(raw.tablas) ? raw.tablas : Array.isArray(raw.tables) ? raw.tables : undefined,
+    callouts: Array.isArray(raw.callouts) ? raw.callouts : undefined,
+    graficos: Array.isArray(raw.graficos) ? raw.graficos : Array.isArray(raw.charts) ? raw.charts : undefined,
+    checklist: Array.isArray(raw.checklist) ? raw.checklist : undefined,
+  };
+}
+
 /**
  * Normalize a ticket_salida response
  * Raw: { title, subtitle, type: 'ticket_salida', questions: [...], instructions, ... }
@@ -46,6 +55,7 @@ export function normalizeTicket(raw: unknown): PedagogicalProduct | null {
       questions: Array.isArray(r.questions) ? r.questions : [],
       instructions: r.instructions,
       ticketType: type === 'ticket_salida' ? 'salida' : 'entrada',
+      ...extractPremiumExtras(r),
     },
   };
 }
@@ -77,6 +87,7 @@ export function normalizeThreeTwoOne(raw: unknown): PedagogicalProduct | null {
     data: {
       cards,
       instructions: r.instructions,
+      ...extractPremiumExtras(r),
     },
   };
 }
@@ -108,6 +119,7 @@ export function normalizeChecklist(raw: unknown): PedagogicalProduct | null {
       items,
       instructions: r.instructions,
       observations: r.teacherNotes,
+      ...extractPremiumExtras(r),
     },
   };
 }
@@ -154,6 +166,7 @@ export function normalizeRubric(raw: unknown): PedagogicalProduct | null {
       levels,
       description: r.instructions,
       totalPoints: r.totalScore,
+      ...extractPremiumExtras(r),
     },
   };
 }
@@ -187,6 +200,7 @@ export function normalizeGuide(raw: unknown, guideType: 'guia_estudiante' | 'gui
       materials: r.vocabulary,
       evaluation: r.selfAssessment,
       instructions: r.instructions,
+      ...extractPremiumExtras(r),
     },
   };
 }
@@ -218,7 +232,7 @@ export function normalizeBitacora(raw: unknown): PedagogicalProduct | null {
     return {
       type: 'bitacora_cientifica',
       metadata: extractMetadata(r),
-      data: r,
+      data: { ...r, ...extractPremiumExtras(r) },
     };
   }
 

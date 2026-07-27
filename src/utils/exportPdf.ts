@@ -1,92 +1,60 @@
-import { mdToHtml } from './htmlUtils';
+/**
+ * Estrategia PDF premium: window.print() nativo del navegador.
+ * - Texto seleccionable, vectores, CSS moderno (oklch) sin problemas
+ * - Fallback textual solo cuando getElementById falla o excepción severa
+ */
 
-export async function exportToPDF(title: string, markdownContent: string): Promise<void> {
-  const { default: jsPDF } = await import('jspdf');
-  const html = mdToHtml(markdownContent);
-
-  const container = document.createElement('div');
-  container.innerHTML = html;
-  container.style.cssText = `
-    font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5;
-    padding: 20px; color: #000; max-width: 190mm;
-  `;
-  container.querySelectorAll('h1, h2, h3').forEach((el) => {
-    (el as HTMLElement).style.color = '#000';
-    (el as HTMLElement).style.margin = '12px 0 6px';
-  });
-  container.querySelectorAll('ul').forEach((el) => {
-    (el as HTMLElement).style.paddingLeft = '20px';
-  });
-  container.querySelectorAll('li').forEach((el) => {
-    (el as HTMLElement).style.margin = '3px 0';
-  });
-
-  document.body.appendChild(container);
-
+export async function exportToPdf(elementId: string, filename: string, fallbackText?: string): Promise<boolean> {
   try {
-    const { default: html2canvas } = await import('html2canvas');
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const imgWidth = 190;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-    heightLeft -= pageHeight - 20;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 10, position + 10, imgWidth, imgHeight);
-      heightLeft -= pageHeight - 20;
+    const targetElement = document.getElementById(elementId);
+    if (!targetElement) {
+      console.warn('Elemento no encontrado para PDF. Usando fallback textual.');
+      return triggerTextFallback(filename, fallbackText);
     }
 
-    pdf.save(`${title.replace(/[^a-zA-Z0-9áéíóúñ\s-]/g, '').trim()}.pdf`);
-  } finally {
-    document.body.removeChild(container);
+    const originalTitle = document.title;
+    document.title = filename;
+
+    document.body.classList.add('premium-pdf-print-mode');
+    targetElement.classList.add('premium-pdf-target');
+
+    window.print();
+
+    document.title = originalTitle;
+    document.body.classList.remove('premium-pdf-print-mode');
+    targetElement.classList.remove('premium-pdf-target');
+
+    return true;
+  } catch (error) {
+    console.error('Error al generar PDF premium nativo. Usando fallback textual:', error);
+    return triggerTextFallback(filename, fallbackText);
   }
 }
 
-export async function exportElementToPDF(elementId: string, filename: string): Promise<void> {
-  const element = document.getElementById(elementId);
-  if (!element) throw new Error(`Elemento #${elementId} no encontrado`);
-
-  const { default: html2canvas } = await import('html2canvas');
-  const { default: jsPDF } = await import('jspdf');
-
-  const canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    backgroundColor: '#ffffff',
-  });
-
-  const imgData = canvas.toDataURL('image/png');
-  const imgWidth = 190;
-  const pageHeight = 297;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  const pdf = new jsPDF('p', 'mm', 'a4');
-  pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-  heightLeft -= pageHeight - 20;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 10, position + 10, imgWidth, imgHeight);
-    heightLeft -= pageHeight - 20;
+function triggerTextFallback(filename: string, content?: string): boolean {
+  if (!content) return false;
+  try {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}-fallback.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  } catch (e) {
+    console.error('Fallback textual falló', e);
+    return false;
   }
+}
 
-  pdf.save(`${filename}.pdf`);
+export async function exportElementToPDF(elementId: string, filename: string): Promise<boolean> {
+  return exportToPdf(elementId, filename);
+}
+
+export async function exportToPDF(title: string, markdownContent: string): Promise<void> {
+  const fallbackContent = `# ${title}\n\n${markdownContent}`;
+  triggerTextFallback(title, fallbackContent);
 }

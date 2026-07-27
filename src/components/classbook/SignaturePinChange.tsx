@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { classbookService } from '../../services/classbookService';
 
 interface Props {
+  institutionId: string;
   onComplete: () => void;
   onCancel: () => void;
 }
 
-export function SignaturePinChange({ onComplete, onCancel }: Props) {
+export function SignaturePinChange({ institutionId, onComplete, onCancel }: Props) {
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
@@ -44,7 +45,7 @@ export function SignaturePinChange({ onComplete, onCancel }: Props) {
 
     setLoading(true);
     try {
-      await classbookService.changeSignaturePin(currentPin, newPin);
+      await classbookService.changeSignaturePin(currentPin, newPin, institutionId);
       onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cambiar PIN');

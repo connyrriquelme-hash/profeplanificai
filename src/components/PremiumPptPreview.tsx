@@ -661,8 +661,8 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
   }
 
   return (
-    <div className="flex gap-4">
-      <div className="flex-1">
+    <div className="flex flex-col gap-4 overflow-x-hidden lg:flex-row">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-gray-700">
             Vista previa: {LAYOUT_LABELS[slide.layout] || slide.layout}
@@ -689,7 +689,7 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           </button>
         </div>
       </div>
-      <div className="w-56 flex-shrink-0">
+      <div className="w-full flex-shrink-0 lg:w-56">
         <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Diapositivas</div>
         {slideList}
       </div>

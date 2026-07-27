@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, EvaluationQuestion } from '../types';
 
 interface EvaluationRendererProps {
@@ -18,6 +19,8 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
   const totalPoints = data.totalPoints as number | undefined;
   const instructions = data.instructions as string | undefined;
   const timeLimit = data.timeLimit as string | undefined;
+  const questionImages = (data.images as Array<{ url: string; alt: string; source: string; attribution: string }>) || [];
+  const imageTitles = (data.imageTitles as string[]) || [];
 
   return (
     <div
@@ -68,9 +71,18 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                     {index + 1}
                   </span>
                   <div className="flex-1">
-                    <p className="text-gray-800 font-medium text-sm">{q.question}</p>
-                    {q.points && (
-                      <span className="text-xs text-gray-500 mt-1 inline-block">({q.points} pts)</span>
+                    <p className="text-gray-800 font-medium text-sm">{q.text || q.question}</p>
+                    {(q.score || q.points) && (
+                      <span className="text-xs text-gray-500 mt-1 inline-block">({q.score || q.points} pts)</span>
+                    )}
+
+                    {questionImages[index] && (
+                      <div className="mt-3">
+                        <ProductImage
+                          image={questionImages[index]}
+                          className="max-w-sm"
+                        />
+                      </div>
                     )}
 
                     {q.type === 'closed' && (
@@ -86,9 +98,22 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                       </div>
                     )}
 
+                    {q.type === 'verdadero_falso' && (
+                      <div className="mt-3 flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                          <input type="radio" name={`q-${index}`} value="V" className="text-indigo-600 focus:ring-indigo-500" />
+                          Verdadero (V)
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                          <input type="radio" name={`q-${index}`} value="F" className="text-indigo-600 focus:ring-indigo-500" />
+                          Falso (F)
+                        </label>
+                      </div>
+                    )}
+
                     {q.type === 'multiple' && q.options && (
                       <div className="mt-3 space-y-2">
-                        {q.options.map((option, oi) => (
+                        {(q.options as string[]).map((option, oi) => (
                           <label key={oi} className="flex items-center gap-2 text-sm text-gray-700">
                             <input type="radio" name={`q-${index}`} className="text-indigo-600 focus:ring-indigo-500" />
                             {option}
@@ -97,7 +122,21 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                       </div>
                     )}
 
-                    {q.type === 'open' && (
+                    {q.type === 'alternativa' && q.options && (
+                      <div className="mt-3 space-y-2">
+                        {(q.options as Array<{ text: string; isCorrect: boolean }>).map((option, oi) => {
+                          const letter = String.fromCharCode(65 + oi); // 0 -> A, 1 -> B, etc.
+                          return (
+                            <label key={oi} className="flex items-center gap-2 text-sm text-gray-700">
+                              <input type="radio" name={`q-${index}`} className="text-indigo-600 focus:ring-indigo-500" />
+                              {letter}) {option.text}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {(q.type === 'open' || q.type === 'desarrollo') && (
                       <div className="mt-3 min-h-[4rem] border-b border-dashed border-gray-300 pb-2">
                         <p className="text-gray-400 text-xs italic">Escribe tu respuesta aquí...</p>
                       </div>
@@ -109,6 +148,8 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
           </div>
         )}
       </ProductSection>
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, ProjectTask } from '../types';
 
 interface ProjectRendererProps {
@@ -146,6 +147,8 @@ export function ProjectRenderer({ product, className, style }: ProjectRendererPr
           </ul>
         </ProductSection>
       )}
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

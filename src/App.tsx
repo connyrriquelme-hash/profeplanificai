@@ -44,7 +44,11 @@ interface ViewState {
 }
 
 function AppContent() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, activeInstitutionId } = useAuth();
+  const effectiveInstitutionId =
+    user?.institutionalRole === 'super_admin'
+      ? activeInstitutionId ?? ''
+      : user?.institutionId ?? '';
   const initialView = (() => {
     const path = window.location.pathname.replace(/\/+$/, '');
     if (path === '/mis-clases' || path === '/generador-rapido') return 'mis-clases';
@@ -154,6 +158,7 @@ function AppContent() {
         return (
           <ClassSessionDetailView
             sessionId={(viewState as Record<string, unknown>)?.sessionId as string ?? ''}
+            institutionId={effectiveInstitutionId}
             onBack={() => handleViewChange('libro-clases')}
             onRefresh={() => {}}
           />

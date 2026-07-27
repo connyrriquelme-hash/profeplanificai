@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, GraphicOrganizerNode } from '../types';
 
 interface GraphicOrganizerRendererProps {
@@ -88,6 +89,8 @@ export function GraphicOrganizerRenderer({ product, className, style }: GraphicO
           </div>
         )}
       </ProductSection>
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />

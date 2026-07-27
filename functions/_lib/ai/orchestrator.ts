@@ -4,6 +4,9 @@ import { callProvider, statusProviders } from './providers';
 import { sanitizeOutput, scanContent, scanForSecrets } from './safety';
 import { checkRateLimit, sanitizeForPrompt, validateInputSize } from './limits';
 import { enrichAIRequestWithPedagogicalContext } from './context';
+import { getSchemaForAgent, getValidatorForAgent } from './schemas';
+
+const MAX_SCHEMA_RETRIES = 2;
 
 function localFallback(agentType: string, taskType: string, req: AIRequest): { content: string; structured: Record<string, unknown> } {
   const course = req.course || 'el curso';
@@ -18,6 +21,50 @@ OA: ${oa}
 Indicadores: ${indicators}
 Habilidades: ${skills}
 Generado por fallback local pedagogico. Para contenido enriquecido, configura una API key de IA (Gemini, Workers AI, OpenRouter o HuggingFace).`;
+
+  const premiumExtras = {
+    callouts: [
+      {
+        tipo: 'docente',
+        titulo: 'Decisión pedagógica sugerida',
+        texto: hasOA
+          ? `Usa el ${req.oaCode} como criterio de foco: modela primero, verifica durante la práctica y ajusta el apoyo según evidencia observable.`
+          : 'Antes de aplicar, selecciona un OA para mejorar la precisión curricular de la actividad.',
+      },
+      {
+        tipo: 'dua',
+        titulo: 'Ajuste DUA prioritario',
+        texto: 'Ofrece la consigna en formato oral, visual y escrito; permite responder con dibujo, explicación oral o texto breve según necesidad del curso.',
+      },
+    ],
+    tablas: [
+      {
+        titulo: 'Plan de uso docente',
+        columnas: ['Momento', 'Acción docente', 'Evidencia esperada'],
+        filas: [
+          ['Inicio', 'Activar conocimientos previos y explicitar el propósito.', 'Respuestas orales o lluvia de ideas.'],
+          ['Desarrollo', 'Modelar, acompañar práctica guiada y retroalimentar.', 'Producto parcial o resolución guiada.'],
+          ['Cierre', 'Sintetizar aprendizajes y tomar decisión pedagógica.', 'Ticket de salida o criterio de logro.'],
+        ],
+      },
+    ],
+    graficos: [
+      {
+        titulo: 'Distribución sugerida del tiempo',
+        datos: [
+          { label: 'Inicio', value: 15 },
+          { label: 'Desarrollo', value: 60 },
+          { label: 'Cierre', value: 15 },
+        ],
+      },
+    ],
+    checklist: [
+      'Revisar que el producto mencione el OA seleccionado.',
+      'Preparar apoyos visuales y vocabulario clave antes de la clase.',
+      'Definir una evidencia breve para tomar decisiones al cierre.',
+      'Ajustar la dificultad para estudiantes que requieren apoyo o desafío.',
+    ],
+  };
 
   if (agentType === 'actividades_clase' && taskType === 'generar') {
     return {
@@ -56,6 +103,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         extensionAvanzados: hasOA
           ? 'Actividades de profundizacion: proyectos de investigacion breve, produccion de material didactico para el curso, asumir rol de tutor de pares, conectar con situaciones reales del entorno.'
           : 'Problemas de mayor complejidad, proyectos breves, rol de tutores.',
+        ...premiumExtras,
       },
     };
   }
@@ -81,6 +129,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         tablaEspecificaciones: [],
         adecuacionesDUA: 'Permitir respuesta oral, escrita o grafica. Entregar pautas visuales. Tiempo adicional si se requiere.',
         reforzamientoSugerido: 'Repasar conceptos clave. Practicar con ejercicios similares.',
+        ...premiumExtras,
       },
     };
   }
@@ -102,6 +151,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         OA: req.oaCode || 'OA pendiente',
         justificacion: 'La alternativa A es correcta porque... Las demas son distractores basados en errores comunes.',
         tiempoEstimado: '3-5 min',
+        ...premiumExtras,
       },
     };
   }
@@ -132,6 +182,7 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
             { nivel: 'No logrado', puntaje: 1, descripcion: 'No se entiende la respuesta.' },
           ]},
         ],
+        ...premiumExtras,
       },
     };
   }
@@ -144,13 +195,14 @@ Generado por fallback local pedagogico. Para contenido enriquecido, configura un
         sugerencias: ['Profundizar en la argumentacion', 'Conectar mas con experiencias personales'],
         proximoPaso: 'Trabajar en la estructuracion de respuestas escritas.',
         reflexionDocente: 'El grupo avanza bien. Considerar actividades de extension para los mas rapidos.',
+        ...premiumExtras,
       },
     };
   }
 
   return {
     content: base,
-    structured: { message: 'Contenido generado por fallback local. Configura una API key para resultados enriquecidos.' },
+    structured: { message: 'Contenido generado por fallback local. Configura una API key para resultados enriquecidos.', ...premiumExtras },
   };
 }
 
@@ -206,6 +258,84 @@ function parseResponse(raw: string): { content: string; structured: Record<strin
   return { content: raw, structured: {} };
 }
 
+/**
+ * Llama al proveedor con validación Zod y retry automático.
+ * Solo aplica para agentType con schema registrado.
+ * Máximo 3 intentos (1 original + 2 reintentos).
+ */
+async function callWithSchemaValidation(
+  provider: ProviderName,
+  env: AIEnv,
+  originalPrompt: string,
+  agentType: string,
+  taskType: string,
+): Promise<{ content: string; structured: Record<string, unknown>; warnings: string[]; retriesUsed: number }> {
+  const warnings: string[] = [];
+  const validator = getValidatorForAgent(agentType);
+
+  // Si no hay validador registrado, usar parseo normal sin retry
+  if (!validator) {
+    const result = await callProvider(provider, env, originalPrompt);
+    if (!result.ok || !result.content) {
+      return { content: '', structured: {}, warnings: ['Proveedor no devolvió contenido'], retriesUsed: 0 };
+    }
+    const sanitized = sanitizeOutput(result.content);
+    const { content, structured } = parseResponse(sanitized);
+    return { content, structured, warnings, retriesUsed: 0 };
+  }
+
+  let currentPrompt = originalPrompt;
+
+  for (let attempt = 0; attempt <= MAX_SCHEMA_RETRIES; attempt++) {
+    const result = await callProvider(provider, env, currentPrompt);
+
+    if (!result.ok || !result.content) {
+      warnings.push(`Intento ${attempt + 1}: proveedor no devolvió contenido`);
+      continue;
+    }
+
+    const sanitized = sanitizeOutput(result.content);
+    const parsed = parseAIJsonSafely(sanitized);
+
+    if (!parsed) {
+      if (attempt < MAX_SCHEMA_RETRIES) {
+        currentPrompt = `${originalPrompt}\n\n⚠️ REINTENTO ${attempt + 1}: Tu respuesta anterior NO era JSON válido. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones, sin texto antes o después del JSON.`;
+        warnings.push(`Intento ${attempt + 1}: JSON inválido → reintentando`);
+        continue;
+      }
+      warnings.push('JSON inválido tras 3 intentos');
+      return { content: sanitized, structured: {}, warnings, retriesUsed: attempt + 1 };
+    }
+
+    // Validar con schema + reglas de negocio
+    const validation = validator(parsed);
+
+    if (validation.success) {
+      if (attempt > 0) {
+        warnings.push(`JSON válido y estructura correcta en intento ${attempt + 1}`);
+      }
+      // Agregar warnings de validación de negocio (tiempos, materiales, etc.)
+      if (validation.warnings.length > 0) {
+        warnings.push(...validation.warnings.map((w) => `[Planificación] ${w}`));
+      }
+      return { content: sanitized, structured: validation.data as Record<string, unknown>, warnings, retriesUsed: attempt + 1 };
+    }
+
+    // Validación falló — construir prompt de retry con errores específicos
+    if (attempt < MAX_SCHEMA_RETRIES) {
+      const errorSummary = validation.errors.slice(0, 5).join('\n  - ');
+      currentPrompt = `${originalPrompt}\n\n⚠️ REINTENTO ${attempt + 1}: Tu respuesta tiene errores de estructura:\n  - ${errorSummary}\n\nCorrige TODOS los errores y responde ÚNICAMENTE con JSON válido que cumpla exactamente la estructura solicitada.`;
+      warnings.push(`Intento ${attempt + 1}: validación Zod fallida → reintentando`);
+      continue;
+    }
+
+    warnings.push(`Validación Zod fallida tras ${MAX_SCHEMA_RETRIES + 1} intentos`);
+    return { content: sanitized, structured: parsed, warnings, retriesUsed: attempt + 1 };
+  }
+
+  return { content: '', structured: {}, warnings, retriesUsed: MAX_SCHEMA_RETRIES + 1 };
+}
+
 export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string): Promise<AIResponse> {
   const start = Date.now();
   const warnings: string[] = [];
@@ -259,23 +389,48 @@ export async function orchestrate(env: AIEnv, req: AIRequest, teacherId: string)
   const { providers, recommended } = await statusProviders(env);
   const providerOrder: ProviderName[] = ['gemini', 'workers-ai', 'openrouter', 'huggingface'];
 
+  // Determinar si aplica validación con schema (solo para 'generar')
+  const useSchemaValidation = req.taskType === 'generar' && getValidatorForAgent(req.agentType) !== null;
+
   for (const provider of providerOrder) {
     if (!providers[provider].available) continue;
 
     try {
-      const result = await callProvider(provider, env, prompt);
-      if (result.ok && result.content) {
-        const contentCheck = scanContent(result.content);
-        if (contentCheck.reason) warnings.push(contentCheck.reason);
+      if (useSchemaValidation) {
+        // Flujo con validación Zod + retry
+        const schemaResult = await callWithSchemaValidation(provider, env, prompt, req.agentType, req.taskType);
+        warnings.push(...schemaResult.warnings);
 
-        const sanitized = sanitizeOutput(result.content);
-        const { content, structured } = parseResponse(sanitized);
+        if (schemaResult.retriesUsed > 1) {
+          warnings.push(`Retry strategy activada: ${schemaResult.retriesUsed} intentos totales`);
+        }
 
-        return {
-          ok: true, provider, model: result.model, agentType: req.agentType, taskType: req.taskType,
-          content, structured: structured || result.structured || {}, warnings,
-          usedFallback: false, durationMs: Date.now() - start,
-        };
+        if (schemaResult.structured && Object.keys(schemaResult.structured).length > 0) {
+          const contentCheck = scanContent(schemaResult.content);
+          if (contentCheck.reason) warnings.push(contentCheck.reason);
+
+          return {
+            ok: true, provider, model: `${provider}-schema-validated`, agentType: req.agentType, taskType: req.taskType,
+            content: schemaResult.content, structured: schemaResult.structured, warnings,
+            usedFallback: false, durationMs: Date.now() - start,
+          };
+        }
+      } else {
+        // Flujo normal sin validación (mejorar, adaptar, otros)
+        const result = await callProvider(provider, env, prompt);
+        if (result.ok && result.content) {
+          const contentCheck = scanContent(result.content);
+          if (contentCheck.reason) warnings.push(contentCheck.reason);
+
+          const sanitized = sanitizeOutput(result.content);
+          const { content, structured } = parseResponse(sanitized);
+
+          return {
+            ok: true, provider, model: result.model, agentType: req.agentType, taskType: req.taskType,
+            content, structured: structured || result.structured || {}, warnings,
+            usedFallback: false, durationMs: Date.now() - start,
+          };
+        }
       }
     } catch (e) {
       warnings.push(`Error con ${provider}: ${e instanceof Error ? e.message : 'desconocido'}`);

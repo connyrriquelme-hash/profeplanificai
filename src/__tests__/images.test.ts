@@ -23,9 +23,9 @@ describe('educational image pipeline', () => {
   it('builds a safe Chilean educational prompt', () => {
     const prompt = buildEducationalImagePrompt(context);
     expect(prompt).toContain('Chile');
-    expect(prompt).toContain('Sin texto dentro de la imagen');
-    expect(prompt).toContain('sin logos');
-    expect(prompt).toContain('sin rostros realistas');
+    expect(prompt).toContain('STRICTLY FORBIDDEN');
+    expect(prompt).toContain('logos');
+    expect(prompt).toContain('realistic human faces');
     expect(prompt).toContain('acuarela');
   });
 

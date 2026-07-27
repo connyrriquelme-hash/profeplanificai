@@ -81,11 +81,27 @@ export interface GraphicOrganizerNode {
   color?: string;
 }
 
+export interface EvaluationOption {
+  text: string;
+  isCorrect: boolean;
+}
+
 export interface EvaluationQuestion {
   question: string;
-  type: 'open' | 'closed' | 'multiple';
-  options?: string[];
+  type: 'open' | 'closed' | 'multiple' | 'alternativa' | 'verdadero_falso' | 'desarrollo';
+  options?: string[] | EvaluationOption[];
   points?: number;
+  indicator?: string;
+  skill?: string;
+  score?: number;
+  text?: string;
+  answer?: string;
+  justification_if_false?: string;
+  teacher_rubric?: {
+    criteria: string[];
+    sample_answer: string;
+    scoring_guide: string;
+  };
 }
 
 export interface ExperimentStep {

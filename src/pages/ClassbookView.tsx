@@ -57,7 +57,7 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
         const active = years.find((y: ClassbookAcademicYear) => y.status === 'active') ?? years[0] ?? null;
         setSelectedYear(active);
         if (active) {
-          return classbookService.getClassSessions(active.id, {}, ctrl.signal);
+          return classbookService.getClassSessions(active.id, effectiveInstitutionId, undefined, ctrl.signal);
         }
         return [];
       })
@@ -78,27 +78,27 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
     setSelectedYear(year);
     setLoading(true);
     try {
-      const s = await classbookService.getClassSessions(year.id);
+      const s = await classbookService.getClassSessions(year.id, effectiveInstitutionId);
       setSessions(s);
     } catch {
       setError('Error al cargar sesiones');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [effectiveInstitutionId]);
 
   const handleRefresh = useCallback(async () => {
     if (!selectedYear) return;
     setLoading(true);
     try {
-      const s = await classbookService.getClassSessions(selectedYear.id);
+      const s = await classbookService.getClassSessions(selectedYear.id, effectiveInstitutionId);
       setSessions(s);
     } catch {
       setError('Error al recargar');
     } finally {
       setLoading(false);
     }
-  }, [selectedYear]);
+  }, [selectedYear, effectiveInstitutionId]);
 
   if (!user || !canViewClassbook(user)) {
     return (
@@ -160,6 +160,7 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
       {selectedSessionId ? (
         <ClassSessionDetailView
           sessionId={selectedSessionId}
+          institutionId={effectiveInstitutionId}
           onBack={() => setSelectedSessionId(null)}
           onRefresh={handleRefresh}
         />

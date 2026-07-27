@@ -101,7 +101,7 @@ const LC = 'block text-[11px] font-black tracking-wide uppercase text-slate-500 
 const IC = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all';
 
 export function MisClases() {
-  const { user } = useAuth();
+  const { user, activeInstitutionId } = useAuth();
   const { getOptions } = useConfigOptions();
   const cfgMethodologies = getOptions('methodologies');
   const cfgNtbTypes = getOptions('non_teaching_types');
@@ -401,7 +401,8 @@ export function MisClases() {
     if (!canCreateSession(user)) { setError('No tienes permiso para crear sesiones en el Libro de Clases.'); return; }
     setSendingToClassbook(true); setError('');
     try {
-      await classbookService.createClassSessionFromLesson(selectedBundle.lesson.id);
+      const institutionId = user?.institutionalRole === 'super_admin' ? activeInstitutionId ?? undefined : user?.institutionId;
+      await classbookService.createClassSessionFromLesson(selectedBundle.lesson.id, institutionId);
       setToast('Clase enviada al Libro de Clases exitosamente.');
       setTimeout(() => setToast(''), 3000);
     } catch (err) {

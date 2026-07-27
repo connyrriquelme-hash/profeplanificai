@@ -43,7 +43,7 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
         category: formData.category,
         content: formData.content,
         visibility: formData.visibility,
-      });
+      }, institutionId);
       setObservations(prev => [obs, ...prev]);
       setShowForm(false);
       setFormData({ student_id: '', course_id: '', category: 'academic', content: '', visibility: 'teacher' });
@@ -54,16 +54,16 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [formData, yearId]);
+  }, [formData, yearId, institutionId]);
 
   const handleArchive = useCallback(async (obsId: string) => {
     try {
-      await classbookService.archiveObservation(obsId);
+      await classbookService.archiveObservation(obsId, institutionId);
       setObservations(prev => prev.filter(o => o.id !== obsId));
     } catch {
       setMessage('Error al archivar');
     }
-  }, []);
+  }, [institutionId]);
 
   return (
     <div className="space-y-4">

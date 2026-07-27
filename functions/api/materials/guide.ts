@@ -1,4 +1,6 @@
-interface Env { DB: D1Database }
+import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+
+interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
 interface GuideRequest {
   type: 'guia_estudiante' | 'guia_docente';
@@ -39,6 +41,39 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const guide = body.type === 'guia_estudiante'
       ? buildStudentGuide(body, objective as any, (indicators as any)?.results || [])
       : buildTeacherGuide(body, objective as any, (indicators as any)?.results || []);
+
+    // Generate images for guide sections
+    const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
+    const imageTitles: string[] = [];
+    const guideImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
+    const guideSections = body.type === 'guia_estudiante' ? (guide as any).activities || [] : [guide.opening, guide.development, guide.closure].filter(Boolean);
+
+    for (const section of guideSections) {
+      try {
+        const sectionTitle = section.name || section.activity || section.title || 'Sección';
+        const sectionContent = section.description || section.instructions || '';
+        const result = await generateEducationalImage({
+          grade: body.level,
+          subject: body.subject,
+          oa: body.objectiveText || body.topic || body.objectiveCode,
+          resourceTitle: body.topic || 'Guía de aprendizaje',
+          slideTitle: sectionTitle,
+          slideContent: sectionContent.slice(0, 300),
+        }, imageEnv);
+        if (result.ok) {
+          guideImages.push({ url: result.url, alt: `Imagen: ${sectionTitle}`, source: result.source, attribution: result.attribution || '' });
+          imageTitles.push(sectionTitle);
+        }
+      } catch {
+        // Image generation failure is non-fatal
+      }
+    }
+
+    // Attach images to guide data
+    if (guideImages.length > 0) {
+      (guide as any).images = guideImages;
+      (guide as any).imageTitles = imageTitles;
+    }
 
     // Save to D1
     const resourceId = `guide_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;

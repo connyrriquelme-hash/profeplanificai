@@ -4,6 +4,7 @@ import React from 'react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
+import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
 import type { PedagogicalProduct, GuideSection } from '../types';
 
 interface GuideRendererProps {
@@ -19,6 +20,8 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
   const materials = (data.materials as string[]) || [];
   const evaluation = data.evaluation as string | undefined;
   const duration = data.duration as string | undefined;
+  const guideImages = (data.images as Array<{ url: string; alt: string; source: string; attribution: string }>) || [];
+  const imageTitles = (data.imageTitles as string[]) || [];
 
   return (
     <div
@@ -47,20 +50,32 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
       )}
 
       {materials.length > 0 && (
-        <ProductSection title="Materiales" icon="🧰">
+        <ProductSection title="Materiales / Vocabulario" icon="🧰">
           <ul className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {materials.map((material, index) => (
-              <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="w-2 h-2 rounded-full bg-teal-400 flex-shrink-0" />
-                {material}
-              </li>
-            ))}
+            {materials.map((material, index) => {
+              const text = typeof material === 'object' && material !== null
+                ? `${(material as Record<string, unknown>).term || ''}: ${(material as Record<string, unknown>).definition || ''}`.trim()
+                : String(material || '');
+              if (!text) return null;
+              return (
+                <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 flex-shrink-0" />
+                  {text}
+                </li>
+              );
+            })}
           </ul>
         </ProductSection>
       )}
 
       {sections.map((section, index) => (
         <ProductSection key={index} title={section.title} icon="📖">
+          {guideImages[index] && (
+            <ProductImage
+              image={guideImages[index]}
+              className="mb-4"
+            />
+          )}
           <div className="prose prose-sm max-w-none">
             <p className="text-gray-700 text-sm whitespace-pre-wrap">{section.content}</p>
           </div>
@@ -91,6 +106,8 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
           <span className="text-amber-800 text-sm font-medium">Duración estimada: {duration}</span>
         </div>
       )}
+
+      <ProductPremiumExtras data={data} />
 
       <div className="print:hidden">
         <PrintToolbar onPrint={() => window.print()} onReset={() => {}} />
