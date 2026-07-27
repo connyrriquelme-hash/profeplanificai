@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AIEngine, extractJsonFromText } from '../functions/core/AIEngine';
+import { z } from 'zod';
+import { AIEngine, AIValidationError, callAIConValidacion, extractJsonFromText, resolveAIResponseText } from '../functions/core/AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from '../functions/core/types';
 
 const MOCK_PLAN: PedagogicalPlan = {
@@ -75,6 +76,142 @@ describe('extractJsonFromText', () => {
   });
 });
 
+describe('resolveAIResponseText', () => {
+  // Hallazgo real de esta sesión: contra el mismo binding y el mismo
+  // modelo (@cf/meta/llama-3.2-3b-instruct), env.AI.run() resolvió, en
+  // llamadas consecutivas al servidor real, unas veces a un string plano
+  // y otras a { response: "<texto>" } — de forma NO determinista, no
+  // según el archivo/prompt que llamaba. Un fix probado solo contra
+  // strings planos (la única forma que mockeaban los tests originales de
+  // los 3 engines) dejó pasar el bug de doble-serialización sin ser
+  // detectado. Estos tests cubren ambas formas y ambos órdenes.
+
+  it('debe devolver el string sin cambios cuando la respuesta ya es un string plano', () => {
+    const plano = '{"titulo":"Clase de prueba"}';
+    expect(resolveAIResponseText(plano)).toBe(plano);
+  });
+
+  it('debe extraer .response sin re-stringify-arlo cuando la respuesta es { response: string } (forma real de Cloudflare Workers AI)', () => {
+    const textoOriginal = '{"titulo":"Clase de prueba","bullets":["uno","dos"]}';
+    const resultado = resolveAIResponseText({ response: textoOriginal });
+
+    expect(resultado).toBe(textoOriginal);
+    // La firma exacta del bug: JSON.stringify de un string ya formado
+    // antepone una comilla al resultado y escapa las comillas internas.
+    expect(resultado.startsWith('"')).toBe(false);
+    expect(resultado).not.toContain('\\"');
+  });
+
+  it('debe manejar CUALQUIER ORDEN entre las dos formas para el mismo binding/modelo, sin arrastrar estado entre llamadas', () => {
+    const stringPlano = '{"a":1}';
+    const objetoConResponse = { response: '{"b":2}' };
+
+    // string plano, luego objeto
+    expect(resolveAIResponseText(stringPlano)).toBe(stringPlano);
+    expect(resolveAIResponseText(objetoConResponse)).toBe('{"b":2}');
+
+    // objeto, luego string plano (orden invertido)
+    expect(resolveAIResponseText(objetoConResponse)).toBe('{"b":2}');
+    expect(resolveAIResponseText(stringPlano)).toBe(stringPlano);
+  });
+
+  it('debe stringify-ar cuando .response no es un string (forma inesperada, no el caso normal)', () => {
+    const resultado = resolveAIResponseText({ response: { anidado: true } });
+    expect(resultado).toBe(JSON.stringify({ anidado: true }));
+  });
+
+  it('debe stringify-ar el objeto completo cuando no existe el campo .response', () => {
+    const objetoSinResponse = { otraCosa: 'valor' };
+    const resultado = resolveAIResponseText(objetoSinResponse);
+    expect(resultado).toBe(JSON.stringify(objetoSinResponse));
+  });
+
+  it('debe convertir a String() cualquier otro tipo primitivo (null, number, etc.)', () => {
+    expect(resolveAIResponseText(null)).toBe('null');
+    expect(resolveAIResponseText(42)).toBe('42');
+  });
+});
+
+describe('callAIConValidacion', () => {
+  const SimpleSchema = z.object({ foo: z.string().min(3) });
+
+  it('reintenta cuando la validación de schema falla, incluye los errores de Zod en el prompt del reintento, y resuelve usedFallback: false cuando el reintento finalmente tiene éxito', async () => {
+    const run = vi.fn()
+      .mockResolvedValueOnce(JSON.stringify({ foo: 'ab' })) // falla: min 3 caracteres
+      .mockResolvedValueOnce(JSON.stringify({ foo: 'abcdef' })); // pasa
+
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    const result = await callAIConValidacion(env, 'system prompt', 'user prompt original', SimpleSchema);
+
+    expect(result.usedFallback).toBe(false);
+    expect(result.intentos).toBe(2);
+    expect(result.data).toEqual({ foo: 'abcdef' });
+    expect(run).toHaveBeenCalledTimes(2);
+
+    const [, segundoLlamado] = run.mock.calls[1] as [string, { messages: Array<{ role: string; content: string }> }];
+    const segundoMensajeUsuario = segundoLlamado.messages.find((m) => m.role === 'user');
+
+    // El prompt del reintento debe incluir el prompt original Y los
+    // errores específicos de Zod del intento anterior (mismo mecanismo
+    // que callWithSchemaValidation() en orchestrator.ts de main).
+    expect(segundoMensajeUsuario?.content).toContain('user prompt original');
+    expect(segundoMensajeUsuario?.content).toContain('REINTENTO');
+    expect(segundoMensajeUsuario?.content).toContain('foo');
+  });
+
+  it('reintenta cuando la respuesta no es JSON válido, agregando instrucciones de formato en el reintento', async () => {
+    const run = vi.fn()
+      .mockResolvedValueOnce('esto no es JSON en absoluto')
+      .mockResolvedValueOnce(JSON.stringify({ foo: 'valido' }));
+
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+    const result = await callAIConValidacion(env, '', 'user prompt', SimpleSchema);
+
+    expect(result.usedFallback).toBe(false);
+    expect(result.intentos).toBe(2);
+    expect(result.data).toEqual({ foo: 'valido' });
+    expect(run).toHaveBeenCalledTimes(2);
+
+    const [, segundoLlamado] = run.mock.calls[1] as [string, { messages: Array<{ role: string; content: string }> }];
+    expect(segundoLlamado.messages[0].content).toContain('JSON válido');
+  });
+
+  it('arroja AIValidationError tras agotar maxReintentos (3 intentos totales por defecto), sin construir ningún fallback propio', async () => {
+    const run = vi.fn().mockResolvedValue(JSON.stringify({ foo: 'ab' })); // siempre falla min 3
+
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    await expect(
+      callAIConValidacion(env, '', 'user prompt', SimpleSchema),
+    ).rejects.toThrow(AIValidationError);
+
+    expect(run).toHaveBeenCalledTimes(3);
+  });
+
+  it('respeta un maxReintentos personalizado (0 = un solo intento, sin reintentos)', async () => {
+    const run = vi.fn().mockResolvedValue(JSON.stringify({ foo: 'ab' }));
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    await expect(
+      callAIConValidacion(env, '', 'user prompt', SimpleSchema, { maxReintentos: 0 }),
+    ).rejects.toThrow(AIValidationError);
+
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it('no reintenta cuando el primer intento ya es válido', async () => {
+    const run = vi.fn().mockResolvedValue(JSON.stringify({ foo: 'valido desde el inicio' }));
+    const env: AIEngineEnv = { AI: { run } as unknown as Ai };
+
+    const result = await callAIConValidacion(env, '', 'user prompt', SimpleSchema);
+
+    expect(result.usedFallback).toBe(false);
+    expect(result.intentos).toBe(1);
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('AIEngine.generateDuaGuide', () => {
   it('should return parsed DuaGuide when AI responds with valid JSON', async () => {
     const aiResponse = JSON.stringify({
@@ -100,6 +237,24 @@ describe('AIEngine.generateDuaGuide', () => {
 
     expect(result.titulo_guia).toContain('La célula');
     expect(result.nivel_apoyo.length).toBeGreaterThan(0);
+  });
+
+  it('REGRESIÓN: debe parsear correctamente cuando env.AI.run() resuelve a { response: string }, la forma real de Cloudflare Workers AI (no solo un string plano)', async () => {
+    const aiResponse = JSON.stringify({
+      titulo_guia: 'Guía La Célula',
+      contexto_motivacional: 'La célula es la unidad básica de la vida.',
+      nivel_apoyo: ['Fichas con vocabulario'],
+      nivel_estandar: ['Explicación guiada'],
+      nivel_desafio: ['Análisis crítico'],
+    });
+    const env: AIEngineEnv = {
+      AI: { run: vi.fn().mockResolvedValue({ response: aiResponse }) } as unknown as Ai,
+    };
+
+    const result = await AIEngine.generateDuaGuide(env, MOCK_PLAN);
+
+    expect(result.titulo_guia).toBe('Guía La Célula');
+    expect(result.nivel_apoyo).toEqual(['Fichas con vocabulario']);
   });
 
   it('should return fallback when AI is not configured', async () => {

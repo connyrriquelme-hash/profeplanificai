@@ -9,14 +9,10 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
-import { buildPremiumPptModel, type PremiumPresentation, type PremiumInput } from '../utils/premiumPptModel';
-import { generatePremiumPptx, downloadPremiumPptx } from '../utils/premiumPptGenerator';
-import PremiumPptPreview from './PremiumPptPreview';
 import PremiumRubricPreview from './PremiumRubricPreview';
-import { enrichPresentationWithImages } from '../services/premiumPptAiService';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
-import { exportElementToWord, sanitizeDownloadName } from '../utils/exportProductWord';
+import type { PptDeck } from '../../schemas/PptDeckSchema';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -33,8 +29,6 @@ const PRODUCTOS = [
   { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#7c3aed' },
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#059669' },
 ];
-
-const PRODUCT_PREVIEW_EXPORT_ID = 'flujo-docente-premium-product-preview';
 
 interface D1Course { id: string; code: string; name: string; objective_count: number }
 interface D1Subject { id: string; name: string; objective_count: number }
@@ -60,19 +54,10 @@ export function FlujoDocenteView() {
   const [additionalContext, setAdditionalContext] = useState('');
   const [result, setResult] = useState<unknown>(null);
   const [resourceId, setResourceId] = useState('');
-  const [pptxBlob, setPptxBlob] = useState<Blob | null>(null);
   const [pptxLoading, setPptxLoading] = useState(false);
-  const [premiumModel, setPremiumModel] = useState<PremiumPresentation | null>(null);
-  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
-  const [imageProgress, setImageProgress] = useState<{ current: number; total: number } | null>(null);
+  const [pptDeck, setPptDeck] = useState<PptDeck | null>(null);
+  const [renderError, setRenderError] = useState('');
   const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
-
-  const exportFileBaseName = useMemo(() => sanitizeDownloadName([
-    PRODUCTOS.find(p => p.id === selectedProducto)?.label || selectedProducto || 'producto',
-    selectedOA?.course_name,
-    selectedOA?.subject_name,
-    selectedOA?.code,
-  ].filter(Boolean).join('-')), [selectedProducto, selectedOA]);
 
   // Load courses
   useEffect(() => {
@@ -141,9 +126,9 @@ export function FlujoDocenteView() {
       setLoading(true);
       setError('');
       setResult(null);
-      setPptxBlob(null);
       setPptxLoading(false);
-      setPremiumModel(null);
+      setPptDeck(null);
+      setRenderError('');
       setPremiumRubric(null);
       setStep('generando');
 
@@ -209,28 +194,8 @@ export function FlujoDocenteView() {
         if (selectedProducto === 'rubrica' && res.rubric) {
           setPremiumRubric(res.rubric as PremiumRubric);
         }
-        if (selectedProducto === 'presentacion') {
-          const model = buildPremiumPptModel({
-            level: selectedOA?.course_name || '',
-            subject: selectedOA?.subject_name || '',
-            objectiveCode: selectedOA?.code || '',
-            objectiveText: selectedOA?.official_text || '',
-            topic,
-            indicators,
-            skills,
-            additionalContext,
-            aiSlides: (res?.slides as PremiumInput['aiSlides']) || undefined,
-          });
-          setPremiumModel(model);
-          setPptxLoading(true);
-          generatePremiumPptx(model).then(blob => {
-            setPptxBlob(blob);
-          }).catch(() => {
-            setPptxBlob(null);
-          }).finally(() => {
-            setPptxLoading(false);
-          });
-        } else {
+        if (selectedProducto === 'presentacion' && res.pptDeck) {
+          setPptDeck(res.pptDeck as PptDeck);
         }
         setStep('resultado');
       } else {
@@ -244,31 +209,6 @@ export function FlujoDocenteView() {
       setLoading(false);
     }
   }, [selectedOA, selectedProducto, indicators, skills, topic, additionalContext, selectedMethodology]);
-
-  const handleGenerateImages = useCallback(async () => {
-    if (!premiumModel) return;
-    setIsGeneratingImages(true);
-    setImageProgress({ current: 0, total: premiumModel.slides.length });
-    try {
-      const result = await enrichPresentationWithImages(
-        premiumModel,
-        (current, total) => setImageProgress({ current, total }),
-      );
-      setPremiumModel(result.presentation);
-      setPptxLoading(true);
-      generatePremiumPptx(result.presentation).then(blob => {
-        setPptxBlob(blob);
-      }).catch(() => {
-        setPptxBlob(null);
-      }).finally(() => {
-        setPptxLoading(false);
-      });
-    } catch {
-    } finally {
-      setIsGeneratingImages(false);
-      setImageProgress(null);
-    }
-  }, [premiumModel]);
 
   const handleSave = useCallback(async () => {
     if (!resourceId) return;
@@ -287,23 +227,6 @@ export function FlujoDocenteView() {
       });
     } catch {}
   }, [resourceId, result, selectedProducto, selectedOA]);
-
-  const handleExportPdf = useCallback(async () => {
-    try {
-      const { exportElementToPDF } = await import('../utils/exportPdf');
-      await exportElementToPDF(PRODUCT_PREVIEW_EXPORT_ID, exportFileBaseName);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo exportar el PDF.');
-    }
-  }, [exportFileBaseName]);
-
-  const handleExportWord = useCallback(async () => {
-    try {
-      exportElementToWord(PRODUCT_PREVIEW_EXPORT_ID, exportFileBaseName);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo exportar a Word.');
-    }
-  }, [exportFileBaseName]);
 
   const suggestedMethodologies = useMemo(() => {
     if (!selectedSubject) return [];
@@ -663,13 +586,26 @@ export function FlujoDocenteView() {
             </div>
           )}
 
-          <div id={PRODUCT_PREVIEW_EXPORT_ID} className="prose prose-sm max-w-none bg-white">
-            {selectedProducto === 'presentacion' && premiumModel ? (
-              <PremiumPptPreview
-                presentation={premiumModel}
-                isGeneratingImages={isGeneratingImages}
-                imageProgress={imageProgress || undefined}
-              />
+          <div className="prose prose-sm max-w-none">
+            {selectedProducto === 'presentacion' && pptDeck ? (
+              <div className="not-prose space-y-2">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                  Vista previa — {pptDeck.slides.length} diapositiva{pptDeck.slides.length !== 1 ? 's' : ''}
+                </h3>
+                {pptDeck.slides.map((slide, i) => {
+                  const layoutLabel = slide.layout.replace(/_/g, ' ');
+                  const slideTitle = 'title' in slide ? slide.title : '';
+                  return (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                      <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate capitalize">{layoutLabel}</p>
+                        {slideTitle && <p className="text-xs text-gray-500 truncate">{slideTitle}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : selectedProducto === 'rubrica' && premiumRubric ? (
               <PremiumRubricPreview rubric={premiumRubric} />
             ) : (
@@ -679,27 +615,47 @@ export function FlujoDocenteView() {
 
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <Button variant="primary" iconLeft={Save} onClick={handleSave}>Guardar en Biblioteca</Button>
-            <Button variant="secondary" iconLeft={Download} onClick={handleExportPdf}>Exportar PDF</Button>
-            {selectedProducto !== 'presentacion' && (
-              <Button variant="secondary" iconLeft={Download} onClick={handleExportWord}>Exportar Word</Button>
-            )}
-            {selectedProducto === 'presentacion' && (
+            {selectedProducto === 'presentacion' && pptDeck && (
               <>
-                <Button
-                  variant="secondary"
-                  iconLeft={Sparkles}
-                  onClick={handleGenerateImages}
-                  disabled={isGeneratingImages}
-                >
-                  {isGeneratingImages ? `Generando imágenes ${imageProgress?.current || 0}/${imageProgress?.total || 0}...` : 'Generar imágenes IA'}
-                </Button>
+                {renderError && (
+                  <p className="text-xs text-red-600">{renderError}</p>
+                )}
                 <Button
                   variant="primary"
                   iconLeft={Download}
-                  disabled={pptxLoading || !pptxBlob}
-                  onClick={() => {
-                    if (pptxBlob && premiumModel) {
-                      downloadPremiumPptx(premiumModel, pptxBlob);
+                  disabled={pptxLoading || !resourceId}
+                  onClick={async () => {
+                    if (!resourceId) return;
+                    setPptxLoading(true);
+                    setRenderError('');
+                    try {
+                      const tokenRaw = localStorage.getItem('planificaia_token');
+                      const token = tokenRaw ? JSON.parse(tokenRaw).token : '';
+                      const resp = await fetch('/api/materials/presentation/render', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        },
+                        body: JSON.stringify({ resourceId }),
+                      });
+                      if (!resp.ok) {
+                        const text = await resp.text();
+                        throw new Error(text || `Error ${resp.status}`);
+                      }
+                      const blob = await resp.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `presentacion-${selectedOA?.code || 'recurso'}.pptx`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    } catch (e) {
+                      setRenderError(e instanceof Error ? e.message : 'Error al generar PPTX');
+                    } finally {
+                      setPptxLoading(false);
                     }
                   }}
                 >
@@ -707,6 +663,14 @@ export function FlujoDocenteView() {
                 </Button>
               </>
             )}
+            <Button variant="secondary" iconLeft={Download} onClick={() => {
+              const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `${selectedProducto}-${selectedOA?.code}.json`;
+              a.click();
+            }}>Descargar JSON</Button>
             <Button variant="outline" iconLeft={RefreshCw} onClick={() => setStep('producto')}>Generar otro</Button>
             <Button variant="ghost" iconLeft={ArrowLeft} onClick={() => setStep('nivel')}>Nuevo recurso</Button>
           </div>

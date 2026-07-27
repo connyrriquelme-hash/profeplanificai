@@ -93,6 +93,16 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
         headers: newHeaders,
       });
     }
+    // Binary payloads (e.g. PPTX/PDF downloads) must pass through untouched:
+    // response.text() decodes the body as UTF-8, replacing any byte that
+    // isn't valid UTF-8 with U+FFFD and corrupting the file.
+    if (!contentType.includes('application/json')) {
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      });
+    }
     const body = await response.text();
     return new Response(body, {
       status: response.status,

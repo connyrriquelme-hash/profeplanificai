@@ -100,12 +100,12 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     const coreParams: unknown[] = [];
 
     if (course) {
-      coreConditions.push('(n.id LIKE ? OR n.nombre LIKE ?)');
-      coreParams.push(`%${normalize(course)}%`, `%${course}%`);
+      coreConditions.push('(n.id = ? OR n.id LIKE ? OR n.nombre LIKE ?)');
+      coreParams.push(course, `%${course}%`, `%${course}%`);
     }
     if (subject) {
-      coreConditions.push('(a.nombre LIKE ? OR a.id LIKE ?)');
-      coreParams.push(`%${subject}%`, `%${normalize(subject)}%`);
+      coreConditions.push('(a.id = ? OR a.id LIKE ? OR a.nombre LIKE ?)');
+      coreParams.push(subject, `%${subject}%`, `%${subject}%`);
     }
     if (q) {
       coreConditions.push('(oa.codigo_oa LIKE ? OR oa.descripcion LIKE ?)');

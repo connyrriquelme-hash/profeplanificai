@@ -1,0 +1,48 @@
+diff --git a/node_modules/pptxgenjs/dist/pptxgen.cjs.js b/node_modules/pptxgenjs/dist/pptxgen.cjs.js
+index 55ae0b9..7d39675 100644
+--- a/node_modules/pptxgenjs/dist/pptxgen.cjs.js
++++ b/node_modules/pptxgenjs/dist/pptxgen.cjs.js
+@@ -4841,8 +4841,8 @@ function encodeSlideMediaRels(layout) {
+     // STEP 2: Lazy-load Node built-ins if needed
+     const loadNodeDeps = isNode
+         ? () => __awaiter(this, void 0, void 0, function* () {
+-            ({ default: fs } = yield import('node:fs'));
+-            ({ default: https } = yield import('node:https'));
++            ({ default: fs } = yield import(String.fromCharCode(110,111,100,101,58,102,115)));
++            ({ default: https } = yield import(String.fromCharCode(110,111,100,101,58,104,116,116,112,115)));
+         })
+         : () => __awaiter(this, void 0, void 0, function* () { });
+     // Immediately start it when we know we’re in Node
+@@ -7204,7 +7204,7 @@ class PptxGenJS {
+             // STEP 4: Write the file out
+             if (isNode) {
+                 // Dynamically import to avoid bundling fs in the browser build
+-                const { promises: fs } = yield import('node:fs');
++                const { promises: fs } = yield import(String.fromCharCode(110,111,100,101,58,102,115));
+                 const { writeFile } = fs;
+                 yield writeFile(fileName, data);
+                 return fileName;
+diff --git a/node_modules/pptxgenjs/dist/pptxgen.es.js b/node_modules/pptxgenjs/dist/pptxgen.es.js
+index cac9ba9..e590d3b 100644
+--- a/node_modules/pptxgenjs/dist/pptxgen.es.js
++++ b/node_modules/pptxgenjs/dist/pptxgen.es.js
+@@ -4839,8 +4839,8 @@ function encodeSlideMediaRels(layout) {
+     // STEP 2: Lazy-load Node built-ins if needed
+     const loadNodeDeps = isNode
+         ? () => __awaiter(this, void 0, void 0, function* () {
+-            ({ default: fs } = yield import('node:fs'));
+-            ({ default: https } = yield import('node:https'));
++            ({ default: fs } = yield import(String.fromCharCode(110,111,100,101,58,102,115)));
++            ({ default: https } = yield import(String.fromCharCode(110,111,100,101,58,104,116,116,112,115)));
+         })
+         : () => __awaiter(this, void 0, void 0, function* () { });
+     // Immediately start it when we know we’re in Node
+@@ -7202,7 +7202,7 @@ class PptxGenJS {
+             // STEP 4: Write the file out
+             if (isNode) {
+                 // Dynamically import to avoid bundling fs in the browser build
+-                const { promises: fs } = yield import('node:fs');
++                const { promises: fs } = yield import(String.fromCharCode(110,111,100,101,58,102,115));
+                 const { writeFile } = fs;
+                 yield writeFile(fileName, data);
+                 return fileName;
