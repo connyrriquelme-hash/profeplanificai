@@ -89,6 +89,20 @@ un modelo deprecado, silenciosamente enmascarado por su propio try/catch.
 Nuestra versión usa un modelo distinto y funcional, confirmado con una
 llamada real.
 
+## RESUELTO: `src/components/FlujoDocenteView.tsx` — adoptar nuestra versión tal cual
+
+**Decisión:** al mergear, quedarse con la versión de `feature/libro-clases-digital`
+sin modificarla. Descartar la de `main`.
+
+**Evidencia:** no requiere prueba de servidor nueva — nuestra versión ya se
+verificó funcionando en esta sesión (Fase 3, hard refresh en navegador). Su
+correctitud depende de los endpoints que consume (`generate.ts`,
+`presentation.ts`), ambos resueltos arriba a favor de nuestra rama por estar
+realmente funcionales; la versión de main del componente consume las
+versiones rotas de esos mismos endpoints (modelo deprecado en presentación,
+callejón sin salida en generate), así que aunque el componente en sí no
+tiene bug propio, adoptar la versión de main heredaría esas dos roturas.
+
 ## RESUELTO: `functions/api/methodologies.ts` — adoptar nuestra versión tal cual
 
 **Decisión:** al mergear, quedarse con la versión de `feature/libro-clases-digital`
