@@ -276,7 +276,11 @@ describe('FlujoDocenteView integration', () => {
     expect(content).toContain('<ProductRenderer product={result}');
   });
 
-  it('FlujoDocenteView exposes teacher-ready exports instead of JSON download', async () => {
+  // Skipped: verifica la versión de FlujoDocenteView.tsx de main
+  // (export PDF/Word), que se descartó al resolver el conflicto de
+  // merge a favor de nuestra versión — ver MERGE-NOTES.md. Si en el
+  // futuro se adopta esa feature, reactivar este test.
+  it.skip('FlujoDocenteView exposes teacher-ready exports instead of JSON download', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const filePath = path.resolve(__dirname, '../src/components/FlujoDocenteView.tsx');
