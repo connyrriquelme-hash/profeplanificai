@@ -1,5 +1,45 @@
 # Merge Notes: feature/libro-clases-digital → main
 
+## RESUELTO: `functions/api/materials/generate.ts` — adoptar nuestra versión tal cual
+
+**Decisión:** al mergear, quedarse con la versión de `feature/libro-clases-digital`
+sin modificarla. Descartar la de `main`.
+
+**Evidencia (2026-07-27):**
+
+- El `generate.ts` de `main` (`e56b135`) **nunca llama a IA**: arma un prompt,
+  hace `INSERT OR IGNORE INTO generated_resources` con
+  `content_json: '{"status":"generating"}'`, y devuelve
+  `{ok, resourceId, prompt, context}` al cliente — sin `content` ni
+  `structured`. `grep` de `"generating"`/`resourceId` en todo `main` no
+  encontró ningún consumidor que complete ese placeholder después: es un
+  callejón sin salida, no un paso 1-de-2 de un flujo async.
+- Es compatible con el esquema real de `generated_resources` en producción
+  (columnas verificadas contra `sqlite_master` — a diferencia de
+  `methodologies.ts`, aquí no hay error de columnas), pero eso solo confirma
+  que el `INSERT` no rompe, no que el endpoint genere contenido real.
+- En `FlujoDocenteView.tsx` (idéntico en ambas ramas), `generateMaterial()` →
+  `generate.ts` es el branch `default:` del switch de productos — cualquier
+  tipo sin endpoint dedicado cae ahí. Como la respuesta no trae
+  `guide/evaluation/rubric/slides`, `setResult(res.guide || res.evaluation ||
+  res.rubric || res.slides || res)` termina asignando el objeto crudo
+  completo (incluyendo el prompt de texto plano) como si fuera el contenido
+  pedagógico final.
+- Nuestra versión (`generate.ts` → `PlanificacionEngine.generatePlanificacion`
+  → `callAIConValidacion`) sí llama a IA real. Corrida en vivo hoy contra el
+  binding de producción (`getPlatformProxy`, sin escribir en D1 real —
+  invocación aislada del engine, no del endpoint completo):
+  ```
+  usedFallback: false (3833ms)
+  unit: 5° Básico
+  classes: 3
+  ```
+
+**Conclusión:** el `generate.ts` de main jamás produjo contenido pedagógico
+real contra datos reales — es un endpoint incompleto, no una implementación
+alternativa funcional. Nuestra versión sí genera contenido real hoy, con
+retry+validación Zod (ver `callAIConValidacion` en `AIEngine.ts`).
+
 ## RESUELTO: `functions/api/methodologies.ts` — adoptar nuestra versión tal cual
 
 **Decisión:** al mergear, quedarse con la versión de `feature/libro-clases-digital`
