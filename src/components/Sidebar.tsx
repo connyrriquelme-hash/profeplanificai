@@ -80,7 +80,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         if (visibleItems.length === 0) return null;
         return (
           <div key={section.label}>
-            {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{section.label}</p>}
+            {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-[var(--ink-soft)] uppercase">{section.label}</p>}
             <div className="space-y-0.5">
               {visibleItems.map((item) => {
                 const isActive = activeView === item.id;
@@ -89,16 +89,14 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   <button
                     key={item.id}
                     title={collapsed ? item.label : undefined}
-                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3.5'} py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
+                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-[14px] text-[15px] transition-all duration-200 group ${
                       isActive
-                        ? 'bg-violet-50 text-slate-900 font-semibold shadow-sm border border-violet-100'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        ? 'bg-[var(--primary)] text-[#FFF6ED] font-bold'
+                        : 'text-[var(--ink-mid)] font-semibold hover:bg-[var(--sidebar-hover)]'
                     }`}
                     onClick={() => handleNavigate(item.id)}
                   >
-                    <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200 ${
-                      isActive ? 'text-violet-600' : 'text-slate-400 group-hover:text-slate-600'
-                    }`}>
+                    <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200">
                       <Icon size={18} strokeWidth={2} />
                     </span>
                     {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
@@ -111,7 +109,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       })}
       {user?.rol === 'admin' && (
         <div>
-          {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-amber-500 uppercase">Administración</p>}
+          {!collapsed && <p className="px-3 mb-2 text-[10px] font-bold tracking-widest text-[var(--ink-soft)] uppercase">Administración</p>}
           <div className="space-y-0.5">
             {[
               { id: 'admin', label: 'Admin General', icon: LayoutDashboard },
@@ -123,16 +121,14 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 <button
                   key={item.id}
                   title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3.5'} py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
+                  className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-[14px] text-[15px] transition-all duration-200 group ${
                     isActive
-                      ? 'bg-amber-50 text-slate-900 font-semibold shadow-sm border border-amber-100'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-[var(--primary)] text-[#FFF6ED] font-bold'
+                      : 'text-[var(--ink-mid)] font-semibold hover:bg-[var(--sidebar-hover)]'
                   }`}
                   onClick={() => handleNavigate(item.id)}
                 >
-                  <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200 ${
-                    isActive ? 'text-amber-600' : 'text-slate-400 group-hover:text-slate-600'
-                  }`}>
+                  <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200">
                     <Icon size={18} strokeWidth={2} />
                   </span>
                   {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
@@ -149,29 +145,40 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-5 mb-2`}>
-        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-violet-500/25">
+        <div
+          className="w-[38px] h-[38px] rounded-xl bg-[var(--primary)] flex items-center justify-center text-white font-bold text-[19px] flex-shrink-0"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
           P
         </div>
         {!collapsed && <div>
-          <h2 className="text-[15px] font-bold text-slate-900 tracking-tight">PlanificaIA Chile</h2>
-          <p className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase">Plataforma Docente</p>
+          <h2 className="text-[15px] font-bold text-[var(--ink)] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>PlanificaIA Chile</h2>
+          <p className="text-[10px] text-[var(--ink-soft)] font-semibold tracking-widest uppercase">Plataforma Docente</p>
         </div>}
       </div>
 
       {/* Navigation */}
       {navItems(collapsed)}
 
+      {/* Idea de la semana — widget decorativo, sin estado */}
+      {!collapsed && (
+        <div className="mx-3 mb-3 flex flex-col gap-1.5 rounded-2xl border-[1.5px] border-dashed border-[#D9A76A] bg-[#FFF9F0] p-3.5">
+          <span className="text-[14px] font-semibold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>Idea de la semana</span>
+          <span className="text-[13px] leading-[1.45] text-[var(--ink-soft)]">Prueba generar una guía con adecuaciones DUA en dos niveles de complejidad.</span>
+        </div>
+      )}
+
       {/* User Footer */}
-      <div className={`${collapsed ? 'px-2' : 'px-3'} py-3 border-t border-slate-100`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center px-1' : 'gap-3 px-2'} py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer`}>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-violet-500/20 flex-shrink-0">
+      <div className={`${collapsed ? 'px-2' : 'px-3'} py-3 border-t border-[var(--border)]`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center px-1' : 'gap-3 px-2'} py-2 rounded-xl hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer`}>
+          <div className="w-9 h-9 rounded-full bg-[var(--success)] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
             {initials}
           </div>
           {!collapsed && <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-slate-900 truncate leading-tight">{user?.nombre || 'Profe'}</p>
-            <p className="text-[11px] text-slate-400 font-medium leading-tight">{user?.rol === 'admin' ? 'Administrador' : 'Docente'}</p>
+            <p className="text-[13px] font-semibold text-[var(--ink)] truncate leading-tight">{user?.nombre || 'Profe'}</p>
+            <p className="text-[11px] text-[var(--ink-soft)] font-medium leading-tight">{user?.rol === 'admin' ? 'Administrador' : 'Docente'}</p>
           </div>}
-          {!collapsed && <button onClick={logout} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Cerrar sesion">
+          {!collapsed && <button onClick={logout} className="p-1.5 rounded-lg text-[var(--ink-soft)] hover:text-red-500 hover:bg-red-50 transition-colors" title="Cerrar sesion">
             <LogOut size={14} strokeWidth={2} />
           </button>}
         </div>
@@ -194,13 +201,13 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       )}
 
       <nav
-        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-72 min-w-[288px] bg-white border-r border-slate-200 flex flex-col transition-transform duration-250 ease-out no-print shadow-xl ${
+        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-72 min-w-[288px] bg-[var(--sidebar)] flex flex-col transition-transform duration-250 ease-out no-print shadow-xl ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex justify-end px-3 pt-3">
           <button
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+            className="p-1.5 rounded-xl text-[var(--ink-soft)] hover:bg-[var(--sidebar-hover)] transition-all"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Cerrar menu"
           >
@@ -210,11 +217,11 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         {sidebarContent(false, true)}
       </nav>
 
-      <nav className={`hidden lg:flex ${isCollapsed ? 'w-20 min-w-[80px]' : 'w-64 min-w-[256px]'} bg-white border-r border-slate-200 flex-col h-screen sticky top-0 z-10 no-print transition-all duration-200`}>
+      <nav className={`hidden lg:flex ${isCollapsed ? 'w-20 min-w-[80px]' : 'w-64 min-w-[256px]'} bg-[var(--sidebar)] flex-col h-screen sticky top-0 z-10 no-print transition-all duration-200`}>
         {!isCollapsed && (
           <button
             onClick={toggleCollapse}
-            className="absolute right-3 top-3 p-2 rounded-xl text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+            className="absolute right-3 top-3 p-2 rounded-xl text-[var(--ink-soft)] hover:text-[var(--primary)] hover:bg-[var(--sidebar-hover)] transition-colors"
             aria-label="Contraer menu"
             title="Contraer menu"
           >
@@ -228,7 +235,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       {isCollapsed && (
         <button
           onClick={toggleCollapse}
-          className="hidden lg:flex fixed top-1/2 -translate-y-1/2 z-20 items-center justify-center w-5 h-14 rounded-l-lg bg-violet-500 text-white shadow-md hover:bg-violet-600 transition-all duration-200 no-print"
+          className="hidden lg:flex fixed top-1/2 -translate-y-1/2 z-20 items-center justify-center w-5 h-14 rounded-l-lg bg-[var(--primary)] text-white shadow-md hover:bg-[var(--primary-hover)] transition-all duration-200 no-print"
           style={{ left: COLLAPSED_WIDTH }}
           aria-label="Expandir menu"
           title="Expandir menu"
