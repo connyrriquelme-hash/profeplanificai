@@ -123,6 +123,14 @@
   font-family: var(--font-body);
 }
 
+/* Nunito Sans en body (heredado desde .theme-calida arriba); Baloo 2 solo
+   en headings — el resto de textos (títulos de tarjeta, etc.) lo aplica
+   cada componente puntualmente con font-family:var(--font-display). */
+.theme-calida h1,
+.theme-calida h2 {
+  font-family: var(--font-display);
+}
+
 @keyframes gradientShift {
   0%, to { background-position: 0 50%; }
   50% { background-position: 100% 50%; }
