@@ -117,6 +117,12 @@ export interface CallAIConValidacionOptions {
   maxReintentos?: number;
   maxTokens?: number;
   temperature?: number;
+  // Override puntual del modelo (default: MODEL, @cf/meta/llama-3.2-3b-instruct).
+  // Ver RubricaEngine.ts: para su schema rico (criterios con 4 indicators c/u
+  // + arrays de instrucciones), el modelo 3B falla sistemáticamente contra
+  // Zod (confirmado contra el servidor real); el 70B ya usado por el
+  // orchestrator de Mis Clases lo cumple al primer intento.
+  model?: string;
 }
 
 // Llama a env.AI.run(), valida la respuesta contra `schema` y, si falla
@@ -142,6 +148,7 @@ export async function callAIConValidacion<T>(
   const maxReintentos = opciones?.maxReintentos ?? 2;
   const maxTokens = opciones?.maxTokens ?? 3000;
   const temperature = opciones?.temperature ?? 0.2;
+  const model = opciones?.model ?? MODEL;
   const maxIntentos = maxReintentos + 1;
 
   let currentUserPrompt = userPrompt;
@@ -155,7 +162,7 @@ export async function callAIConValidacion<T>(
         ]
       : [{ role: 'user' as const, content: currentUserPrompt }];
 
-    const response = await env.AI.run(MODEL, { messages, temperature, max_tokens: maxTokens });
+    const response = await env.AI.run(model, { messages, temperature, max_tokens: maxTokens });
     const raw = resolveAIResponseText(response);
     const candidate = extractJsonFromText(raw);
 
