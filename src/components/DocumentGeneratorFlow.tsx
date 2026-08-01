@@ -158,25 +158,25 @@ function CurriculumStep({ state, dispatch }: { state: WizardState; dispatch: Rea
       className="space-y-6"
     >
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-          <GraduationCap size={20} className="text-indigo-600" />
+        <h3 className="text-lg font-bold text-[var(--ink)] mb-1 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <GraduationCap size={20} style={{ color: 'var(--primary)' }} />
           Configuracion Curricular
         </h3>
-        <p className="text-sm text-gray-500">Selecciona el nivel, asignatura y objetivo de aprendizaje.</p>
+        <p className="text-sm text-[var(--ink-soft)]">Selecciona el nivel, asignatura y objetivo de aprendizaje.</p>
       </div>
 
       {/* Nivel */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Nivel educativo</label>
+        <label className="block text-sm font-semibold text-[var(--ink-mid)] mb-2">Nivel educativo</label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {levels.map((lvl) => (
             <button
               key={lvl}
               onClick={() => dispatch({ type: 'SET_NIVEL', nivel: lvl })}
-              className={`px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all ${
+              className={`px-4 py-3 rounded-[14px] text-sm font-medium border-[1.5px] transition-all ${
                 state.nivel === lvl
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-[var(--primary)] bg-[var(--primary-tint)] text-[var(--primary-ink)] font-bold'
+                  : 'border-[var(--border)] bg-[var(--surface-soft)] text-[var(--ink-mid)] hover:bg-[var(--sidebar-hover)]'
               }`}
             >
               {lvl}
@@ -188,16 +188,16 @@ function CurriculumStep({ state, dispatch }: { state: WizardState; dispatch: Rea
       {/* Asignatura */}
       {state.nivel && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Asignatura</label>
+          <label className="block text-sm font-semibold text-[var(--ink-mid)] mb-2">Asignatura</label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {subjects.map((asig) => (
               <button
                 key={asig}
                 onClick={() => dispatch({ type: 'SET_ASIGNATURA', asignatura: asig })}
-                className={`px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all ${
+                className={`px-4 py-3 rounded-[14px] text-sm font-medium border-[1.5px] transition-all ${
                   state.asignatura === asig
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-[var(--primary)] bg-[var(--primary-tint)] text-[var(--primary-ink)] font-bold'
+                    : 'border-[var(--border)] bg-[var(--surface-soft)] text-[var(--ink-mid)] hover:bg-[var(--sidebar-hover)]'
                 }`}
               >
                 {asig}
@@ -210,23 +210,23 @@ function CurriculumStep({ state, dispatch }: { state: WizardState; dispatch: Rea
       {/* Objetivo de Aprendizaje */}
       {state.asignatura && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Objetivo de Aprendizaje</label>
-          <div className="max-h-64 overflow-y-auto space-y-2 border border-gray-200 rounded-xl p-3 bg-white">
+          <label className="block text-sm font-semibold text-[var(--ink-mid)] mb-2">Objetivo de Aprendizaje</label>
+          <div className="max-h-64 overflow-y-auto space-y-2 border border-[var(--border)] rounded-[14px] p-3 bg-[var(--surface)]">
             {objectives.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">No se encontraron OA para esta combinacion.</p>
+              <p className="text-sm text-[var(--ink-soft)] text-center py-4">No se encontraron OA para esta combinacion.</p>
             )}
             {objectives.map((oa) => (
               <button
                 key={oa.code}
                 onClick={() => dispatch({ type: 'SET_OBJECTIVE', code: oa.code, text: oa.text })}
-                className={`w-full text-left px-4 py-3 rounded-xl text-sm border-2 transition-all ${
+                className={`w-full text-left px-4 py-3 rounded-[14px] text-sm border-[1.5px] transition-all ${
                   state.objectiveCode === oa.code
-                    ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                    : 'border-gray-100 bg-gray-50/50 hover:border-gray-200 hover:bg-gray-50'
+                    ? 'border-[var(--primary)] bg-[var(--primary-tint)]'
+                    : 'border-transparent bg-[var(--surface-soft)] hover:bg-[var(--sidebar-hover)]'
                 }`}
               >
-                <span className="font-mono text-xs text-indigo-600 font-bold">{oa.code}</span>
-                <p className="text-gray-700 mt-1 leading-relaxed">{oa.text}</p>
+                <span className="font-mono text-xs font-bold" style={{ color: 'var(--primary-ink)' }}>{oa.code}</span>
+                <p className="text-[var(--ink-mid)] mt-1 leading-relaxed">{oa.text}</p>
               </button>
             ))}
           </div>
@@ -238,13 +238,13 @@ function CurriculumStep({ state, dispatch }: { state: WizardState; dispatch: Rea
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-4 rounded-xl bg-indigo-50 border border-indigo-200"
+          className="p-4 rounded-[14px] bg-[var(--primary-tint)] border border-[var(--primary)]"
         >
           <div className="flex items-start gap-3">
-            <CheckCircle2 size={18} className="text-indigo-600 mt-0.5 flex-shrink-0" />
+            <CheckCircle2 size={18} style={{ color: 'var(--primary)' }} className="mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-indigo-800">Objetivo seleccionado</p>
-              <p className="text-xs text-indigo-600 mt-1">{state.objectiveCode} — {state.objectiveText}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--primary-ink)' }}>✓ Objetivo seleccionado</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--primary-ink)' }}>{state.objectiveCode} — {state.objectiveText}</p>
             </div>
           </div>
         </motion.div>
@@ -335,16 +335,17 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">Principios de inclusion</label>
         <div className="space-y-3">
-          <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+          <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-transparent bg-[var(--success-bg)] hover:brightness-95 cursor-pointer transition-all">
             <input
               type="checkbox"
               checked={state.duaInclusion}
               onChange={() => dispatch({ type: 'TOGGLE_DUA' })}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="mt-0.5 h-4 w-4 rounded"
+              style={{ accentColor: 'var(--success)' }}
             />
             <div>
-              <p className="text-sm font-medium text-gray-700">Inclusion DUA</p>
-              <p className="text-xs text-gray-500">Adecuaciones para Diversidad, Universalidad y Accesibilidad</p>
+              <p className="text-sm font-extrabold" style={{ color: 'var(--success-ink)' }}>♿ Inclusion DUA</p>
+              <p className="text-xs" style={{ color: 'var(--success-ink)' }}>Adecuaciones para Diversidad, Universalidad y Accesibilidad</p>
             </div>
           </label>
           <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
@@ -598,18 +599,18 @@ export function DocumentGeneratorFlow() {
   const isNavigable = state.step !== 'loading' && state.step !== 'workspace';
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-[var(--surface)] border-b border-[var(--border)] px-6 py-4">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-indigo-100">
-                <BookOpen size={20} className="text-indigo-600" />
+              <div className="p-2 rounded-xl" style={{ backgroundColor: 'var(--primary-tint)' }}>
+                <BookOpen size={20} style={{ color: 'var(--primary-ink)' }} />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">Generador de Recursos</h1>
-                <p className="text-xs text-gray-500">Crea materiales educativos alineados al curriculum chileno</p>
+                <h1 className="text-lg font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>Generador de Recursos</h1>
+                <p className="text-xs text-[var(--ink-soft)]">Crea materiales educativos alineados al curriculum chileno</p>
               </div>
             </div>
             <Badge color="indigo" size="sm">IA Curriculum</Badge>
