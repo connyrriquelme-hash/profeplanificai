@@ -89,6 +89,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   <button
                     key={item.id}
                     title={collapsed ? item.label : undefined}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-[14px] text-[15px] transition-all duration-200 group ${
                       isActive
                         ? 'bg-[var(--primary)] text-[#FFF6ED] font-bold'
@@ -121,6 +122,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 <button
                   key={item.id}
                   title={collapsed ? item.label : undefined}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-[14px] text-[15px] transition-all duration-200 group ${
                     isActive
                       ? 'bg-[var(--primary)] text-[#FFF6ED] font-bold'
