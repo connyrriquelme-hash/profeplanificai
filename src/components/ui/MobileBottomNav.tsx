@@ -32,13 +32,13 @@ export function MobileBottomNav({ activeView, onViewChange }: MobileBottomNavPro
               onClick={() => onViewChange(item.id)}
               className={`flex flex-col items-center justify-center min-w-[56px] py-2 px-1 rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'text-theme-primary'
-                  : 'text-gray-400 active:text-theme-primary/70'
+                  ? 'text-[var(--primary)]'
+                  : 'text-gray-400 active:text-[var(--primary)]/70'
               }`}
               aria-label={item.label}
             >
               <div className={`p-1.5 rounded-xl transition-all duration-200 ${
-                isActive ? 'bg-theme-primary/10' : ''
+                isActive ? 'bg-[var(--primary)]/10' : ''
               }`}>
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
               </div>
@@ -48,7 +48,7 @@ export function MobileBottomNav({ activeView, onViewChange }: MobileBottomNavPro
                 {item.label}
               </span>
               {isActive && (
-                <span className="w-1 h-1 rounded-full bg-theme-primary mt-1" />
+                <span className="w-1 h-1 rounded-full bg-[var(--primary)] mt-1" />
               )}
             </button>
           );

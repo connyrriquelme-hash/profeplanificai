@@ -75,7 +75,7 @@ function MarkdownTable({ lines }: { lines: string[] }) {
     <div className="overflow-x-auto my-4 rounded-xl border border-theme-gray/30 shadow-sm">
       <table className="w-full text-sm text-left">
         <thead>
-          <tr className="bg-theme-primary/5 border-b border-theme-gray/30">
+          <tr className="bg-[var(--primary)]/5 border-b border-theme-gray/30">
             {headers.map((h, i) => (
               <th key={i} className="px-4 py-3 font-semibold whitespace-nowrap" style={{color:'#000000'}}>
                 {renderMarkdownLine(h)}
