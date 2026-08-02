@@ -135,7 +135,7 @@ export function SlideAssistant({
       <button
         onClick={onToggle}
         aria-label={isOpen ? 'Cerrar asistente' : 'Abrir asistente'}
-        className="fixed right-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors lg:hidden"
+        className="fixed right-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center shadow-lg hover:bg-[var(--primary-hover)] transition-colors lg:hidden"
       >
         {isOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
       </button>
@@ -150,8 +150,8 @@ export function SlideAssistant({
       >
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-slate-200 bg-white flex-shrink-0">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100">
-            <Sparkles size={18} className="text-indigo-600" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--primary-tint)]">
+            <Sparkles size={18} className="text-[var(--primary)]" />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold text-slate-900">Asistente IA</h2>
@@ -179,21 +179,21 @@ export function SlideAssistant({
               className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.role === 'assistant' && (
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
-                  <Bot size={14} className="text-indigo-600" />
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--primary-tint)] flex items-center justify-center mt-0.5">
+                  <Bot size={14} className="text-[var(--primary)]" />
                 </div>
               )}
               <div
                 className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white rounded-br-md'
+                    ? 'bg-[var(--primary)] text-white rounded-br-md'
                     : 'bg-white text-slate-700 border border-slate-200 rounded-bl-md shadow-sm'
                 }`}
               >
                 {msg.text}
               </div>
               {msg.role === 'user' && (
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center mt-0.5">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--primary)] flex items-center justify-center mt-0.5">
                   <User size={14} className="text-white" />
                 </div>
               )}
@@ -202,8 +202,8 @@ export function SlideAssistant({
 
           {(isLoading || isProcessing) && (
             <div className="flex gap-2.5 justify-start">
-              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center">
-                <Bot size={14} className="text-indigo-600" />
+              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--primary-tint)] flex items-center justify-center">
+                <Bot size={14} className="text-[var(--primary)]" />
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                 <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -232,14 +232,14 @@ export function SlideAssistant({
               onKeyDown={handleKeyDown}
               placeholder="Ej: Cambia el color de fondo a azul..."
               disabled={isLoading || isProcessing}
-              className="flex-1 resize-none rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 resize-none rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Escribe tu instrucción para modificar la presentación"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading || isProcessing}
               aria-label="Enviar mensaje"
-              className="flex-shrink-0 w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex-shrink-0 w-10 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center hover:bg-[var(--primary-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <Send size={18} />
             </button>

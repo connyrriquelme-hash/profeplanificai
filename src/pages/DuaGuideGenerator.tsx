@@ -58,7 +58,7 @@ function DetailCard({ title, text, items }: { title: string; text?: string; item
 
   return (
     <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-4 print:shadow-none">
-      <h3 className="text-sm font-black uppercase tracking-[0.14em] text-violet-600 print:text-black">{title}</h3>
+      <h3 className="text-sm font-black uppercase tracking-[0.14em] text-[var(--primary)] print:text-black">{title}</h3>
       {text && <p className="mt-2 text-sm leading-relaxed text-slate-700 print:text-black">{text}</p>}
       {safeItems.length > 0 && (
         <ul className="mt-3 space-y-2 list-disc pl-5 text-sm leading-relaxed text-slate-700 print:text-black">
@@ -278,7 +278,7 @@ export function DuaGuideGenerator() {
         }
       `}</style>
 
-      <div className="rounded-[2rem] bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 p-6 text-white shadow-lg print:hidden">
+      <div className="rounded-[2rem] bg-[var(--primary)] p-6 text-white shadow-lg print:hidden">
         <p className="text-sm font-bold uppercase tracking-[0.24em] text-white/75">Copilot pedagógico</p>
         <h1 className="mt-2 text-3xl font-black">Generador de Guía DUA</h1>
         <p className="mt-2 max-w-3xl text-sm text-white/85">
@@ -307,7 +307,7 @@ export function DuaGuideGenerator() {
           <input
             value={curriculumSelection.tema || ''}
             onChange={(event) => setCurriculumSelection(prev => ({ ...prev, tema: event.target.value }))}
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-tint)]"
             placeholder="Ej: La célula"
           />
         </div>
@@ -316,7 +316,7 @@ export function DuaGuideGenerator() {
           <button
             type="submit"
             disabled={loading || !curriculumSelection.level || !curriculumSelection.subject || !curriculumSelection.objectiveCode || !curriculumSelection.tema}
-            className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-5 py-3 text-sm font-black text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Generando...' : 'Generar Guía DUA'}
           </button>
@@ -343,7 +343,7 @@ export function DuaGuideGenerator() {
           <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-0 print:pb-4 print:shadow-none">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-500 print:text-black">Guía DUA Generada</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)] print:text-black">Guía DUA Generada</p>
                 <h2 className="mt-2 text-2xl font-black text-slate-950 print:text-2xl print:text-black">
                   {duaGuide?.titulo_guia || 'Guía DUA Multinivel'}
                 </h2>
@@ -351,14 +351,14 @@ export function DuaGuideGenerator() {
               <button
                 type="button"
                 onClick={handleSaveToBank}
-                className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 print:hidden shrink-0"
+                className="rounded-2xl bg-[var(--primary)] px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-[var(--primary-hover)] print:hidden shrink-0"
               >
                 Guardar en Banco
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 print:hidden shrink-0"
+                className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-[var(--primary-hover)] print:hidden shrink-0"
               >
                 Exportar a PDF / Imprimir
               </button>

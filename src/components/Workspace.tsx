@@ -610,12 +610,12 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   onClick={() => setLessonTheme(tema)}
                   style={{
                     padding: '4px 10px', borderRadius: 999, border: '1px solid var(--line)',
-                    background: lessonTheme === tema ? '#eef2ff' : 'var(--card)',
-                    color: lessonTheme === tema ? '#4f46e5' : 'var(--muted2)',
+                    background: lessonTheme === tema ? 'var(--primary-tint)' : 'var(--card)',
+                    color: lessonTheme === tema ? 'var(--primary)' : 'var(--muted2)',
                     fontSize: 10, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'all 0.15s',
                   }}
-                  className="hover:border-indigo-300 hover:text-indigo-600"
+                  className="hover:border-[var(--primary)] hover:text-[var(--primary)]"
                 >
                   {tema}
                 </button>
@@ -641,12 +641,12 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                       <button key={t} onClick={() => setLessonTheme(t)}
                         style={{
                           padding: '4px 10px', borderRadius: 999, border: '1px solid var(--line)',
-                          background: lessonTheme === t ? '#eef2ff' : 'var(--card)',
-                          color: lessonTheme === t ? '#4f46e5' : 'var(--muted2)',
+                          background: lessonTheme === t ? 'var(--primary-tint)' : 'var(--card)',
+                          color: lessonTheme === t ? 'var(--primary)' : 'var(--muted2)',
                           fontSize: 10, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
                           transition: 'all 0.15s',
                         }}
-                        className="hover:border-indigo-300 hover:text-indigo-600"
+                        className="hover:border-[var(--primary)] hover:text-[var(--primary)]"
                       >
                         {t}
                       </button>
@@ -672,7 +672,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                 <div>
                   <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--muted2)' }}>
                     Indicadores
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700">{selectedInds.size}/{selectedOA.indicadores.length}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--primary-tint)] text-[var(--primary-ink)]">{selectedInds.size}/{selectedOA.indicadores.length}</span>
                   </div>
                   <div className="flex gap-1 mb-1">
                     <button onClick={() => setSelectedInds(new Set(selectedOA.indicadores.map((_, i) => i)))} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Todo</button>
@@ -768,7 +768,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   onClick={() => setNumberOfLessons(n)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                     numberOfLessons === n
-                      ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                      ? 'border-[var(--primary)] bg-[var(--primary-tint)] text-[var(--primary-ink)]'
                       : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
                   }`}
                 >
@@ -890,7 +890,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
                 />
                 <button
                   onClick={handleCopyShareUrl}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${shareResult.copied ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'}`}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${shareResult.copied ? 'bg-green-100 text-green-700' : 'bg-[var(--primary-tint)] text-[var(--primary-ink)] hover:brightness-95'}`}
                 >
                   {shareResult.copied ? <><Check size={12} className="inline mr-1" />Copiado</> : 'Copiar'}
                 </button>
@@ -898,7 +898,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShareResult(null); onNavigate?.('panel-compartido'); }}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white text-sm font-semibold hover:bg-[var(--primary-hover)] transition-all"
                 >
                   Abrir Panel Compartido
                 </button>
