@@ -109,7 +109,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
 
   return (
     <div className="view">
-      <Card className="bg-gradient-to-br from-blue-50 to-slate-50/50 border-blue-100/80 mb-6">
+      <Card className="bg-[var(--primary-tint)] border-[var(--border)] mb-6">
         <div className="flex items-start gap-4">
           <IconBadge icon={LibraryBig} size="xl" color="#2563eb" variant="gradient" />
           <div className="flex-1 min-w-0">
@@ -128,13 +128,13 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-              <GraduationCap size={13} className="text-blue-600" strokeWidth={2.25} />
+              <GraduationCap size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
               Curso
             </label>
             <select
               value={course}
               onChange={e => { setCourse(e.target.value); setSubject(''); setSelected(null); }}
-              className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all shadow-sm appearance-none cursor-pointer"
+              className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
             >
               <option value="">Todos los cursos</option>
               {courses.map(c => (
@@ -150,7 +150,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
             <select
               value={subject}
               onChange={e => { setSubject(e.target.value); setSelected(null); }}
-              className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all shadow-sm appearance-none cursor-pointer"
+              className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
             >
               <option value="">Todas las asignaturas</option>
               {subjects.map(s => (
@@ -187,7 +187,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
               disabled={busy}
               className={`w-full text-left rounded-2xl p-4 border transition-all duration-200 ${
                 selected?.code === oa.code
-                  ? 'border-blue-400 bg-blue-50/50 shadow-sm shadow-blue-100/50'
+                  ? 'border-[var(--primary)] bg-[var(--primary-tint)]/50 shadow-sm shadow-black/5'
                   : 'border-gray-200/80 bg-white hover:border-gray-300/80 hover:shadow-sm'
               }`}
             >
@@ -195,7 +195,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge color="indigo" size="sm">{oa.code}</Badge>
                   {selected?.code === oa.code && (
-                    <Check size={14} className="text-blue-600" strokeWidth={2.5} />
+                    <Check size={14} className="text-[var(--primary)]" strokeWidth={2.5} />
                   )}
                 </div>
                 <span className="text-[11px] text-gray-400 whitespace-nowrap mt-0.5">
@@ -234,7 +234,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
           ) : (
             <Card variant="elevated">
               <div className="flex items-start justify-between gap-3 mb-5">
-                <code className="inline-flex items-center px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 font-bold text-base tracking-tight">
+                <code className="inline-flex items-center px-3 py-1.5 rounded-xl bg-[var(--primary-tint)] text-[var(--primary-ink)] font-bold text-base tracking-tight">
                   {selected.code}
                 </code>
                 {selected.source_url && (
@@ -242,7 +242,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
                     href={selected.source_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors whitespace-nowrap"
+                    className="flex items-center gap-1.5 text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors whitespace-nowrap"
                   >
                     <ExternalLink size={12} strokeWidth={2.25} />
                     Fuente oficial
@@ -258,7 +258,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
 
               {selected.axis_name && (
                 <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
-                  <GraduationCap size={12} strokeWidth={2.25} className="text-blue-500" />
+                  <GraduationCap size={12} strokeWidth={2.25} className="text-[var(--primary)]" />
                   <span>Eje: {selected.axis_name}</span>
                 </div>
               )}

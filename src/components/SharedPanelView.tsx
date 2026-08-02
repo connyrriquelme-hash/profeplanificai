@@ -176,7 +176,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
               </div>
               {editingContent ? (
                 <textarea
-                  className="w-full min-h-[300px] p-4 rounded-xl border border-gray-200 text-sm font-sans resize-y outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all"
+                  className="w-full min-h-[300px] p-4 rounded-xl border border-gray-200 text-sm font-sans resize-y outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   placeholder="Escribe el contenido de la planificación..."
@@ -206,7 +206,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                 <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
                   <input
                     type="text"
-                    className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all"
+                    className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                     placeholder="Escribe un comentario..."
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
@@ -255,14 +255,14 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                       value={emailTo}
                       onChange={e => setEmailTo(e.target.value)}
                       placeholder="Correo del destinatario"
-                      className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100 transition-all"
+                      className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                     />
                     <textarea
                       value={emailMessage}
                       onChange={e => setEmailMessage(e.target.value)}
                       placeholder="Mensaje opcional"
                       rows={2}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100 transition-all resize-y"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all resize-y"
                     />
                     <Button
                       variant="premium"
