@@ -155,12 +155,12 @@ export function UnidadesDidacticasView() {
         <aside className="w-full xl:w-[380px] shrink-0">
           <Card className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-theme-text">
-              <Sparkles size={16} className="text-theme-primary" />
+              <Sparkles size={16} className="text-[var(--primary)]" />
               Configurar Unidad
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-theme-secondary mb-1">Nombre de la Unidad</label>
+              <label className="block text-xs font-medium text-[var(--ink-soft)] mb-1">Nombre de la Unidad</label>
               <input
                 type="text"
                 value={unitName}
@@ -171,7 +171,7 @@ export function UnidadesDidacticasView() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-theme-secondary mb-1">Metodologia Activa</label>
+              <label className="block text-xs font-medium text-[var(--ink-soft)] mb-1">Metodologia Activa</label>
               <select
                 value={metodologia}
                 onChange={e => setMetodologia(e.target.value as MetodologiaActiva)}
@@ -184,7 +184,7 @@ export function UnidadesDidacticasView() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-theme-secondary mb-1">Nivel Educativo</label>
+              <label className="block text-xs font-medium text-[var(--ink-soft)] mb-1">Nivel Educativo</label>
               <select
                 value={nivel}
                 onChange={e => setNivel(e.target.value as NivelEducativo)}
@@ -198,7 +198,7 @@ export function UnidadesDidacticasView() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-theme-secondary">OAs por Asignatura</label>
+                <label className="text-xs font-medium text-[var(--ink-soft)]">OAs por Asignatura</label>
                 <button onClick={addOa} className="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded-lg transition-colors font-medium">
                   + Agregar OA
                 </button>
@@ -240,7 +240,7 @@ export function UnidadesDidacticasView() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-theme-secondary mb-1">Instrucciones Adicionales</label>
+              <label className="block text-xs font-medium text-[var(--ink-soft)] mb-1">Instrucciones Adicionales</label>
               <textarea
                 value={instructions}
                 onChange={e => setInstructions(e.target.value)}
