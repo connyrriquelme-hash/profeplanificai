@@ -228,7 +228,7 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'text-violet-600 border-b-2 border-violet-600'
+                ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -249,7 +249,7 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />
           <span className="ml-3 text-slate-500">Cargando datos...</span>
         </div>
       )}

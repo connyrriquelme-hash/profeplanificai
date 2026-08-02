@@ -38,11 +38,11 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 via-white to-orange-50">
+    <div className="theme-calida min-h-screen bg-[var(--bg)]">
       {/* Mobile header */}
       <div className="lg:hidden flex flex-col items-center pt-8 pb-4 px-4">
         <img src="/brand/logo-profeplanificai.png" alt="Logo ProfePlanificAI" className="w-16 h-16 rounded-2xl object-contain mb-3" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-fuchsia-600 via-purple-600 to-orange-500 bg-clip-text text-transparent">ProfePlanificAI</h1>
+        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] bg-clip-text text-transparent">ProfePlanificAI</h1>
         <p className="text-sm text-gray-500 italic mt-0.5">{SLOGAN}</p>
       </div>
 
@@ -54,7 +54,7 @@ export default function LoginView() {
             <div className="flex items-center gap-4 mb-6">
               <img src="/brand/logo-profeplanificai.png" alt="Logo ProfePlanificAI" className="w-20 h-20 rounded-2xl object-contain" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <div>
-                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-fuchsia-600 via-purple-600 to-orange-500 bg-clip-text text-transparent leading-tight">ProfePlanificAI</h1>
+                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] bg-clip-text text-transparent leading-tight">ProfePlanificAI</h1>
                 <p className="text-base text-gray-500 italic">{SLOGAN}</p>
               </div>
             </div>
@@ -66,8 +66,8 @@ export default function LoginView() {
             <div className="space-y-3">
               {BENEFITS.map((b, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.08 }} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-100 to-orange-100 flex items-center justify-center flex-shrink-0">
-                    <b.icon size={18} className="text-fuchsia-600" />
+                  <div className="w-9 h-9 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center flex-shrink-0">
+                    <b.icon size={18} className="text-[var(--primary)]" />
                   </div>
                   <span className="text-sm text-gray-700">{b.text}</span>
                 </motion.div>
@@ -82,7 +82,7 @@ export default function LoginView() {
             {/* Login card */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-white rounded-2xl shadow-xl p-8">
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 to-orange-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[var(--primary)] flex items-center justify-center">
                   <LogIn size={20} className="text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Ingreso a ProfePlanificAI</h2>
@@ -92,18 +92,18 @@ export default function LoginView() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none transition" placeholder="docente@colegio.cl" />
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="docente@colegio.cl" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none transition" placeholder="mínimo 6 caracteres" />
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="mínimo 6 caracteres" />
                 </div>
 
                 {error && (
                   <motion.p initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</motion.p>
                 )}
 
-                <button type="submit" disabled={busy} className="w-full py-2.5 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white rounded-lg font-medium hover:from-fuchsia-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={busy} className="w-full py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
                   {busy ? <><Loader2 size={18} className="animate-spin" /> Ingresando...</> : 'Iniciar sesión'}
                 </button>
               </form>

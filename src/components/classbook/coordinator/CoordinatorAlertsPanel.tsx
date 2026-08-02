@@ -44,7 +44,7 @@ export default function CoordinatorAlertsPanel({
         icon={Info}
         title="Sin alertas"
         description="No hay alertas activas en este momento."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }
@@ -93,7 +93,7 @@ export default function CoordinatorAlertsPanel({
                     {alert.description}
                   </p>
                   {hasNavigation && (
-                    <p className="text-[10px] text-violet-500 mt-1.5 flex items-center gap-1">
+                    <p className="text-[10px] text-[var(--primary)] mt-1.5 flex items-center gap-1">
                       <ExternalLink size={10} strokeWidth={2} />
                       Click para abrir recurso
                     </p>

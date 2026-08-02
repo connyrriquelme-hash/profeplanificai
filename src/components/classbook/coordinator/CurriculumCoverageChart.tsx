@@ -22,7 +22,7 @@ export default function CurriculumCoverageChart({
         icon={BarChart3}
         title="Sin datos de cobertura"
         description="No hay datos de cobertura curricular disponibles."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }
@@ -30,7 +30,7 @@ export default function CurriculumCoverageChart({
   return (
     <Card variant="default" aria-label="Gráfico de cobertura curricular">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 size={16} className="text-violet-500" />
+        <BarChart3 size={16} className="text-[var(--primary)]" />
         <h3 className="text-sm font-bold text-slate-700">Cobertura curricular</h3>
       </div>
       <div className="space-y-3">

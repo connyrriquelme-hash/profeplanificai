@@ -35,7 +35,7 @@ export default function TeacherComplianceTable({
         icon={Users}
         title="Sin docentes para mostrar"
         description="No hay datos de cumplimiento docente disponibles."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }
@@ -102,7 +102,7 @@ export default function TeacherComplianceTable({
                 <td className="py-3 px-3 text-center text-amber-600 font-medium">
                   {t.pendingSignatures}
                 </td>
-                <td className="py-3 px-3 text-center text-violet-600 font-medium">
+                <td className="py-3 px-3 text-center text-[var(--primary)] font-medium">
                   {t.pendingReviews}
                 </td>
                 <td className="py-3 px-3">
