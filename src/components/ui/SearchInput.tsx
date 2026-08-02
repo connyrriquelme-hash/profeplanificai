@@ -14,7 +14,7 @@ export function SearchInput({ value, onChange, placeholder = 'Buscar...', classN
       <Search
         size={compact ? 14 : 16}
         strokeWidth={2.25}
-        className={`absolute top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-indigo-500 ${
+        className={`absolute top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[var(--primary)] ${
           compact ? 'left-3' : 'left-3.5'
         }`}
       />
@@ -22,7 +22,7 @@ export function SearchInput({ value, onChange, placeholder = 'Buscar...', classN
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded-2xl bg-white border border-gray-200/80 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all shadow-sm ${
+        className={`w-full rounded-2xl bg-white border border-gray-200/80 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] focus:bg-white transition-all shadow-sm ${
           compact ? 'h-9 pl-9 pr-8 text-xs' : 'h-10 pl-10 pr-10'
         }`}
       />
