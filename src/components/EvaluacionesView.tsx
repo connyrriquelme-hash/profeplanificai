@@ -32,7 +32,7 @@ interface EvaluacionesViewProps {
 const STEPS = ['Configuración', 'Contenido', 'Personalización'];
 
 const selectClass =
-  'w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm appearance-none cursor-pointer';
+  'w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer';
 
 export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
   const { getOptions } = useConfigOptions();
@@ -599,10 +599,10 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
   return (
     <div className="view" id="evaluaciones">
-      <Card className="bg-gradient-to-br from-violet-50 to-pink-50/50 border-violet-100/80 mb-6">
+      <Card className="bg-[var(--primary-tint)] border-[var(--border)] mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
-            <IconBadge icon={ClipboardCheck} size="xl" color="#7c3aed" variant="gradient" />
+            <IconBadge icon={ClipboardCheck} size="xl" color="#B5471F" variant="gradient" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Evaluaciones</h1>
@@ -628,7 +628,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
         <Card className="mb-6">
           <SectionHeader
             icon={Eye}
-            iconColor="#7c3aed"
+            iconColor="#B5471F"
             title="Instrumentos guardados"
             description={`${savedMaterials.length} instrumento(s) en tu biblioteca personal.`}
           />
@@ -642,11 +642,11 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
       {step === 1 && (
         <Card className="mb-6">
-          <SectionHeader icon={FileText} iconColor="#7c3aed" title="Paso 1: Configuración" description="Define el tipo, nivel y asignatura de la evaluación." className="mb-5" />
+          <SectionHeader icon={FileText} iconColor="#B5471F" title="Paso 1: Configuración" description="Define el tipo, nivel y asignatura de la evaluación." className="mb-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-                <FileCheck2 size={13} className="text-violet-600" strokeWidth={2.25} />
+                <FileCheck2 size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Tipo de evaluación
               </label>
               <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={selectClass}>
@@ -655,7 +655,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             </div>
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-                <GraduationCap size={13} className="text-violet-600" strokeWidth={2.25} />
+                <GraduationCap size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Nivel educativo
               </label>
               <select
@@ -669,7 +669,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             </div>
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-                <GraduationCap size={13} className="text-violet-600" strokeWidth={2.25} />
+                <GraduationCap size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Curso
               </label>
               <select
@@ -694,7 +694,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             </div>
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-                <BookOpen size={13} className="text-violet-600" strokeWidth={2.25} />
+                <BookOpen size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Asignatura
               </label>
               <select
@@ -711,7 +711,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             </div>
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-                <ClipboardCheck size={13} className="text-violet-600" strokeWidth={2.25} />
+                <ClipboardCheck size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Habilidad principal
               </label>
               <select value={habilidad} onChange={(e) => setHabilidad(e.target.value)} className={selectClass}>
@@ -731,7 +731,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
       {step === 2 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
           <Card>
-            <SectionHeader icon={BookOpen} iconColor="#7c3aed" title="Paso 2: Contenido (OA)" description="Selecciona un OA cargado desde la base curricular D1." className="mb-4" />
+            <SectionHeader icon={BookOpen} iconColor="#B5471F" title="Paso 2: Contenido (OA)" description="Selecciona un OA cargado desde la base curricular D1." className="mb-4" />
             {selectedAsignatura ? (
               <>
                 <div style={{ position: 'relative', marginBottom: 6 }}>
@@ -789,8 +789,8 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             )}
             {oaError && !loadingOAs && <div className="text-xs mt-1" style={{ color: 'var(--muted2)' }}>{oaError}</div>}
             {selectedOA && (
-              <div className="mt-3 px-3 py-2 rounded-xl bg-violet-50 border border-violet-100 text-xs text-gray-600">
-                <code className="font-bold text-violet-700">{extractShortObjectiveCode(selectedOA.oa_id)}</code>
+              <div className="mt-3 px-3 py-2 rounded-xl bg-[var(--primary-tint)] border border-[var(--border)] text-xs text-gray-600">
+                <code className="font-bold text-[var(--primary-ink)]">{extractShortObjectiveCode(selectedOA.oa_id)}</code>
                 {resolveObjectiveRealCode(selectedOA) !== extractShortObjectiveCode(selectedOA.oa_id) && (
                   <span className="ml-2 text-gray-400">({resolveObjectiveRealCode(selectedOA)})</span>
                 )}
@@ -804,12 +804,12 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           </Card>
 
           <Card>
-            <SectionHeader icon={ClipboardList} iconColor="#7c3aed" title="Indicadores de evaluación" className="mb-3" />
+            <SectionHeader icon={ClipboardList} iconColor="#B5471F" title="Indicadores de evaluación" className="mb-3" />
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-gray-500">{selectedInds.size} de {indicadores.length} seleccionados</span>
               {indicadores.length > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <button onClick={selectAllInds} className="text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-2 py-1 rounded-lg hover:bg-violet-50">Todo</button>
+                  <button onClick={selectAllInds} className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors px-2 py-1 rounded-lg hover:bg-[var(--primary-tint)]">Todo</button>
                   <button onClick={deselectAllInds} className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100">Ninguno</button>
                 </div>
               )}
@@ -837,14 +837,14 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                   <label
                     key={i}
                     className={`flex items-start gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all ${
-                      selectedInds.has(i) ? 'bg-violet-50 border border-violet-200' : 'hover:bg-gray-50 border border-transparent'
+                      selectedInds.has(i) ? 'bg-[var(--primary-tint)] border border-[var(--primary)]' : 'hover:bg-gray-50 border border-transparent'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={selectedInds.has(i)}
                       onChange={() => toggleIndicador(i)}
-                      className="mt-0.5 accent-violet-600"
+                      className="mt-0.5 accent-[var(--primary)]"
                     />
                     <span className={`text-xs leading-relaxed ${selectedInds.has(i) ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
                       {ind}
@@ -862,11 +862,11 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
       {step === 3 && (
         <Card className="mb-6">
-          <SectionHeader icon={Sparkles} iconColor="#7c3aed" title="Paso 3: Personalización y DUA" description="Configura dificultad, preguntas SIMCE (si aplica) y genera la evaluación." className="mb-5" />
+          <SectionHeader icon={Sparkles} iconColor="#B5471F" title="Paso 3: Personalización y DUA" description="Configura dificultad, preguntas SIMCE (si aplica) y genera la evaluación." className="mb-5" />
           <div className="space-y-4">
             <div>
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-                <FileText size={13} className="text-violet-600" strokeWidth={2.25} />
+                <FileText size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Dificultad
               </label>
               <select value={dificultad} onChange={(e) => setDificultad(e.target.value)} className={selectClass}>
@@ -943,7 +943,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           <textarea
             value={output}
             onChange={(e) => setOutput(e.target.value)}
-            className="w-full min-h-[400px] font-mono text-sm p-3 rounded-xl bg-white border border-gray-200/80 text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm resize-y mt-3"
+            className="w-full min-h-[400px] font-mono text-sm p-3 rounded-xl bg-white border border-gray-200/80 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm resize-y mt-3"
           />
         ) : (
           <div className="mt-3 bg-gray-50 rounded-xl p-4 max-h-[500px] overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{color:'#000000'}}>
@@ -957,8 +957,8 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-                  <Share2 size={18} className="text-violet-600" />
+                <div className="w-10 h-10 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center">
+                  <Share2 size={18} className="text-[var(--primary)]" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Evaluacion compartida</h3>
@@ -979,7 +979,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               />
               <button
                 onClick={handleCopyShareUrl}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${shareResult.copied ? 'bg-green-100 text-green-700' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'}`}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${shareResult.copied ? 'bg-green-100 text-green-700' : 'bg-[var(--primary-tint)] text-[var(--primary-ink)] hover:brightness-95'}`}
               >
                 {shareResult.copied ? <><Check size={12} className="inline mr-1" />Copiado</> : 'Copiar'}
               </button>
@@ -1016,8 +1016,8 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
       {selectedAsignatura && selectedOA && extSources.length > 0 && (
         <Card className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <SectionHeader icon={BookOpen} iconColor="#7c3aed" title="Recursos sugeridos" description="Fuentes externas relacionadas con evaluacion" />
-            <button onClick={() => setShowExtPanel(!showExtPanel)} className="text-xs font-medium text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition-all">
+            <SectionHeader icon={BookOpen} iconColor="#B5471F" title="Recursos sugeridos" description="Fuentes externas relacionadas con evaluacion" />
+            <button onClick={() => setShowExtPanel(!showExtPanel)} className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] px-3 py-1.5 rounded-lg hover:bg-[var(--primary-tint)] transition-all">
               {showExtPanel ? 'Ocultar' : 'Mostrar'}
             </button>
           </div>
@@ -1056,7 +1056,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                               <div className="flex items-center gap-2 flex-wrap">
                                 {link.url && (
                                   <a href={link.url} target="_blank" rel="noopener noreferrer"
-                                     className="text-xs font-medium text-violet-600 hover:text-violet-700 hover:underline">
+                                     className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] hover:underline">
                                     {link.source_name || 'Visitar sitio'}
                                   </a>
                                 )}
@@ -1119,7 +1119,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                   )}
 
                   <div className="border-t border-gray-100 pt-3 mt-3">
-                    <button onClick={() => setShowAddLink(!showAddLink)} className="text-xs font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1">
+                    <button onClick={() => setShowAddLink(!showAddLink)} className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] flex items-center gap-1">
                       {showAddLink ? 'Cancelar' : 'Agregar enlace manual'}
                     </button>
 
