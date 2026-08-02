@@ -247,16 +247,16 @@ export function FlujoDocenteView() {
         return (
           <div key={s} className="flex items-center flex-shrink-0">
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              isActive ? 'bg-indigo-50 text-indigo-700' : isPast ? 'text-gray-500' : 'text-gray-400'
+              isActive ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)]' : isPast ? 'text-gray-500' : 'text-gray-400'
             }`}>
               <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                isActive ? 'bg-indigo-600 text-white' : isPast ? 'bg-gray-200 text-gray-500' : 'bg-gray-100 text-gray-300'
+                isActive ? 'bg-[var(--primary)] text-white' : isPast ? 'bg-gray-200 text-gray-500' : 'bg-gray-100 text-gray-300'
               }`}>
                 {isPast ? <Check size={12} /> : <span>{i + 1}</span>}
               </div>
               <span className="hidden sm:inline">{labels[s]}</span>
             </div>
-            {i < 4 && <div className={`w-4 h-px mx-0.5 ${isPast || isActive ? 'bg-indigo-200' : 'bg-gray-200'}`} />}
+            {i < 4 && <div className={`w-4 h-px mx-0.5 ${isPast || isActive ? 'bg-[var(--primary)]/30' : 'bg-gray-200'}`} />}
           </div>
         );
       })}
@@ -270,8 +270,8 @@ export function FlujoDocenteView() {
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-              <GraduationCap size={20} className="text-indigo-600" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center">
+              <GraduationCap size={20} className="text-[var(--primary)]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">Paso 1: Selecciona el nivel</h2>
@@ -283,7 +283,7 @@ export function FlujoDocenteView() {
               <button
                 key={c.id}
                 onClick={() => { setSelectedCourse(c); setStep('asignatura'); }}
-                className="p-3 rounded-xl border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all text-left"
+                className="p-3 rounded-xl border-2 border-gray-200 hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all text-left"
               >
                 <p className="text-sm font-semibold text-gray-800">{c.name}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{c.objective_count} OA</p>
@@ -423,7 +423,7 @@ export function FlujoDocenteView() {
               value={topic}
               onChange={e => setTopic(e.target.value)}
               placeholder="Ej: Animales vertebrados de Chile"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
             />
           </div>
           <div>
@@ -433,7 +433,7 @@ export function FlujoDocenteView() {
               onChange={e => setAdditionalContext(e.target.value)}
               rows={3}
               placeholder="Ej: Curso de 32 estudiantes, 5 con NEE..."
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
             />
           </div>
           {suggestedMethodologies.length > 0 && (
@@ -446,7 +446,7 @@ export function FlujoDocenteView() {
                     onClick={() => setSelectedMethodology(m.name)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${
                       selectedMethodology === m.name
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        ? 'border-[var(--primary)] bg-[var(--primary-tint)] text-[var(--primary-ink)]'
                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}
                   >
@@ -472,8 +472,8 @@ export function FlujoDocenteView() {
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-              <WandSparkles size={20} className="text-violet-600" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center">
+              <WandSparkles size={20} className="text-[var(--primary)]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">Paso 5: ¿Qué necesitas?</h2>
@@ -489,7 +489,7 @@ export function FlujoDocenteView() {
                   onClick={() => setSelectedProducto(p.id)}
                   className={`p-4 rounded-xl border-2 transition-all text-center ${
                     selectedProducto === p.id
-                      ? 'border-indigo-500 bg-indigo-50'
+                      ? 'border-[var(--primary)] bg-[var(--primary-tint)]'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -502,10 +502,10 @@ export function FlujoDocenteView() {
             })}
           </div>
           {selectedProducto && (
-            <div className="mt-4 p-4 bg-indigo-50 rounded-xl">
+            <div className="mt-4 p-4 bg-[var(--primary-tint)] rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Lightbulb size={16} className="text-indigo-600" />
-                <span className="text-sm font-medium text-indigo-700">Resumen</span>
+                <Lightbulb size={16} className="text-[var(--primary)]" />
+                <span className="text-sm font-medium text-[var(--primary-ink)]">Resumen</span>
               </div>
               <div className="flex flex-wrap gap-1.5 mb-3">
                 <Badge color="indigo" size="sm">{selectedOA?.course_name}</Badge>
@@ -540,8 +540,8 @@ export function FlujoDocenteView() {
     return (
       <div className="max-w-lg mx-auto flex flex-col items-center justify-center py-20">
         <Card variant="elevated" className="p-10 text-center w-full">
-          <div className="w-16 h-16 rounded-3xl bg-indigo-100 flex items-center justify-center mx-auto mb-6">
-            <Loader2 size={32} className="text-indigo-600 animate-spin" />
+          <div className="w-16 h-16 rounded-3xl bg-[var(--primary-tint)] flex items-center justify-center mx-auto mb-6">
+            <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">Generando recurso pedagógico...</h3>
           <p className="text-sm text-gray-500">
@@ -549,7 +549,7 @@ export function FlujoDocenteView() {
           </p>
           <div className="mt-6 flex justify-center gap-1.5">
             {[0, 1, 2, 3, 4].map(i => (
-              <div key={i} className="w-2 h-2 rounded-full bg-indigo-300 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="w-2 h-2 rounded-full bg-[var(--primary)]/50 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </Card>
@@ -597,7 +597,7 @@ export function FlujoDocenteView() {
                   const slideTitle = 'title' in slide ? slide.title : '';
                   return (
                     <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
-                      <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                      <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate capitalize">{layoutLabel}</p>
                         {slideTitle && <p className="text-xs text-gray-500 truncate">{slideTitle}</p>}

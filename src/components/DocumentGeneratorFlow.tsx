@@ -263,7 +263,7 @@ function ResourceTypeStep({ state, dispatch }: { state: WizardState; dispatch: R
     >
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-          <Layers size={20} className="text-indigo-600" />
+          <Layers size={20} className="text-[var(--primary)]" />
           Tipo de recurso
         </h3>
         <p className="text-sm text-gray-500">Elige que tipo de documento educativo generar.</p>
@@ -279,20 +279,20 @@ function ResourceTypeStep({ state, dispatch }: { state: WizardState; dispatch: R
               onClick={() => dispatch({ type: 'SET_RESOURCE_TYPE', resourceType: rt.id })}
               className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 isSelected
-                  ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
+                  ? 'border-[var(--primary)] bg-[var(--primary-tint)] shadow-md shadow-black/5'
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
               }`}
             >
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${isSelected ? 'bg-indigo-100' : 'bg-gray-100'}`}>
-                  <Icon size={24} className={isSelected ? 'text-indigo-600' : 'text-gray-500'} />
+                <div className={`p-3 rounded-xl ${isSelected ? 'bg-[var(--primary-tint)]' : 'bg-gray-100'}`}>
+                  <Icon size={24} className={isSelected ? 'text-[var(--primary)]' : 'text-gray-500'} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold ${isSelected ? 'text-indigo-700' : 'text-gray-900'}`}>{rt.label}</p>
+                  <p className={`font-semibold ${isSelected ? 'text-[var(--primary-ink)]' : 'text-gray-900'}`}>{rt.label}</p>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">{rt.description}</p>
                 </div>
                 {isSelected && (
-                  <CheckCircle2 size={20} className="text-indigo-600 flex-shrink-0" />
+                  <CheckCircle2 size={20} className="text-[var(--primary)] flex-shrink-0" />
                 )}
               </div>
             </button>
@@ -313,7 +313,7 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
     >
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-          <MessageSquare size={20} className="text-indigo-600" />
+          <MessageSquare size={20} className="text-[var(--primary)]" />
           Contexto y personalizacion
         </h3>
         <p className="text-sm text-gray-500">Define el tema especifico y las opciones de inclusion.</p>
@@ -327,7 +327,7 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
           onChange={(e) => dispatch({ type: 'SET_TOPIC', topic: e.target.value })}
           placeholder="Ej: Fotosintesis en plantas, Fracciones equivalentes, La Guerra del Pacifico..."
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-none"
         />
       </div>
 
@@ -353,7 +353,7 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
               type="checkbox"
               checked={state.differentiation}
               onChange={() => dispatch({ type: 'TOGGLE_DIFFERENTIATION' })}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
             />
             <div>
               <p className="text-sm font-medium text-gray-700">Diferenciacion de actividades</p>
@@ -365,7 +365,7 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
               type="checkbox"
               checked={state.rubric}
               onChange={() => dispatch({ type: 'TOGGLE_RUBRIC' })}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
             />
             <div>
               <p className="text-sm font-medium text-gray-700">Incluir rubrica de evaluacion</p>
@@ -387,8 +387,8 @@ function LoadingStep({ state }: { state: WizardState }) {
       className="flex flex-col items-center justify-center py-20"
     >
       <div className="relative mb-8">
-        <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
-          <Loader2 size={36} className="text-indigo-600 animate-spin" />
+        <div className="w-20 h-20 rounded-full bg-[var(--primary-tint)] flex items-center justify-center">
+          <Loader2 size={36} className="text-[var(--primary)] animate-spin" />
         </div>
         <Sparkles size={20} className="absolute -top-1 -right-1 text-amber-500 animate-pulse" />
       </div>
@@ -490,7 +490,7 @@ function WorkspaceStep({ state, onReset }: { state: WizardState; onReset: () => 
       <div className="flex-[3] border-l border-gray-200 bg-gray-50/50 flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <MessageSquare size={16} className="text-indigo-600" />
+            <MessageSquare size={16} className="text-[var(--primary)]" />
             Asistente IA
           </h3>
           <p className="text-xs text-gray-500 mt-1">Pide ajustes o mejoras al documento generado.</p>
