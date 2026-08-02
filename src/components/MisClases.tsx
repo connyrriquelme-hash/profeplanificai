@@ -98,7 +98,7 @@ function hoursBetween(s: string, e: string) { const [sh, sm] = s.split(':').map(
 function fmtH(total: number) { const h = Math.floor(total / 60); const m = total % 60; return total > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''}` : '0h'; }
 
 const LC = 'block text-[11px] font-black tracking-wide uppercase text-slate-500 mb-1';
-const IC = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all';
+const IC = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all';
 
 export function MisClases() {
   const { user, activeInstitutionId } = useAuth();
@@ -612,11 +612,11 @@ export function MisClases() {
       <aside className="w-full xl:w-[380px] xl:min-w-[380px] shrink-0">
         <Card className="space-y-4 xl:sticky xl:top-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Sparkles size={16} className="text-violet-600" /> Configurar Clase</div>
-            <button onClick={handleNewClass} className="inline-flex items-center gap-1 rounded-xl bg-violet-100 text-violet-700 px-3 py-1.5 text-xs font-bold hover:bg-violet-200 transition-all"><Plus size={12} /> Nueva</button>
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Sparkles size={16} className="text-[var(--primary)]" /> Configurar Clase</div>
+            <button onClick={handleNewClass} className="inline-flex items-center gap-1 rounded-xl bg-[var(--primary-tint)] text-[var(--primary-ink)] px-3 py-1.5 text-xs font-bold hover:brightness-95 transition-all"><Plus size={12} /> Nueva</button>
           </div>
 
-          <div><label className={LC}>Tipo de bloque</label><div className="flex gap-2">{(['lectivo', 'no_lectivo', 'reemplazo'] as const).map((t) => (<button key={t} onClick={() => setBlockType(t)} className={`flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition-all ${blockType === t ? 'bg-violet-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{t === 'lectivo' ? 'Lectivo' : t === 'no_lectivo' ? 'No lectivo' : 'Reemplazo'}</button>))}</div></div>
+          <div><label className={LC}>Tipo de bloque</label><div className="flex gap-2">{(['lectivo', 'no_lectivo', 'reemplazo'] as const).map((t) => (<button key={t} onClick={() => setBlockType(t)} className={`flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition-all ${blockType === t ? 'bg-[var(--primary)] text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{t === 'lectivo' ? 'Lectivo' : t === 'no_lectivo' ? 'No lectivo' : 'Reemplazo'}</button>))}</div></div>
 
           <div className="space-y-3">
             <label className={LC}>Nombre de la clase<input value={selectedBundle?.plan?.title || selectedBundle?.lesson?.title || draftLesson.title} onChange={(e) => { if (selectedBundle) updatePlanField('title', e.target.value); else setDraftLesson((p) => ({ ...p, title: e.target.value })); }} placeholder="Ej: Lenguaje 4A - Taller de lectura" className={IC} /></label>
@@ -631,7 +631,7 @@ export function MisClases() {
           </div>
 
           <div className="border-t border-slate-100 pt-4 space-y-3">
-            <p className="text-[11px] font-black tracking-wide uppercase text-violet-600">Curriculo</p>
+            <p className="text-[11px] font-black tracking-wide uppercase text-[var(--primary)]">Curriculo</p>
             <label className={LC}>Nivel educativo<select value={lessonCurriculum.levelId} onChange={(e) => updateLessonCurriculum({ levelId: e.target.value })} className={IC}><option value="">Selecciona nivel</option>{courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
             <label className={LC}>Asignatura<select value={lessonCurriculum.subjectId} onChange={(e) => updateLessonCurriculum({ subjectId: e.target.value })} disabled={!lessonCurriculum.levelId || lcSubjectsLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcSubjectsLoading ? 'Cargando...' : 'Selecciona asignatura'}</option>{lcSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
             <label className={LC}>Objetivo Curricular OA (opcional)<select value={lessonCurriculum.objectiveId} onChange={(e) => updateLessonCurriculum({ objectiveId: e.target.value })} disabled={!lessonCurriculum.subjectId || lcObjectivesLoading} className={`${IC} disabled:bg-slate-100 disabled:text-slate-400`}><option value="">{lcObjectivesLoading ? 'Cargando...' : 'Selecciona OA (opcional)'}</option>{lcObjectives.map((oa) => <option key={oa.id} value={oa.id}>{oa.code} - {oa.official_text}</option>)}</select></label>
@@ -659,7 +659,7 @@ export function MisClases() {
           </div>
 
           <div className="space-y-2 pt-2">
-            <button onClick={handleSaveClass} disabled={savingState === 'saving'} className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 text-white font-bold shadow-md shadow-violet-900/10 hover:shadow-lg transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={handleSaveClass} disabled={savingState === 'saving'} className="w-full rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-4 py-3 text-white font-bold shadow-md shadow-black/10 hover:shadow-lg transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2">
               {savingState === 'saving' ? <><Loader2 size={14} className="animate-spin" /> Guardando...</> : <><Save size={14} /> {selectedLessonId ? 'Actualizar clase' : 'Guardar clase'}</>}
             </button>
             <button onClick={() => setShowScheduleForm(true)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"><CalendarDays size={14} /> Horario semanal</button>
@@ -683,8 +683,8 @@ export function MisClases() {
             {fmtH(totalTeachingMin + totalNonTeachingMin)} totales &middot; {fmtH(totalTeachingMin)} lectivas &middot; {fmtH(totalNonTeachingMin)} no lectivas &middot; {teachPct}% lectivo
           </div>
           {calendar.length === 0 && ntbBlocks.length === 0 && !loading && (
-            <div className="rounded-2xl bg-violet-50 border border-violet-100 p-8 text-center mb-4">
-              <CalendarDays size={32} className="mx-auto text-violet-400 mb-3" />
+            <div className="rounded-2xl bg-[var(--primary-tint)] border border-[var(--border)] p-8 text-center mb-4">
+              <CalendarDays size={32} className="mx-auto text-[var(--primary)] mb-3" />
               <h3 className="font-black text-slate-900">Sin bloques programados</h3>
               <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">Crea una clase, horario semanal o bloque no lectivo desde el panel izquierdo para comenzar.</p>
             </div>
@@ -720,12 +720,12 @@ export function MisClases() {
         {/* TAB: Clase */}
         {rightTab === 'clase' && (<div>
           {!selectedBundle ? (<div className="flex flex-col items-center justify-center min-h-[400px] text-center text-slate-500">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-violet-600"><BookOpenCheck size={24} /></div>
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-[var(--primary)]"><BookOpenCheck size={24} /></div>
             <h3 className="font-black text-slate-900">Selecciona o crea una clase para planificar.</h3>
             <p className="mt-1 max-w-sm text-sm">Haz clic en un bloque del calendario o crea una nueva clase desde el panel izquierdo.</p>
           </div>) : (<div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-              <div><p className="text-xs font-bold text-violet-600">Detalle de clase</p><h3 className="font-black text-slate-900 text-lg">{selectedBundle.plan?.title || selectedBundle.lesson.title}</h3><p className="text-sm text-slate-500">{selectedBundle.lesson.lesson_date} &middot; {selectedBundle.lesson.start_time}-{selectedBundle.lesson.end_time}</p></div>
+              <div><p className="text-xs font-bold text-[var(--primary)]">Detalle de clase</p><h3 className="font-black text-slate-900 text-lg">{selectedBundle.plan?.title || selectedBundle.lesson.title}</h3><p className="text-sm text-slate-500">{selectedBundle.lesson.lesson_date} &middot; {selectedBundle.lesson.start_time}-{selectedBundle.lesson.end_time}</p></div>
               <div className="flex items-center gap-2 text-sm text-slate-500">{savingState === 'saving' ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{savingState === 'saving' ? 'Guardando...' : savingState === 'saved' ? 'Guardado automaticamente' : 'Borrador'}</div>
             </div>
 
@@ -750,20 +750,20 @@ export function MisClases() {
             </div>
 
             {/* SECCION: Actividades de clase */}
-            <div className="rounded-2xl border border-violet-200 bg-violet-50/30 p-5 mb-5">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--primary-tint)]/30 p-5 mb-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div>
-                  <h3 className="font-black text-slate-900 text-lg flex items-center gap-2"><BookOpen size={18} className="text-violet-600" /> Actividades de clase</h3>
+                  <h3 className="font-black text-slate-900 text-lg flex items-center gap-2"><BookOpen size={18} className="text-[var(--primary)]" /> Actividades de clase</h3>
                   <p className="text-xs text-slate-500 mt-0.5">Momentos pedagogicos: Inicio, Desarrollo, Cierre y componentes complementarios.</p>
                 </div>
-                <button disabled={loading} onClick={() => void handleGenerateActividades()} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-white text-sm font-bold shadow-md shadow-violet-900/10 hover:shadow-lg transition-all disabled:opacity-50">
+                <button disabled={loading} onClick={() => void handleGenerateActividades()} className="inline-flex items-center gap-2 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-4 py-2.5 text-white text-sm font-bold shadow-md shadow-black/10 hover:shadow-lg transition-all disabled:opacity-50">
                   {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Generar actividades de clase
                 </button>
               </div>
 
               {/* Sub-tabs de actividades */}
               <div className="flex gap-1 overflow-x-auto pb-2 mb-4">
-                {(['oa', 'inicio', 'desarrollo', 'cierre', 'metodologia', 'comentarios'] as DetailTab[]).map((t) => (<button key={t} onClick={() => setDetailTab(t)} className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${detailTab === t ? 'bg-violet-100 text-violet-700' : 'bg-white text-slate-500 hover:bg-slate-100'}`}>{t === 'oa' ? 'OA' : t === 'inicio' ? 'Inicio' : t === 'desarrollo' ? 'Desarrollo' : t === 'cierre' ? 'Cierre' : t === 'metodologia' ? 'Metodologia' : 'Comentarios'}</button>))}
+                {(['oa', 'inicio', 'desarrollo', 'cierre', 'metodologia', 'comentarios'] as DetailTab[]).map((t) => (<button key={t} onClick={() => setDetailTab(t)} className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${detailTab === t ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)]' : 'bg-white text-slate-500 hover:bg-slate-100'}`}>{t === 'oa' ? 'OA' : t === 'inicio' ? 'Inicio' : t === 'desarrollo' ? 'Desarrollo' : t === 'cierre' ? 'Cierre' : t === 'metodologia' ? 'Metodologia' : 'Comentarios'}</button>))}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
@@ -780,18 +780,18 @@ export function MisClases() {
                   {detailTab === 'metodologia' && (<div className="space-y-3"><h3 className="font-black text-slate-900">Metodologia sugerida</h3>
                     <select value={methodologyId} onChange={(e) => { setMethodologyId(e.target.value); updateLessonCurriculum({ methodologyId: e.target.value }); }} className={IC}>{(cfgMethodologies.length > 0 ? cfgMethodologies : METHODOLOGY_OPTIONS).map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select>
                     <p className="text-xs text-slate-500">Selecciona una metodologia del curriculo chileno.</p></div>)}
-                  {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100" placeholder={`Escribe o genera contenido para ${detailTab}`} />)}
+                  {fieldForTab && detailTab !== 'oa' && detailTab !== 'metodologia' && (<textarea value={displayText(selectedBundle.plan?.[fieldForTab])} onChange={(e) => updatePlanField(fieldForTab, e.target.value)} className="w-full min-h-[260px] rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed shadow-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-tint)]" placeholder={`Escribe o genera contenido para ${detailTab}`} />)}
                 </div>
-                <aside className="rounded-2xl border border-violet-100 p-4 bg-violet-50/50">
+                <aside className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--primary-tint)]/50">
                   <h3 className="font-black text-slate-900 flex items-center gap-2"><Sparkles size={18} /> IA integrada</h3>
                   <p className="mt-1 text-xs text-slate-500">Genera actividades completas o por separado. Seleccionar OA mejora la alineacion curricular.</p>
                   <div className="mt-4 grid grid-cols-1 gap-2">
-                    <button disabled={loading} onClick={() => void handleGenerateActividades()} className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-3 py-2 text-left text-xs font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
+                    <button disabled={loading} onClick={() => void handleGenerateActividades()} className="rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-3 py-2 text-left text-xs font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
                       <Sparkles size={12} /> Generar actividades de clase
                     </button>
-                    <div className="border-t border-violet-100 my-1" />
+                    <div className="border-t border-[var(--border)] my-1" />
                     {[['Generar inicio', 'inicio', 'resource'], ['Generar desarrollo', 'desarrollo', 'resource'], ['Generar cierre', 'cierre', 'resource']].map(([label, action, kind]) => (
-                      <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-xl bg-white border border-violet-100 px-3 py-2 text-left text-xs font-bold text-violet-700 hover:bg-violet-600 hover:text-white transition-colors disabled:opacity-50">{label}</button>
+                      <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-xl bg-white border border-[var(--border)] px-3 py-2 text-left text-xs font-bold text-[var(--primary-ink)] hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-50">{label}</button>
                     ))}
                   </div>
                   <div className="mt-4 flex gap-2">
@@ -815,17 +815,17 @@ export function MisClases() {
               {[['Nivel', lessonCurriculum.levelId ? courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId : '-'], ['Asignatura', lessonCurriculum.subjectId ? lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId : '-'], ['OA', lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.official_text || lessonCurriculum.objectiveId : 'OA opcional'], ['Metodologia', METHODOLOGY_OPTIONS.find((m) => m.value === methodologyId)?.label || '-']].map(([label, value]) => (<div key={label} className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">{label}</p><p className="text-sm font-semibold text-slate-700 mt-1">{value}</p></div>))}
             </div>
             {!lessonCurriculum.objectiveId && lessonCurriculum.levelId && lessonCurriculum.subjectId && (
-              <div className="rounded-xl bg-violet-50 border border-violet-100 p-4 text-center">
-                <p className="text-sm text-violet-700">Selecciona un OA en el panel izquierdo para enriquecer el contexto curricular.</p>
+              <div className="rounded-xl bg-[var(--primary-tint)] border border-[var(--border)] p-4 text-center">
+                <p className="text-sm text-[var(--primary-ink)]">Selecciona un OA en el panel izquierdo para enriquecer el contexto curricular.</p>
               </div>
             )}
             {lcContext && (<div className="space-y-3">
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-3"><p className="text-xs font-black text-slate-400 uppercase">Eje</p><p className="text-sm text-slate-700 mt-1">{lcContext.axis_name || '-'}</p></div>
-              {lcContext.indicators?.length > 0 && (<div><p className="text-xs font-black text-slate-400 uppercase mb-2">Indicadores ({lcContext.indicators.length})</p><div className="flex flex-wrap gap-1">{lcContext.indicators.map((i: any, idx: number) => (<span key={idx} className="rounded-lg bg-violet-100 text-violet-700 px-2 py-1 text-[11px] font-bold">{i.description}</span>))}</div></div>)}
+              {lcContext.indicators?.length > 0 && (<div><p className="text-xs font-black text-slate-400 uppercase mb-2">Indicadores ({lcContext.indicators.length})</p><div className="flex flex-wrap gap-1">{lcContext.indicators.map((i: any, idx: number) => (<span key={idx} className="rounded-lg bg-[var(--primary-tint)] text-[var(--primary-ink)] px-2 py-1 text-[11px] font-bold">{i.description}</span>))}</div></div>)}
               {lcContext.skills?.length > 0 && (<div><p className="text-xs font-black text-slate-400 uppercase mb-2">Habilidades ({lcContext.skills.length})</p><div className="flex flex-wrap gap-1">{lcContext.skills.map((s: any, idx: number) => (<span key={idx} className="rounded-lg bg-emerald-100 text-emerald-700 px-2 py-1 text-[11px] font-bold">{s.description}</span>))}</div></div>)}
               {attitudes.length > 0 && (<div><p className="text-xs font-black text-slate-400 uppercase mb-2">Actitudes</p><div className="flex flex-wrap gap-1">{attitudes.map((a, idx) => (<span key={idx} className="rounded-lg bg-amber-100 text-amber-700 px-2 py-1 text-[11px] font-bold">{a}</span>))}</div></div>)}
             </div>)}
-            {lcContextLoading && <p className="text-xs text-violet-500">Cargando contexto curricular...</p>}
+            {lcContextLoading && <p className="text-xs text-[var(--primary)]">Cargando contexto curricular...</p>}
           </div>
         </div>)}
 
@@ -836,7 +836,7 @@ export function MisClases() {
             <p className="text-sm text-slate-500">{hasOA ? 'Cada recurso usa el contexto curricular guardado: nivel, asignatura y OA seleccionados.' : 'Genera recursos usando nivel y asignatura. Seleccionar OA mejora la alineacion curricular.'}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[['Guia de aprendizaje', 'guia', 'resource'], ['Ficha de trabajo', 'ficha_trabajo', 'resource'], ['Actividad pedagogica', 'actividad_pedagogica', 'resource'], ['Recurso DUA', 'recurso_dua', 'resource'], ['Reforzamiento', 'reforzamiento', 'resource'], ['Extension para avanzados', 'extension_avanzados', 'resource'], ['Material para apoderados', 'material_apoderados', 'resource'], ['Banco de preguntas', 'banco_preguntas', 'resource'], ['Crear presentacion', 'presentation', 'presentation'], ['Crear ticket de salida', 'ticket', 'evaluation']].map(([label, action, kind]) => (
-                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
+                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
               ))}
             </div>
 
@@ -857,7 +857,7 @@ export function MisClases() {
                           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                             {meta.sourceTab && <span className="rounded-md bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-[10px] font-bold">{meta.sourceTab === 'recursos_ia' ? 'Recursos IA' : meta.sourceTab === 'evaluacion' ? 'Evaluacion' : meta.sourceTab === 'actividades' ? 'Actividades' : meta.sourceTab}</span>}
                             {r.type && <span className="rounded-md bg-slate-100 text-slate-600 px-1.5 py-0.5 text-[10px] font-bold">{r.type}</span>}
-                            {meta.generatedWith && <span className="rounded-md bg-violet-100 text-violet-700 px-1.5 py-0.5 text-[10px] font-bold">{meta.generatedWith}</span>}
+                            {meta.generatedWith && <span className="rounded-md bg-[var(--primary-tint)] text-[var(--primary-ink)] px-1.5 py-0.5 text-[10px] font-bold">{meta.generatedWith}</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
@@ -879,7 +879,7 @@ export function MisClases() {
             <h3 className="font-black text-slate-900 text-lg">Evaluaciones con IA</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[['Crear evaluacion', 'evaluacion', 'evaluation'], ['Crear rubrica', 'rubrica', 'evaluation'], ['Crear pauta', 'pauta', 'evaluation'], ['Crear evaluacion tipo SIMCE', 'simce', 'evaluation'], ['Crear retroalimentacion', 'retroalimentacion', 'evaluation']].map(([label, action, kind]) => (
-                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Basado en el OA seleccionado' : 'Genera con curso y asignatura'}</p></button>
+                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Basado en el OA seleccionado' : 'Genera con curso y asignatura'}</p></button>
               ))}
             </div>
           </div>
@@ -934,7 +934,7 @@ export function MisClases() {
           <label className="sm:col-span-2 flex items-center gap-2 text-sm font-bold text-slate-600"><input type="checkbox" checked={scheduleForm.repeats_weekly} onChange={(e) => setScheduleForm((p) => ({ ...p, repeats_weekly: e.target.checked }))} /> Repetir semanalmente</label>
         </div>
         <div className="flex gap-3 mt-4">
-          <button onClick={() => void handleCreateSchedule()} className="flex-1 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-white font-bold text-sm">Guardar horario</button>
+          <button onClick={() => void handleCreateSchedule()} className="flex-1 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-4 py-2.5 text-white font-bold text-sm">Guardar horario</button>
           <button onClick={() => setShowScheduleForm(false)} className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Cancelar</button>
         </div>
       </Card>

@@ -45,7 +45,7 @@ export default function SessionStatusChart({
   return (
     <Card variant="default" aria-label="Resumen de estados de sesión">
       <div className="flex items-center gap-2 mb-4">
-        <Activity size={16} className="text-violet-500" />
+        <Activity size={16} className="text-[var(--primary)]" />
         <h3 className="text-sm font-bold text-slate-700">
           Estado de sesiones
         </h3>

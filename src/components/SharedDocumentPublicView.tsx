@@ -168,7 +168,7 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader size={32} className="animate-spin text-indigo-600 mx-auto mb-4" />
+          <Loader size={32} className="animate-spin text-[var(--primary)] mx-auto mb-4" />
           <p className="text-sm text-gray-500">Cargando planificación compartida…</p>
         </div>
       </div>
@@ -304,7 +304,7 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
               <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
                 <input
                   type="text"
-                  className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all"
+                  className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                   placeholder="Escribe un comentario…"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}

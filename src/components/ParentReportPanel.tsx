@@ -326,7 +326,7 @@ export function ParentReportPanel() {
             <button key={s.id} onClick={() => i <= step && setStep(i)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 active
-                  ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-md shadow-violet-500/25'
+                  ? 'bg-[var(--primary)] text-white shadow-md shadow-black/10'
                   : done
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : 'bg-white text-slate-400 border border-slate-200'
@@ -404,7 +404,7 @@ export function ParentReportPanel() {
               <label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Objetivos seleccionados ({selectedObjectives.length})</label>
               <div className="space-y-1 mt-1">
                 {selectedObjectives.map(o => (
-                  <div key={o.id} className="flex items-center justify-between text-[11px] p-1.5 rounded bg-indigo-50" style={{ color: 'var(--ink2)' }}>
+                  <div key={o.id} className="flex items-center justify-between text-[11px] p-1.5 rounded bg-[var(--primary-tint)]" style={{ color: 'var(--ink2)' }}>
                     <span><strong>{o.code}</strong> — {o.text?.slice(0, 60)}...</span>
                     <button onClick={() => setSelectedObjectives(prev => prev.filter(s => s.id !== o.id))} className="text-red-400 hover:text-red-600"><Trash2 size={10} /></button>
                   </div>
@@ -475,7 +475,7 @@ export function ParentReportPanel() {
                           setSelectedSkills(prev => prev.some(s => s.id === sk.id) ? prev.filter(s => s.id !== sk.id) : [...prev, sk]);
                         }} className="mt-0.5" />
                         <span>{sk.text}</span>
-                        <span className="text-[8px] px-1 rounded bg-blue-100 text-blue-700">D1</span>
+                        <span className="text-[8px] px-1 rounded bg-[var(--primary-tint)] text-[var(--primary-ink)]">D1</span>
                       </label>
                     ))}
                   </div>
@@ -521,7 +521,7 @@ export function ParentReportPanel() {
           {sheets.length > 1 && (
             <div className="flex gap-1">
               {sheets.map((s, i) => (
-                <button key={i} onClick={() => setActiveSheet(i)} className={`px-2 py-1 rounded text-[10px] font-medium border ${activeSheet === i ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 text-gray-600'}`}>
+                <button key={i} onClick={() => setActiveSheet(i)} className={`px-2 py-1 rounded text-[10px] font-medium border ${activeSheet === i ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-gray-300 text-gray-600'}`}>
                   Planilla {s.sheetNumber} ({s.students.length})
                 </button>
               ))}
@@ -561,13 +561,13 @@ export function ParentReportPanel() {
         <div className="rounded-2xl border p-6 space-y-4 bg-white shadow-sm" style={{ borderColor: 'var(--line)' }}>
           <h3 className="text-base font-bold" style={{ color: 'var(--ink)' }}>Observaciones IA ({totalGenerated}/{students.length} generadas)</h3>
           {generating && (
-            <div className="rounded p-2 bg-indigo-50">
+            <div className="rounded p-2 bg-[var(--primary-tint)]">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-medium text-indigo-700">{progress.batch} — {progress.current}/{progress.total}</span>
-                <button onClick={() => setPaused(!paused)} className="text-[10px] px-2 py-0.5 rounded border border-indigo-300 text-indigo-600">{paused ? 'Reanudar' : 'Pausar'}</button>
+                <span className="text-[10px] font-medium text-[var(--primary-ink)]">{progress.batch} — {progress.current}/{progress.total}</span>
+                <button onClick={() => setPaused(!paused)} className="text-[10px] px-2 py-0.5 rounded border border-[var(--primary)] text-[var(--primary)]">{paused ? 'Reanudar' : 'Pausar'}</button>
               </div>
-              <div className="w-full h-1.5 rounded-full bg-indigo-200 overflow-hidden">
-                <div className="h-full bg-indigo-500 transition-all" style={{ width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%` }} />
+              <div className="w-full h-1.5 rounded-full bg-[var(--primary-tint)] overflow-hidden">
+                <div className="h-full bg-[var(--primary)] transition-all" style={{ width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%` }} />
               </div>
             </div>
           )}
@@ -596,7 +596,7 @@ export function ParentReportPanel() {
                     </div>
                   </div>
                 )}
-                <button onClick={() => { setEditingId(student.id); setEditText(student.finalParentReport || student.aiFeedbackForParents || ''); }} className="text-[9px] text-indigo-500 hover:underline mt-1"><Edit3 size={9} className="inline" /> Editar</button>
+                <button onClick={() => { setEditingId(student.id); setEditText(student.finalParentReport || student.aiFeedbackForParents || ''); }} className="text-[9px] text-[var(--primary)] hover:underline mt-1"><Edit3 size={9} className="inline" /> Editar</button>
               </div>
             ))}
           </div>

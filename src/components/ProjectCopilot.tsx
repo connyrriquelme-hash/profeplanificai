@@ -142,7 +142,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <header className="no-print text-center space-y-2">
-        <div className="inline-flex items-center gap-2 bg-violet-50 text-violet-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">
+        <div className="inline-flex items-center gap-2 bg-[var(--primary-tint)] text-[var(--primary-ink)] px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">
           <Bot size={14} /> Project Copilot
         </div>
         <h1 className="text-2xl font-bold text-slate-900">Generador de Planificación</h1>
@@ -159,7 +159,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
             value={tema}
             onChange={(e) => setTema(e.target.value)}
             placeholder="Ej: La célula"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary-tint)] focus:border-[var(--primary)] transition"
           />
         </div>
 
@@ -185,7 +185,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         <button
           type="submit"
           disabled={loading || !curriculumSelection.level || !curriculumSelection.subject || !curriculumSelection.objectiveCode || !tema}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition"
         >
           {loading ? (
             <>
@@ -207,7 +207,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
             <button
               type="button"
               onClick={handleSaveToBank}
-              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer"
+              className="inline-flex items-center gap-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer"
             >
               <Save size={16} />
               Guardar en Banco
@@ -449,7 +449,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
                     <p className="text-xs font-bold text-slate-700 mb-2">Habilidades</p>
                     <div className="flex flex-wrap gap-1.5">
                       {[...(result.duaGuide.habilidades || []).filter(s => s && s.trim().length > 1), ...(result.duaGuide.habilidades_sugeridas || []).map(s => `${s} (sugerida)`)].map((item, i) => (
-                        <span key={i} className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-violet-100 border-violet-300 text-violet-700">{item}</span>
+                        <span key={i} className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-[var(--primary-tint)] border-[var(--primary)] text-[var(--primary-ink)]">{item}</span>
                       ))}
                     </div>
                   </div>
@@ -499,7 +499,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
                 {(result.duaGuide.adecuaciones_apoyos || []).length > 0 && (
                   <div className="mt-4">
                     <p className="text-xs font-bold text-slate-700 mb-2">Adecuaciones y apoyos</p>
-                    <ul className="space-y-1">{(result.duaGuide.adecuaciones_apoyos || []).map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><CheckCircle2 size={10} className="mt-0.5 flex-shrink-0 text-violet-500" />{item}</li>)}</ul>
+                    <ul className="space-y-1">{(result.duaGuide.adecuaciones_apoyos || []).map((item, i) => <li key={i} className="text-xs text-slate-600 flex items-start gap-2"><CheckCircle2 size={10} className="mt-0.5 flex-shrink-0 text-[var(--primary)]" />{item}</li>)}</ul>
                   </div>
                 )}
                 {(result.duaGuide.cierre_inclusivo || []).length > 0 && (

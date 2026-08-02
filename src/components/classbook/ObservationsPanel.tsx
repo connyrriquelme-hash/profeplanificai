@@ -73,7 +73,7 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
           <button
             aria-expanded={showForm}
             onClick={() => setShowForm(!showForm)}
-            className="text-sm bg-violet-600 hover:bg-violet-700 text-white font-semibold px-4 py-2 rounded-xl transition"
+            className="text-sm bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold px-4 py-2 rounded-xl transition"
           >
             {showForm ? 'Cancelar' : '+ Nueva'}
           </button>
@@ -94,20 +94,20 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
               placeholder="Student ID"
               value={formData.student_id}
               onChange={(e) => setFormData(prev => ({ ...prev, student_id: e.target.value }))}
-              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
             <input
               aria-label="ID del curso"
               placeholder="Course ID"
               value={formData.course_id}
               onChange={(e) => setFormData(prev => ({ ...prev, course_id: e.target.value }))}
-              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
             <select
               aria-label="Categoría"
               value={formData.category}
               onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             >
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -115,7 +115,7 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
               aria-label="Visibilidad"
               value={formData.visibility}
               onChange={(e) => setFormData(prev => ({ ...prev, visibility: e.target.value }))}
-              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             >
               <option value="teacher">Solo docente</option>
               <option value="institution">Institución</option>
@@ -127,12 +127,12 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
             value={formData.content}
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             rows={3}
-            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] resize-none"
           />
           <button
             onClick={handleCreate}
             disabled={saving || !formData.student_id || !formData.course_id || !formData.content}
-            className="bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
+            className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
           >
             {saving ? 'Guardando...' : 'Crear observación'}
           </button>
@@ -141,7 +141,7 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div role="status" aria-label="Cargando observaciones" className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+          <div role="status" aria-label="Cargando observaciones" className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : observations.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
@@ -154,7 +154,7 @@ export function ObservationsPanel({ institutionId, yearId, sessions }: Props) {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">{obs.category}</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)]">{obs.category}</span>
                     <span className="text-xs text-slate-400">{obs.created_at?.slice(0, 10)}</span>
                   </div>
                   <p className="text-sm text-slate-700 mt-2">{obs.content}</p>

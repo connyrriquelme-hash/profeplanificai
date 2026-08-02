@@ -23,12 +23,12 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
       )}
 
       {/* School selector pill */}
-      <div className="hidden lg:flex items-center gap-2.5 px-3 py-2 rounded-xl border border-blue-100 bg-blue-50/50 cursor-pointer hover:bg-blue-50 transition-colors">
-        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-          <Building2 size={14} className="text-blue-600" strokeWidth={2.5} />
+      <div className="hidden lg:flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--primary-tint)]/50 cursor-pointer hover:bg-[var(--primary-tint)] transition-colors">
+        <div className="w-8 h-8 rounded-lg bg-[var(--primary-tint)] flex items-center justify-center">
+          <Building2 size={14} className="text-[var(--primary)]" strokeWidth={2.5} />
         </div>
         <div className="hidden xl:block">
-          <p className="text-[9px] font-bold text-blue-400 tracking-widest uppercase leading-tight">Establecimiento</p>
+          <p className="text-[9px] font-bold text-[var(--primary-ink)] tracking-widest uppercase leading-tight">Establecimiento</p>
           <p className="text-[12px] font-semibold text-slate-700 leading-tight truncate max-w-[140px]">Liceo Nacional</p>
         </div>
         <ChevronDown size={14} className="text-slate-400" />
@@ -59,11 +59,11 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
 
         <button className="p-2.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all relative min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Notificaciones">
           <Bell size={18} strokeWidth={2} />
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-fuchsia-500 ring-2 ring-white" />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--primary)] ring-2 ring-white" />
         </button>
 
         <div className="hidden sm:flex items-center gap-2.5 pl-3 ml-1 border-l border-slate-200">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-violet-500/20">
+          <div className="w-9 h-9 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-black/10">
             {initials}
           </div>
           <div className="hidden md:block">

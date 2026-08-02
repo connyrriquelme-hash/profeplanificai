@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 
 const variantStyles: Record<string, string> = {
   primary:
-    'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 shadow-md shadow-violet-200/50 hover:shadow-lg hover:shadow-violet-200/60 active:scale-[0.98]',
+    'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] shadow-md shadow-black/10 hover:shadow-lg hover:shadow-black/15 active:scale-[0.98]',
   secondary:
     'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
   ghost:
@@ -12,7 +12,7 @@ const variantStyles: Record<string, string> = {
   outline:
     'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
   premium:
-    'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-200/50 hover:shadow-xl hover:shadow-violet-200/60 hover:from-violet-600 hover:to-fuchsia-600 active:scale-[0.98]',
+    'bg-[var(--primary)] text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/15 hover:bg-[var(--primary-hover)] active:scale-[0.98]',
   danger:
     'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 hover:border-red-200',
 };
@@ -53,7 +53,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type="button"
         disabled={isDisabled}
-        className={`inline-flex items-center justify-center font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`inline-flex items-center justify-center font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {loading ? (

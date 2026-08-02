@@ -185,7 +185,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
 
   return (
     <div className="view">
-      <Card className="bg-gradient-to-br from-teal-50 to-blue-50/50 border-teal-100/80 mb-6">
+      <Card className="bg-[var(--primary-tint)] border-[var(--border)] mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
             <IconBadge icon={Archive} size="xl" color="#0d9488" variant="gradient" />
@@ -351,7 +351,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                       <button
                         onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1 rounded-lg hover:bg-indigo-50 transition-all"
+                        className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] px-2.5 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all"
                       >
                         Ver
                       </button>
@@ -398,7 +398,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
           )}
 
           {recommendedResource && filteredResources.length > 0 && (
-            <Card className="mb-6 bg-gradient-to-br from-teal-50 to-blue-50/50 border-teal-100/80">
+            <Card className="mb-6 bg-[var(--primary-tint)] border-[var(--border)]">
               <div className="flex items-start gap-4">
                 <IconBadge icon={Sparkles} size="lg" color="#0d9488" variant="gradient" />
                 <div className="flex-1 min-w-0">
@@ -449,7 +449,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-all"
+                      className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] px-2 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all"
                     >
                       Ver
                     </button>
@@ -495,7 +495,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-all"
+                        className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] px-2 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all"
                       >
                         Ver
                       </button>

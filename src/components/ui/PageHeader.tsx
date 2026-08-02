@@ -3,8 +3,8 @@ import { IconBadge } from './IconBadge';
 import { Badge } from './Badge';
 
 const iconColorMap: Record<string, string> = {
-  indigo: '#4f46e5',
-  violet: '#7c3aed',
+  indigo: '#B5471F',
+  violet: '#9A3A17',
   teal: '#0d9488',
   orange: '#ea580c',
   pink: '#db2777',
@@ -30,7 +30,7 @@ export function PageHeader({ icon, iconColor: iconColorProp, title, description,
 
   if (variant === 'hero') {
     return (
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 p-6 sm:p-8 lg:p-10 mb-8 ${className}`}>
+      <div className={`relative overflow-hidden rounded-3xl bg-[var(--primary)] p-6 sm:p-8 lg:p-10 mb-8 ${className}`}>
         <div className="absolute inset-0 bg-noise opacity-[0.07]" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export function PageHeader({ icon, iconColor: iconColorProp, title, description,
                 <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{title}</h1>
                 {badge && <Badge color="violet" size="sm">{badge}</Badge>}
               </div>
-              {description && <p className="text-sm text-indigo-200 mt-1 max-w-xl">{description}</p>}
+              {description && <p className="text-sm text-[#FFF6ED]/80 mt-1 max-w-xl">{description}</p>}
             </div>
           </div>
           {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}

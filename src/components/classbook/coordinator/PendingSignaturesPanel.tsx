@@ -61,7 +61,7 @@ export default function PendingSignaturesPanel({
                 {onOpenSession && (
                   <button
                     onClick={() => onOpenSession(s.sessionId)}
-                    className="mt-1 p-1.5 rounded-lg text-violet-600 hover:bg-violet-50 transition-colors flex items-center gap-1"
+                    className="mt-1 p-1.5 rounded-lg text-[var(--primary)] hover:bg-[var(--primary-tint)] transition-colors flex items-center gap-1"
                     aria-label={`Abrir sesión ${s.sessionId}`}
                     title="Abrir sesión"
                   >

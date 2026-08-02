@@ -84,7 +84,7 @@ export default function PendingReviewsPanel({
     >
       <div className="px-4 py-3 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <ClipboardCheck size={16} className="text-violet-500" />
+          <ClipboardCheck size={16} className="text-[var(--primary)]" />
           <h3 className="text-sm font-bold text-slate-700">
             Revisiones pendientes ({reviews.length})
           </h3>
@@ -137,7 +137,7 @@ export default function PendingReviewsPanel({
                         if (comment !== null) handleAction(r.reviewId, 'observe', comment);
                       }}
                       disabled={loadingIds.has(r.reviewId)}
-                      className="p-1.5 rounded-lg text-violet-600 hover:bg-violet-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-1.5 rounded-lg text-[var(--primary)] hover:bg-[var(--primary-tint)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Observar revisión"
                       title="Observar"
                     >

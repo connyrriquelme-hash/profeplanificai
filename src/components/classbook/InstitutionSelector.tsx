@@ -80,7 +80,7 @@ export function InstitutionSelector() {
         id="institution-selector"
         value={activeInstitutionId || ''}
         onChange={(e) => setActiveInstitution(e.target.value)}
-        className="w-auto min-w-[200px] max-w-[300px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-colors"
+        className="w-auto min-w-[200px] max-w-[300px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-colors"
         aria-label="Seleccionar institución activa"
       >
         <option value="">Seleccionar institución</option>

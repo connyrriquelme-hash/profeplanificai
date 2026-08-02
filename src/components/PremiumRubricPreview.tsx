@@ -35,7 +35,7 @@ function RubricTable({ criteria, levels }: { criteria: RubricCriterion[]; levels
                 <div className="text-sm font-semibold">{criterion.name}</div>
                 <div className="text-xs text-gray-500 mt-0.5">{criterion.description}</div>
                 {criterion.weight && (
-                  <div className="text-[10px] text-indigo-600 mt-1 font-medium">Peso: {criterion.weight}%</div>
+                  <div className="text-[10px] text-[var(--primary)] mt-1 font-medium">Peso: {criterion.weight}%</div>
                 )}
               </td>
               {levels.map(level => {
@@ -65,7 +65,7 @@ function FeedbackSection({ criteria, levels }: { criteria: RubricCriterion[]; le
     <div className="mt-4">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+        className="flex items-center gap-2 text-sm font-semibold text-[var(--primary-ink)] hover:text-[var(--primary-hover)]"
       >
         {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         Retroalimentación sugerida por criterio
@@ -73,8 +73,8 @@ function FeedbackSection({ criteria, levels }: { criteria: RubricCriterion[]; le
       {expanded && (
         <div className="mt-3 space-y-3">
           {criteria.map(criterion => (
-            <div key={criterion.id} className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-              <div className="text-xs font-bold text-indigo-800 mb-2">{criterion.name}</div>
+            <div key={criterion.id} className="p-3 bg-[var(--primary-tint)] rounded-lg border border-[var(--border)]">
+              <div className="text-xs font-bold text-[var(--primary-ink)] mb-2">{criterion.name}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {levels.map(level => {
                   const indicator = criterion.indicators.find(ind => ind.levelId === level.id);
@@ -103,10 +103,10 @@ function FeedbackSection({ criteria, levels }: { criteria: RubricCriterion[]; le
 function DUASection({ adjustments }: { adjustments: string[] }) {
   const [expanded, setExpanded] = useState(false);
   return (
-    <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+    <div className="mt-4 p-4 bg-[var(--success-bg)] rounded-xl border border-transparent">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 text-sm font-semibold text-purple-800 hover:text-purple-900 w-full text-left"
+        className="flex items-center gap-2 text-sm font-semibold text-[var(--success-ink)] hover:opacity-80 w-full text-left"
       >
         <span className="text-lg">🌈</span>
         Adecuaciones inclusivas / DUA
@@ -115,8 +115,8 @@ function DUASection({ adjustments }: { adjustments: string[] }) {
       {expanded && (
         <ul className="mt-3 space-y-1.5">
           {adjustments.map((adj, i) => (
-            <li key={i} className="text-xs text-purple-700 flex items-start gap-2">
-              <span className="text-purple-400 mt-0.5">•</span>
+            <li key={i} className="text-xs text-[var(--success-ink)] flex items-start gap-2">
+              <span className="text-[var(--success)] mt-0.5">•</span>
               {adj}
             </li>
           ))}
@@ -282,10 +282,10 @@ export default function PremiumRubricPreview({ rubric }: PremiumRubricPreviewPro
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">{rubric.nivel}</span>
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--primary-tint)] text-[var(--primary-ink)]">{rubric.nivel}</span>
         <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">{rubric.asignatura}</span>
         <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">{rubric.oa}</span>
-        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700">{rubric.criteria.length} criterios</span>
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--primary-tint)] text-[var(--primary-ink)]">{rubric.criteria.length} criterios</span>
         <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">{rubric.totalScore} puntos</span>
       </div>
 

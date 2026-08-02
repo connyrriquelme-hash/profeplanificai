@@ -255,7 +255,7 @@ export function ReportesView() {
           <select
             value={subject}
             onChange={e => { setSubject(e.target.value); setSelectedD1Subject(''); }}
-            className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+            className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
           >
             {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
             {d1Subjects.length > 0 && <option disabled>─── Asignaturas D1 ───</option>}
@@ -269,7 +269,7 @@ export function ReportesView() {
           <select
             value={course}
             onChange={e => { setCourse(e.target.value); setSelectedD1Course(''); }}
-            className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+            className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
           >
             {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
             {d1Courses.length > 0 && <option disabled>─── Cursos D1 ───</option>}
@@ -279,9 +279,9 @@ export function ReportesView() {
           </select>
         </div>
         <div className="flex items-end">
-          <div className="px-4 py-2 bg-indigo-50 border border-indigo-200/60 rounded-xl text-center">
-            <p className="text-[10px] font-bold text-indigo-500 uppercase">Indicadores</p>
-            <p className="text-lg font-bold text-indigo-700">{indicators.length + d1Indicators.length}</p>
+          <div className="px-4 py-2 bg-[var(--primary-tint)] border border-[var(--border)] rounded-xl text-center">
+            <p className="text-[10px] font-bold text-[var(--primary)] uppercase">Indicadores</p>
+            <p className="text-lg font-bold text-[var(--primary-ink)]">{indicators.length + d1Indicators.length}</p>
           </div>
         </div>
       </div>
@@ -296,7 +296,7 @@ export function ReportesView() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                 activeTab === tab.id
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-[var(--primary)] text-[var(--primary)]'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-t-lg'
               }`}
             >
@@ -312,29 +312,29 @@ export function ReportesView() {
         <div className="mt-5 space-y-5">
           <Card>
             <h3 className="text-sm font-bold text-theme-text mb-4 flex items-center gap-2">
-              <Settings size={16} className="text-indigo-500" />
+              <Settings size={16} className="text-[var(--primary)]" />
               Datos del Informe
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Nombre del Colegio</label>
-                <input type="text" value={config.schoolName} onChange={e => setConfig(prev => ({ ...prev, schoolName: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                <input type="text" value={config.schoolName} onChange={e => setConfig(prev => ({ ...prev, schoolName: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Profesor(a)</label>
-                <input type="text" value={config.teacher} onChange={e => setConfig(prev => ({ ...prev, teacher: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                <input type="text" value={config.teacher} onChange={e => setConfig(prev => ({ ...prev, teacher: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Fecha de Reporte</label>
-                <input type="date" value={config.reportDate} onChange={e => setConfig(prev => ({ ...prev, reportDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                <input type="date" value={config.reportDate} onChange={e => setConfig(prev => ({ ...prev, reportDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Nota Minima</label>
-                <input type="number" step="0.1" value={config.minGrade} onChange={e => setConfig(prev => ({ ...prev, minGrade: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                <input type="number" step="0.1" value={config.minGrade} onChange={e => setConfig(prev => ({ ...prev, minGrade: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">% Exigencia</label>
-                <input type="number" value={config.requiredPercentage} onChange={e => setConfig(prev => ({ ...prev, requiredPercentage: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                <input type="number" value={config.requiredPercentage} onChange={e => setConfig(prev => ({ ...prev, requiredPercentage: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
             </div>
           </Card>
@@ -342,15 +342,15 @@ export function ReportesView() {
           {/* Indicators (read-only from database) */}
           <Card>
             <h3 className="text-sm font-bold text-theme-text mb-4 flex items-center gap-2">
-              <BookOpen size={16} className="text-indigo-500" />
+              <BookOpen size={16} className="text-[var(--primary)]" />
               Indicadores de Evaluacion - {subject} ({course})
             </h3>
             <div className="space-y-2">
               {indicators.map((ind, idx) => (
                 <div key={ind.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200/60">
-                  <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg shrink-0">{idx + 1}</span>
+                  <span className="text-xs font-bold text-[var(--primary)] bg-[var(--primary-tint)] px-2 py-1 rounded-lg shrink-0">{idx + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold text-indigo-600">{ind.oaCode}</span>
+                    <span className="text-[10px] font-bold text-[var(--primary)]">{ind.oaCode}</span>
                     <p className="text-xs text-gray-700 leading-relaxed mt-0.5">{ind.description}</p>
                   </div>
                   <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200 px-2 py-1 rounded-lg shrink-0">{ind.maxPoints} pts</span>
@@ -365,11 +365,11 @@ export function ReportesView() {
           {/* Students */}
           <Card>
             <h3 className="text-sm font-bold text-theme-text mb-4 flex items-center gap-2">
-              <Users size={16} className="text-indigo-500" />
+              <Users size={16} className="text-[var(--primary)]" />
               Estudiantes ({students.length})
             </h3>
             <div className="flex gap-2 mb-4">
-              <input type="text" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStudent()} placeholder="Nombre completo del estudiante..." className="flex-1 px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" />
+              <input type="text" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStudent()} placeholder="Nombre completo del estudiante..." className="flex-1 px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all" />
               <Button variant="primary" size="sm" iconLeft={Plus} onClick={addStudent}>Agregar</Button>
             </div>
             <div className="max-h-60 overflow-y-auto space-y-1">
@@ -408,14 +408,14 @@ export function ReportesView() {
                     <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky left-10 bg-gray-50/80 z-10 min-w-[180px]">Nombre</th>
                     {indicators.map((ind) => (
                       <th key={ind.id} className="p-2 text-[9px] font-bold text-gray-500 uppercase tracking-wider text-center min-w-[70px]">
-                        <div className="text-indigo-600">{ind.oaCode}</div>
+                        <div className="text-[var(--primary)]">{ind.oaCode}</div>
                         <div className="text-[8px] font-normal normal-case tracking-normal text-gray-400 max-w-[80px] truncate" title={ind.description}>{ind.description.slice(0, 25)}...</div>
                       </th>
                     ))}
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-indigo-50/80 min-w-[50px]">Total</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-indigo-50/80 min-w-[45px]">%</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-indigo-50/80 min-w-[40px]">Nota</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-indigo-50/80 min-w-[80px]">Nivel</th>
+                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[50px]">Total</th>
+                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[45px]">%</th>
+                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[40px]">Nota</th>
+                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[80px]">Nivel</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -427,13 +427,13 @@ export function ReportesView() {
                         <td className="p-2 text-xs font-medium text-theme-text sticky left-10 bg-white z-10 truncate max-w-[180px]">{student.name}</td>
                         {indicators.map(ind => (
                           <td key={ind.id} className="p-1 text-center">
-                            <input type="number" min={0} max={ind.maxPoints} value={getScore(student.id, ind.id)} onChange={e => updateScore(student.id, ind.id, Math.min(ind.maxPoints, Math.max(0, Number(e.target.value))))} className="w-11 h-7 text-center text-xs font-semibold rounded-lg border border-gray-200/80 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                            <input type="number" min={0} max={ind.maxPoints} value={getScore(student.id, ind.id)} onChange={e => updateScore(student.id, ind.id, Math.min(ind.maxPoints, Math.max(0, Number(e.target.value))))} className="w-11 h-7 text-center text-xs font-semibold rounded-lg border border-gray-200/80 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
                           </td>
                         ))}
-                        <td className="p-2 text-center text-xs font-bold text-theme-text bg-indigo-50/30">{result?.totalScore ?? 0}</td>
-                        <td className="p-2 text-center text-xs font-semibold text-gray-600 bg-indigo-50/30">{result?.percentage ?? 0}%</td>
-                        <td className="p-2 text-center text-sm font-bold text-theme-text bg-indigo-50/30">{result?.grade.toFixed(1) ?? '-'}</td>
-                        <td className="p-2 text-center bg-indigo-50/30">
+                        <td className="p-2 text-center text-xs font-bold text-theme-text bg-[var(--primary-tint)]/30">{result?.totalScore ?? 0}</td>
+                        <td className="p-2 text-center text-xs font-semibold text-gray-600 bg-[var(--primary-tint)]/30">{result?.percentage ?? 0}%</td>
+                        <td className="p-2 text-center text-sm font-bold text-theme-text bg-[var(--primary-tint)]/30">{result?.grade.toFixed(1) ?? '-'}</td>
+                        <td className="p-2 text-center bg-[var(--primary-tint)]/30">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${getNivelColor(result?.nivelLogro || 'No evaluado')}`}>
                             {getNivelIcon(result?.nivelLogro || 'No evaluado')}
                             {result?.nivelLogro || '-'}
@@ -571,7 +571,7 @@ export function ReportesView() {
                         return (
                           <div key={ind.id} className="p-3 bg-white rounded-xl border border-gray-200/60">
                             <div className="flex justify-between items-start mb-1">
-                              <span className="text-[10px] font-bold text-indigo-600">{ind.oaCode}</span>
+                              <span className="text-[10px] font-bold text-[var(--primary)]">{ind.oaCode}</span>
                               <span className="text-xs font-bold text-theme-text">{score}/{ind.maxPoints}</span>
                             </div>
                             <p className="text-[10px] text-gray-600 leading-relaxed line-clamp-2">{ind.description}</p>
@@ -586,7 +586,7 @@ export function ReportesView() {
                     {/* Observations */}
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Observaciones</label>
-                      <textarea value={student.observations} onChange={e => setStudents(prev => prev.map(s => s.id === student.id ? { ...s, observations: e.target.value } : s))} rows={4} placeholder="Escribe las observaciones del estudiante..." className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none transition-all" />
+                      <textarea value={student.observations} onChange={e => setStudents(prev => prev.map(s => s.id === student.id ? { ...s, observations: e.target.value } : s))} rows={4} placeholder="Escribe las observaciones del estudiante..." className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 resize-none transition-all" />
                     </div>
 
                     {/* Export PDF button per student */}

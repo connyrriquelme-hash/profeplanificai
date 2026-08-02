@@ -23,7 +23,7 @@ export function ClassSessionList({ sessions, onRefresh, onOpenSession }: Props) 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-900">Sesiones</h1>
-        <button onClick={onRefresh} className="text-sm text-violet-600 hover:text-violet-700 font-medium">
+        <button onClick={onRefresh} className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium">
           Actualizar
         </button>
       </div>
@@ -35,7 +35,7 @@ export function ClassSessionList({ sessions, onRefresh, onOpenSession }: Props) 
           placeholder="Buscar por fecha o contenido..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 flex-1 min-w-[200px]"
+          className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] flex-1 min-w-[200px]"
         />
         <div role="group" aria-label="Filtrar por estado" className="flex flex-wrap gap-2">
           {(['all', 'scheduled', 'completed', 'pending_signature', 'signed'] as StatusFilter[]).map(f => (
@@ -44,7 +44,7 @@ export function ClassSessionList({ sessions, onRefresh, onOpenSession }: Props) 
               aria-pressed={statusFilter === f}
               onClick={() => setStatusFilter(f)}
               className={`text-xs font-semibold px-3 py-2 rounded-xl transition ${
-                statusFilter === f ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                statusFilter === f ? 'bg-[var(--primary)] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {f === 'all' ? 'Todas' : f === 'scheduled' ? 'Programadas' : f === 'completed' ? 'Completadas' : f === 'pending_signature' ? 'Pendientes' : 'Firmadas'}
@@ -90,7 +90,7 @@ function ClassSessionCard({ session, onOpen }: { session: ClassbookSession; onOp
     <button
       aria-label={`Abrir sesión del ${session.date}: ${session.planned_content ?? 'Sin contenido planificado'}, estado ${statusLabels[session.status] ?? session.status}`}
       onClick={() => onOpen(session.id)}
-      className="w-full bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-md hover:border-violet-200 transition text-left"
+      className="w-full bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-md hover:border-[var(--primary)] transition text-left"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -113,7 +113,7 @@ function ClassSessionCard({ session, onOpen }: { session: ClassbookSession; onOp
       </div>
       <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
         <span>v{session.version}</span>
-        {session.lesson_instance_id && <span className="text-violet-500">Desde planificación</span>}
+        {session.lesson_instance_id && <span className="text-[var(--primary)]">Desde planificación</span>}
       </div>
     </button>
   );

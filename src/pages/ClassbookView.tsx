@@ -106,7 +106,7 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full space-y-4">
           <h2 className="text-lg font-bold text-slate-900">Acceso restringido</h2>
           <p className="text-sm text-slate-500">No tienes acceso al Libro de Clases Digital.</p>
-          <button onClick={() => onNavigate('dashboard')} className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition">
+          <button onClick={() => onNavigate('dashboard')} className="inline-flex items-center gap-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition">
             Volver al inicio
           </button>
         </div>
@@ -129,7 +129,7 @@ export function ClassbookView({ onNavigate, sessionId }: Props) {
   if (loading && !sessions.length) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

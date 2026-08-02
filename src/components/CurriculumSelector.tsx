@@ -16,7 +16,7 @@ interface CurriculumSelectorProps {
 }
 
 const selectClass =
-  'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100 disabled:opacity-50 disabled:cursor-not-allowed';
+  'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] disabled:opacity-50 disabled:cursor-not-allowed';
 
 export function CurriculumSelector({
   value,
@@ -190,11 +190,11 @@ export function CurriculumSelector({
               </select>
 
               {selection.objectiveCode && (
-                <div className="rounded-xl border border-violet-100 bg-violet-50 px-3.5 py-3">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--primary-tint)] px-3.5 py-3">
                   <div className="flex items-start gap-2">
-                    <CheckCircle2 size={14} className="mt-0.5 flex-shrink-0 text-violet-500" />
+                    <CheckCircle2 size={14} className="mt-0.5 flex-shrink-0 text-[var(--primary)]" />
                     <div>
-                      <p className="font-mono text-xs font-bold text-violet-700">{selection.objectiveCode}</p>
+                      <p className="font-mono text-xs font-bold text-[var(--primary-ink)]">{selection.objectiveCode}</p>
                       <p className="mt-1 text-xs leading-relaxed text-slate-700">{selection.objectiveText}</p>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export function CurriculumSelector({
                   onClick={() => handleSkillToggle(sk.official_text)}
                   className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition ${
                     active
-                      ? 'bg-violet-100 border-violet-300 text-violet-700'
+                      ? 'bg-[var(--primary-tint)] border-[var(--primary)] text-[var(--primary-ink)]'
                       : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                   }`}
                 >
@@ -274,7 +274,7 @@ export function CurriculumSelector({
             {(selection.skills || []).map((skillText) => (
               <span
                 key={skillText}
-                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-violet-100 border-violet-300 text-violet-700"
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-[var(--primary-tint)] border-[var(--primary)] text-[var(--primary-ink)]"
               >
                 {skillText}
               </span>
@@ -323,7 +323,7 @@ export function CurriculumSelector({
             {(selection.skills || []).map((skillText) => (
               <span
                 key={skillText}
-                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-violet-100 border-violet-300 text-violet-700"
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border bg-[var(--primary-tint)] border-[var(--primary)] text-[var(--primary-ink)]"
               >
                 {skillText}
                 <button
@@ -332,7 +332,7 @@ export function CurriculumSelector({
                     const next = (selection.skills || []).filter(s => s !== skillText);
                     handleChange({ skills: next });
                   }}
-                  className="text-violet-400 hover:text-red-500 transition ml-0.5"
+                  className="text-[var(--primary)] hover:text-red-500 transition ml-0.5"
                 >
                   <X size={10} />
                 </button>
@@ -355,7 +355,7 @@ export function CurriculumSelector({
                 }
               }}
               placeholder="Escribir habilidad y presionar Enter o Agregar"
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)]"
             />
             <button
               type="button"
@@ -408,7 +408,7 @@ export function CurriculumSelector({
               onChange={(e) => setCriteriaInput(e.target.value)}
               onKeyDown={handleCriteriaKeyDown}
               placeholder="Escribir criterio y presionar Enter"
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)]"
             />
             <button
               type="button"
