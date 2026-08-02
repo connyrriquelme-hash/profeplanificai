@@ -469,7 +469,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         {/* ── Cascading selectors ── */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Nivel educativo</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Nivel educativo</label>
             <select
               value={selectedNivel}
               onChange={e => handleNivelChange(e.target.value)}
@@ -480,7 +480,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Curso</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Curso</label>
             <select
               value={selectedCurso?.id || ''}
               onChange={e => handleCursoChange(e.target.value)}
@@ -502,7 +502,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Asignatura</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Asignatura</label>
             <select
               value={selectedAsignatura}
               onChange={e => handleAsignaturaChange(e.target.value)}
@@ -520,10 +520,10 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         {/* ── OA search and selector ── */}
         <div className="space-y-3">
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Objetivo (OA)</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Objetivo (OA)</label>
             {selectedAsignatura && (
               <div style={{ position: 'relative', marginBottom: 6 }}>
-                <Search size={13} style={{ position: 'absolute', left: 10, top: 9, color: 'var(--muted2)', pointerEvents: 'none' }} />
+                <Search size={13} style={{ position: 'absolute', left: 10, top: 9, color: 'var(--ink-soft)', pointerEvents: 'none' }} />
                 <input
                   type="text"
                   value={oaSearch}
@@ -566,14 +566,14 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                 ));
               })()}
             </select>
-            {loadingOAs && <div className="text-[10px] flex items-center gap-1" style={{ color: 'var(--muted2)' }}><Loader size={10} className="spin" /> Cargando objetivos desde la base curricular…</div>}
+            {loadingOAs && <div className="text-[10px] flex items-center gap-1" style={{ color: 'var(--ink-soft)' }}><Loader size={10} className="spin" /> Cargando objetivos desde la base curricular…</div>}
             {fetchedOAs.length > 0 && !loadingOAs && (
-              <div className="text-[10px]" style={{ color: 'var(--muted2)' }}>Objetivos encontrados: {fetchedOAs.length}</div>
+              <div className="text-[10px]" style={{ color: 'var(--ink-soft)' }}>Objetivos encontrados: {fetchedOAs.length}</div>
             )}
-            {oaError && !loadingOAs && <div className="text-[10px]" style={{ color: 'var(--muted2)' }}>{oaError}</div>}
+            {oaError && !loadingOAs && <div className="text-[10px]" style={{ color: 'var(--ink-soft)' }}>{oaError}</div>}
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Habilidad</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">Habilidad</label>
             <select
               value={selectedHabilidad}
               onChange={e => setSelectedHabilidad(e.target.value)}
@@ -586,7 +586,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">TEMA DE LA CLASE</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }} className="text-[10px] sm:text-[11px] lg:text-xs">TEMA DE LA CLASE</label>
             <input
               type="text"
               value={lessonTheme}
@@ -600,7 +600,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
               }}
               className="text-[13px] sm:text-sm"
             />
-            <p style={{ fontSize: 10, color: 'var(--muted2)', marginTop: 4 }}>
+            <p style={{ fontSize: 10, color: 'var(--ink-soft)', marginTop: 4 }}>
               Opcional. Ayuda a contextualizar la clase sin cambiar el OA.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
@@ -611,7 +611,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   style={{
                     padding: '4px 10px', borderRadius: 999, border: '1px solid var(--line)',
                     background: lessonTheme === tema ? 'var(--primary-tint)' : 'var(--card)',
-                    color: lessonTheme === tema ? 'var(--primary)' : 'var(--muted2)',
+                    color: lessonTheme === tema ? 'var(--primary)' : 'var(--ink-soft)',
                     fontSize: 10, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'all 0.15s',
                   }}
@@ -623,7 +623,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
             </div>
             {selectedAsignatura && (
               <details style={{ marginTop: 4 }}>
-                <summary style={{ fontSize: 10, color: 'var(--muted2)', cursor: 'pointer' }}>Temas sugeridos para {selectedAsignatura}</summary>
+                <summary style={{ fontSize: 10, color: 'var(--ink-soft)', cursor: 'pointer' }}>Temas sugeridos para {selectedAsignatura}</summary>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
                   {(() => {
                     const sugeridos: Record<string, string[]> = {
@@ -642,7 +642,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                         style={{
                           padding: '4px 10px', borderRadius: 999, border: '1px solid var(--line)',
                           background: lessonTheme === t ? 'var(--primary-tint)' : 'var(--card)',
-                          color: lessonTheme === t ? 'var(--primary)' : 'var(--muted2)',
+                          color: lessonTheme === t ? 'var(--primary)' : 'var(--ink-soft)',
                           fontSize: 10, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
                           transition: 'all 0.15s',
                         }}
@@ -660,7 +660,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
 
         {selectedOA && (
           <div className="rounded-xl border" style={{ borderColor: 'var(--line)', background: 'var(--card)', overflow: 'hidden' }}>
-            <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider flex items-center justify-between" style={{ color: 'var(--muted2)', borderBottom: '1px solid var(--line)', background: 'var(--surface)' }}>
+            <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider flex items-center justify-between" style={{ color: 'var(--ink-soft)', borderBottom: '1px solid var(--line)', background: 'var(--surface)' }}>
               <span>Contexto Curricular</span>
               {loadingContext && <Loader size={12} className="spin" />}
             </div>
@@ -670,13 +670,13 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
               {/* Indicadores */}
               {selectedOA.indicadores.length > 0 ? (
                 <div>
-                  <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--muted2)' }}>
+                  <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--ink-soft)' }}>
                     Indicadores
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--primary-tint)] text-[var(--primary-ink)]">{selectedInds.size}/{selectedOA.indicadores.length}</span>
                   </div>
                   <div className="flex gap-1 mb-1">
-                    <button onClick={() => setSelectedInds(new Set(selectedOA.indicadores.map((_, i) => i)))} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Todo</button>
-                    <button onClick={() => setSelectedInds(new Set())} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--muted2)' }}>Ninguno</button>
+                    <button onClick={() => setSelectedInds(new Set(selectedOA.indicadores.map((_, i) => i)))} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)' }}>Todo</button>
+                    <button onClick={() => setSelectedInds(new Set())} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ borderColor: 'var(--line)', color: 'var(--ink-soft)' }}>Ninguno</button>
                   </div>
                   <div className="space-y-0.5 max-h-32 overflow-y-auto">
                     {selectedOA.indicadores.map((ind, i) => (
@@ -692,13 +692,13 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   </div>
                 </div>
               ) : (
-                <div className="text-[11px] italic" style={{ color: 'var(--muted2)' }}>Indicadores aún no cargados para este OA</div>
+                <div className="text-[11px] italic" style={{ color: 'var(--ink-soft)' }}>Indicadores aún no cargados para este OA</div>
               )}
 
               {/* Textos escolares */}
               {curricularContext?.textbookReferences && curricularContext.textbookReferences.length > 0 ? (
                 <div>
-                  <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--muted2)' }}>
+                  <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--ink-soft)' }}>
                     Textos escolares
                     {curricularContext.textbookReferences[0]?.sourceType === 'metadata' ? (
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-600">Pendiente de validación oficial</span>
@@ -715,13 +715,13 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   </ul>
                 </div>
               ) : (
-                <div className="text-[11px] italic" style={{ color: 'var(--muted2)' }}>Sin referencias de texto escolar cargadas</div>
+                <div className="text-[11px] italic" style={{ color: 'var(--ink-soft)' }}>Sin referencias de texto escolar cargadas</div>
               )}
 
               {/* Guías docentes */}
               {curricularContext?.teacherGuideReferences && curricularContext.teacherGuideReferences.length > 0 ? (
                 <div>
-                  <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--muted2)' }}>
+                  <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--ink-soft)' }}>
                     Guías docentes
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700">Derivado por IA</span>
                   </div>
@@ -732,14 +732,14 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   </ul>
                 </div>
               ) : (
-                <div className="text-[11px] italic" style={{ color: 'var(--muted2)' }}>Sin guías docentes asociadas cargadas</div>
+                <div className="text-[11px] italic" style={{ color: 'var(--ink-soft)' }}>Sin guías docentes asociadas cargadas</div>
               )}
 
               {/* Complejidad */}
               {complexityAnalysis && (
                 <div>
                   <div className="flex items-center gap-2 pt-1">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--muted2)' }}>Complejidad:</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--ink-soft)' }}>Complejidad:</span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                       complexityAnalysis.complexity === 'baja' ? 'bg-green-100 text-green-700' :
                       complexityAnalysis.complexity === 'media' ? 'bg-yellow-100 text-yellow-700' :
@@ -760,7 +760,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
 
         {selectedOA && (
           <div className="flex items-center gap-2 flex-wrap">
-            <label className="text-xs font-semibold" style={{ color: 'var(--muted2)' }}>Duración de la secuencia:</label>
+            <label className="text-xs font-semibold" style={{ color: 'var(--ink-soft)' }}>Duración de la secuencia:</label>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(n => (
                 <button
@@ -776,7 +776,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                 </button>
               ))}
             </div>
-            <span className="text-[10px]" style={{ color: 'var(--muted2)' }}>
+            <span className="text-[10px]" style={{ color: 'var(--ink-soft)' }}>
               {numberOfLessons === 1 ? 'clase' : 'clases'}{complexityAnalysis?.recommendedLessons ? ` (recomendado: ${complexityAnalysis.recommendedLessons})` : ''}
             </span>
           </div>
@@ -787,7 +787,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         </aside>
 
         {/* ── Debug diagnostics ── */}
-        <details className="text-[10px]" style={{ color: 'var(--muted2)' }}>
+        <details className="text-[10px]" style={{ color: 'var(--ink-soft)' }}>
           <summary className="cursor-pointer select-none">Diagnóstico (click para ver)</summary>
           <pre className="mt-1 p-2 rounded" style={{ background: 'var(--surface)', overflow: 'auto', maxHeight: 200, fontSize: 9, lineHeight: 1.4 }}>
 {`nivelEducativo: ${selectedNivel}
@@ -806,7 +806,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
       <div className="lg:col-span-8 space-y-5">
 
         <div style={{ marginBottom: 4 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Título de la planificación</label>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Título de la planificación</label>
           <input
             type="text"
             value={lessonTitle}
