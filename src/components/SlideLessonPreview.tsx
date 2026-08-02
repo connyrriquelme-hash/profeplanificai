@@ -659,8 +659,8 @@ export function SlideLessonPreview({ lesson, onExportPDF, onSave, onShare }: Sli
 
       {/* Collapsible teacher notes */}
       {showNotes && slide.teacherNotes && (
-        <Card variant="default" className="p-3 border-l-4 border-indigo-400 bg-indigo-50/50">
-          <p className="text-xs text-indigo-700 leading-relaxed">{slide.teacherNotes}</p>
+        <Card variant="default" className="p-3 border-l-4 border-[var(--primary)] bg-[var(--primary-tint)]/50">
+          <p className="text-xs text-[var(--primary-ink)] leading-relaxed">{slide.teacherNotes}</p>
         </Card>
       )}
     </div>

@@ -73,7 +73,7 @@ function SectionCard({ section }: { section: ProductSection }) {
     <div className="mb-4">
       {section.title && (
         <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
           {section.title}
         </h4>
       )}
@@ -87,8 +87,8 @@ function TableCard({ table }: { table: ProductTable }) {
   return (
     <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
       {table.title && (
-        <div className="bg-blue-50 px-4 py-2 border-b border-gray-200">
-          <h4 className="text-sm font-semibold text-blue-800">{table.title}</h4>
+        <div className="bg-[var(--primary-tint)] px-4 py-2 border-b border-gray-200">
+          <h4 className="text-sm font-semibold text-[var(--primary-ink)]">{table.title}</h4>
         </div>
       )}
       <div className="overflow-x-auto">
@@ -154,7 +154,7 @@ function ChartCard({ chart }: { chart: ProductChart }) {
             <span className="text-xs text-gray-600 w-24 text-right truncate">{d.label}</span>
             <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all"
+                className="h-full bg-[var(--primary)] rounded-full transition-all"
                 style={{ width: `${Math.max((d.value / maxVal) * 100, 4)}%` }}
               />
             </div>
@@ -201,9 +201,9 @@ export default function ProductPreview({ product, onExportPDF, onCopy, onPrint }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+      <div className="bg-[var(--primary)] px-6 py-4">
         <h2 className="text-lg font-bold text-white leading-tight">{product.title}</h2>
-        <p className="text-blue-100 text-xs mt-1">{resourceTypeLabel(product.type)}</p>
+        <p className="text-[#FFF6ED]/80 text-xs mt-1">{resourceTypeLabel(product.type)}</p>
       </div>
 
       {metaChips.length > 0 && (
@@ -272,7 +272,7 @@ export default function ProductPreview({ product, onExportPDF, onCopy, onPrint }
           {onExportPDF && (
             <button
               onClick={onExportPDF}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-white bg-[var(--primary)] rounded-lg hover:bg-[var(--primary-hover)] transition-colors"
             >
               Exportar PDF
             </button>
