@@ -35,37 +35,37 @@ export function CurriculumCallout({
 
   return (
     <div
-      className={`curriculum-callout bg-indigo-50 border border-indigo-200 rounded-xl p-4 md:p-5 ${className || ''}`}
+      className={`curriculum-callout bg-[var(--primary-tint)] border border-[var(--border)] rounded-xl p-4 md:p-5 ${className || ''}`}
       style={style}
       role="complementary"
       aria-label="Referencia curricular"
     >
       <div className="flex items-center gap-2 mb-3">
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
-        <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wide">Referencia Curricular</h3>
+        <h3 className="text-sm font-bold text-[var(--primary-ink)] uppercase tracking-wide">Referencia Curricular</h3>
       </div>
 
       <div className="space-y-2">
         {oaCode && (
           <div className="flex items-start gap-2">
-            <span className="px-2 py-0.5 text-xs font-mono font-bold bg-indigo-100 text-indigo-800 rounded flex-shrink-0">
+            <span className="px-2 py-0.5 text-xs font-mono font-bold bg-[var(--primary-tint)] text-[var(--primary-ink)] rounded flex-shrink-0">
               {oaCode}
             </span>
             {oaText && (
-              <span className="text-indigo-900 text-sm leading-relaxed">{oaText}</span>
+              <span className="text-[var(--primary-ink)] text-sm leading-relaxed">{oaText}</span>
             )}
           </div>
         )}
 
         {(!oaCode && oaText) && (
-          <p className="text-indigo-900 text-sm leading-relaxed">{oaText}</p>
+          <p className="text-[var(--primary-ink)] text-sm leading-relaxed">{oaText}</p>
         )}
 
         <div className="flex flex-wrap gap-2 mt-2">
           {level && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--primary-tint)] text-[var(--primary-ink)]">
               {level}
             </span>
           )}
@@ -78,11 +78,11 @@ export function CurriculumCallout({
 
         {skills && skills.length > 0 && (
           <div className="mt-2">
-            <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Habilidades:</span>
+            <span className="text-xs font-semibold text-[var(--primary-ink)] uppercase tracking-wide">Habilidades:</span>
             <ul className="mt-1 space-y-0.5">
               {skills.map((skill, index) => (
-                <li key={index} className="text-sm text-indigo-800 flex items-start gap-1.5">
-                  <span className="text-indigo-400 mt-1 flex-shrink-0">•</span>
+                <li key={index} className="text-sm text-[var(--primary-ink)] flex items-start gap-1.5">
+                  <span className="text-[var(--primary)] mt-1 flex-shrink-0">•</span>
                   {skill}
                 </li>
               ))}
@@ -91,9 +91,9 @@ export function CurriculumCallout({
         )}
 
         {learningGoal && (
-          <div className="mt-2 pt-2 border-t border-indigo-200">
-            <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Meta de aprendizaje:</span>
-            <p className="text-sm text-indigo-900 mt-1 leading-relaxed">{learningGoal}</p>
+          <div className="mt-2 pt-2 border-t border-[var(--border)]">
+            <span className="text-xs font-semibold text-[var(--primary-ink)] uppercase tracking-wide">Meta de aprendizaje:</span>
+            <p className="text-sm text-[var(--primary-ink)] mt-1 leading-relaxed">{learningGoal}</p>
           </div>
         )}
       </div>

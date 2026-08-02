@@ -41,7 +41,7 @@ export function TeacherInfoFields({
               type="text"
               defaultValue={teacherName || ''}
               placeholder="Nombre del docente"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Nombre del docente"
             />
           ) : (
@@ -60,7 +60,7 @@ export function TeacherInfoFields({
               type="text"
               defaultValue={establishmentName || ''}
               placeholder="Nombre del establecimiento"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Nombre del establecimiento"
             />
           ) : (
@@ -79,7 +79,7 @@ export function TeacherInfoFields({
               type="text"
               defaultValue={subject || ''}
               placeholder="Ej: Ciencias Naturales"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Asignatura"
             />
           ) : (
@@ -98,7 +98,7 @@ export function TeacherInfoFields({
               type="text"
               defaultValue={grade || ''}
               placeholder="Ej: 6° Básico"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Grado o nivel"
             />
           ) : (
