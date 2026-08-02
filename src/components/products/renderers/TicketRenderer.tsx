@@ -47,7 +47,7 @@ export function TicketRenderer({ product, className, style }: TicketRendererProp
             {questions.map((q, index) => (
               <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-sm font-bold flex items-center justify-center">
                     {index + 1}
                   </span>
                   <div className="flex-1">

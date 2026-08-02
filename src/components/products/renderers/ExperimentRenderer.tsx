@@ -106,7 +106,7 @@ export function ExperimentRenderer({ product, className, style }: ExperimentRend
           {steps.map((step, index) => (
             <div key={index} className="flex gap-4">
               <div className="flex-shrink-0 relative">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-sm">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--primary)] text-white font-bold text-sm">
                   {step.step}
                 </span>
                 {index < steps.length - 1 && (

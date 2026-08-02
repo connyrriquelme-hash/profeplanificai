@@ -53,9 +53,9 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
       />
 
       {objective && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-indigo-800 mb-1">Objetivo</h3>
-          <p className="text-indigo-700 text-sm">{objective}</p>
+        <div className="bg-[var(--primary-tint)] border border-[var(--border)] rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-[var(--primary-ink)] mb-1">Objetivo</h3>
+          <p className="text-[var(--primary-ink)] text-sm">{objective}</p>
         </div>
       )}
 

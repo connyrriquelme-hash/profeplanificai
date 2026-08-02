@@ -67,9 +67,9 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
               const key = principle.toLowerCase();
               const icon = Object.entries(principleIcons).find(([k]) => key.includes(k))?.[1] || '📘';
               return (
-                <div key={index} className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 text-center">
+                <div key={index} className="bg-[var(--primary-tint)] border border-[var(--border)] rounded-lg p-4 text-center">
                   <span className="text-2xl">{icon}</span>
-                  <h4 className="text-sm font-semibold text-indigo-800 mt-2">{principle}</h4>
+                  <h4 className="text-sm font-semibold text-[var(--primary-ink)] mt-2">{principle}</h4>
                 </div>
               );
             })}
@@ -84,7 +84,7 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
             <ul className="space-y-2">
               {section.strategies.map((strategy, si) => (
                 <li key={si} className="flex items-start gap-2 text-sm text-gray-700 bg-gray-50 p-2 rounded">
-                  <span className="text-indigo-500 mt-0.5">✦</span>
+                  <span className="text-[var(--primary)] mt-0.5">✦</span>
                   {strategy}
                 </li>
               ))}

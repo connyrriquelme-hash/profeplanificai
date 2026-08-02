@@ -41,7 +41,7 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
 
       <div className="flex flex-wrap gap-3">
         {totalPoints && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--primary-tint)] text-[var(--primary-ink)]">
             Puntaje total: {totalPoints} pts
           </span>
         )}
@@ -67,7 +67,7 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
             {questions.map((q, index) => (
               <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-sm font-bold flex items-center justify-center">
                     {index + 1}
                   </span>
                   <div className="flex-1">
@@ -88,11 +88,11 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                     {q.type === 'closed' && (
                       <div className="mt-3 flex gap-4">
                         <label className="flex items-center gap-2 text-sm text-gray-700">
-                          <input type="radio" name={`q-${index}`} className="text-indigo-600 focus:ring-indigo-500" />
+                          <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Verdadero
                         </label>
                         <label className="flex items-center gap-2 text-sm text-gray-700">
-                          <input type="radio" name={`q-${index}`} className="text-indigo-600 focus:ring-indigo-500" />
+                          <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Falso
                         </label>
                       </div>
@@ -101,11 +101,11 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                     {q.type === 'verdadero_falso' && (
                       <div className="mt-3 flex gap-4">
                         <label className="flex items-center gap-2 text-sm text-gray-700">
-                          <input type="radio" name={`q-${index}`} value="V" className="text-indigo-600 focus:ring-indigo-500" />
+                          <input type="radio" name={`q-${index}`} value="V" className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Verdadero (V)
                         </label>
                         <label className="flex items-center gap-2 text-sm text-gray-700">
-                          <input type="radio" name={`q-${index}`} value="F" className="text-indigo-600 focus:ring-indigo-500" />
+                          <input type="radio" name={`q-${index}`} value="F" className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Falso (F)
                         </label>
                       </div>
@@ -115,7 +115,7 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                       <div className="mt-3 space-y-2">
                         {(q.options as string[]).map((option, oi) => (
                           <label key={oi} className="flex items-center gap-2 text-sm text-gray-700">
-                            <input type="radio" name={`q-${index}`} className="text-indigo-600 focus:ring-indigo-500" />
+                            <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                             {option}
                           </label>
                         ))}
@@ -128,7 +128,7 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                           const letter = String.fromCharCode(65 + oi); // 0 -> A, 1 -> B, etc.
                           return (
                             <label key={oi} className="flex items-center gap-2 text-sm text-gray-700">
-                              <input type="radio" name={`q-${index}`} className="text-indigo-600 focus:ring-indigo-500" />
+                              <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                               {letter}) {option.text}
                             </label>
                           );

@@ -94,10 +94,10 @@ export function ScientificNotebookRenderer({
           <ProductSection title="Introducción" icon="📚">
             <div className="space-y-4">
               <p className="text-gray-700 leading-relaxed">
-                <span className="font-semibold text-indigo-700">¿Qué exploraremos hoy?:</span> {notebook.intro.motivatingQuestion}
+                <span className="font-semibold text-[var(--primary-ink)]">¿Qué exploraremos hoy?:</span> {notebook.intro.motivatingQuestion}
               </p>
-              <p className="text-gray-600 text-sm leading-relaxed bg-indigo-50 p-3 rounded-lg">
-                <span className="font-semibold text-indigo-700">Explicación amigable:</span> {notebook.intro.childFriendlyExplanation}
+              <p className="text-gray-600 text-sm leading-relaxed bg-[var(--primary-tint)] p-3 rounded-lg">
+                <span className="font-semibold text-[var(--primary-ink)]">Explicación amigable:</span> {notebook.intro.childFriendlyExplanation}
               </p>
               <p className="text-gray-600 text-sm leading-relaxed bg-teal-50 p-3 rounded-lg">
                 <span className="font-semibold text-teal-700">Instrucción visual:</span> {notebook.intro.visualPrompt}
@@ -159,7 +159,7 @@ export function ScientificNotebookRenderer({
             ) : (
               <div className="space-y-3">
                 <p className="text-gray-700">
-                  <span className="font-semibold text-indigo-700">Pregunta:</span> {notebook.hypothesis.prompt}
+                  <span className="font-semibold text-[var(--primary-ink)]">Pregunta:</span> {notebook.hypothesis.prompt}
                 </p>
                 {notebook.hypothesis.sentenceStarter && (
                   <p className="text-gray-600 text-sm">
@@ -182,19 +182,19 @@ export function ScientificNotebookRenderer({
         <ProductSection title="Preguntas" icon="💬">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-indigo-700 mb-2">¿Antes?</h4>
+              <h4 className="font-semibold text-[var(--primary-ink)] mb-2">¿Antes?</h4>
               <p className="text-gray-700 text-sm">{notebook.questions.before}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-indigo-700 mb-2">¿Durante?</h4>
+              <h4 className="font-semibold text-[var(--primary-ink)] mb-2">¿Durante?</h4>
               <p className="text-gray-700 text-sm">{notebook.questions.during}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-indigo-700 mb-2">¿Después?</h4>
+              <h4 className="font-semibold text-[var(--primary-ink)] mb-2">¿Después?</h4>
               <p className="text-gray-700 text-sm">{notebook.questions.after}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-indigo-700 mb-2">Nuevas Preguntas:</h4>
+              <h4 className="font-semibold text-[var(--primary-ink)] mb-2">Nuevas Preguntas:</h4>
               <ul className="text-gray-700 text-sm list-disc list-inside">
                 {notebook.questions.newQuestions.map((q: string, idx: number) => (
                   <li key={idx}>{q}</li>
@@ -214,7 +214,7 @@ export function ScientificNotebookRenderer({
 
             return (
               <div key={key} className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-indigo-700 mb-2 capitalize">{label}</h4>
+                <h4 className="font-semibold text-[var(--primary-ink)] mb-2 capitalize">{label}</h4>
                 <ul className="text-gray-700 text-sm list-disc list-inside">
                   {data.map((item, idx) => (
                     <li key={idx}>{item}</li>

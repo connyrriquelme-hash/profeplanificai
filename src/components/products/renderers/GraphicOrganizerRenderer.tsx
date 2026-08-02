@@ -47,15 +47,15 @@ export function GraphicOrganizerRenderer({ product, className, style }: GraphicO
       />
 
       {instructions && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-          <p className="text-indigo-700 text-sm">{instructions}</p>
+        <div className="bg-[var(--primary-tint)] border border-[var(--border)] rounded-xl p-4">
+          <p className="text-[var(--primary-ink)] text-sm">{instructions}</p>
         </div>
       )}
 
       {centralConcept && (
         <div className="flex justify-center">
-          <div className="bg-indigo-100 border-2 border-indigo-300 rounded-xl px-6 py-3 text-center">
-            <span className="text-indigo-800 font-semibold text-sm">{centralConcept}</span>
+          <div className="bg-[var(--primary-tint)] border-2 border-[var(--primary)] rounded-xl px-6 py-3 text-center">
+            <span className="text-[var(--primary-ink)] font-semibold text-sm">{centralConcept}</span>
           </div>
         </div>
       )}
@@ -78,7 +78,7 @@ export function GraphicOrganizerRenderer({ product, className, style }: GraphicO
                   <ul className="space-y-0.5">
                     {node.children.map((child, ci) => (
                       <li key={ci} className="text-xs text-gray-600 flex items-start gap-1">
-                        <span className="text-indigo-400 mt-0.5">▸</span>
+                        <span className="text-[var(--primary)] mt-0.5">▸</span>
                         {child}
                       </li>
                     ))}
