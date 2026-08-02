@@ -1,49 +1,63 @@
-import { ClipboardCheck, LibraryBig, Boxes, NotebookPen, ArrowRight, Target } from 'lucide-react';
+import { ClipboardCheck, LibraryBig, Boxes, NotebookPen } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
-import { IconBadge } from './ui/IconBadge';
-import { Card } from './ui/Card';
-import { SectionHeader } from './ui/SectionHeader';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardViewProps {
   onNavigate: (view: string, state?: { tab?: string }) => void;
 }
 
 const QUICK_ACTIONS = [
-  { view: 'mis-clases', icon: NotebookPen, color: '#213885', title: 'Mis Clases', desc: 'Organiza tu semana, planifica por OA y guarda recursos automáticamente.' },
-  { view: 'evaluaciones', icon: ClipboardCheck, color: '#893172', title: 'Crear evaluación', desc: 'Crea evaluaciones formativas, sumativas o tipo SIMCE.' },
-  { view: 'banco', icon: LibraryBig, color: '#5F3475', title: 'Explorar OA', desc: 'Navega los Objetivos de Aprendizaje del Currículum Nacional.' },
-  { view: 'banco-recursos', icon: Boxes, color: '#213885', title: 'Banco de Recursos', desc: 'Revisa y gestiona todos tus materiales generados.' },
+  { view: 'mis-clases', icon: NotebookPen, tint: 'var(--primary-tint)', iconColor: 'var(--primary-ink)', title: 'Mis Clases', desc: 'Organiza tu semana, planifica por OA y guarda recursos automáticamente.' },
+  { view: 'evaluaciones', icon: ClipboardCheck, tint: 'var(--warn-bg)', iconColor: 'var(--warn-ink)', title: 'Crear evaluación', desc: 'Crea evaluaciones formativas, sumativas o tipo SIMCE.' },
+  { view: 'banco', icon: LibraryBig, tint: '#E6EEE3', iconColor: 'var(--success-ink)', title: 'Explorar OA', desc: 'Navega los Objetivos de Aprendizaje del Currículum Nacional.' },
+  { view: 'banco-recursos', icon: Boxes, tint: 'var(--primary-tint)', iconColor: 'var(--primary-ink)', title: 'Banco de Recursos', desc: 'Revisa y gestiona todos tus materiales generados.' },
 ];
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
   const { newProject } = useProject();
+  const { user } = useAuth();
 
   const handleClick = (view: string) => {
     if (view === 'workspace') newProject();
     onNavigate(view, view === 'banco-recursos' ? { tab: 'planificaciones' } : undefined);
   };
 
+  const firstName = user?.nombre?.split(' ')[0] || 'Profe';
+
   return (
-    <div className="max-w-6xl mx-auto animate-fade-in">
-      <section>
-        <SectionHeader
-          icon={Target}
-          iconColor="#213885"
-          title="Acciones rápidas"
-          description="Accede a las herramientas principales de ProfePlanificAI."
-        />
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="max-w-6xl mx-auto animate-fade-in flex flex-col gap-7">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-[32px] font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
+          ¡Hola, profe {firstName}!
+        </h1>
+        <p className="text-base text-[var(--ink-soft)]">¿Qué preparamos hoy? Te acompañamos paso a paso.</p>
+      </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-[19px] font-semibold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
+          Acciones rápidas
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {QUICK_ACTIONS.map((a) => {
             const Icon = a.icon;
             return (
-              <Card key={a.view} variant="interactive" onClick={() => handleClick(a.view)} className="flex items-start gap-4 p-5">
-                <IconBadge icon={Icon} size="md" color={a.color} variant="gradient" className="flex-shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-theme-text mb-0.5">{a.title}</h3>
-                  <p className="text-xs text-theme-secondary leading-relaxed line-clamp-2">{a.desc}</p>
+              <button
+                key={a.view}
+                type="button"
+                onClick={() => handleClick(a.view)}
+                className="group flex flex-col items-start gap-2.5 rounded-[20px] bg-[var(--surface)] p-4 text-left shadow-[0_2px_10px_rgba(51,38,28,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(181,71,31,0.18)]"
+              >
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-[14px]"
+                  style={{ backgroundColor: a.tint }}
+                >
+                  <Icon size={22} style={{ color: a.iconColor }} strokeWidth={2} />
                 </div>
-                <ArrowRight size={16} className="text-theme-gray flex-shrink-0 mt-1 transition-colors group-hover:text-theme-primary" />
-              </Card>
+                <div className="flex-1">
+                  <h3 className="text-[15px] font-bold text-[var(--ink)]">{a.title}</h3>
+                  <p className="text-[12.5px] leading-relaxed text-[var(--ink-soft)] line-clamp-2">{a.desc}</p>
+                </div>
+              </button>
             );
           })}
         </div>

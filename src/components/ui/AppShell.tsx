@@ -9,7 +9,7 @@ interface AppShellProps {
 
 export function AppShell({ sidebar, topbar, bottomNav, children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-theme-beige flex w-full">
+    <div className="theme-calida min-h-screen bg-theme-beige flex w-full">
       {sidebar}
       <div className="flex-1 flex flex-col min-w-0">
         {topbar}

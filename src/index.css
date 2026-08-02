@@ -70,6 +70,77 @@
   --header-h: 80px;
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Tema "Cálida educativa" — design_handoff_rediseno_calida/README.md
+   Tokens escondidos bajo la clase .theme-calida (NO en :root desnudo):
+   varios nombres (--bg, --surface, --ink, --success, --success-bg) ya
+   existen en :root con otros valores y los usan componentes compartidos
+   (Stepper, .card, etc). Redefinirlos en :root recolorearía toda la app
+   de golpe antes de migrar cada vista a propósito. La clase se aplica en
+   el wrapper raíz de AppShell.tsx — eso activa los tokens para TODA la
+   app sin cambiar nada visualmente hasta que cada vista migre sus clases,
+   y quitar la clase de AppShell revierte todo al instante.
+   ──────────────────────────────────────────────────────────────────── */
+.theme-calida {
+  /* Colores */
+  --primary: #B5471F;
+  --primary-hover: #9A3A17;
+  --primary-tint: #FBE3D6;
+  --primary-ink: #7C2F13;
+  --bg: #FBF5EC;
+  --sidebar: #F4E8D7;
+  --sidebar-hover: #EEDDC5;
+  --surface: #FFFFFF;
+  --surface-soft: #FFFDF9;
+  --ink: #33261C;
+  --ink-soft: #6B5B4E;
+  --ink-mid: #5A483A;
+  --border: #D9CBB8;
+  --border-strong: #E8DCC9;
+  --success: #5B7B5E;
+  --success-bg: #EAF0E7;
+  --success-ink: #2E4630;
+  --warn-bg: #FCEFD3;
+  --warn-ink: #8A5A00;
+  --accent-honey: #E9A13B;
+
+  /* Tipografia */
+  --font-display: 'Baloo 2', sans-serif;
+  --font-body: 'Nunito Sans', sans-serif;
+
+  /* Radios */
+  --radius-card: 21px;
+  --radius-input: 14px;
+  --radius-icon: 13px;
+  --radius-pill: 999px;
+
+  /* Sombras */
+  --shadow-card: 0 2px 10px rgba(51, 38, 28, 0.06);
+  --shadow-card-hover: 0 6px 18px rgba(181, 71, 31, 0.18);
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* Nunito Sans en body (heredado desde .theme-calida arriba); Baloo 2 solo
+   en headings — el resto de textos (títulos de tarjeta, etc.) lo aplica
+   cada componente puntualmente con font-family:var(--font-display). */
+.theme-calida h1,
+.theme-calida h2 {
+  font-family: var(--font-display);
+}
+
+/* Foco visible (WCAG AA) — README: "outline 2px --primary, offset 2px"
+   en todos los interactivos. */
+.theme-calida button:focus-visible,
+.theme-calida a:focus-visible,
+.theme-calida input:focus-visible,
+.theme-calida [role="button"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 @keyframes gradientShift {
   0%, to { background-position: 0 50%; }
   50% { background-position: 100% 50%; }
