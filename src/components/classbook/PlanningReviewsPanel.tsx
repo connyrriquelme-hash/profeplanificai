@@ -44,7 +44,7 @@ export function PlanningReviewsPanel({ institutionId }: Props) {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div role="status" aria-label="Cargando revisiones" className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+          <div role="status" aria-label="Cargando revisiones" className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">

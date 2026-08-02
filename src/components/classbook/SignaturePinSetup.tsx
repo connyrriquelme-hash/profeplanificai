@@ -68,7 +68,7 @@ export function SignaturePinSetup({ institutionId, onComplete, onCancel }: Props
             maxLength={6}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 tracking-[0.5em] text-center"
+            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] tracking-[0.5em] text-center"
             placeholder="------"
             autoComplete="off"
           />
@@ -82,7 +82,7 @@ export function SignaturePinSetup({ institutionId, onComplete, onCancel }: Props
             maxLength={6}
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 tracking-[0.5em] text-center"
+            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] tracking-[0.5em] text-center"
             placeholder="------"
             autoComplete="off"
           />
@@ -92,14 +92,14 @@ export function SignaturePinSetup({ institutionId, onComplete, onCancel }: Props
       <div className="flex gap-2">
         <button
           onClick={onCancel}
-          className="flex-1 text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+          className="flex-1 text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
         >
           Cancelar
         </button>
         <button
           onClick={handleSubmit}
           disabled={loading || pin.length !== 6 || confirmPin.length !== 6}
-          className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+          className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
         >
           {loading ? 'Configurando...' : 'Configurar PIN'}
         </button>

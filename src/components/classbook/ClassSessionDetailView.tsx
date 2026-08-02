@@ -224,7 +224,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <div role="status" aria-label="Cargando sesión" className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+        <div role="status" aria-label="Cargando sesión" className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -233,7 +233,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
     return (
       <div className="text-center py-12">
         <p className="text-sm text-slate-500">Sesión no encontrada</p>
-        <button onClick={onBack} className="mt-4 text-sm text-violet-600 hover:text-violet-700 font-medium">Volver</button>
+        <button onClick={onBack} className="mt-4 text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium">Volver</button>
       </div>
     );
   }
@@ -271,7 +271,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
   return (
     <div className="space-y-4 max-w-4xl">
       <div className="flex items-center gap-3">
-        <button onClick={onBack} aria-label="Volver a la lista" className="text-slate-400 hover:text-slate-600 transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2">
+        <button onClick={onBack} aria-label="Volver a la lista" className="text-slate-400 hover:text-slate-600 transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M15 19l-7-7 7-7" /></svg>
         </button>
         <div className="flex-1 min-w-0">
@@ -283,7 +283,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {saving && <span className="text-xs text-slate-400 flex items-center gap-1"><span className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" /> Guardando...</span>}
+          {saving && <span className="text-xs text-slate-400 flex items-center gap-1"><span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" /> Guardando...</span>}
         </div>
       </div>
 
@@ -312,7 +312,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
               {!credentialStatus?.configured ? (
                 <button
                   onClick={() => setShowPinSetup(true)}
-                  className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+                  className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
                 >
                   Configurar PIN
                 </button>
@@ -320,14 +320,14 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                 <>
                   <button
                     onClick={() => setShowPinChange(true)}
-                    className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+                    className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
                   >
                     Cambiar PIN
                   </button>
                   {(session.status === 'completed' || session.status === 'pending_signature') && !credentialStatus.locked && !credentialStatus.must_change_pin && (
                     <button
                       onClick={() => setShowSignModal(true)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
                     >
                       Firmar sesión
                     </button>
@@ -346,7 +346,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
               key={s.value}
               onClick={() => handleStatusChange(s.value)}
               disabled={saving || i > statusIndex + 1 || s.value === session.status}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed ${
                 s.value === session.status ? s.color : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
               }`}
             >
@@ -361,7 +361,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition-all focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2 ${
+            className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition-all focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2 ${
               activeTab === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
             }`}
           >
@@ -384,7 +384,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                 value={editedContent}
                 onChange={(e) => handleContentChange(e.target.value)}
                 rows={4}
-                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] resize-none"
                 placeholder="Describe lo realizado en clase..."
               />
             ) : (
@@ -398,7 +398,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                 value={editedNotes}
                 onChange={(e) => handleNotesChange(e.target.value)}
                 rows={2}
-                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] resize-none"
                 placeholder="Notas privadas..."
               />
             ) : (
@@ -407,7 +407,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
           </Section>
           {canEdit && (
             <button onClick={handleSave} disabled={saving} aria-busy={saving}
-              className="bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2">
+              className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2">
               {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>
           )}
@@ -430,7 +430,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                       aria-label={`Asistencia de ${record.student_id}`}
                       value={record.status}
                       onChange={(e) => handleAttendanceChange(record.student_id, e.target.value)}
-                      className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                     >
                       <option value="present">Presente</option>
                       <option value="absent">Ausente</option>
@@ -442,7 +442,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                   </div>
                 ))}
                 <button onClick={handleSaveAttendance} disabled={saving}
-                  className="mt-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2">
+                  className="mt-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2">
                   {saving ? 'Guardando...' : 'Guardar asistencia'}
                 </button>
               </div>
@@ -458,9 +458,9 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input aria-label="ID del estudiante" value={newObsStudent} onChange={(e) => setNewObsStudent(e.target.value)}
-                    placeholder="ID del estudiante" className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                    placeholder="ID del estudiante" className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
                   <select aria-label="Categoría" value={newObsCategory} onChange={(e) => setNewObsCategory(e.target.value)}
-                    className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                    className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                     <option value="academic">Académica</option>
                     <option value="behavioral">Conducta</option>
                     <option value="social">Social</option>
@@ -470,10 +470,10 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                   </select>
                 </div>
                 <textarea aria-label="Contenido de la observación" value={newObsContent} onChange={(e) => setNewObsContent(e.target.value)}
-                  rows={3} className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                  rows={3} className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] resize-none"
                   placeholder="Describe la observación..." />
                 <button onClick={handleCreateObservation} disabled={saving || !newObsStudent.trim() || !newObsContent.trim()}
-                  className="bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2">
+                  className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2">
                   {saving ? 'Guardando...' : 'Crear observación'}
                 </button>
               </div>
@@ -487,7 +487,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
                 {observations.map(obs => (
                   <div key={obs.id} className="p-3 bg-slate-50 rounded-xl">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">{obs.category}</span>
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)]">{obs.category}</span>
                       <span className="text-xs text-slate-400">{obs.student_id}</span>
                       <span className="text-xs text-slate-400">{obs.created_at?.slice(0, 10)}</span>
                     </div>
@@ -513,7 +513,7 @@ export function ClassSessionDetailView({ sessionId, institutionId, onBack, onRef
             <Section title="Indicadores">
               <div className="flex flex-wrap gap-1.5">
                 {parsedIndicators.map((ind, i) => (
-                  <span key={i} className="text-xs bg-violet-50 text-violet-700 px-2 py-1 rounded-lg">{ind}</span>
+                  <span key={i} className="text-xs bg-[var(--primary-tint)] text-[var(--primary-ink)] px-2 py-1 rounded-lg">{ind}</span>
                 ))}
               </div>
             </Section>

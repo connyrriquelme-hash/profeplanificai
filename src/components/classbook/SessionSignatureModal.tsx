@@ -80,7 +80,7 @@ export function SessionSignatureModal({ session, institutionId, onSuccess, onCan
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             onKeyDown={(e) => { if (e.key === 'Enter' && pin.length === 6) handleSign(); }}
-            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500 tracking-[0.5em] text-center"
+            className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] tracking-[0.5em] text-center"
             placeholder="------"
             autoComplete="off"
             autoFocus

@@ -30,7 +30,7 @@ export function ClassbookSidebar({ activeTab, onTabChange, academicYears, select
             const year = academicYears.find(y => y.id === e.target.value);
             if (year) onYearChange(year);
           }}
-          className="mt-1 w-full text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
+          className="mt-1 w-full text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
         >
           {academicYears.map(y => (
             <option key={y.id} value={y.id}>{y.name}</option>
@@ -46,7 +46,7 @@ export function ClassbookSidebar({ activeTab, onTabChange, academicYears, select
             onClick={() => onTabChange(tab.id)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
               activeTab === tab.id
-                ? 'bg-violet-50 text-violet-700'
+                ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)]'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >

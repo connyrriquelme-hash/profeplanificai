@@ -16,7 +16,7 @@ export function ClassbookOverview({ sessions, onNavigate, onRefresh }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-900">Resumen</h1>
-        <button onClick={onRefresh} className="text-sm text-violet-600 hover:text-violet-700 font-medium">
+        <button onClick={onRefresh} className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium">
           Actualizar
         </button>
       </div>
@@ -36,7 +36,7 @@ export function ClassbookOverview({ sessions, onNavigate, onRefresh }: Props) {
           <p className="text-slate-500 text-sm font-medium">No hay sesiones registradas</p>
           <button
             onClick={() => onNavigate('mis-clases')}
-            className="mt-4 text-sm text-violet-600 hover:text-violet-700 font-semibold"
+            className="mt-4 text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-semibold"
           >
             Ir a Mis Clases
           </button>

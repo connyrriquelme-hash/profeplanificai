@@ -74,7 +74,7 @@ export function AttendancePanel({ sessions, institutionId, onRefresh }: Props) {
         aria-label="Seleccionar sesión"
         value={selectedSessionId}
         onChange={(e) => setSelectedSessionId(e.target.value)}
-        className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500"
+        className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
       >
         <option value="">Seleccionar sesión...</option>
         {completedSessions.map(s => (
@@ -92,7 +92,7 @@ export function AttendancePanel({ sessions, institutionId, onRefresh }: Props) {
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div role="status" aria-label="Cargando asistencia" className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+              <div role="status" aria-label="Cargando asistencia" className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : records.length === 0 ? (
             <div className="text-center py-12 text-sm text-slate-500">No hay registros de asistencia</div>
@@ -106,7 +106,7 @@ export function AttendancePanel({ sessions, institutionId, onRefresh }: Props) {
                     value={record.status}
                     onChange={(e) => handleStatusChange(record.student_id, e.target.value)}
                     disabled={!canEdit}
-                    className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50"
+                    className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] disabled:opacity-50"
                   >
                     <option value="present">Presente</option>
                     <option value="absent">Ausente</option>
@@ -125,7 +125,7 @@ export function AttendancePanel({ sessions, institutionId, onRefresh }: Props) {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
+                className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
               >
                 {saving ? 'Guardando...' : 'Guardar asistencia'}
               </button>
