@@ -10,3 +10,9 @@ dist
 local-dev-smoke.*
 tsconfig.tsbuildinfo
 backup-cambios-no-commiteados.patch
+
+# Artefactos locales de desarrollo
+_worker.bundle
+tmp/
+docs/learning/
+public/expedicion/
