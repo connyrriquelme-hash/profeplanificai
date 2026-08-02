@@ -57,7 +57,7 @@ function StepItem({ step, index, total }: { step: ProcedureStep; index: number; 
       <div className="flex gap-4">
         <div className="flex-shrink-0 relative">
           <span
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-sm"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--primary)] text-white font-bold text-sm"
             aria-label={`Paso ${step.step}`}
           >
             {step.step}
@@ -72,14 +72,14 @@ function StepItem({ step, index, total }: { step: ProcedureStep; index: number; 
             
             <div className="space-y-2 mt-3">
               {teacherSupport && (
-                <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                  <div className="flex items-center gap-1.5 text-indigo-800 text-sm mb-1">
+                <div className="bg-[var(--primary-tint)] p-3 rounded-lg border border-[var(--border)]">
+                  <div className="flex items-center gap-1.5 text-[var(--primary-ink)] text-sm mb-1">
                     <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L9.889 15 8 17.361l8-5.554 2.03 1.27L20 9.214V6a2 2 0 00-2-2h-4a2 2 0 00-2 2v.677l-5.606 2.803A1 1 0 012 11.5V6a2 2 0 012-2h4a2 2 0 012 2v.677l5.606 2.803A1 1 0 0118 8.5V8a2 2 0 00-2 2v.677l-8 4.5 2.03 1.27L15 19.17V16a2 2 0 00-2 2h-4a2 2 0 01-2-2v-.677l-5.606-2.803A1 1 0 012 11.5V6a2 2 0 012-2h4a2 2 0 012 2v.677l5.606 2.803A1 1 0 0118 8.5V8a2 2 0 00-2 2v.677l-8 4.5 2.03 1.27L15 19.17V16a2 2 0 00-2 2h-4a2 2 0 01-2-2v-.677l-5.606-2.803A1 1 0 012 11.5V6a2 2 0 012-2h4a2 2 0 012 2v.677l5.606 2.803A1 1 0 0118 8.5V8a2 2 0 00-2 2v.677l-8 4.5 2.03 1.27L15 19.17V16a2 2 0 00-2 2h-4a2 2 0 01-2-2z" />
                     </svg>
                     <span className="font-medium">Apoyo docente:</span>
                   </div>
-                  <p className="text-indigo-700 text-sm mt-1">{teacherSupport}</p>
+                  <p className="text-[var(--primary-ink)] text-sm mt-1">{teacherSupport}</p>
                 </div>
               )}
               {studentAction && (

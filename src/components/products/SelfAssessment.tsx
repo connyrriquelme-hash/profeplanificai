@@ -25,7 +25,7 @@ export function SelfAssessment({ checklist, className, style }: SelfAssessmentPr
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-4 h-4 text-[var(--primary)] border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
               aria-label={`${item}`}
             />
             <span className="text-gray-700 text-sm">{item}</span>

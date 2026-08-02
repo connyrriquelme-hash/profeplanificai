@@ -35,12 +35,12 @@ export function ProductHeader({
   style,
 }: ProductHeaderProps) {
   return (
-    <header className={`product-header overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-xl shadow-violet-100/50 print:shadow-none ${className || ''}`} style={style}>
-      <div className="h-2 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 print:hidden" />
+    <header className={`product-header overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-xl shadow-black/5 print:shadow-none ${className || ''}`} style={style}>
+      <div className="h-2 bg-[var(--primary)] print:hidden" />
       <div className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
-          <span className="inline-flex items-center rounded-full bg-violet-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-violet-700 print:bg-transparent print:px-0">
+          <span className="inline-flex items-center rounded-full bg-[var(--primary-tint)] px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--primary-ink)] print:bg-transparent print:px-0">
             ProfePlanificAI
           </span>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h1>
@@ -50,7 +50,7 @@ export function ProductHeader({
         </div>
         <div className="flex flex-wrap items-center gap-2 md:gap-4">
           {level && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--primary-tint)] text-[var(--primary-ink)]">
               {level}
             </span>
           )}
@@ -89,7 +89,7 @@ export function ProductHeader({
         <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
           {oaCode && (
             <div className="flex items-start gap-2">
-              <span className="px-2 py-0.5 text-xs font-mono font-semibold bg-indigo-50 text-indigo-700 rounded flex-shrink-0">
+              <span className="px-2 py-0.5 text-xs font-mono font-semibold bg-[var(--primary-tint)] text-[var(--primary-ink)] rounded flex-shrink-0">
                 {oaCode}
               </span>
               <span className="text-gray-700 text-sm flex-1">{oaText}</span>

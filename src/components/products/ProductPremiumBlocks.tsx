@@ -120,10 +120,10 @@ export function PremiumTable({ table }: { table: TableLike }) {
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-violet-50">
+          <thead className="bg-[var(--primary-tint)]">
             <tr>
               {columns.map((column, index) => (
-                <th key={index} className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-wider text-violet-700">
+                <th key={index} className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-wider text-[var(--primary-ink)]">
                   {column}
                 </th>
               ))}
@@ -167,7 +167,7 @@ export function PremiumChart({ chart }: { chart: ChartLike }) {
                 <span>{value}</span>
               </div>
               <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${width}%` }} />
+                <div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${width}%` }} />
               </div>
             </div>
           );
@@ -252,7 +252,7 @@ export function ProductImage({ image, className, compact = false, loading = fals
       {onRegenerate && (
         <button
           onClick={onRegenerate}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm border border-slate-200 print:hidden"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-600 hover:text-[var(--primary)] rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm border border-slate-200 print:hidden"
           title="Regenerar imagen"
         >
           ↻ Regenerar
@@ -290,7 +290,7 @@ function renderNestedValue(value: unknown, depth: number): React.ReactNode {
       <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
         {value.filter(isRenderableValue).map((item, index) => (
           <li key={index} className="flex items-start gap-2">
-            <span className="text-violet-500 mt-0.5">•</span>
+            <span className="text-[var(--primary)] mt-0.5">•</span>
             <span className="min-w-0 flex-1">
               {asRecord(item) ? <PremiumKeyValueGrid data={item} depth={depth + 1} /> : asString(item)}
             </span>

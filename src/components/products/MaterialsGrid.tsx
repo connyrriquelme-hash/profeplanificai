@@ -31,11 +31,11 @@ export function MaterialsGrid({ materials, className, style }: MaterialsGridProp
       {materials.map((material, index) => (
         <article
           key={index}
-          className="material-card bg-white border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
+          className="material-card bg-white border border-gray-200 rounded-lg p-4 hover:border-[var(--primary)] hover:shadow-sm transition-all"
         >
           <div className="flex items-start gap-3">
             <div
-              className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-xl"
+              className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--primary-tint)] flex items-center justify-center text-xl"
               aria-hidden="true"
             >
               {material.icon}
