@@ -109,63 +109,82 @@ describe('ProductRenderer registry normalizers', () => {
   });
 
   describe('normalizeGuide', () => {
-    it('normalizes guia_estudiante', () => {
-      const raw = {
-        title: 'Guía: MA07 OA 12',
-        subtitle: '4° Básico — Matemática',
-        objective: 'Demostrar comprensión',
-        activities: [
-          { name: 'Actividad 1', description: 'Activación', steps: ['Paso 1', 'Paso 2'] },
-        ],
-        instructions: 'Lee atentamente',
-      };
-      const result = normalizeGuide(raw, 'guia_estudiante');
+    // Raw shape actual: GuiaEngine (functions/core/GuiaEngine.ts) ya devuelve
+    // { title, objective, sections: GuideSection[] } directamente — el
+    // normalizer es un passthrough, ya no traduce nombres de campo ni
+    // reconstruye materials/evaluation/duration desde las secciones.
+    const rawEstudiante = {
+      title: 'Guía: MA07 OA 12',
+      objective: 'Demostrar comprensión del OA en lenguaje del estudiante',
+      sections: [
+        { title: 'Introducción', content: 'Vamos a aprender...' },
+        { title: 'Vocabulario clave', content: 'fracción, numerador', activities: ['Definición de fracción con ejemplo cotidiano.', 'Definición de numerador con ejemplo cotidiano.'] },
+        { title: 'Actividad 1: Activación', content: 'Responde lo que ya sabes.', activities: ['Paso 1', 'Paso 2'] },
+        { title: 'Actividad 2: Desarrollo', content: 'Lee y responde.', activities: ['Paso 1', 'Paso 2'] },
+        { title: 'Reflexión / Autoevaluación', content: '', activities: ['Puedo explicar...', 'Todavía me cuesta...'] },
+      ],
+      images: [{ url: 'https://example.com/img.png', alt: 'Imagen', source: 'test', attribution: '' }],
+      imageTitles: ['Introducción'],
+    };
+
+    const rawDocente = {
+      title: 'Guía Docente: MA07 OA 12',
+      objective: 'OA en registro docente, preciso y accionable',
+      sections: [
+        { title: 'Inicio (15 min)', content: 'Activación de conocimientos previos.' },
+        { title: 'Desarrollo (50 min)', content: 'Modelado explícito: yo hago, hacemos juntos, tú haces.' },
+        { title: 'Cierre (15 min)', content: 'Síntesis y ticket de salida.' },
+        { title: 'Diferenciación / Adecuaciones DUA', content: '', activities: ['Adecuación para dificultades', 'Extensión para avanzados'] },
+        { title: 'Materiales y evaluación', content: 'Duración total: 90 minutos. Evaluación formativa.', activities: ['Pizarra', 'Guía impresa'] },
+      ],
+    };
+
+    it('normaliza guia_estudiante: sections pasa directo como GuideSection[], objective presente', () => {
+      const result = normalizeGuide(rawEstudiante, 'guia_estudiante');
       expect(result).not.toBeNull();
       expect(result!.type).toBe('guia_estudiante');
       expect(result!.metadata.title).toBe('Guía: MA07 OA 12');
-      expect((result!.data.sections as unknown[]).length).toBe(1);
+      expect(result!.data.objective).toBe(rawEstudiante.objective);
+
+      // Passthrough real: mismo array, no una reconstrucción campo a campo.
+      expect(result!.data.sections).toBe(rawEstudiante.sections);
+      const sections = result!.data.sections as Array<{ title: string; content: string; activities?: string[] }>;
+      expect(sections.length).toBe(5);
+      expect(sections.every((s) => typeof s.title === 'string' && typeof s.content === 'string')).toBe(true);
+
+      expect(result!.data.images).toEqual(rawEstudiante.images);
+      expect(result!.data.imageTitles).toEqual(rawEstudiante.imageTitles);
     });
 
-    it('normalizes guia_docente (buildTeacherGuide shape — no activities array)', () => {
-      // Mirrors functions/api/materials/guide.ts buildTeacherGuide() output.
-      const raw = {
-        title: 'Guía Docente: MA07 OA 12',
-        subtitle: '4° Básico — Matemática',
-        objective: 'Demostrar comprensión',
-        duration: '90 minutos',
-        materials: ['Guía impresa', 'Pizarra o proyector'],
-        opening: { activity: 'Activación de conocimientos previos', time: '15 min', instructions: 'Presentar pregunta inicial.' },
-        development: { activity: 'Explicación del concepto clave', time: '50 min', instructions: 'Modelar el concepto.' },
-        closure: { activity: 'Síntesis y ticket de salida', time: '15 min', instructions: 'Cierre positivo.' },
-        differentiation: ['Ofrecer apoyo visual', 'Permitir respuesta oral o escrita'],
-        assessment: 'Evaluación formativa mediante observación.',
-      };
-      const result = normalizeGuide(raw, 'guia_docente');
+    it('normaliza guia_docente: mismo passthrough que guia_estudiante (ya no hay lógica separada)', () => {
+      const result = normalizeGuide(rawDocente, 'guia_docente');
       expect(result).not.toBeNull();
       expect(result!.type).toBe('guia_docente');
+      expect(result!.data.objective).toBe(rawDocente.objective);
+      expect(result!.data.sections).toBe(rawDocente.sections);
 
       const sections = result!.data.sections as Array<{ title: string; content: string }>;
-      expect(sections.length).toBe(4); // opening, development, closure, differentiation
+      expect(sections.length).toBe(5);
       expect(sections[0].title).toBe('Inicio (15 min)');
-      expect(sections[0].content).toContain('Activación de conocimientos previos');
-      expect(sections[3].title).toBe('Diferenciación / Adecuaciones DUA');
-      expect(sections[3].content).toContain('Ofrecer apoyo visual');
+      expect(sections[4].title).toBe('Materiales y evaluación');
 
-      expect(result!.data.materials).toEqual(['Guía impresa', 'Pizarra o proyector']);
-      expect(result!.data.evaluation).toBe('Evaluación formativa mediante observación.');
-      expect(result!.data.duration).toBe('90 minutos');
+      // Los campos legacy (materials/evaluation/duration como top-level en
+      // data) ya no existen — la información vive dentro de sections.
+      expect(result!.data.materials).toBeUndefined();
+      expect(result!.data.evaluation).toBeUndefined();
+      expect(result!.data.duration).toBeUndefined();
     });
 
-    it('normalizes guia_docente with missing optional fields', () => {
+    it('no truena si sections viene ausente (no revienta con el shape nuevo)', () => {
       const raw = { title: 'Guía Docente' };
       const result = normalizeGuide(raw, 'guia_docente');
       expect(result).not.toBeNull();
       expect(result!.type).toBe('guia_docente');
-      expect((result!.data.sections as unknown[]).length).toBe(0);
+      expect(result!.data.sections).toBeUndefined();
     });
 
     it('returns null for missing title', () => {
-      expect(normalizeGuide({ activities: [] }, 'guia_estudiante')).toBeNull();
+      expect(normalizeGuide({ sections: [] }, 'guia_estudiante')).toBeNull();
     });
   });
 

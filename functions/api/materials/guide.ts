@@ -1,4 +1,6 @@
 import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+import { generateGuia, type GuiaEngineInput } from '../../core/GuiaEngine';
+import type { AIEngineEnv } from '../../core/types';
 
 interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
@@ -38,42 +40,51 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     ).bind(body.objectiveCode).all();
 
     // Build guide structure
-    const guide = body.type === 'guia_estudiante'
-      ? buildStudentGuide(body, objective as any, (indicators as any)?.results || [])
-      : buildTeacherGuide(body, objective as any, (indicators as any)?.results || []);
+    const guiaInput: GuiaEngineInput = {
+      level: body.level,
+      subject: body.subject,
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      topic: body.topic,
+      indicators: (indicators as any)?.results?.map((i: any) => i.indicator_text) || [],
+      duration: body.duration,
+    };
+    const guide = await generateGuia(
+      { AI: context.env.AI } as AIEngineEnv,
+      guiaInput,
+      body.type === 'guia_estudiante' ? 'estudiante' : 'docente',
+    );
 
-    // Generate images for guide sections
+    // Generate images for guide sections (en paralelo — antes era secuencial)
     const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
-    const imageTitles: string[] = [];
-    const guideImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
-    const guideSections = body.type === 'guia_estudiante' ? (guide as any).activities || [] : [guide.opening, guide.development, guide.closure].filter(Boolean);
 
-    for (const section of guideSections) {
-      try {
-        const sectionTitle = section.name || section.activity || section.title || 'Sección';
-        const sectionContent = section.description || section.instructions || '';
-        const result = await generateEducationalImage({
+    const imageResults = await Promise.allSettled(
+      guide.sections.map((section) =>
+        generateEducationalImage({
           grade: body.level,
           subject: body.subject,
           oa: body.objectiveText || body.topic || body.objectiveCode,
           resourceTitle: body.topic || 'Guía de aprendizaje',
-          slideTitle: sectionTitle,
-          slideContent: sectionContent.slice(0, 300),
-        }, imageEnv);
-        if (result.ok) {
-          guideImages.push({ url: result.url, alt: `Imagen: ${sectionTitle}`, source: result.source, attribution: result.attribution || '' });
-          imageTitles.push(sectionTitle);
-        }
-      } catch {
-        // Image generation failure is non-fatal
-      }
-    }
+          slideTitle: section.title,
+          slideContent: section.content.slice(0, 300),
+        }, imageEnv)
+      ),
+    );
+
+    // Array alineado 1:1 con guide.sections (huecos undefined si falló) —
+    // antes era denso vía push() secuencial, lo que desalineaba
+    // guideImages[index] contra sections[index] en GuideRenderer.tsx si
+    // alguna imagen intermedia fallaba.
+    const guideImages: Array<{ url: string; alt: string; source: string; attribution: string } | undefined> = imageResults.map((r, i) =>
+      r.status === 'fulfilled' && r.value.ok
+        ? { url: r.value.url, alt: `Imagen: ${guide.sections[i].title}`, source: r.value.source, attribution: r.value.attribution || '' }
+        : undefined
+    );
+    const imageTitles = guideImages.map((img, i) => img ? guide.sections[i].title : null).filter(Boolean);
 
     // Attach images to guide data
-    if (guideImages.length > 0) {
-      (guide as any).images = guideImages;
-      (guide as any).imageTitles = imageTitles;
-    }
+    (guide as any).images = guideImages;
+    (guide as any).imageTitles = imageTitles;
 
     // Save to D1
     const resourceId = `guide_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -100,93 +111,3 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
   }
 }
 
-function buildStudentGuide(req: GuideRequest, objective: any, indicators: any[]): any {
-  const ctx = objective?.course_name || req.level;
-  const subj = objective?.subject_name || req.subject;
-  const indText = indicators.map((i: any) => i.indicator_text).filter(Boolean).slice(0, 2);
-
-  return {
-    title: req.topic || `Guía: ${req.objectiveCode}`,
-    subtitle: `${ctx} — ${subj}`,
-    objective: req.objectiveText,
-    indicators: indText,
-    instructions: 'Lee atentamente cada sección. Responde las preguntas con tus propias palabras. Si tienes dudas, pregunta a tu profesor o compañera.',
-    activities: [
-      {
-        name: 'Actividad 1: Activación',
-        description: 'Responde las siguientes preguntas sobre lo que ya sabes del tema.',
-        steps: [
-          '¿Qué sabes sobre este tema?',
-          '¿Dónde lo has visto antes?',
-          'Escribe 3 palabras que se te vengan a la mente.'
-        ]
-      },
-      {
-        name: 'Actividad 2: Desarrollo',
-        description: 'Lee el texto y responde las preguntas de comprensión.',
-        steps: [
-          'Lee el texto atentamente.',
-          'Subraya las ideas principales.',
-          'Responde las preguntas con tus propias palabras.'
-        ]
-      },
-      {
-        name: 'Actividad 3: Aplicación',
-        description: 'Aplica lo aprendido en una situación nueva.',
-        steps: [
-          'Resuelve el ejercicio propuesto.',
-          'Explica tu procedimiento.',
-          'Comparte tu respuesta con un compañero.'
-        ]
-      }
-    ],
-    vocabulary: [
-      { term: 'Concepto clave', definition: 'Definición clara y simple del concepto principal.' },
-      { term: 'Término 2', definition: 'Definición del segundo término importante.' }
-    ],
-    selfAssessment: [
-      '¿Qué aprendí hoy?',
-      '¿Qué me resultó fácil?',
-      '¿Qué me costó más?',
-      '¿Qué puedo hacer para mejorar?'
-    ]
-  };
-}
-
-function buildTeacherGuide(req: GuideRequest, objective: any, indicators: any[]): any {
-  const ctx = objective?.course_name || req.level;
-  const subj = objective?.subject_name || req.subject;
-  const axis = objective?.axis_name || '';
-  const indText = indicators.map((i: any) => i.indicator_text).filter(Boolean).slice(0, 3);
-
-  return {
-    title: `Guía Docente: ${req.objectiveCode}`,
-    subtitle: `${ctx} — ${subj}${axis ? ` — ${axis}` : ''}`,
-    objective: req.objectiveText,
-    indicators: indText,
-    duration: req.duration || '90 minutos',
-    materials: ['Guía impresa', 'Pizarra o proyector', 'Material concreto según asignatura', 'Post-its o tarjetas'],
-    opening: {
-      activity: 'Activación de conocimientos previos con preguntas provocadoras',
-      time: '15 min',
-      instructions: 'Presentar pregunta inicial. Dar 2 minutos para pensar individualmente. Compartir en parejas. Plenaria breve.'
-    },
-    development: {
-      activity: 'Explicación del concepto clave con ejemplo contextualizado + práctica guiada',
-      time: '50 min',
-      instructions: 'Modelar el concepto. Usar ejemplo chileno. Práctica guiada en parejas. Monitorear y retroalimentar.'
-    },
-    closure: {
-      activity: 'Síntesis y ticket de salida',
-      time: '15 min',
-      instructions: 'Síntesis oral con participación estudiantil. Ticket de salida individual. Cierre positivo.'
-    },
-    differentiation: [
-      'Ofrecer apoyo visual con organizadores gráficos',
-      'Permitir respuesta oral o escrita según necesidad',
-      'Agrupar estudiantes de forma heterogénea',
-      'Ofrecer tiempo adicional si es necesario'
-    ],
-    assessment: 'Evaluación formativa mediante observación, ticket de salida y participación. Criterios: comprensión del OA, aplicación del concepto, calidad de la explicación.'
-  };
-}

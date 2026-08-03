@@ -172,86 +172,26 @@ export function normalizeRubric(raw: unknown): PedagogicalProduct | null {
 }
 
 /**
- * Normalize guia_docente
- * Raw: { title, subtitle, objective, duration, materials: string[],
- *        opening/development/closure: {activity, time, instructions}, differentiation, assessment }
- * Distinct shape from guia_estudiante — no `activities` array, so it needs its own mapping
- * (buildTeacherGuide in functions/api/materials/guide.ts).
- */
-function normalizeTeacherGuide(r: Record<string, unknown>): PedagogicalProduct {
-  const moments: Array<{ key: string; label: string }> = [
-    { key: 'opening', label: 'Inicio' },
-    { key: 'development', label: 'Desarrollo' },
-    { key: 'closure', label: 'Cierre' },
-  ];
-
-  const sections = moments.map(({ key, label }) => {
-    const m = r[key];
-    if (typeof m !== 'object' || m === null) return null;
-    const moment = m as Record<string, unknown>;
-    const time = typeof moment.time === 'string' ? ` (${moment.time})` : '';
-    const content = [moment.activity, moment.instructions]
-      .filter((v): v is string => typeof v === 'string' && v.length > 0)
-      .join('\n\n');
-    return { title: `${label}${time}`, content };
-  }).filter(Boolean);
-
-  const differentiation = Array.isArray(r.differentiation)
-    ? r.differentiation.filter((d): d is string => typeof d === 'string')
-    : [];
-  if (differentiation.length > 0) {
-    sections.push({
-      title: 'Diferenciación / Adecuaciones DUA',
-      content: differentiation.map((d) => `• ${d}`).join('\n'),
-    });
-  }
-
-  return {
-    type: 'guia_docente',
-    metadata: extractMetadata(r),
-    data: {
-      sections,
-      objective: r.objective,
-      materials: r.materials,
-      evaluation: r.assessment,
-      duration: r.duration,
-      ...extractPremiumExtras(r),
-    },
-  };
-}
-
-/**
  * Normalize guide (guia_estudiante / guia_docente)
- * Raw: { title, subtitle, objective, activities: [...], vocabulary, ... }
+ * Raw (desde GuiaEngine, functions/core/GuiaEngine.ts): { title, objective, sections: GuideSection[], images?, imageTitles? }
+ * GuiaEngine ya genera "sections" en el shape exacto que GuideRenderer.tsx
+ * consume (title/content/activities?) — este normalizer es un passthrough,
+ * no traduce nombres de campo ni reconstruye materials/evaluation/duration
+ * a partir de las secciones.
  * NOTE: guide objects from API have NO `type` field
  */
 export function normalizeGuide(raw: unknown, guideType: 'guia_estudiante' | 'guia_docente'): PedagogicalProduct | null {
   if (!hasStringProp(raw, 'title')) return null;
   const r = raw as Record<string, unknown>;
 
-  if (guideType === 'guia_docente') return normalizeTeacherGuide(r);
-
-  const rawActivities = Array.isArray(r.activities) ? r.activities : [];
-  const sections = rawActivities.map((a: unknown) => {
-    if (typeof a !== 'object' || a === null) return null;
-    const act = a as Record<string, unknown>;
-    return {
-      title: typeof act.name === 'string' ? act.name : '',
-      content: typeof act.description === 'string' ? act.description : '',
-      activities: Array.isArray(act.steps) ? act.steps.map(String) : [],
-    };
-  }).filter(Boolean);
-
   return {
     type: guideType,
     metadata: extractMetadata(r),
     data: {
-      sections,
+      sections: r.sections,
       objective: r.objective,
-      materials: r.vocabulary,
-      evaluation: r.selfAssessment,
-      instructions: r.instructions,
-      ...extractPremiumExtras(r),
+      images: r.images,
+      imageTitles: r.imageTitles,
     },
   };
 }
