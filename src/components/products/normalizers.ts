@@ -172,6 +172,55 @@ export function normalizeRubric(raw: unknown): PedagogicalProduct | null {
 }
 
 /**
+ * Normalize guia_docente
+ * Raw: { title, subtitle, objective, duration, materials: string[],
+ *        opening/development/closure: {activity, time, instructions}, differentiation, assessment }
+ * Distinct shape from guia_estudiante — no `activities` array, so it needs its own mapping
+ * (buildTeacherGuide in functions/api/materials/guide.ts).
+ */
+function normalizeTeacherGuide(r: Record<string, unknown>): PedagogicalProduct {
+  const moments: Array<{ key: string; label: string }> = [
+    { key: 'opening', label: 'Inicio' },
+    { key: 'development', label: 'Desarrollo' },
+    { key: 'closure', label: 'Cierre' },
+  ];
+
+  const sections = moments.map(({ key, label }) => {
+    const m = r[key];
+    if (typeof m !== 'object' || m === null) return null;
+    const moment = m as Record<string, unknown>;
+    const time = typeof moment.time === 'string' ? ` (${moment.time})` : '';
+    const content = [moment.activity, moment.instructions]
+      .filter((v): v is string => typeof v === 'string' && v.length > 0)
+      .join('\n\n');
+    return { title: `${label}${time}`, content };
+  }).filter(Boolean);
+
+  const differentiation = Array.isArray(r.differentiation)
+    ? r.differentiation.filter((d): d is string => typeof d === 'string')
+    : [];
+  if (differentiation.length > 0) {
+    sections.push({
+      title: 'Diferenciación / Adecuaciones DUA',
+      content: differentiation.map((d) => `• ${d}`).join('\n'),
+    });
+  }
+
+  return {
+    type: 'guia_docente',
+    metadata: extractMetadata(r),
+    data: {
+      sections,
+      objective: r.objective,
+      materials: r.materials,
+      evaluation: r.assessment,
+      duration: r.duration,
+      ...extractPremiumExtras(r),
+    },
+  };
+}
+
+/**
  * Normalize guide (guia_estudiante / guia_docente)
  * Raw: { title, subtitle, objective, activities: [...], vocabulary, ... }
  * NOTE: guide objects from API have NO `type` field
@@ -179,6 +228,8 @@ export function normalizeRubric(raw: unknown): PedagogicalProduct | null {
 export function normalizeGuide(raw: unknown, guideType: 'guia_estudiante' | 'guia_docente'): PedagogicalProduct | null {
   if (!hasStringProp(raw, 'title')) return null;
   const r = raw as Record<string, unknown>;
+
+  if (guideType === 'guia_docente') return normalizeTeacherGuide(r);
 
   const rawActivities = Array.isArray(r.activities) ? r.activities : [];
   const sections = rawActivities.map((a: unknown) => {

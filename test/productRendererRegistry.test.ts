@@ -126,11 +126,42 @@ describe('ProductRenderer registry normalizers', () => {
       expect((result!.data.sections as unknown[]).length).toBe(1);
     });
 
-    it('normalizes guia_docente', () => {
-      const raw = { title: 'Guía Docente', activities: [] };
+    it('normalizes guia_docente (buildTeacherGuide shape — no activities array)', () => {
+      // Mirrors functions/api/materials/guide.ts buildTeacherGuide() output.
+      const raw = {
+        title: 'Guía Docente: MA07 OA 12',
+        subtitle: '4° Básico — Matemática',
+        objective: 'Demostrar comprensión',
+        duration: '90 minutos',
+        materials: ['Guía impresa', 'Pizarra o proyector'],
+        opening: { activity: 'Activación de conocimientos previos', time: '15 min', instructions: 'Presentar pregunta inicial.' },
+        development: { activity: 'Explicación del concepto clave', time: '50 min', instructions: 'Modelar el concepto.' },
+        closure: { activity: 'Síntesis y ticket de salida', time: '15 min', instructions: 'Cierre positivo.' },
+        differentiation: ['Ofrecer apoyo visual', 'Permitir respuesta oral o escrita'],
+        assessment: 'Evaluación formativa mediante observación.',
+      };
       const result = normalizeGuide(raw, 'guia_docente');
       expect(result).not.toBeNull();
       expect(result!.type).toBe('guia_docente');
+
+      const sections = result!.data.sections as Array<{ title: string; content: string }>;
+      expect(sections.length).toBe(4); // opening, development, closure, differentiation
+      expect(sections[0].title).toBe('Inicio (15 min)');
+      expect(sections[0].content).toContain('Activación de conocimientos previos');
+      expect(sections[3].title).toBe('Diferenciación / Adecuaciones DUA');
+      expect(sections[3].content).toContain('Ofrecer apoyo visual');
+
+      expect(result!.data.materials).toEqual(['Guía impresa', 'Pizarra o proyector']);
+      expect(result!.data.evaluation).toBe('Evaluación formativa mediante observación.');
+      expect(result!.data.duration).toBe('90 minutos');
+    });
+
+    it('normalizes guia_docente with missing optional fields', () => {
+      const raw = { title: 'Guía Docente' };
+      const result = normalizeGuide(raw, 'guia_docente');
+      expect(result).not.toBeNull();
+      expect(result!.type).toBe('guia_docente');
+      expect((result!.data.sections as unknown[]).length).toBe(0);
     });
 
     it('returns null for missing title', () => {
