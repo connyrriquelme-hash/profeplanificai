@@ -313,7 +313,7 @@ export function MisClases() {
         const teacherClassPayload = {
           school_year: Number(schoolYear), level_id: lessonCurriculum.levelId || levelId || '',
           subject_id: lessonCurriculum.subjectId || subjectId || '',
-          course_name: title, class_name: title, color: '#6d28d9',
+          course_name: title, class_name: title, color: '#B5471F',
         };
         const createdClass = await createTeacherClass(teacherClassPayload);
         classId = createdClass.data?.id || (createdClass as any).id;
@@ -362,7 +362,7 @@ export function MisClases() {
         const created = await createTeacherClass({
           school_year: Number(schoolYear), level_id: lessonCurriculum.levelId || '',
           subject_id: lessonCurriculum.subjectId || '',
-          course_name: title, class_name: title, color: '#2563eb',
+          course_name: title, class_name: title, color: '#B5471F',
         });
         classId = created.data.id;
         setScheduleForm((prev) => ({ ...prev, class_id: classId }));
@@ -601,7 +601,7 @@ export function MisClases() {
   const fieldForTab = FIELD_BY_TAB[detailTab];
 
   return (<div className="max-w-[1440px] mx-auto animate-fade-in pb-10">
-    <SectionHeader icon={BookOpen} iconColor="#5F3475" title="Mis Clases" description="Organiza tu horario docente, planifica clases y conecta recursos al curriculo chileno." />
+    <SectionHeader icon={BookOpen} iconColor="#B5471F" title="Mis Clases" description="Organiza tu horario docente, planifica clases y conecta recursos al curriculo chileno." />
 
     {(toast || error || savingState !== 'idle') && (<div className={`mb-4 rounded-2xl border px-4 py-3 text-sm flex items-center justify-between ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
       <span>{error || toast || (savingState === 'saving' ? 'Guardando...' : savingState === 'saved' ? 'Guardado automaticamente' : savingState === 'error' ? 'No se pudo guardar; se reintentara al editar.' : '')}</span>
@@ -649,7 +649,7 @@ export function MisClases() {
           </div>)}
 
           {blockType === 'reemplazo' && (<div className="border-t border-slate-100 pt-4 space-y-3">
-            <p className="text-[11px] font-black tracking-wide uppercase text-blue-600">Reemplazo</p>
+            <p className="text-[11px] font-black tracking-wide uppercase text-[var(--primary-ink)]">Reemplazo</p>
             <label className={LC}>Docente reemplazado<input value={replacementDoc} onChange={(e) => setReplacementDoc(e.target.value)} placeholder="Nombre del docente" className={IC} /></label>
             <label className={LC}>Observacion<textarea value={replacementObs} onChange={(e) => setReplacementObs(e.target.value)} rows={2} placeholder="Indicaciones para el reemplazo" className={IC} /></label>
           </div>)}
@@ -693,7 +693,7 @@ export function MisClases() {
             {lessonsByDay.map((day) => (<div key={day.date} className="min-h-[220px] rounded-2xl bg-slate-50 border border-slate-100 p-3">
               <p className="font-black text-slate-800">{day.label}</p><p className="text-xs text-slate-400 mb-3">{day.date}</p>
               <div className="space-y-2">
-                {day.lessons.map((lesson) => (<button key={lesson.id} onClick={() => void openLesson(lesson)} className="w-full text-left rounded-2xl p-3 text-white shadow-sm hover:opacity-90 transition-opacity" style={{ backgroundColor: lesson.color || '#2563eb' }}>
+                {day.lessons.map((lesson) => (<button key={lesson.id} onClick={() => void openLesson(lesson)} className="w-full text-left rounded-2xl p-3 text-white shadow-sm hover:opacity-90 transition-opacity" style={{ backgroundColor: lesson.color || '#B5471F' }}>
                   <p className="text-xs font-bold flex items-center gap-1"><Clock size={12} /> {lesson.start_time}-{lesson.end_time}</p>
                   <p className="mt-1 font-black text-sm">{lesson.class_name || lesson.title}</p>
                   <p className="text-xs opacity-85">{lesson.course_name} &middot; {lesson.status}</p>
