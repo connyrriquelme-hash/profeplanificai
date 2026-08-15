@@ -1,5 +1,6 @@
 import { generateTicketSalida, type TicketSalidaEngineInput } from '../../../../core/TicketSalidaEngine';
 import { generateFormato321, type Format321EngineInput } from '../../../../core/Format321Engine';
+import { generateListaCotejo, type ListaCotejoEngineInput } from '../../../../core/ListaCotejoEngine';
 import { generateSemaforo, type SemaforoEngineInput } from '../../../../core/SemaforoEngine';
 import type { AIEngineEnv } from '../../../../core/types';
 
@@ -39,9 +40,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       ? await buildExitTicketAI(context.env, body, objective as any, (indicators as any)?.results || [])
       : body.evaluationSubType === 'evaluation_321'
         ? await build321FormatAI(context.env, body, objective as any, (indicators as any)?.results || [])
-        : body.evaluationSubType === 'evaluation_traffic_light'
-          ? await buildTrafficLightAI(context.env, body, objective as any, (indicators as any)?.results || [])
-          : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
+        : body.evaluationSubType === 'evaluation_checklist'
+          ? await buildChecklistAI(context.env, body, objective as any, (indicators as any)?.results || [])
+          : body.evaluationSubType === 'evaluation_traffic_light'
+            ? await buildTrafficLightAI(context.env, body, objective as any, (indicators as any)?.results || [])
+            : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
 
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
@@ -72,8 +75,6 @@ function buildFormativeEvaluation(req: FormativeEvaluationRequest, objective: an
   const subType = req.evaluationSubType;
 
   switch (subType) {
-    case 'evaluation_checklist':
-      return buildChecklist(req, ctx, subj);
     case 'evaluation_formative_rubric':
       return buildFormativeRubric(req, ctx, subj);
     default:
@@ -155,27 +156,43 @@ async function build321FormatAI(
   };
 }
 
-function buildChecklist(req: FormativeEvaluationRequest, ctx: string, subj: string): any {
+// Reemplaza a la plantilla fija anterior (ver historial): ahora los
+// criterios vienen de generateListaCotejo() (IA real con fallback
+// determinista); el resto del envelope (subtitle, type, responseOptions,
+// studentNameField, dateField, summaryRow) es metadata fija que no
+// requiere IA.
+async function buildChecklistAI(
+  env: Env,
+  req: FormativeEvaluationRequest,
+  objective: any,
+  indicators: any[],
+): Promise<any> {
+  const ctx = objective?.course_name || req.level;
+  const subj = objective?.subject_name || req.subject;
+
+  const checklistInput: ListaCotejoEngineInput = {
+    level: req.level,
+    subject: req.subject,
+    objectiveCode: req.objectiveCode,
+    objectiveText: req.objectiveText,
+    topic: req.topic,
+    indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
+  };
+  const lista = await generateListaCotejo({ AI: env.AI } as AIEngineEnv, checklistInput);
+
   return {
-    title: `Lista de Cotejo / Autoevaluación: ${req.objectiveCode}`,
+    title: lista.title,
     subtitle: `${ctx} — ${subj}`,
-    objective: req.objectiveText,
+    objective: lista.objective,
     type: 'lista_cotejo',
     evaluationSubType: 'evaluation_checklist',
-    instructions: 'Marca cada criterio según tu desempeño: Sí / No / En proceso',
-    criteria: [
-      { number: 1, description: 'Comprendo el concepto principal del tema', indicator: 'Comprensión conceptual', skill: 'Comprensión' },
-      { number: 2, description: 'Puedo explicar el tema con mis propias palabras', indicator: 'Explicación propia', skill: 'Comunicación' },
-      { number: 3, description: 'Identifiqué ejemplos del tema en la vida real', indicator: 'Conexión vida real', skill: 'Transferencia' },
-      { number: 4, description: 'Participé activamente en las actividades', indicator: 'Participación', skill: 'Compromiso' },
-      { number: 5, description: 'Resolví los ejercicios propuestos correctamente', indicator: 'Aplicación práctica', skill: 'Aplicación' },
-      { number: 6, description: 'Puedo enseñarle el tema a un compañero', indicator: 'Dominio para enseñar', skill: 'Enseñanza entre pares' }
-    ],
+    instructions: lista.instructions,
+    criteria: lista.criteria,
     responseOptions: ['✅ Sí', '⚠️ En proceso', '❌ No'],
-    teacherNotes: 'Entregar a estudiantes para autoevaluación. Revisar los que marquen "En proceso" o "No".',
+    teacherNotes: lista.teacherNotes,
     studentNameField: true,
     dateField: true,
-    summaryRow: true
+    summaryRow: true,
   };
 }
 
