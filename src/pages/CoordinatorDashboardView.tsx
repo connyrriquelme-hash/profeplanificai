@@ -321,10 +321,10 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
                         <td className="p-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                             s.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
-                            s.status === 'signed' ? 'bg-violet-50 text-violet-700' :
+                            s.status === 'signed' ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)]' :
                             s.status === 'pending_signature' ? 'bg-amber-50 text-amber-700' :
                             s.status === 'cancelled' ? 'bg-slate-100 text-slate-500' :
-                            'bg-blue-50 text-blue-700'
+                            'bg-slate-50 text-slate-600'
                           }`}>
                             {s.status}
                           </span>

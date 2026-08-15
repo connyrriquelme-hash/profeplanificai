@@ -468,16 +468,16 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
                 )}
                 {result.duaGuide.principios_dua && (
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="rounded-xl bg-blue-50 border border-blue-200 p-3">
-                      <p className="text-xs font-bold text-blue-700 mb-1">Representación</p>
+                    <div className="rounded-xl bg-[var(--primary-tint)] border border-[var(--primary)] p-3">
+                      <p className="text-xs font-bold text-[var(--primary-ink)] mb-1">Representación</p>
                       <ul className="space-y-1">{(result.duaGuide.principios_dua.representacion || []).map((item, i) => <li key={i} className="text-[11px] text-slate-600">{item}</li>)}</ul>
                     </div>
-                    <div className="rounded-xl bg-green-50 border border-green-200 p-3">
-                      <p className="text-xs font-bold text-green-700 mb-1">Acción y Expresión</p>
+                    <div className="rounded-xl bg-[var(--success-bg)] border border-[var(--success)] p-3">
+                      <p className="text-xs font-bold text-[var(--success-ink)] mb-1">Acción y Expresión</p>
                       <ul className="space-y-1">{(result.duaGuide.principios_dua.accion_expresion || []).map((item, i) => <li key={i} className="text-[11px] text-slate-600">{item}</li>)}</ul>
                     </div>
-                    <div className="rounded-xl bg-orange-50 border border-orange-200 p-3">
-                      <p className="text-xs font-bold text-orange-700 mb-1">Implicación</p>
+                    <div className="rounded-xl bg-[var(--warn-bg)] border border-[var(--accent-honey)] p-3">
+                      <p className="text-xs font-bold text-[var(--warn-ink)] mb-1">Implicación</p>
                       <ul className="space-y-1">{(result.duaGuide.principios_dua.implicacion || []).map((item, i) => <li key={i} className="text-[11px] text-slate-600">{item}</li>)}</ul>
                     </div>
                   </div>
@@ -530,7 +530,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
         toastOptions={{
           style: {
             borderRadius: '16px',
-            background: '#1e1b4b',
+            background: '#33261C',
             color: '#f1f5f9',
             fontSize: '14px',
             fontWeight: 600,
@@ -556,14 +556,14 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 
 function StageCard({ title, time, description, color }: { title: string; time: number; description: string; color: 'emerald' | 'blue' | 'amber' }) {
   const colors = {
-    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    amber: 'bg-amber-50 border-amber-200 text-amber-700',
+    emerald: 'bg-[var(--success-bg)] border-[var(--success)] text-[var(--success-ink)]',
+    blue: 'bg-[var(--primary-tint)] border-[var(--primary)] text-[var(--primary-ink)]',
+    amber: 'bg-[var(--warn-bg)] border-[var(--accent-honey)] text-[var(--warn-ink)]',
   };
   const headerColors = {
-    emerald: 'text-emerald-600',
-    blue: 'text-blue-600',
-    amber: 'text-amber-600',
+    emerald: 'text-[var(--success)]',
+    blue: 'text-[var(--primary)]',
+    amber: 'text-[var(--accent-honey)]',
   };
 
   return (
@@ -580,9 +580,9 @@ function StageCard({ title, time, description, color }: { title: string; time: n
 
 function DuaLevelCard({ title, items, color }: { title: string; items: string[]; color: 'rose' | 'sky' | 'violet' }) {
   const colors = {
-    rose: 'bg-rose-50 border-rose-200',
-    sky: 'bg-sky-50 border-sky-200',
-    violet: 'bg-violet-50 border-violet-200',
+    rose: 'bg-[var(--warn-bg)] border-[var(--accent-honey)]',
+    sky: 'bg-slate-50 border-slate-200',
+    violet: 'bg-[var(--primary-tint)] border-[var(--primary)]',
   };
 
   return (
