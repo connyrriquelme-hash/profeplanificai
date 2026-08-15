@@ -1,4 +1,5 @@
 import { generateTicketSalida, type TicketSalidaEngineInput } from '../../../../core/TicketSalidaEngine';
+import { generateFormato321, type Format321EngineInput } from '../../../../core/Format321Engine';
 import type { AIEngineEnv } from '../../../../core/types';
 
 interface Env { DB: D1Database; AI?: Ai }
@@ -35,7 +36,9 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const evaluation = body.evaluationSubType === 'evaluation_exit_ticket'
       ? await buildExitTicketAI(context.env, body, objective as any, (indicators as any)?.results || [])
-      : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
+      : body.evaluationSubType === 'evaluation_321'
+        ? await build321FormatAI(context.env, body, objective as any, (indicators as any)?.results || [])
+        : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
 
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
@@ -66,8 +69,6 @@ function buildFormativeEvaluation(req: FormativeEvaluationRequest, objective: an
   const subType = req.evaluationSubType;
 
   switch (subType) {
-    case 'evaluation_321':
-      return build321Format(req, ctx, subj);
     case 'evaluation_checklist':
       return buildChecklist(req, ctx, subj);
     case 'evaluation_formative_rubric':
@@ -116,43 +117,40 @@ async function buildExitTicketAI(
   };
 }
 
-function build321Format(req: FormativeEvaluationRequest, ctx: string, subj: string): any {
+// Reemplaza a la plantilla fija anterior (ver historial): ahora las
+// consignas de cada bloque vienen de generateFormato321() (IA real con
+// fallback determinista); el resto del envelope (subtitle, type,
+// studentNameField, dateField) es metadata fija que no requiere IA.
+async function build321FormatAI(
+  env: Env,
+  req: FormativeEvaluationRequest,
+  objective: any,
+  indicators: any[],
+): Promise<any> {
+  const ctx = objective?.course_name || req.level;
+  const subj = objective?.subject_name || req.subject;
+
+  const formatoInput: Format321EngineInput = {
+    level: req.level,
+    subject: req.subject,
+    objectiveCode: req.objectiveCode,
+    objectiveText: req.objectiveText,
+    topic: req.topic,
+    indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
+  };
+  const formato = await generateFormato321({ AI: env.AI } as AIEngineEnv, formatoInput);
+
   return {
-    title: `Formato 3-2-1: ${req.objectiveCode}`,
+    title: formato.title,
     subtitle: `${ctx} — ${subj}`,
-    objective: req.objectiveText,
+    objective: formato.objective,
     type: 'formato_321',
     evaluationSubType: 'evaluation_321',
-    instructions: 'Completa cada sección con tus propias palabras.',
-    sections: [
-      {
-        number: 3,
-        title: '3 cosas que aprendí',
-        description: 'Escribe tres aprendizajes clave de la clase de hoy',
-        lines: 3,
-        indicator: 'Identificación de aprendizajes clave',
-        skill: 'Síntesis'
-      },
-      {
-        number: 2,
-        title: '2 cosas que me interesan / quiero saber más',
-        description: 'Escribe dos cosas que te gustaría profundizar',
-        lines: 2,
-        indicator: 'Curiosidad y motivación',
-        skill: 'Curiosidad intelectual'
-      },
-      {
-        number: 1,
-        title: '1 duda o pregunta',
-        description: 'Escribe una pregunta que aún tienes',
-        lines: 1,
-        indicator: 'Identificación de brechas',
-        skill: 'Pensamiento crítico'
-      }
-    ],
-    teacherNotes: 'Recolectar al final de la clase. Usar para planificar la siguiente sesión y responder dudas.',
+    instructions: formato.instructions,
+    sections: formato.sections,
+    teacherNotes: formato.teacherNotes,
     studentNameField: true,
-    dateField: true
+    dateField: true,
   };
 }
 
