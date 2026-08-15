@@ -1,4 +1,7 @@
-interface Env { DB: D1Database }
+import { generateTicketSalida, type TicketSalidaEngineInput } from '../../../../core/TicketSalidaEngine';
+import type { AIEngineEnv } from '../../../../core/types';
+
+interface Env { DB: D1Database; AI?: Ai }
 
 interface FormativeEvaluationRequest {
   level: string;
@@ -30,7 +33,9 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `SELECT ci.indicator_text FROM curriculum_indicators ci WHERE ci.oa_code = ? LIMIT 10`
     ).bind(body.objectiveCode).all();
 
-    const evaluation = buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
+    const evaluation = body.evaluationSubType === 'evaluation_exit_ticket'
+      ? await buildExitTicketAI(context.env, body, objective as any, (indicators as any)?.results || [])
+      : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
 
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
@@ -61,8 +66,6 @@ function buildFormativeEvaluation(req: FormativeEvaluationRequest, objective: an
   const subType = req.evaluationSubType;
 
   switch (subType) {
-    case 'evaluation_exit_ticket':
-      return buildExitTicket(req, ctx, subj);
     case 'evaluation_321':
       return build321Format(req, ctx, subj);
     case 'evaluation_checklist':
@@ -76,41 +79,40 @@ function buildFormativeEvaluation(req: FormativeEvaluationRequest, objective: an
   }
 }
 
-function buildExitTicket(req: FormativeEvaluationRequest, ctx: string, subj: string): any {
+// Reemplaza a la plantilla fija anterior (ver historial): ahora las
+// preguntas de contenido vienen de generateTicketSalida() (IA real con
+// fallback determinista); el resto del envelope (subtitle, type,
+// studentNameField, dateField) es metadata fija que no requiere IA.
+async function buildExitTicketAI(
+  env: Env,
+  req: FormativeEvaluationRequest,
+  objective: any,
+  indicators: any[],
+): Promise<any> {
+  const ctx = objective?.course_name || req.level;
+  const subj = objective?.subject_name || req.subject;
+
+  const ticketInput: TicketSalidaEngineInput = {
+    level: req.level,
+    subject: req.subject,
+    objectiveCode: req.objectiveCode,
+    objectiveText: req.objectiveText,
+    topic: req.topic,
+    indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
+  };
+  const ticket = await generateTicketSalida({ AI: env.AI } as AIEngineEnv, ticketInput);
+
   return {
-    title: `Ticket de Salida: ${req.objectiveCode}`,
+    title: ticket.title,
     subtitle: `${ctx} — ${subj}`,
-    objective: req.objectiveText,
+    objective: ticket.objective,
     type: 'ticket_salida',
     evaluationSubType: 'evaluation_exit_ticket',
-    instructions: 'Completa antes de salir de clase. Responde con honestidad.',
-    questions: [
-      {
-        number: 1,
-        type: 'open',
-        question: '¿Cuál fue lo más importante que aprendiste hoy?',
-        indicator: 'Comprensión del concepto principal',
-        skill: 'Síntesis'
-      },
-      {
-        number: 2,
-        type: 'open',
-        question: '¿Qué duda te quedó sin resolver?',
-        indicator: 'Identificación de lagunas',
-        skill: 'Metacognición'
-      },
-      {
-        number: 3,
-        type: 'traffic_light',
-        question: '¿Cómo te sientes con lo aprendido hoy?',
-        options: ['🟢 Lo entendí bien', '🟡 Algunas dudas', '🔴 No lo entendí'],
-        indicator: 'Autoevaluación de comprensión',
-        skill: 'Autorregulación'
-      }
-    ],
-    teacherNotes: 'Recolectar al final de la clase. Revisar respuestas para ajustar la siguiente sesión.',
+    instructions: ticket.instructions,
+    questions: ticket.questions,
+    teacherNotes: ticket.teacherNotes,
     studentNameField: true,
-    dateField: true
+    dateField: true,
   };
 }
 
