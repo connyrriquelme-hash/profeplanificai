@@ -243,7 +243,7 @@ export function ReportesView() {
     <div className="max-w-7xl mx-auto animate-fade-in">
       <SectionHeader
         icon={BarChart2}
-        iconColor="#213885"
+        iconColor="#B5471F"
         title="Informe Final Formativo"
         description="Evalua a tus estudiantes con indicadores alineados al MINEDUC."
       />
@@ -629,7 +629,7 @@ export function ReportesView() {
 
           {/* Parent Report Module */}
           <div className="mt-8">
-            <SectionHeader icon={Users} iconColor="#7c3aed" title="Informe Final Formativo para Apoderados" description="Genera informes individuales para estudiantes y apoderados, con observaciones automáticas según objetivos, indicadores y nivel de logro." />
+            <SectionHeader icon={Users} iconColor="#9A3A17" title="Informe Final Formativo para Apoderados" description="Genera informes individuales para estudiantes y apoderados, con observaciones automáticas según objetivos, indicadores y nivel de logro." />
             <div className="mt-4">
               <ParentReportPanel />
             </div>

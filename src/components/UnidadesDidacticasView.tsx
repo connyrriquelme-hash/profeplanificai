@@ -145,7 +145,7 @@ export function UnidadesDidacticasView() {
     <div className="max-w-6xl mx-auto animate-fade-in">
       <SectionHeader
         icon={BookOpen}
-        iconColor="#5F3475"
+        iconColor="#B5471F"
         title="Unidades Didacticas"
         description="Planifica unidades integradas con metodologias activas alineadas al MINEDUC."
       />

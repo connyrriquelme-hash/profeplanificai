@@ -43,7 +43,7 @@ export default function PendingReviewsPanel({
         icon={ClipboardCheck}
         title="Sin revisiones pendientes"
         description="No hay planificaciones pendientes de revisión en este momento."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }
@@ -72,7 +72,7 @@ export default function PendingReviewsPanel({
         icon={ClipboardCheck}
         title="Sin revisiones pendientes"
         description="No hay planificaciones pendientes de revisión en este momento."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }

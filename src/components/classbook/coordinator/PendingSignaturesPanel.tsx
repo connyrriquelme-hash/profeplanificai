@@ -18,7 +18,7 @@ export default function PendingSignaturesPanel({
         icon={PenLine}
         title="Sin firmas pendientes"
         description="Todas las sesiones tienen sus firmas al día."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }

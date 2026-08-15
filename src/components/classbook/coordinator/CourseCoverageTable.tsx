@@ -35,7 +35,7 @@ export default function CourseCoverageTable({
         icon={BookOpen}
         title="Sin cursos para mostrar"
         description="No hay datos de cobertura de cursos disponibles."
-        iconColor="#7c3aed"
+        iconColor="#B5471F"
       />
     );
   }

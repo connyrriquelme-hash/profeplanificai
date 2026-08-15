@@ -196,18 +196,18 @@ export default function AdminPanelView() {
           <h3>Resumen del sistema</h3>
           <div className="metrics" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
             <div className="metric" style={{ textAlign: 'center', padding: 16 }}>
-              <Building2 size={24} style={{ color: '#6d5dfc', marginBottom: 8 }} />
-              <b style={{ display: 'block', fontSize: 28, color: '#6d5dfc' }}>{institutions.length}</b>
+              <Building2 size={24} style={{ color: '#B5471F', marginBottom: 8 }} />
+              <b style={{ display: 'block', fontSize: 28, color: '#B5471F' }}>{institutions.length}</b>
               <span className="muted">Instituciones</span>
             </div>
             <div className="metric" style={{ textAlign: 'center', padding: 16 }}>
-              <Users size={24} style={{ color: '#00a7a7', marginBottom: 8 }} />
-              <b style={{ display: 'block', fontSize: 28, color: '#00a7a7' }}>{institutions.reduce((acc, i) => acc + (i.member_count || 0), 0)}</b>
+              <Users size={24} style={{ color: '#7C2F13', marginBottom: 8 }} />
+              <b style={{ display: 'block', fontSize: 28, color: '#7C2F13' }}>{institutions.reduce((acc, i) => acc + (i.member_count || 0), 0)}</b>
               <span className="muted">Docentes</span>
             </div>
             <div className="metric" style={{ textAlign: 'center', padding: 16 }}>
-              <Shield size={24} style={{ color: '#f59e0b', marginBottom: 8 }} />
-              <b style={{ display: 'block', fontSize: 28, color: '#f59e0b' }}>{auditLog.length}</b>
+              <Shield size={24} style={{ color: '#E9A13B', marginBottom: 8 }} />
+              <b style={{ display: 'block', fontSize: 28, color: '#E9A13B' }}>{auditLog.length}</b>
               <span className="muted">Acciones admin</span>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function AdminPanelView() {
       )}
 
       {selectedInst && (tab === 'instituciones' || tab === 'calendario' || tab === 'usuarios') && (
-        <div className="card" style={{ marginTop: 14, borderLeft: '3px solid #6d5dfc' }}>
+        <div className="card" style={{ marginTop: 14, borderLeft: '3px solid #B5471F' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>{selectedInst.name}</h3>
             <button className="secondary" onClick={() => setSelectedInst(null)} style={{ fontSize: 12 }}>Cerrar</button>
@@ -435,7 +435,7 @@ export default function AdminPanelView() {
               const Icon = step.icon;
               return (
                 <div key={step.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
-                  <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#6d5dfc', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                  <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#B5471F', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                     {i + 1}
                   </span>
                   <Icon size={16} style={{ color: 'var(--muted)', flexShrink: 0 }} />

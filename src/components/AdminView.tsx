@@ -141,13 +141,17 @@ export default function AdminView({ onNavigate }: { onNavigate?: (view: string) 
     } finally { setCreating(false); }
   };
 
+  // Tonos tomados directo de los tokens del tema (.theme-calida en index.css)
+  // en vez de colores genéricos de Tailwind — misma paleta usada en
+  // FlujoDocenteView/BancoRecursosView para mantener distinción visual sin
+  // salir de la identidad cálida.
   const items = stats ? [
-    { label: 'Planificaciones', value: stats.planes, icon: BarChart3, color: '#6d5dfc' },
-    { label: 'Recursos', value: stats.recursos, icon: Database, color: '#00a7a7' },
-    { label: 'Evaluaciones', value: stats.evaluaciones, icon: Database, color: '#f59e0b' },
-    { label: 'Cursos', value: stats.cursos, icon: Database, color: '#3b82f6' },
-    { label: 'Estudiantes', value: stats.estudiantes, icon: Users, color: '#22c55e' },
-    { label: 'Colaboraciones', value: stats.postsColaboracion, icon: Database, color: '#a78bfa' },
+    { label: 'Planificaciones', value: stats.planes, icon: BarChart3, color: '#B5471F' }, // --primary
+    { label: 'Recursos', value: stats.recursos, icon: Database, color: '#7C2F13' }, // --primary-ink
+    { label: 'Evaluaciones', value: stats.evaluaciones, icon: Database, color: '#E9A13B' }, // --accent-honey
+    { label: 'Cursos', value: stats.cursos, icon: Database, color: '#9A3A17' }, // --primary-hover
+    { label: 'Estudiantes', value: stats.estudiantes, icon: Users, color: '#5B7B5E' }, // --success
+    { label: 'Colaboraciones', value: stats.postsColaboracion, icon: Database, color: '#8A5A00' }, // --warn-ink
   ] : [];
 
   return (
