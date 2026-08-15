@@ -1,31 +1,9 @@
 import { PptDeckSchema, TITLE_MAX, SUBTITLE_MAX, BULLET_MAX, type PptDeck, type Slide } from '../../schemas/PptDeckSchema';
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from './types';
+import { inferRangoEtario } from './pedagogicalUtils';
 
-// Rangos etarios aproximados por curso, usados para adaptar el lenguaje del
-// contenido generado. No son edades legales/exactas, son una guía de
-// complejidad de vocabulario y largo de oraciones para el prompt de la IA.
-export function inferRangoEtario(curso: string): string {
-  const c = (curso || '').toLowerCase();
-  const grado = Number(c.match(/(\d+)/)?.[1] ?? NaN);
-
-  if (/sala cuna|nivel medio|nivel transici|prekinder|pre-kinder|prekínder|kinder|kínder|parvularia/.test(c)) {
-    return '3-5 años: frases de una sola idea, vocabulario muy concreto y cotidiano (cosas que se ven, tocan o hacen), apoyo constante en ejemplos y juego, sin conceptos abstractos';
-  }
-  if (c.includes('medio')) {
-    return '12-18 años (Educación Media): vocabulario más técnico permitido, siempre explicado con claridad la primera vez que aparece; se puede profundizar y usar términos disciplinares';
-  }
-  if (c.includes('básico') || c.includes('basico')) {
-    if (!Number.isNaN(grado) && grado <= 2) {
-      return '6-8 años (1°-2° Básico): oraciones muy cortas y simples, vocabulario cotidiano, evitar términos abstractos';
-    }
-    if (!Number.isNaN(grado) && grado <= 6) {
-      return '8-12 años (3°-6° Básico): oraciones simples, algunos términos técnicos permitidos si se explican con un ejemplo concreto';
-    }
-    return '12-18 años (7°-8° Básico): vocabulario más técnico permitido pero siempre explicado con claridad';
-  }
-  return '8-12 años: oraciones simples, algunos términos técnicos explicados con un ejemplo concreto';
-}
+export { inferRangoEtario };
 
 export function buildSystemPrompt(plan: PedagogicalPlan): string {
   const rangoEtario = inferRangoEtario(plan.curso);

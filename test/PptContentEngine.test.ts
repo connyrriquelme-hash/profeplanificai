@@ -125,14 +125,14 @@ describe('inferRangoEtario', () => {
     expect(inferRangoEtario('6° Básico')).toContain('8-12 años');
   });
 
-  it('7°-8° Básico → 12-18 años', () => {
-    expect(inferRangoEtario('7° Básico')).toContain('12-18 años');
-    expect(inferRangoEtario('8° Básico')).toContain('12-18 años');
+  it('7°-8° Básico → 12-14 años (separado de Media)', () => {
+    expect(inferRangoEtario('7° Básico')).toContain('12-14 años');
+    expect(inferRangoEtario('8° Básico')).toContain('12-14 años');
   });
 
-  it('Educación Media → 12-18 años', () => {
-    expect(inferRangoEtario('1° Medio')).toContain('12-18 años');
-    expect(inferRangoEtario('4° Medio')).toContain('12-18 años');
+  it('Educación Media → 14-18 años', () => {
+    expect(inferRangoEtario('1° Medio')).toContain('14-18 años');
+    expect(inferRangoEtario('4° Medio')).toContain('14-18 años');
   });
 
   it('Educación Parvularia → 3-5 años', () => {
@@ -164,7 +164,7 @@ describe('buildSystemPrompt', () => {
     expect(promptBasico).toContain('6-8 años');
 
     const promptMedio = buildSystemPrompt({ ...MOCK_PLAN, curso: '3° Medio' });
-    expect(promptMedio).toContain('12-18 años');
+    expect(promptMedio).toContain('14-18 años');
   });
 });
 
