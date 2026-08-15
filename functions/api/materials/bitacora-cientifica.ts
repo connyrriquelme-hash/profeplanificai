@@ -1,4 +1,7 @@
-interface Env { DB: D1Database }
+import { generateBitacora, type BitacoraEngineInput } from '../../core/BitacoraEngine';
+import type { AIEngineEnv } from '../../core/types';
+
+interface Env { DB: D1Database; AI?: Ai }
 
 interface BitacoraCientificaRequest {
   level: string;
@@ -29,7 +32,24 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `SELECT ci.indicator_text FROM curriculum_indicators ci WHERE ci.oa_code = ? LIMIT 10`
     ).bind(body.objectiveCode).all();
 
-    const evaluation = buildBitacoraCientifica(body, objective as any, (indicators as any)?.results || []);
+    const baseBitacora = buildBitacoraCientifica(body, objective as any, (indicators as any)?.results || []);
+
+    // consignasIA: las 4 consignas del proceso científico (hipótesis,
+    // observaciones, resultados, conclusión) generadas con IA real,
+    // específicas al OA/tema — ver BitacoraEngine.ts. El resto de la
+    // bitácora (estructura por tramo etario, campos de formulario, medidas
+    // de seguridad, portfolio) es scaffold de la app y no requiere IA.
+    const bitacoraInput: BitacoraEngineInput = {
+      level: body.level,
+      subject: body.subject,
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      topic: body.topic,
+      indicators: (indicators as any)?.results?.map((i: any) => i.indicator_text).filter(Boolean) || [],
+    };
+    const consignasIA = await generateBitacora({ AI: context.env.AI } as AIEngineEnv, bitacoraInput);
+
+    const evaluation = { ...baseBitacora, consignasIA };
 
     const resourceId = `bitacora_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
@@ -96,7 +116,7 @@ function buildBitacoraCientifica(req: BitacoraCientificaRequest, objective: any,
       { titulo: 'Análisis', descripcion: 'Interpretación de resultados', campos: ['¿Qué muestran los datos?', '¿Apoyan la hipótesis?', 'Errores posibles', 'Limitaciones'] },
       { titulo: 'Nuevas Preguntas', descripcion: 'Extensión de la indagación', campos: ['Nueva hipótesis', 'Nuevo experimento', 'Aplicación en otro contexto'] }
     ];
-  } else {
+  } else if (isMedia) {
     modelo = 'ENSEÑANZA MEDIA';
     estructura = [
       { titulo: 'Informe Científico', descripcion: 'Estructura formal de comunicación científica', campos: ['Título', 'Autor/es', 'Fecha', 'Curso', 'Docente'] },
@@ -108,6 +128,23 @@ function buildBitacoraCientifica(req: BitacoraCientificaRequest, objective: any,
       { titulo: 'Discusión', descripcion: 'Interpretación y análisis crítico', campos: ['Interpretación de resultados', 'Comparación con literatura', 'Limitaciones', 'Implicancias', 'Nuevas hipótesis'] },
       { titulo: 'Conclusión', descripcion: 'Síntesis final y respuesta a la hipótesis', campos: ['Respuesta a la hipótesis', 'Aportes', 'Recomendaciones', 'Trabajo futuro'] },
       { titulo: 'Bibliografía', descripcion: 'Referencias en formato APA 7ma edición', campos: ['Artículos', 'Libros', 'Fuentes web', 'Normas APA 7ma'] }
+    ];
+  } else {
+    // Nivel no reconocido por ninguno de los 4 tramos (string vacío,
+    // formato inesperado, etc.) — antes caía aquí silenciosamente y
+    // quedaba etiquetado "ENSEÑANZA MEDIA" pese a no serlo, porque
+    // isMedia se calculaba pero nunca se usaba en la cadena if/else.
+    // Fallback explícito al tramo intermedio (1°-6° Básico) en vez de
+    // mentir sobre el nivel real.
+    modelo = '1° A 6° BÁSICO';
+    estructura = [
+      { titulo: 'Pregunta de Investigación', descripcion: 'La pregunta que guía la indagación', campos: ['Pregunta principal', 'Por qué es importante', 'Qué esperamos descubrir'] },
+      { titulo: 'Hipótesis', descripcion: 'Nuestra predicción fundamentada', campos: ['Mi predicción', 'Por qué creo esto', 'Qué evidencia buscaré'] },
+      { titulo: 'Materiales', descripcion: 'Lista de materiales necesarios', campos: ['Material', 'Cantidad', 'Fuente/Proveedor', 'Medida de seguridad'] },
+      { titulo: 'Procedimiento', descripcion: 'Pasos detallados del experimento', campos: ['Paso número', 'Acción', 'Qué observar', 'Registro de datos'] },
+      { titulo: 'Observaciones y Registro de Datos', descripcion: 'Registro sistemático de lo observado', campos: ['Tabla de datos', 'Dibujos/Esquemas', 'Mediciones', 'Fotografías'] },
+      { titulo: 'Conclusión', descripcion: 'Respuesta a la pregunta de investigación', campos: ['¿Se cumplió la hipótesis?', 'Evidencia que lo respalda', 'Qué aprendí', 'Qué haría diferente'] },
+      { titulo: 'Reflexión', descripcion: 'Pensamiento metacognitivo sobre el proceso', campos: ['Qué fue lo más difícil', 'Qué disfruté más', 'Qué nueva pregunta tengo', 'Cómo se relaciona con mi vida'] }
     ];
   }
 
