@@ -10,7 +10,7 @@ const TOAST_ID = 'dua-guide-generate';
 const TOAST_STYLE = {
   style: {
     borderRadius: '16px',
-    background: '#1e1b4b',
+    background: '#33261C',
     color: '#f1f5f9',
     fontSize: '14px',
     fontWeight: 600,
@@ -376,8 +376,8 @@ export function DuaGuideGenerator() {
                 <p className="text-xs font-black uppercase text-green-600 print:text-black">OA a trabajar</p>
                 <p className="mt-1 text-sm font-semibold text-slate-800 print:text-black">{result.plan.objetivo_aprendizaje}</p>
               </div>
-              <div className="rounded-2xl bg-blue-50 p-4 border border-blue-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
-                <p className="text-xs font-black uppercase text-blue-600 print:text-black">Habilidades</p>
+              <div className="rounded-2xl bg-[var(--primary-tint)] p-4 border border-[var(--primary)] print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-[var(--primary-ink)] print:text-black">Habilidades</p>
                 <p className="mt-1 text-sm font-semibold text-slate-800 print:text-black">{result.plan.habilidades}</p>
               </div>
               <div className="rounded-2xl bg-orange-50 p-4 border border-orange-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
@@ -398,9 +398,9 @@ export function DuaGuideGenerator() {
             <LevelCard
               title="Nivel Estándar"
               items={duaGuide?.nivel_estandar || []}
-              borderColor="border-blue-300"
-              bgColor="bg-blue-50"
-              iconColor="text-blue-600"
+              borderColor="border-[var(--primary)]"
+              bgColor="bg-[var(--primary-tint)]"
+              iconColor="text-[var(--primary-ink)]"
             />
             <LevelCard
               title="Nivel Desafío"
@@ -423,8 +423,8 @@ export function DuaGuideGenerator() {
           <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm print:break-before-page print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-4 print:shadow-none">
             <h3 className="text-lg font-black text-slate-900 print:text-black">Principios DUA aplicados</h3>
             <div className="mt-3 grid gap-2 md:grid-cols-3">
-              <div className="rounded-xl bg-blue-50 p-3 border border-blue-200 print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
-                <p className="text-xs font-black uppercase text-blue-600 print:text-black">Representación</p>
+              <div className="rounded-xl bg-[var(--primary-tint)] p-3 border border-[var(--primary)] print:break-inside-avoid print:rounded-none print:border print:border-slate-300 print:bg-white">
+                <p className="text-xs font-black uppercase text-[var(--primary-ink)] print:text-black">Representación</p>
                 <ul className="mt-1 list-disc pl-4 text-xs text-slate-700 print:text-black">
                   {(duaGuide?.principios_dua?.representacion || ['Múltiples medios: texto, imágenes, esquemas visuales y organizadores gráficos']).map((item, index) => <li key={`representacion-${index}`}>{item}</li>)}
                 </ul>
