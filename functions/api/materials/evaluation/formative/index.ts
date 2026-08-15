@@ -1,5 +1,6 @@
 import { generateTicketSalida, type TicketSalidaEngineInput } from '../../../../core/TicketSalidaEngine';
 import { generateFormato321, type Format321EngineInput } from '../../../../core/Format321Engine';
+import { generateSemaforo, type SemaforoEngineInput } from '../../../../core/SemaforoEngine';
 import type { AIEngineEnv } from '../../../../core/types';
 
 interface Env { DB: D1Database; AI?: Ai }
@@ -38,7 +39,9 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       ? await buildExitTicketAI(context.env, body, objective as any, (indicators as any)?.results || [])
       : body.evaluationSubType === 'evaluation_321'
         ? await build321FormatAI(context.env, body, objective as any, (indicators as any)?.results || [])
-        : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
+        : body.evaluationSubType === 'evaluation_traffic_light'
+          ? await buildTrafficLightAI(context.env, body, objective as any, (indicators as any)?.results || [])
+          : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
 
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
@@ -73,8 +76,6 @@ function buildFormativeEvaluation(req: FormativeEvaluationRequest, objective: an
       return buildChecklist(req, ctx, subj);
     case 'evaluation_formative_rubric':
       return buildFormativeRubric(req, ctx, subj);
-    case 'evaluation_traffic_light':
-      return buildTrafficLight(req, ctx, subj);
     default:
       return buildDefaultFormative(req, ctx, subj);
   }
@@ -231,28 +232,41 @@ function buildFormativeRubric(req: FormativeEvaluationRequest, ctx: string, subj
   };
 }
 
-function buildTrafficLight(req: FormativeEvaluationRequest, ctx: string, subj: string): any {
+// Reemplaza a la plantilla fija anterior (ver historial): ahora los
+// indicadores y sus 3 niveles vienen de generateSemaforo() (IA real con
+// fallback determinista); el resto del envelope (subtitle, type,
+// studentNameField, dateField) es metadata fija que no requiere IA.
+async function buildTrafficLightAI(
+  env: Env,
+  req: FormativeEvaluationRequest,
+  objective: any,
+  indicators: any[],
+): Promise<any> {
+  const ctx = objective?.course_name || req.level;
+  const subj = objective?.subject_name || req.subject;
+
+  const semaforoInput: SemaforoEngineInput = {
+    level: req.level,
+    subject: req.subject,
+    objectiveCode: req.objectiveCode,
+    objectiveText: req.objectiveText,
+    topic: req.topic,
+    indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
+  };
+  const semaforo = await generateSemaforo({ AI: env.AI } as AIEngineEnv, semaforoInput);
+
   return {
-    title: `Semáforo de Comprensión: ${req.objectiveCode}`,
+    title: semaforo.title,
     subtitle: `${ctx} — ${subj}`,
-    objective: req.objectiveText,
+    objective: semaforo.objective,
     type: 'semaforo',
     evaluationSubType: 'evaluation_traffic_light',
-    instructions: 'Marca el color que representa tu nivel de comprensión para cada aspecto.',
-    aspects: [
-      { number: 1, description: 'Entiendo el concepto principal', indicator: 'Comprensión conceptual' },
-      { number: 2, description: 'Puedo explicarlo con mis palabras', indicator: 'Explicación propia' },
-      { number: 3, description: 'Puedo resolver ejercicios relacionados', indicator: 'Aplicación' },
-      { number: 4, description: 'Puedo explicárselo a un compañero', indicator: 'Enseñanza entre pares' }
-    ],
-    colors: [
-      { color: '🟢 Verde', meaning: 'Lo entiendo bien, puedo explicarlo', action: 'Ayudar a otros' },
-      { color: '🟡 Amarillo', meaning: 'Tengo algunas dudas, necesito repasar', action: 'Preguntar al docente o compañero' },
-      { color: '🔴 Rojo', meaning: 'No lo entiendo, necesito ayuda urgente', action: 'Solicitar apoyo docente' }
-    ],
-    teacherNotes: 'Recolectar semáforos al final. Agrupar estudiantes por color para apoyos diferenciados.',
+    instructions: semaforo.instructions,
+    aspects: semaforo.aspects,
+    colors: semaforo.colors,
+    teacherNotes: semaforo.teacherNotes,
     studentNameField: true,
-    dateField: true
+    dateField: true,
   };
 }
 
