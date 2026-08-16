@@ -3,16 +3,17 @@ import {
   BookOpenCheck, Target, Layers3, WandSparkles, FileText,
   ClipboardCheck, ClipboardList, Presentation, Loader2, Check,
   ArrowRight, ArrowLeft, Sparkles, GraduationCap, Lightbulb,
-  Save, Download, RefreshCw, AlertTriangle, Microscope
+  Save, Download, RefreshCw, AlertTriangle, Microscope, BookOpen
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
+import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, generateUnidadDidactica, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
+import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -31,11 +32,48 @@ const PRODUCTOS = [
   { id: 'bitacora_cientifica', label: 'Bitácora Científica IA', icon: Microscope, color: '#5A483A' }, // --ink-mid
   { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#B5471F' }, // --primary
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#E9A13B' }, // --accent-honey
+  { id: 'serie_lecciones', label: 'Serie de Lecciones', icon: BookOpen, color: '#33261C' }, // --ink
 ];
 
 interface D1Course { id: string; code: string; name: string; objective_count: number }
 interface D1Subject { id: string; name: string; objective_count: number }
 interface D1Objective { id: string; code: string; official_text: string; course_name: string; subject_name: string; axis_name?: string }
+
+// Preview simple para "Serie de Lecciones" — solo lectura, sin edición ni
+// exportación propia (eso ya lo dan los botones genéricos de abajo:
+// Guardar en Biblioteca / Descargar JSON). Primera versión: si esto crece
+// (editar clases, reordenar fases), se separa a su propio archivo bajo
+// components/products/, igual que ProductRenderer.
+function UnidadDidacticaPreview({ unidad }: { unidad: UnidadDidactica }) {
+  return (
+    <div className="not-prose space-y-3">
+      <div>
+        <h3 className="text-base font-bold text-gray-900">{unidad.titulo}</h3>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {unidad.nivel} · {unidad.asignatura} · Metodología: {unidad.metodologiaActiva} · {unidad.clases.length} clase{unidad.clases.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+      <div className="space-y-2">
+        {unidad.clases.map((clase) => (
+          <div key={clase.numero} className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center flex-shrink-0">
+                {clase.numero}
+              </span>
+              <p className="text-sm font-medium text-gray-900 truncate">{clase.tema}</p>
+            </div>
+            <p className="text-xs text-gray-600 mt-1">{clase.objetivoEspecifico}</p>
+            <div className="mt-2 grid gap-1 text-xs text-gray-600">
+              <p><span className="font-semibold text-gray-700">Inicio:</span> {clase.estructuraClase.inicio.descripcion}</p>
+              <p><span className="font-semibold text-gray-700">Desarrollo:</span> {clase.estructuraClase.desarrollo.descripcion}</p>
+              <p><span className="font-semibold text-gray-700">Cierre:</span> {clase.estructuraClase.cierre.descripcion}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function FlujoDocenteView() {
   const [step, setStep] = useState<FlujoStep>('nivel');
@@ -61,6 +99,7 @@ export function FlujoDocenteView() {
   const [pptDeck, setPptDeck] = useState<PptDeck | null>(null);
   const [renderError, setRenderError] = useState('');
   const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
+  const [unidadDidactica, setUnidadDidactica] = useState<UnidadDidactica | null>(null);
 
   // Load courses
   useEffect(() => {
@@ -133,6 +172,7 @@ export function FlujoDocenteView() {
       setPptDeck(null);
       setRenderError('');
       setPremiumRubric(null);
+      setUnidadDidactica(null);
       setStep('generando');
 
     const req: MaterialRequest = {
@@ -158,11 +198,25 @@ export function FlujoDocenteView() {
       ].includes(selectedProducto);
 
       const isBitacoraCientifica = selectedProducto === 'bitacora_cientifica';
+      const isSerieLecciones = selectedProducto === 'serie_lecciones';
 
       if (isFormativeEvaluation) {
         res = await generateFormativeEvaluation(req, selectedProducto as FormativeEvaluationType);
       } else if (isBitacoraCientifica) {
         res = await generateBitacoraCientifica(req);
+      } else if (isSerieLecciones) {
+        // Contrato real de /api/materials/unidad-didactica (distinto al de
+        // MaterialRequest): nivel + metodologiaActiva + oas[] + titulo?.
+        // No hay parámetro de "número de sesiones" — el engine decide entre
+        // 2 y 12 clases (UnidadDidacticaSchema.ts) según el OA y la
+        // metodología, no algo que el caller pueda fijar sin tocar el engine.
+        res = await generateUnidadDidactica({
+          titulo: topic || 'Serie de lecciones',
+          nivel: selectedOA.course_name,
+          metodologiaActiva: 'Tradicional',
+          oas: [{ subject: selectedOA.subject_name, objective: selectedOA.official_text }],
+          instructions: additionalContext || undefined,
+        });
       } else {
         switch (selectedProducto) {
           case 'guia_estudiante':
@@ -190,6 +244,8 @@ export function FlujoDocenteView() {
           // The ProductRenderer expects the full ClassroomScientificNotebook structure
           // For now, we pass the evaluation directly - it should match ClassroomScientificNotebook
           setResult(res.evaluation);
+        } else if (selectedProducto === 'serie_lecciones' && res.unidad) {
+          setResult(res.unidad);
         } else {
           setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         }
@@ -199,6 +255,9 @@ export function FlujoDocenteView() {
         }
         if (selectedProducto === 'presentacion' && res.pptDeck) {
           setPptDeck(res.pptDeck as PptDeck);
+        }
+        if (selectedProducto === 'serie_lecciones' && res.unidad) {
+          setUnidadDidactica(res.unidad);
         }
         setStep('resultado');
       } else {
@@ -611,6 +670,8 @@ export function FlujoDocenteView() {
               </div>
             ) : selectedProducto === 'rubrica' && premiumRubric ? (
               <PremiumRubricPreview rubric={premiumRubric} />
+            ) : selectedProducto === 'serie_lecciones' && unidadDidactica ? (
+              <UnidadDidacticaPreview unidad={unidadDidactica} />
             ) : (
               <ProductRenderer product={result} selectedProducto={selectedProducto} />
             )}
