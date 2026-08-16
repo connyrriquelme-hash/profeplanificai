@@ -11,6 +11,8 @@ export type FormativeEvaluationType =
   | 'evaluation_traffic_light';
 
 import type { ClassroomScientificNotebook } from '../types/scientificNotebook';
+import type { UnidadDidactica, MetodologiaActiva } from '../../schemas/UnidadDidacticaSchema';
+import { api } from './apiClient';
 
 export interface MaterialRequest {
   level: string;
@@ -40,6 +42,7 @@ export interface MaterialResult {
   rubric?: unknown;
   slides?: unknown[];
   pptDeck?: unknown;
+  unidad?: UnidadDidactica;
   prompt?: string;
   context?: unknown;
   error?: string;
@@ -85,6 +88,32 @@ export async function generateMaterial(req: MaterialRequest, type: string): Prom
 
 export async function generateBitacoraCientifica(req: MaterialRequest): Promise<MaterialResult> {
   return postJSON('/api/materials/bitacora-cientifica', req);
+}
+
+export interface UnidadDidacticaRequest {
+  titulo?: string;
+  nivel: string;
+  metodologiaActiva: MetodologiaActiva;
+  oas: Array<{ subject: string; objective: string }>;
+  instructions?: string;
+}
+
+// A diferencia de los demás generate*() de este archivo, no usa postJSON:
+// /api/materials/unidad-didactica exige un JWT real (getAuthenticatedUserId
+// en el endpoint), y postJSON nunca manda Authorization. api.post (ya usado
+// por UnidadesDidacticasView.tsx contra este mismo endpoint) sí lo adjunta
+// desde localStorage — sin eso, todo llamado del wizard terminaría en 401.
+export async function generateUnidadDidactica(req: UnidadDidacticaRequest): Promise<MaterialResult> {
+  try {
+    const res = await api.post<{ ok: boolean; id: string; unidad: UnidadDidactica; usedFallback: boolean }>(
+      '/api/materials/unidad-didactica',
+      req,
+    );
+    return { ok: res.ok, resourceId: res.id, unidad: res.unidad };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: message };
+  }
 }
 
 /**
