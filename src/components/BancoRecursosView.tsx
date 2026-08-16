@@ -22,15 +22,18 @@ interface BancoRecursosViewProps {
   onNavigate?: (view: string) => void;
 }
 
+// Paleta cálida educativa: 8 tonos tomados directo de los tokens del tema
+// (.theme-calida en index.css) en vez de un arcoíris genérico de Tailwind —
+// mantiene distinción visual entre categorías sin salir de la identidad de marca.
 const QUICK_CATEGORIES = [
-  { icon: FileText, label: 'Fichas de actividades', color: '#0d9488' },
-  { icon: ClipboardCheck, label: 'Evaluaciones', color: '#7c3aed' },
-  { icon: Presentation, label: 'Presentaciones', color: '#ea580c' },
-  { icon: BookMarked, label: 'Recursos DUA', color: '#2563eb' },
-  { icon: BookOpen, label: 'Lectura y comprensión', color: '#16a34a' },
-  { icon: GraduationCap, label: 'Matemática', color: '#4f46e5' },
-  { icon: FileSpreadsheet, label: 'SIMCE', color: '#d97706' },
-  { icon: FolderOpen, label: 'Plantillas docentes', color: '#0891b2' },
+  { icon: FileText, label: 'Fichas de actividades', color: '#B5471F' }, // --primary
+  { icon: ClipboardCheck, label: 'Evaluaciones', color: '#7C2F13' }, // --primary-ink
+  { icon: Presentation, label: 'Presentaciones', color: '#E9A13B' }, // --accent-honey
+  { icon: BookMarked, label: 'Recursos DUA', color: '#6B5B4E' }, // --ink-soft
+  { icon: BookOpen, label: 'Lectura y comprensión', color: '#5B7B5E' }, // --success
+  { icon: GraduationCap, label: 'Matemática', color: '#9A3A17' }, // --primary-hover
+  { icon: FileSpreadsheet, label: 'SIMCE', color: '#8A5A00' }, // --warn-ink
+  { icon: FolderOpen, label: 'Plantillas docentes', color: '#5A483A' }, // --ink-mid
 ];
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -188,7 +191,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
       <Card className="bg-[var(--primary-tint)] border-[var(--border)] mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
-            <IconBadge icon={Archive} size="xl" color="#0d9488" variant="gradient" />
+            <IconBadge icon={Archive} size="xl" color="#B5471F" variant="gradient" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Banco de Recursos</h1>
@@ -225,7 +228,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 <select
                   value={filterSubject}
                   onChange={e => setFilterSubject(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all shadow-sm appearance-none cursor-pointer"
+                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
                 >
                   <option value="">Todas las asignaturas</option>
                   {uniqueSubjects.map(s => <option key={s} value={s}>{s}</option>)}
@@ -239,7 +242,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 <select
                   value={filterLevel}
                   onChange={e => setFilterLevel(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all shadow-sm appearance-none cursor-pointer"
+                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
                 >
                   <option value="">Todos los niveles</option>
                   {uniqueLevels.map(l => <option key={l} value={l}>{l}</option>)}
@@ -259,7 +262,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
 
       <SectionHeader
         icon={FolderOpen}
-        iconColor="#0d9488"
+        iconColor="#B5471F"
         title="Explorar categorías"
         description="Accede rápidamente a tipos de recursos pedagógicos."
         className="mb-4"
@@ -280,9 +283,9 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
             role="tab"
             aria-selected={activeTab === id}
             onClick={() => setActiveTab(id)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 ${
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 ${
               activeTab === id
-                ? 'bg-teal-600 text-white shadow-sm shadow-teal-200/40'
+                ? 'bg-[var(--primary)] text-white shadow-sm shadow-[var(--primary-tint)]'
                 : 'bg-white text-gray-600 border border-gray-200/80 hover:bg-gray-50 hover:border-gray-300'
             }`}
           >
@@ -357,7 +360,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); onNavigate?.('panel-compartido'); }}
-                        className="text-xs font-semibold text-teal-600 hover:text-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-50 transition-all ml-auto"
+                        className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-ink)] px-2.5 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all ml-auto"
                       >
                         Compartir
                       </button>
@@ -400,7 +403,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
           {recommendedResource && filteredResources.length > 0 && (
             <Card className="mb-6 bg-[var(--primary-tint)] border-[var(--border)]">
               <div className="flex items-start gap-4">
-                <IconBadge icon={Sparkles} size="lg" color="#0d9488" variant="gradient" />
+                <IconBadge icon={Sparkles} size="lg" color="#B5471F" variant="gradient" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <Badge color="teal" size="sm">Recomendado</Badge>
