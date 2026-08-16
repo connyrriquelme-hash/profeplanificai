@@ -37,6 +37,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.21.0",
+    "mammoth": "^1.12.1",
     "motion": "^12.41.0",
     "pptxgenjs": "^4.0.1",
     "react": "^19.1.0",
