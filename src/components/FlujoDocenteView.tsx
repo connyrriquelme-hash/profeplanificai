@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   BookOpenCheck, Target, Layers3, WandSparkles, FileText,
   ClipboardCheck, ClipboardList, Presentation, Loader2, Check,
   ArrowRight, ArrowLeft, Sparkles, GraduationCap, Lightbulb,
-  Save, Download, RefreshCw, AlertTriangle, Microscope, BookOpen
+  Save, Download, RefreshCw, AlertTriangle, Microscope, BookOpen,
+  Link2, Upload
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, generateUnidadDidactica, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
+import { api } from '../services/apiClient';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
@@ -93,6 +95,11 @@ export function FlujoDocenteView() {
   const [selectedProducto, setSelectedProducto] = useState('');
   const [topic, setTopic] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
+  const [referenceUrl, setReferenceUrl] = useState('');
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState('');
+  const [extractedSource, setExtractedSource] = useState<{ fuente: 'url' | 'docx'; titulo?: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<unknown>(null);
   const [resourceId, setResourceId] = useState('');
   const [pptxLoading, setPptxLoading] = useState(false);
@@ -162,6 +169,71 @@ export function FlujoDocenteView() {
       .then(sk => setSkills((sk.data || []).map((s: Record<string, unknown>) => (typeof s.official_text === 'string' ? s.official_text : typeof s.text === 'string' ? s.text : ''))))
       .catch(() => {});
   }, []);
+
+  // Agrega al final de additionalContext en vez de reemplazarlo — el
+  // docente puede haber escrito contexto propio antes de pegar la URL o
+  // subir el Word, y no debe perderlo.
+  const appendToAdditionalContext = useCallback((texto: string) => {
+    setAdditionalContext(prev => (prev.trim() ? `${prev}\n\n${texto}` : texto));
+  }, []);
+
+  const handleExtractFromUrl = useCallback(async () => {
+    const url = referenceUrl.trim();
+    if (!url) return;
+    setExtracting(true);
+    setExtractError('');
+    setExtractedSource(null);
+    try {
+      const res = await api.post<{ ok: true; texto: string; fuente: 'url' | 'docx'; titulo?: string }>(
+        '/api/extract-content',
+        { url },
+      );
+      appendToAdditionalContext(res.texto);
+      setExtractedSource({ fuente: res.fuente, titulo: res.titulo });
+      setReferenceUrl('');
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : 'No se pudo extraer el contenido de la URL.');
+    } finally {
+      setExtracting(false);
+    }
+  }, [referenceUrl, appendToAdditionalContext]);
+
+  // No usa api.post: ese helper siempre serializa el body a JSON, y un
+  // archivo .docx va como FormData/multipart. El token se lee igual que en
+  // la descarga de PPTX más abajo (única otra llamada de este archivo que
+  // necesita adjuntar Authorization a mano).
+  const handleExtractFromFile = useCallback(async (file: File) => {
+    setExtracting(true);
+    setExtractError('');
+    setExtractedSource(null);
+    try {
+      const tokenRaw = localStorage.getItem('planificaia_token');
+      const token = tokenRaw ? JSON.parse(tokenRaw).token : '';
+      const formData = new FormData();
+      formData.set('file', file);
+      const resp = await fetch('/api/extract-content', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        throw new Error(data.error || 'No se pudo extraer el contenido del archivo.');
+      }
+      appendToAdditionalContext(data.texto);
+      setExtractedSource({ fuente: data.fuente, titulo: data.titulo });
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : 'No se pudo extraer el contenido del archivo.');
+    } finally {
+      setExtracting(false);
+    }
+  }, [appendToAdditionalContext]);
+
+  const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) handleExtractFromFile(file);
+  }, [handleExtractFromFile]);
 
   const handleGenerate = useCallback(async () => {
     if (!selectedOA || !selectedProducto) return;
@@ -498,6 +570,75 @@ export function FlujoDocenteView() {
               className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
             />
           </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Material de referencia (opcional)</p>
+              <p className="text-xs text-gray-500 mt-0.5">Pega una URL o sube un Word — el texto se agrega al contexto adicional de arriba.</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                value={referenceUrl}
+                onChange={e => setReferenceUrl(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleExtractFromUrl(); } }}
+                placeholder="Pega una URL: página web, recurso MINEDUC, YouTube..."
+                disabled={extracting}
+                className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none disabled:opacity-60"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                iconLeft={Link2}
+                loading={extracting}
+                disabled={extracting || !referenceUrl.trim()}
+                onClick={handleExtractFromUrl}
+              >
+                Extraer contenido
+              </Button>
+            </div>
+
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".docx"
+                onChange={handleFileInputChange}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                iconLeft={Upload}
+                disabled={extracting}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Subir archivo Word
+              </Button>
+            </div>
+
+            {extracting && (
+              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                <Loader2 size={14} className="animate-spin" /> Extrayendo contenido...
+              </p>
+            )}
+
+            {extractError && !extracting && (
+              <p className="text-xs text-red-600 flex items-start gap-1.5">
+                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                {extractError}
+              </p>
+            )}
+
+            {extractedSource && !extracting && !extractError && (
+              <p className="text-xs text-green-700 flex items-center gap-1.5">
+                <Check size={14} className="flex-shrink-0" />
+                Contenido agregado desde {extractedSource.fuente === 'docx' ? 'archivo Word' : 'URL'}
+                {extractedSource.titulo ? `: "${extractedSource.titulo}"` : ''}
+              </p>
+            )}
+          </div>
+
           {suggestedMethodologies.length > 0 && (
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-2">Metodología sugerida</label>
