@@ -17,7 +17,7 @@ interface Props {
 type DetailTab = 'desarrollo' | 'asistencia' | 'observaciones' | 'plan' | 'recursos' | 'historial';
 
 const STATUS_FLOW: { value: string; label: string; color: string }[] = [
-  { value: 'scheduled', label: 'Programada', color: 'bg-blue-100 text-blue-700' },
+  { value: 'scheduled', label: 'Programada', color: 'bg-[var(--primary-tint)] text-[var(--primary-ink)]' },
   { value: 'in_progress', label: 'En desarrollo', color: 'bg-amber-100 text-amber-700' },
   { value: 'completed', label: 'Completada', color: 'bg-green-100 text-green-700' },
   { value: 'pending_signature', label: 'En revisión', color: 'bg-orange-100 text-orange-700' },

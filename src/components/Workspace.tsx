@@ -868,8 +868,8 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
             <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
-                    <Share2 size={18} className="text-teal-600" />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center">
+                    <Share2 size={18} className="text-[var(--primary)]" />
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-gray-900">Planificación compartida</h3>

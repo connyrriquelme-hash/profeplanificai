@@ -16,18 +16,21 @@ import type { PptDeck } from '../../schemas/PptDeckSchema';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
+// Paleta cálida educativa: tonos tomados directo de los tokens del tema
+// (.theme-calida en index.css) en vez de un arcoíris genérico de Tailwind —
+// mantiene distinción visual entre productos sin salir de la identidad de marca.
 const PRODUCTOS = [
-  { id: 'guia_estudiante', label: 'Guía Estudiante', icon: FileText, color: '#4f46e5' },
-  { id: 'guia_docente', label: 'Guía Docente', icon: BookOpenCheck, color: '#0d9488' },
-  { id: 'planificacion', label: 'Planificación', icon: Layers3, color: '#ea580c' },
-  { id: 'evaluation_exit_ticket', label: 'Ticket de Salida', icon: ClipboardCheck, color: '#db2777' },
-  { id: 'evaluation_321', label: 'Formato 3-2-1', icon: ClipboardCheck, color: '#7c3aed' },
-  { id: 'evaluation_checklist', label: 'Lista de Cotejo', icon: ClipboardList, color: '#059669' },
-  { id: 'evaluation_formative_rubric', label: 'Rúbrica Analítica', icon: ClipboardList, color: '#dc2626' },
-  { id: 'evaluation_traffic_light', label: 'Semáforo', icon: ClipboardCheck, color: '#ea580c' },
-  { id: 'bitacora_cientifica', label: 'Bitácora Científica IA', icon: Microscope, color: '#0891b2' },
-  { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#7c3aed' },
-  { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#059669' },
+  { id: 'guia_estudiante', label: 'Guía Estudiante', icon: FileText, color: '#B5471F' }, // --primary
+  { id: 'guia_docente', label: 'Guía Docente', icon: BookOpenCheck, color: '#7C2F13' }, // --primary-ink
+  { id: 'planificacion', label: 'Planificación', icon: Layers3, color: '#E9A13B' }, // --accent-honey
+  { id: 'evaluation_exit_ticket', label: 'Ticket de Salida', icon: ClipboardCheck, color: '#9A3A17' }, // --primary-hover
+  { id: 'evaluation_321', label: 'Formato 3-2-1', icon: ClipboardCheck, color: '#8A5A00' }, // --warn-ink
+  { id: 'evaluation_checklist', label: 'Lista de Cotejo', icon: ClipboardList, color: '#5B7B5E' }, // --success
+  { id: 'evaluation_formative_rubric', label: 'Rúbrica Analítica', icon: ClipboardList, color: '#2E4630' }, // --success-ink
+  { id: 'evaluation_traffic_light', label: 'Semáforo', icon: ClipboardCheck, color: '#6B5B4E' }, // --ink-soft
+  { id: 'bitacora_cientifica', label: 'Bitácora Científica IA', icon: Microscope, color: '#5A483A' }, // --ink-mid
+  { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#B5471F' }, // --primary
+  { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#E9A13B' }, // --accent-honey
 ];
 
 interface D1Course { id: string; code: string; name: string; objective_count: number }
@@ -302,8 +305,8 @@ export function FlujoDocenteView() {
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
-              <BookOpenCheck size={20} className="text-teal-600" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center">
+              <BookOpenCheck size={20} className="text-[var(--primary)]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">Paso 2: Selecciona la asignatura</h2>
@@ -315,7 +318,7 @@ export function FlujoDocenteView() {
               <button
                 key={s.id}
                 onClick={() => { setSelectedSubject(s); setStep('oa'); }}
-                className="p-3 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 transition-all text-left"
+                className="p-3 rounded-xl border-2 border-gray-200 hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all text-left"
               >
                 <p className="text-sm font-semibold text-gray-800">{s.name}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{s.objective_count} OA</p>
