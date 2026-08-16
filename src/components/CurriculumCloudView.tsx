@@ -111,7 +111,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
     <div className="view">
       <Card className="bg-[var(--primary-tint)] border-[var(--border)] mb-6">
         <div className="flex items-start gap-4">
-          <IconBadge icon={LibraryBig} size="xl" color="#2563eb" variant="gradient" />
+          <IconBadge icon={LibraryBig} size="xl" color="#B5471F" variant="gradient" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Base Curricular Oficial</h1>
@@ -144,7 +144,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
           </div>
           <div>
             <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
-              <BookOpenCheck size={13} className="text-teal-600" strokeWidth={2.25} />
+              <BookOpenCheck size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
               Asignatura
             </label>
             <select

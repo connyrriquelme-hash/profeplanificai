@@ -322,7 +322,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
     <div className="space-y-6">
       <PageHeader
         icon={Share2}
-        iconColor="#0891b2"
+        iconColor="#B5471F"
         title="Panel Compartido"
         description="Comparte planificaciones con colegas para revisar, comentar o adaptar."
         badge="Colaboración"
@@ -361,7 +361,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
               <Card key={doc.id} variant="interactive" onClick={() => setSelectedDoc(doc)}>
                 <div className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-3">
-                    <IconBadge icon={Share2} size="sm" color="#0891b2" variant="soft" />
+                    <IconBadge icon={Share2} size="sm" color="#B5471F" variant="soft" />
                     <Badge color={roleInfo.color} size="sm">{roleInfo.label}</Badge>
                   </div>
                   <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">{doc.title}</h3>

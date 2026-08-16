@@ -15,7 +15,7 @@ export default function CoordinatorDashboardHeader({
   return (
     <PageHeader
       icon={LayoutDashboard}
-      iconColor="#7c3aed"
+      iconColor="#B5471F"
       title="Coordinación Académica"
       description={`${yearText}${termText}`}
       badgeColor="violet"

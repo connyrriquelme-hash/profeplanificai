@@ -23,10 +23,13 @@ interface SmartArtProps {
   compact?: boolean;
 }
 
+// Tonos tomados directo de los tokens del tema (.theme-calida en index.css)
+// en vez de la paleta navy/púrpura original — mantiene distinción visual
+// entre nodos del diagrama sin salir de la identidad cálida.
 const THEME = {
-  primary: '#213885',
-  secondary: '#5F3475',
-  accent: '#893172',
+  primary: '#B5471F', // --primary
+  secondary: '#7C2F13', // --primary-ink
+  accent: '#E9A13B', // --accent-honey
   beige: '#ECDFD2',
   gray: '#CCCACC',
   text: '#1A1A2E',
