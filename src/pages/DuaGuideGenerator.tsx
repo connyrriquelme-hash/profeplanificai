@@ -1,11 +1,25 @@
 import { FormEvent, useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import type { CopilotProjectResult, DuaGuide, PedagogicalPlan } from '../types/copilot';
+import type { CopilotProjectResult, DuaGuide, FichaDiferenciada, FichasDua, PedagogicalPlan } from '../types/copilot';
 import { saveToBank } from '../services/bankService';
+import { api } from '../services/apiClient';
 import { CurriculumSelector, type CurriculumSelection } from '../components/CurriculumSelector';
 import { useActiveLesson } from '../contexts/ActiveLessonContext';
 
 const TOAST_ID = 'dua-guide-generate';
+const FICHAS_TOAST_ID = 'dua-fichas-generate';
+
+const NIVEL_LABELS: Record<FichaDiferenciada['nivel'], string> = {
+  apoyo: 'Apoyo',
+  estandar: 'Estándar',
+  desafio: 'Desafío',
+};
+
+const NIVEL_STYLES: Record<FichaDiferenciada['nivel'], { border: string; bg: string; text: string }> = {
+  apoyo: { border: 'border-green-300', bg: 'bg-green-50', text: 'text-green-700' },
+  estandar: { border: 'border-[var(--primary)]', bg: 'bg-[var(--primary-tint)]', text: 'text-[var(--primary-ink)]' },
+  desafio: { border: 'border-orange-300', bg: 'bg-orange-50', text: 'text-orange-700' },
+};
 
 const TOAST_STYLE = {
   style: {
@@ -127,6 +141,53 @@ function SkeletonLoader() {
   );
 }
 
+function FichaCard({ ficha }: { ficha: FichaDiferenciada }) {
+  const style = NIVEL_STYLES[ficha.nivel];
+
+  return (
+    <section className={`rounded-3xl border-2 ${style.border} ${style.bg} p-5 shadow-sm print:break-before-page print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white`}>
+      <p className={`text-xs font-black uppercase tracking-[0.18em] ${style.text} print:text-black`}>{NIVEL_LABELS[ficha.nivel]}</p>
+      <h3 className="mt-1 text-xl font-black text-slate-900 print:text-black">{ficha.titulo}</h3>
+      <p className="mt-2 text-sm font-semibold text-slate-700 print:text-black">{ficha.objetivo}</p>
+
+      <div className="mt-4 rounded-2xl bg-white/70 border border-slate-200 p-4 print:border-slate-300 print:bg-white">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">Vocabulario clave</p>
+        <dl className="mt-2 space-y-2">
+          {ficha.vocabularioClave.map((item, index) => (
+            <div key={`${ficha.nivel}-vocab-${index}`}>
+              <dt className="text-sm font-black text-slate-900 print:text-black">{item.termino}</dt>
+              <dd className="text-sm text-slate-700 print:text-black">{item.definicion}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">Actividades</p>
+        <ol className="mt-2 space-y-3 list-decimal list-inside text-sm text-slate-800 print:text-black">
+          {ficha.actividades.map((actividad, index) => (
+            <li key={`${ficha.nivel}-act-${index}`} className="leading-relaxed">
+              {actividad.instruccion}
+              {actividad.espacioRespuesta && (
+                <div className="mt-1 ml-5 h-10 rounded-lg border border-dashed border-slate-300 print:border-slate-400" aria-hidden="true" />
+              )}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="mt-4 rounded-2xl bg-white/70 border border-slate-200 p-4 print:border-slate-300 print:bg-white">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">Autoevaluación</p>
+        <ul className="mt-2 space-y-1 list-disc pl-4 text-sm text-slate-700 print:text-black">
+          {ficha.autoevaluacion.map((pregunta, index) => (
+            <li key={`${ficha.nivel}-auto-${index}`}>{pregunta}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 export function DuaGuideGenerator() {
   const { curriculum: activeLesson, hasCurriculum } = useActiveLesson();
   const [curriculumSelection, setCurriculumSelection] = useState<CurriculumSelection>({
@@ -137,6 +198,10 @@ export function DuaGuideGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<CopilotProjectResult | null>(null);
+  const [fichas, setFichas] = useState<FichasDua | null>(null);
+  const [fichasLoading, setFichasLoading] = useState(false);
+  const [fichasError, setFichasError] = useState('');
+  const [activeFichaTab, setActiveFichaTab] = useState<FichaDiferenciada['nivel']>('apoyo');
 
   console.debug('[DUA-DBG] RENDER', {
     level: curriculumSelection.level,
@@ -182,6 +247,8 @@ export function DuaGuideGenerator() {
     setLoading(true);
     setError('');
     setResult(null);
+    setFichas(null);
+    setFichasError('');
 
     toast.loading('Generando tu planificación...', { id: TOAST_ID });
 
@@ -257,6 +324,48 @@ export function DuaGuideGenerator() {
     }
   };
 
+  const handleGenerateFichas = async () => {
+    if (!result || !duaGuide) return;
+    setFichasLoading(true);
+    setFichasError('');
+    toast.loading('Generando fichas para estudiantes...', { id: FICHAS_TOAST_ID });
+
+    try {
+      // Usa result.plan (lo efectivamente generado) en vez de curriculumSelection
+      // (el formulario, que sigue siendo editable mientras el resultado está en
+      // pantalla) para que las fichas nunca queden desalineadas con el duaGuide
+      // que se les pasa — mismo criterio que handleSaveToBank ya aplica arriba.
+      const response = await api.post<{ fichas: FichasDua }>('/api/generate-fichas-dua', {
+        duaGuide,
+        level: result.plan.curso,
+        subject: result.plan.asignatura,
+        topic: result.plan.tema || '',
+      });
+
+      setFichas(response.fichas);
+      setActiveFichaTab('apoyo');
+      toast.dismiss(FICHAS_TOAST_ID);
+      toast.success('Fichas generadas con éxito');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setFichasError(message);
+      toast.dismiss(FICHAS_TOAST_ID);
+      toast.error('No se pudieron generar las fichas. Inténtalo de nuevo.');
+    } finally {
+      setFichasLoading(false);
+    }
+  };
+
+  const handlePrintFichas = () => {
+    document.body.classList.add('printing-fichas-only');
+    const cleanup = () => {
+      document.body.classList.remove('printing-fichas-only');
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 print:m-0 print:w-full print:max-w-none print:bg-white print:p-0 print:text-black">
       <style>{`
@@ -274,6 +383,28 @@ export function DuaGuideGenerator() {
             padding: 0 !important;
             background: #ffffff !important;
             color: #000000 !important;
+          }
+
+          /* Modo "Imprimir fichas": oculta el documento DUA completo y
+             muestra solo #fichas-print-area, en vez del árbol normal. */
+          body.printing-fichas-only #copilot-print-area,
+          body.printing-fichas-only #copilot-print-area * {
+            visibility: hidden !important;
+          }
+          body.printing-fichas-only #fichas-print-area {
+            display: block !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+          }
+          body.printing-fichas-only #fichas-print-area,
+          body.printing-fichas-only #fichas-print-area * {
+            visibility: visible;
           }
         }
       `}</style>
@@ -457,6 +588,88 @@ export function DuaGuideGenerator() {
             />
             <DetailCard title="Cierre de clase inclusivo" items={duaGuide?.cierre_inclusivo} />
           </div>
+
+          {duaGuide && (
+            <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm print:hidden">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Fichas diferenciadas para estudiantes</h3>
+                  <p className="mt-1 text-sm text-slate-600">Genera una ficha imprimible por nivel (Apoyo, Estándar, Desafío) a partir de esta guía DUA.</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleGenerateFichas}
+                    disabled={fichasLoading}
+                    className="rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-4 py-2 text-sm font-black text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {fichasLoading ? 'Generando fichas...' : fichas ? 'Regenerar fichas' : 'Generar fichas para estudiantes'}
+                  </button>
+                  {fichas && (
+                    <button
+                      type="button"
+                      onClick={handlePrintFichas}
+                      className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-[var(--primary-hover)]"
+                    >
+                      Imprimir fichas
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {fichasError && (
+                <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+                  {fichasError}
+                </div>
+              )}
+
+              {fichasLoading && (
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <SkeletonCard lines={4} />
+                  <SkeletonCard lines={4} />
+                  <SkeletonCard lines={4} />
+                </div>
+              )}
+
+              {fichas && (
+                <div className="mt-4">
+                  <div className="flex gap-2 border-b border-slate-200">
+                    {(['apoyo', 'estandar', 'desafio'] as const).map((nivel) => (
+                      <button
+                        key={nivel}
+                        type="button"
+                        onClick={() => setActiveFichaTab(nivel)}
+                        className={`px-4 py-2 text-sm font-black rounded-t-xl transition ${
+                          activeFichaTab === nivel
+                            ? `${NIVEL_STYLES[nivel].bg} ${NIVEL_STYLES[nivel].text} border border-b-0 ${NIVEL_STYLES[nivel].border}`
+                            : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        {NIVEL_LABELS[nivel]}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <FichaCard ficha={fichas[activeFichaTab]} />
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+      )}
+
+      {fichas && (
+        <div id="fichas-print-area" className="hidden space-y-6">
+          <div className="print:break-inside-avoid print:border-b print:border-black print:pb-3">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-black">
+              Fichas Diferenciadas DUA - Generado por ProfePlanificAI
+            </p>
+            <p className="mt-1 text-sm text-black">{duaGuide?.titulo_guia || 'Guía DUA Multinivel'}</p>
+          </div>
+          <FichaCard ficha={fichas.apoyo} />
+          <FichaCard ficha={fichas.estandar} />
+          <FichaCard ficha={fichas.desafio} />
         </div>
       )}
 

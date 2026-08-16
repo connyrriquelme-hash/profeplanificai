@@ -69,3 +69,28 @@ export interface CopilotProjectResult {
   duaGuide: DuaGuide;
   data: PedagogicalPlan & DuaGuide;
 }
+
+export interface VocabularioTermino {
+  termino: string;
+  definicion: string;
+}
+
+export interface ActividadFicha {
+  instruccion: string;
+  espacioRespuesta: boolean;
+}
+
+export interface FichaDiferenciada {
+  nivel: 'apoyo' | 'estandar' | 'desafio';
+  titulo: string;
+  objetivo: string;
+  vocabularioClave: VocabularioTermino[];
+  actividades: ActividadFicha[];
+  autoevaluacion: string[];
+}
+
+export interface FichasDua {
+  apoyo: FichaDiferenciada;
+  estandar: FichaDiferenciada;
+  desafio: FichaDiferenciada;
+}
