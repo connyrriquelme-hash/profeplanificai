@@ -341,4 +341,198 @@ describe('PptContentEngine.generateDeckContent', () => {
       expect(oaBullet.length).toBeLessThan(longOA.length);
     }
   });
+
+  it('usa explícitamente el modelo llama-3.3-70b (mismo argumento que GuiaEngine/RubricaEngine/PlanificacionEngine)', async () => {
+    const env = mockAI(VALID_AI_RESPONSE);
+    await generateDeckContent(env, MOCK_PLAN);
+
+    const runMock = env.AI!.run as unknown as ReturnType<typeof vi.fn>;
+    expect(runMock).toHaveBeenCalledWith('@cf/meta/llama-3.3-70b-instruct-fp8-fast', expect.anything());
+  });
+
+  it('enrich: reemplaza un slide con título genérico ("Introducción") por el del fallback en esa posición', async () => {
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'La Célula', subtitle: '5° Básico — Ciencias Naturales' },
+        { layout: 'bullets', title: 'Introducción', bullets: ['Un punto', 'Otro punto'] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'bullets', title: 'Cierre', bullets: ['Crear organizador gráfico', 'Compartir aprendizajes'] },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    const secondSlide = result.slides[1];
+    expect(secondSlide.layout).toBe('bullets');
+    if (secondSlide.layout === 'bullets') {
+      expect(secondSlide.title).not.toBe('Introducción');
+    }
+  });
+
+  it('enrich: reemplaza un slide de bullets cuando TODOS sus bullets tienen menos de 3 palabras', async () => {
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'La Célula', subtitle: '5° Básico — Ciencias Naturales' },
+        { layout: 'bullets', title: 'Objetivo de Aprendizaje', bullets: ['Sí', 'El caracol', 'Actividad 1'] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'bullets', title: 'Cierre', bullets: ['Crear organizador gráfico', 'Compartir aprendizajes'] },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    const secondSlide = result.slides[1];
+    expect(secondSlide.layout).toBe('bullets');
+    if (secondSlide.layout === 'bullets') {
+      expect(secondSlide.bullets).not.toEqual(['Sí', 'El caracol', 'Actividad 1']);
+    }
+  });
+
+  it('enrich: NO reemplaza bullets de 4-5 palabras (son correctos y específicos para 2° básico, no débiles)', async () => {
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'El Caracol', subtitle: '2° Básico — Lenguaje y Comunicación' },
+        { layout: 'bullets', title: 'Características del caracol', bullets: ['Tiene un caparazón duro', 'Se mueve muy lentamente', 'Come hojas y frutas'] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'bullets', title: 'Cierre', bullets: ['Crear organizador gráfico', 'Compartir aprendizajes'] },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, { ...MOCK_PLAN, curso: '2° Básico', tema: 'El caracol' });
+
+    const caracteristicas = result.slides.find((s) => s.layout === 'bullets' && s.title === 'Características del caracol');
+    expect(caracteristicas?.layout).toBe('bullets');
+    if (caracteristicas?.layout === 'bullets') {
+      expect(caracteristicas.bullets).toEqual(['Tiene un caparazón duro', 'Se mueve muy lentamente', 'Come hojas y frutas']);
+    }
+  });
+
+  it('enrich: NO reemplaza slides titulados "Desarrollo"/"Cierre" cuando sus bullets son específicos (son rótulos de sección válidos, no genéricos)', async () => {
+    const env = mockAI(VALID_AI_RESPONSE);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    const desarrollo = result.slides.find((s) => s.layout === 'bullets' && s.title === 'Desarrollo');
+    expect(desarrollo?.layout).toBe('bullets');
+    if (desarrollo?.layout === 'bullets') {
+      expect(desarrollo.bullets).toEqual(['Modelar la célula con plastilina', 'Identificar partes en el microscopio']);
+    }
+  });
+
+  it('validateDeck: sanea el author de una cita atribuida a una autoridad genérica sin nombre real', async () => {
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'La Célula', subtitle: '5° Básico — Ciencias Naturales' },
+        { layout: 'bullets', title: 'Objetivo de Aprendizaje', bullets: ['Describir la estructura celular', 'Identificar orgánulos celulares'] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'quote', text: 'La célula es la unidad fundamental de la vida', author: 'Un biólogo' },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    const quoteSlide = result.slides.find((s) => s.layout === 'quote');
+    expect(quoteSlide?.layout).toBe('quote');
+    if (quoteSlide?.layout === 'quote') {
+      expect(quoteSlide.text).toBe('La célula es la unidad fundamental de la vida');
+      expect(quoteSlide.author).toBeUndefined();
+    }
+  });
+
+  it('validateDeck: NO toca una cita con nombre propio real (ej. "Schleiden")', async () => {
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'La Célula', subtitle: '5° Básico — Ciencias Naturales' },
+        { layout: 'bullets', title: 'Objetivo de Aprendizaje', bullets: ['Describir la estructura celular', 'Identificar orgánulos celulares'] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'quote', text: 'La célula es la unidad fundamental de la vida', author: 'Schleiden' },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    const quoteSlide = result.slides.find((s) => s.layout === 'quote');
+    expect(quoteSlide?.layout).toBe('quote');
+    if (quoteSlide?.layout === 'quote') {
+      expect(quoteSlide.author).toBe('Schleiden');
+    }
+  });
+
+  it('validateDeck: quita de un slide de bullets cualquier bullet que sea texto crudo del OA (>100 caracteres)', async () => {
+    // >100 (umbral de la regla) pero <=140 (BULLET_MAX del schema): tiene
+    // que ser un valor que la IA SÍ podría devolver sin que
+    // callAIConValidacion lo rechace antes de llegar a validateDeck.
+    const oaLargo = 'Leer independientemente y comprender textos no literarios para ampliar el conocimiento del mundo y entretenerse.';
+    expect(oaLargo.length).toBeGreaterThan(100);
+    expect(oaLargo.length).toBeLessThanOrEqual(140);
+
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'La Célula', subtitle: '5° Básico — Ciencias Naturales' },
+        { layout: 'bullets', title: 'Objetivo de Aprendizaje', bullets: [oaLargo, 'Asignatura: Lenguaje y Comunicación', 'Curso: 2° Básico'] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'bullets', title: 'Cierre', bullets: ['Crear organizador gráfico', 'Compartir aprendizajes'] },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    const oaSlide = result.slides.find((s) => s.layout === 'bullets' && s.title === 'Objetivo de Aprendizaje');
+    expect(oaSlide?.layout).toBe('bullets');
+    if (oaSlide?.layout === 'bullets') {
+      expect(oaSlide.bullets).not.toContain(oaLargo);
+      expect(oaSlide.bullets.every((b) => b.length <= 100)).toBe(true);
+      expect(oaSlide.bullets).toContain('Asignatura: Lenguaje y Comunicación');
+      expect(oaSlide.bullets.length).toBeGreaterThanOrEqual(2); // nunca queda bajo el mínimo del schema
+    }
+  });
+
+  it('validateDeck: si TODOS los bullets de un slide son texto crudo del OA, rellena con contenido genérico seguro en vez de eliminar el slide', async () => {
+    const oaLargo1 = 'Leer independientemente y comprender textos no literarios para ampliar el conocimiento del mundo y entretenerse.';
+    const oaLargo2 = 'Comprender la información que aportan las ilustraciones y símbolos, formulando una opinión sobre la lectura hecha.';
+    expect(oaLargo1.length).toBeLessThanOrEqual(140);
+    expect(oaLargo2.length).toBeLessThanOrEqual(140);
+
+    const response = JSON.stringify({
+      slides: [
+        { layout: 'title', title: 'La Célula', subtitle: '5° Básico — Ciencias Naturales' },
+        { layout: 'bullets', title: 'Objetivo de Aprendizaje', bullets: [oaLargo1, oaLargo2] },
+        { layout: 'bullets', title: 'Inicio', bullets: ['Pregunta guía: ¿Qué es una célula?', 'Observar imágenes de células'] },
+        { layout: 'bullets', title: 'Desarrollo', bullets: ['Modelar la célula con plastilina', 'Identificar partes en el microscopio'] },
+        { layout: 'bullets', title: 'Cierre', bullets: ['Crear organizador gráfico', 'Compartir aprendizajes'] },
+      ],
+    });
+    const env = mockAI(response);
+    const result = await generateDeckContent(env, MOCK_PLAN);
+
+    expect(result.slides.length).toBe(5); // el slide nunca se elimina
+    const oaSlide = result.slides.find((s) => s.layout === 'bullets' && s.title === 'Objetivo de Aprendizaje');
+    expect(oaSlide?.layout).toBe('bullets');
+    if (oaSlide?.layout === 'bullets') {
+      expect(oaSlide.bullets).not.toContain(oaLargo1);
+      expect(oaSlide.bullets).not.toContain(oaLargo2);
+      expect(oaSlide.bullets.length).toBeGreaterThanOrEqual(2);
+      expect(oaSlide.bullets.every((b) => b.length <= 100)).toBe(true);
+    }
+  });
+
+  it('validateDeck: el fallback determinista también queda saneado cuando la IA falla (su propio bullet de OA puede exceder 100 caracteres)', async () => {
+    const longPlan: PedagogicalPlan = {
+      ...MOCK_PLAN,
+      objetivo_aprendizaje: 'Leer independientemente y comprender textos no literarios (cartas, notas, instrucciones y artículos informativos) para entretenerse y ampliar su conocimiento del mundo: extrayendo información explícita e implícita comprendiendo la información que aportan las ilustraciones y los símbolos a un texto formulando una opinión sobre algún aspecto de la lectura.',
+    };
+    const env = mockAINoAI();
+    const result = await generateDeckContent(env, longPlan);
+
+    for (const slide of result.slides) {
+      if (slide.layout === 'bullets') {
+        expect(slide.bullets.every((b) => b.length <= 100)).toBe(true);
+      }
+    }
+  });
 });

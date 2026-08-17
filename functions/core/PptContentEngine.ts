@@ -27,6 +27,20 @@ REGLAS OBLIGATORIAS:
 7. NO incluyas explicaciones ni texto adicional fuera del JSON.
 8. Responde ÚNICAMENTE con JSON válido que cumpla el esquema PptDeckSchema.
 
+REGLA CRÍTICA — PRECISIÓN FACTUAL:
+Si no tienes certeza sobre un dato específico (nombre científico, cifra, proceso biológico, característica anatómica), usa una descripción funcional general en vez de un dato concreto que pueda ser inexacto. NUNCA inventes términos, palabras o conceptos que no existan. NUNCA uses metáforas o analogías que produzcan información incorrecta.
+
+CITAS PROHIBIDAS:
+PROHIBIDO incluir slides de tipo "quote" con citas atribuidas a "Un biólogo", "Un experto", "Un científico" o cualquier autoridad genérica sin nombre real verificable. Si usas el layout "quote", la cita debe ser un refrán popular, un dicho conocido, o una pregunta reflexiva del propio contenido — nunca una atribución a una persona o fuente que no puedas verificar.
+
+COHERENCIA CON EL OA — HABILIDAD, NO SOLO TEMA:
+El contenido de los slides debe enseñar o modelar la HABILIDAD del OA, no solo información sobre el tema. Por ejemplo, si el OA es de comprensión lectora, incluye slides que modelen cómo identificar información explícita vs. implícita, cómo interpretar ilustraciones, y un espacio para que el estudiante practique formular una opinión — no solo datos sobre el tema. Siempre pregúntate: ¿este slide ayuda al estudiante a desarrollar la habilidad del OA, o solo informa sobre el tema?
+
+TIPOGRAFÍA Y ORTOGRAFÍA:
+Cuida la ortografía española: usa tildes correctamente (imagen, no imagén), escribe con mayúscula solo al inicio de oraciones y en nombres propios.
+
+NUNCA incluyas un slide cuyo único propósito sea listar el OA oficial textualmente — el objetivo debe aparecer reformulado en lenguaje simple integrado en el contenido, no como slide separado de "Objetivo de Aprendizaje" que solo repite el texto curricular.
+
 ESTRUCTURA JSON OBLIGATORIA:
 {
   "slides": [
@@ -212,12 +226,117 @@ function safeguardEmptyArrays(deck: PptDeck): PptDeck {
   return { slides };
 }
 
+// ─── Enrich parcial — mismo principio que enrichPlanificacion
+// (PlanificacionEngine.ts): safeguardBulletsFromPlan/safeguardEmptyArrays
+// solo arreglan completitud ESTRUCTURAL (arrays vacíos o bajo el mínimo del
+// schema); esto arregla CALIDAD de contenido — un slide que sí pasa el
+// schema pero es débil o genérico se reemplaza por el fallback determinista
+// en la misma posición, en vez de descartar el deck completo.
+
+// 3, no 5: para 2° básico un bullet de 4-5 palabras ("Tiene un caparazón
+// duro") es correcto y específico — GuiaEngine mismo recomienda oraciones
+// muy cortas para 1°-2° básico. Con 3 solo se filtra lo realmente vacío
+// ("Sí", "El caracol", "Actividad 1"), no contenido bueno pero breve.
+const MIN_WORDS_PER_BULLET = 3;
+// A propósito NO incluye "desarrollo"/"cierre"/"actividad"/"ejercicio":
+// son los rótulos de sección estándar y deseables de una clase
+// (Inicio/Desarrollo/Cierre, el mismo patrón que ya usa GuiaEngine para
+// la guía docente) — un slide titulado "Desarrollo" con bullets
+// específicos no es genérico, solo sigue la estructura esperada. Solo
+// entran acá palabras que nunca aportan contexto por sí solas.
+const GENERIC_TITLE_PATTERN = /^(introducci[oó]n|conclusi[oó]n|resumen|contenido)s?$/i;
+
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// Título "sin contexto específico": calza contra la lista de títulos
+// genéricos de manual. A propósito NO se intentó además "es corto y no
+// menciona el tema" — esa heurística marcaba falsos positivos reales
+// (ej. "Membrana Celular" contra tema "La célula": no comparte el
+// substring exacto por el acento/flexión y quedaba descartado un slide
+// image_text perfectamente específico). Mejor un filtro angosto y sin
+// falsos positivos que uno amplio que descarta contenido bueno.
+function isGenericTitle(title: string): boolean {
+  return GENERIC_TITLE_PATTERN.test(title.trim().toLowerCase());
+}
+
+function isWeakSlide(slide: Slide): boolean {
+  if ('title' in slide && isGenericTitle(slide.title)) return true;
+  if (slide.layout === 'bullets' && slide.bullets.every((b) => countWords(b) < MIN_WORDS_PER_BULLET)) return true;
+  return false;
+}
+
+function enrichDeck(aiDeck: PptDeck, fallbackDeck: PptDeck): PptDeck {
+  const slides = aiDeck.slides.map((slide, index) => {
+    if (!isWeakSlide(slide)) return slide;
+    // Sin equivalente en esa posición del fallback (deck más corto que el
+    // generado por la IA) — se deja tal cual, no hay con qué enriquecerlo.
+    return fallbackDeck.slides[index] ?? slide;
+  });
+
+  return { slides };
+}
+
+// ─── Verificación anti-cita — regla "CITAS PROHIBIDAS" en código: si la IA
+// ignora la regla del prompt e igual atribuye una cita a una autoridad
+// genérica sin nombre real, se sanea el campo "author" en vez de descartar
+// el slide entero (el texto de la cita en sí puede seguir siendo válido).
+// Mismo patrón de dos capas (prompt + runtime) que INTERNAL_STATE_PATTERN
+// en RubricaEngine.ts.
+const FAKE_AUTHORITY_PATTERN = /\b(bi[oó]log[oa]s?|expert[oa]s?|cient[ií]fic[oa]s?|investigador(a)?|profesor(a)?)\b/i;
+
+// Regla "NUNCA incluyas un slide cuyo único propósito sea listar el OA
+// textualmente" en código — no solo prompt: el caso real encontrado en el
+// diagnóstico anterior vino del FALLBACK determinista (buildFallbackDeck
+// trunca el OA a BULLET_MAX=140 caracteres, muy por sobre lo que un niño
+// de 2° básico lee), no de la IA ignorando la regla. Un rule de prompt
+// nunca habría arreglado eso — el fallback es código determinista, no le
+// llega el prompt. 100 caracteres: más largo que cualquier bullet
+// reformulado en lenguaje simple, pero corto para texto curricular crudo.
+const OA_BULLET_MAX_LEN = 100;
+const MIN_BULLETS_SCHEMA = 2; // BulletsSlideSchema.bullets.min — ver schemas/PptDeckSchema.ts
+const SAFE_FILLER_BULLETS = ['Revisemos juntos el objetivo de esta clase.', 'Pregunta a tu profesor o profesora si tienes dudas.'];
+
+function sanitizeBulletsSlide(slide: Extract<Slide, { layout: 'bullets' }>): Slide {
+  const cleanBullets = slide.bullets.filter((b) => b.trim().length <= OA_BULLET_MAX_LEN);
+  if (cleanBullets.length === slide.bullets.length) return slide;
+
+  // Nunca se elimina el slide completo (arriesgaría bajar el deck de
+  // MIN_SLIDES=5): si quedan menos bullets que el mínimo del schema, se
+  // completa con relleno seguro y genérico en vez de texto curricular.
+  const filled = [...cleanBullets];
+  let fillerIndex = 0;
+  while (filled.length < MIN_BULLETS_SCHEMA) {
+    filled.push(SAFE_FILLER_BULLETS[fillerIndex % SAFE_FILLER_BULLETS.length]);
+    fillerIndex += 1;
+  }
+
+  return { ...slide, bullets: filled };
+}
+
+export function validateDeck(deck: PptDeck): PptDeck {
+  const slides = deck.slides.map((slide): Slide => {
+    if (slide.layout === 'quote' && slide.author && FAKE_AUTHORITY_PATTERN.test(slide.author)) {
+      const { author, ...rest } = slide;
+      return rest;
+    }
+    if (slide.layout === 'bullets') {
+      return sanitizeBulletsSlide(slide);
+    }
+    return slide;
+  });
+
+  return { slides };
+}
+
 export async function generateDeckContent(
   env: AIEngineEnv,
   plan: PedagogicalPlan,
   opciones?: { maxSlides?: number },
 ): Promise<PptDeck> {
   const maxSlides = opciones?.maxSlides ?? 20;
+  const fallback = buildFallbackDeck(plan);
 
   try {
     const { data } = await callAIConValidacion(
@@ -225,16 +344,18 @@ export async function generateDeckContent(
       buildSystemPrompt(plan),
       JSON.stringify(plan, null, 2),
       PptDeckSchema,
-      { maxTokens: 3000 },
+      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 3000 },
     );
 
     let deck = data;
+    deck = enrichDeck(deck, fallback);
     deck = safeguardBulletsFromPlan(deck, plan);
     deck = safeguardEmptyArrays(deck);
+    deck = validateDeck(deck);
     deck.slides = deck.slides.slice(0, maxSlides);
     return deck;
   } catch (error) {
     console.error('[PptContentEngine] error:', error);
-    return buildFallbackDeck(plan);
+    return validateDeck(fallback);
   }
 }
