@@ -76,7 +76,12 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
            o.course_id, o.subject_id, o.axis_id, o.unit_id,
            c.code AS course_code, c.name AS course_name,
            s.id AS subject_id_out, s.name AS subject_name,
-           a.name AS axis_name
+           a.name AS axis_name,
+           (SELECT json_group_array(DISTINCT ci.indicator_text)
+              FROM curriculum_indicators ci WHERE ci.oa_code = o.code) AS indicators_json,
+           (SELECT json_group_array(DISTINCT sk.official_text)
+              FROM skills sk JOIN objective_skills os ON os.skill_id = sk.id
+              WHERE os.objective_id = o.id) AS skills_json
     FROM objectives o
     JOIN courses c ON c.id=o.course_id
     JOIN subjects s ON s.id=o.subject_id
