@@ -25,8 +25,10 @@ export type PremiumRubric = {
 };
 
 export function truncate(text: string, max: number): string {
-  if (!text || text.length <= max) return text || '';
-  const sliced = text.slice(0, max - 3);
+  if (!text) return '';
+  const chars = Array.from(text);
+  if (chars.length <= max) return text;
+  const sliced = chars.slice(0, max - 3).join('');
   const lastSpace = sliced.lastIndexOf(' ');
   if (lastSpace > max * 0.5) return sliced.slice(0, lastSpace).trim() + '...';
   return sliced.trim() + '...';

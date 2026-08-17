@@ -304,6 +304,24 @@ describe('PptContentEngine.generateDeckContent', () => {
     }
   });
 
+  it('should not corrupt an emoji straddling the truncation boundary', async () => {
+    const emojiPlan: PedagogicalPlan = {
+      ...MOCK_PLAN,
+      tema: '🟢🟡🔴'.repeat(15) + ' Regiones naturales de Chile y sus características geográficas',
+      asignatura: 'Historia, Geografía y Ciencias Sociales',
+    };
+    const env = mockAINoAI();
+    const result = await generateDeckContent(env, emojiPlan);
+
+    const titleSlide = result.slides[0];
+    expect(titleSlide.layout).toBe('title');
+    if (titleSlide.layout === 'title') {
+      const roundTripped = new TextDecoder('utf-8').decode(new TextEncoder().encode(titleSlide.title));
+      expect(roundTripped).toBe(titleSlide.title);
+      expect(titleSlide.title).not.toContain('�');
+    }
+  });
+
   it('should send age-appropriate instructions to the AI based on the plan\'s curso', async () => {
     const env = mockAI(VALID_AI_RESPONSE);
     const plan1Basico: PedagogicalPlan = { ...MOCK_PLAN, curso: '1° Básico' };

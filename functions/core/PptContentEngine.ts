@@ -55,8 +55,9 @@ ESTRUCTURA JSON OBLIGATORIA:
 
 function truncate(text: string, max: number): string {
   const trimmed = text.trim();
-  if (trimmed.length <= max) return trimmed;
-  const cut = trimmed.slice(0, max - 1).trimEnd();
+  const chars = Array.from(trimmed);
+  if (chars.length <= max) return trimmed;
+  const cut = chars.slice(0, max - 1).join('').trimEnd();
   const lastSpace = cut.lastIndexOf(' ');
   return `${lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut}…`;
 }

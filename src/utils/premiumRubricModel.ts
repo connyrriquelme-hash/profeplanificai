@@ -103,8 +103,9 @@ function extractConcepts(oaText: string): string[] {
 }
 
 function truncate(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const sliced = text.slice(0, max - 3);
+  const chars = Array.from(text);
+  if (chars.length <= max) return text;
+  const sliced = chars.slice(0, max - 3).join('');
   const lastSpace = sliced.lastIndexOf(' ');
   if (lastSpace > max * 0.5) return sliced.slice(0, lastSpace).trim() + '...';
   return sliced.trim() + '...';
