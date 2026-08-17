@@ -107,6 +107,10 @@ export function FlujoDocenteView() {
   const [renderError, setRenderError] = useState('');
   const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
   const [unidadDidactica, setUnidadDidactica] = useState<UnidadDidactica | null>(null);
+  const [chatInstruccion, setChatInstruccion] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const [chatExplicacion, setChatExplicacion] = useState('');
 
   // Load courses
   useEffect(() => {
@@ -361,6 +365,36 @@ export function FlujoDocenteView() {
       });
     } catch {}
   }, [resourceId, result, selectedProducto, selectedOA]);
+
+  const handleAplicarEdicionGuia = useCallback(async () => {
+    const instruccion = chatInstruccion.trim();
+    if (!instruccion || !resourceId || chatLoading) return;
+
+    setChatLoading(true);
+    setChatError('');
+    setChatExplicacion('');
+
+    try {
+      const response = await api.patch<{
+        ok: boolean;
+        seccionModificada: number;
+        guiaActualizada: unknown;
+        explicacion: string;
+      }>('/api/materials/guide/edit', {
+        resourceId,
+        instruccion,
+        guia: result,
+      });
+
+      setResult(response.guiaActualizada);
+      setChatExplicacion(response.explicacion);
+      setChatInstruccion('');
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : 'No se pudo aplicar el cambio. Inténtalo de nuevo.');
+    } finally {
+      setChatLoading(false);
+    }
+  }, [chatInstruccion, chatLoading, resourceId, result]);
 
   const suggestedMethodologies = useMemo(() => {
     if (!selectedSubject) return [];
@@ -817,6 +851,53 @@ export function FlujoDocenteView() {
               <ProductRenderer product={result} selectedProducto={selectedProducto} />
             )}
           </div>
+
+          {selectedProducto === 'guia_estudiante' && resourceId && (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 print:hidden">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                <Sparkles size={16} className="text-[var(--primary)]" />
+                Editar con IA
+              </h3>
+              <p className="mt-1 text-xs text-gray-500">
+                Pídele a la IA que ajuste una sección específica de la guía. El resto se mantiene igual.
+              </p>
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  value={chatInstruccion}
+                  onChange={(e) => setChatInstruccion(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !chatLoading && chatInstruccion.trim()) handleAplicarEdicionGuia();
+                  }}
+                  placeholder="Ej: Simplifica la segunda actividad para 1° básico"
+                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary-tint)]"
+                  disabled={chatLoading}
+                />
+                <Button
+                  variant="primary"
+                  iconLeft={Sparkles}
+                  onClick={handleAplicarEdicionGuia}
+                  disabled={chatLoading || !chatInstruccion.trim()}
+                >
+                  {chatLoading ? 'Aplicando cambio...' : 'Aplicar cambio'}
+                </Button>
+              </div>
+              {chatLoading && (
+                <p className="mt-2 text-xs font-medium text-gray-500">✏️ Aplicando cambio...</p>
+              )}
+              {chatExplicacion && !chatLoading && (
+                <p className="mt-2 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  Cambio aplicado: {chatExplicacion}
+                </p>
+              )}
+              {chatError && !chatLoading && (
+                <p className="mt-2 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                  <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                  {chatError}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <Button variant="primary" iconLeft={Save} onClick={handleSave}>Guardar en Biblioteca</Button>
