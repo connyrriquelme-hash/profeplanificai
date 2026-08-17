@@ -709,7 +709,7 @@ async function callAI(
     { role: 'user' as const, content: JSON.stringify(plan, null, 2) },
   ];
 
-  const response = await env.AI.run(MODEL, {
+  const response = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
     messages,
     temperature: 0.2,
     max_tokens: 2500,
@@ -726,7 +726,7 @@ export class AIEngine {
         SYSTEM_PROMPT_DUA,
         JSON.stringify(plan, null, 2),
         DuaGuideValidationSchema,
-        { maxTokens: 2500 },
+        { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 3000 },
       );
       const result = enrichDuaGuide(data, plan);
 
