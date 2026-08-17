@@ -15,10 +15,11 @@
     Para activar D1 basta con que el helper USE_D1 = true y las funciones
     asíncronas fetchObjectivesFromAPI llamarán al endpoint real.
 
-    Pendiente: agregar columnas indicators (JSON) y skills (JSON) a la tabla
-    objectives mediante migración D1:
-      ALTER TABLE objectives ADD COLUMN indicators TEXT DEFAULT '[]';
-      ALTER TABLE objectives ADD COLUMN skills TEXT DEFAULT '[]';
+    indicators/skills: GET /api/objectives ya los entrega por objetivo
+    (indicators_json, skills_json), vía subqueries a curriculum_indicators
+    (oa_code) y a skills/objective_skills (objective_id) — no requirió
+    columnas nuevas en objectives, esas tablas ya existían y estaban
+    pobladas (8.720 indicadores, 357 skills / 16.212 links).
 */
 
 const USE_D1 = false; // Cambiar a true cuando D1 tenga datos de indicadores/habilidades
@@ -44,9 +45,21 @@ interface D1ObjectiveRow {
   course_code: string;
   course_name: string;
   subject_name: string;
+  indicators_json?: string | null;
+  skills_json?: string | null;
 }
 
-async function fetchObjectivesFromAPI(params: { course?: string; subject?: string; q?: string }): Promise<LearningObjective[]> {
+function parseJsonStringArray(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchObjectivesFromAPI(params: { course?: string; subject?: string; q?: string }): Promise<LearningObjective[]> {
   const query = new URLSearchParams();
   if (params.course) query.set('course', params.course);
   if (params.subject) query.set('subject', params.subject);
@@ -64,8 +77,8 @@ async function fetchObjectivesFromAPI(params: { course?: string; subject?: strin
     subject: row.subject_name,
     axis: row.axis_name || undefined,
     text: row.official_text,
-    indicators: [],  // TODO: leer de columna indicators cuando exista en D1
-    skills: [],      // TODO: leer de columna skills cuando exista en D1
+    indicators: parseJsonStringArray(row.indicators_json),
+    skills: parseJsonStringArray(row.skills_json),
   }));
 }
 
