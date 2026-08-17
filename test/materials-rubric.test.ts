@@ -239,4 +239,27 @@ describe('POST /api/materials/rubric', () => {
     expect(names).toContain('Explicación de la función celular');
     expect(names).not.toContain('Criterio con descriptor duplicado');
   });
+
+  it('descarta solo el criterio cuyo descriptor describe un "sentimiento" en vez del acto observable de expresarlo', async () => {
+    const feelingCriterion = {
+      id: 'c3', name: 'Opinión sobre la célula',
+      description: 'Formula una opinión sobre lo aprendido de la célula.', weight: 20,
+      indicators: [
+        { levelId: 'avanzado', descriptor: 'Explica con detalle su opinión fundamentada sobre lo más interesante de la célula observada', evidence: 'Texto con opinión fundamentada', feedbackSuggestion: 'Tu opinión está bien argumentada.' },
+        { levelId: 'adecuado', descriptor: 'Señala una opinión sobre algún aspecto de la célula, aunque sin fundamentar del todo', evidence: 'Comentario oral con una razón', feedbackSuggestion: 'Intenta fundamentar más tu opinión.' },
+        { levelId: 'en_desarrollo', descriptor: 'Menciona una posible opinión sobre la célula, aunque no queda del todo clara', evidence: 'Comentario oral breve', feedbackSuggestion: 'Vamos a pensar juntos en una opinión clara.' },
+        { levelId: 'inicial', descriptor: 'Comienza a expresar una preferencia o sentimiento básico hacia el tema, aunque no lo explica', evidence: 'Gesto de agrado o desagrado', feedbackSuggestion: 'Sigamos explorando tus impresiones sobre el tema.' },
+      ],
+    };
+    const ai = { run: async () => JSON.stringify(validAiPayload(feelingCriterion)) };
+    const ctx = makeContext({ mockAi: ai });
+    const res = await onRequestPost(ctx);
+    const json = await res.json() as any;
+
+    expect(res.status).toBe(200);
+    const names = json.rubric.criteria.map((c: any) => c.name);
+    expect(names).toContain('Identificación de organelos celulares');
+    expect(names).toContain('Explicación de la función celular');
+    expect(names).not.toContain('Opinión sobre la célula');
+  });
 });

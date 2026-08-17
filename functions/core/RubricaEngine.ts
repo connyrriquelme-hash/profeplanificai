@@ -1129,6 +1129,7 @@ REGLAS OBLIGATORIAS:
 2. Genera entre 2 y 10 criterios de evaluación, cada uno específico al tema "${topic}" y al OA — nunca criterios intercambiables entre asignaturas distintas.
 3. Cada criterio debe tener EXACTAMENTE 4 indicadores (uno por nivel), con levelId EXACTAMENTE uno de: "avanzado", "adecuado", "en_desarrollo", "inicial" (sin variaciones, sin mayúsculas distintas, sin acentos alternativos).
 4. PROHIBIDO usar frases genéricas o vacías de contenido, entre otras: "Cumple completamente", "Cumple parcialmente", "No cumple", "Excelente", "Bueno", "Regular", "Insuficiente", "Demuestra comprensión del contenido", "Aplica el concepto", "Trabajo colaborativo". Cada descriptor debe nombrar QUÉ hace observablemente el estudiante en relación al tema real.
+4b. Si un criterio evalúa opiniones o preferencias del estudiante, el descriptor debe nombrar el ACTO observable de expresar esa opinión (decir, escribir, señalar, comentar) — NUNCA un estado interno o "sentimiento" ("siente", "sentimiento", "piensa que"), que no es observable por el docente. Ejemplo INCORRECTO: "Comienza a expresar una preferencia o sentimiento básico hacia el tema, aunque no lo explica." Ejemplo CORRECTO: "Dice o señala una preferencia sobre algún aspecto del tema (ej. 'me gustó cuando...'), aunque no explica por qué."
 5. Cada "descriptor" debe tener al menos 20 caracteres y ser claramente distinto entre los 4 niveles del mismo criterio (nunca repitas el mismo texto en dos niveles).
 6. "evidence" debe ser algo observable y concreto (un producto, una respuesta, un registro), no una repetición del descriptor.
 7. "feedbackSuggestion" debe ser una frase breve dirigida al estudiante en segunda persona, coherente con el nivel de desempeño.
@@ -1149,11 +1150,20 @@ const FORBIDDEN_PHRASES = [
   'demuestra comprensión del contenido', 'aplica el concepto', 'trabajo colaborativo',
 ];
 
+// Regla 4b del prompt en código: "siente"/"sentimiento" describen un
+// estado interno que el docente no puede observar directamente — un
+// descriptor de opinión válido nombra el ACTO de expresarla (decir,
+// escribir, señalar), no el sentimiento en sí. No confiamos solo en el
+// prompt para esto (mismo motivo que el resto de isGenericOrWeak): la IA
+// puede ignorar una regla de prompt sin que el schema lo detecte.
+const INTERNAL_STATE_PATTERN = /\bsiente\b|\bsentimientos?\b|\bpiensa que\b/i;
+
 function isGenericOrWeak(text: string, siblingTexts: string[]): boolean {
   const normalized = (text || '').trim().toLowerCase();
   if (normalized.length < 20) return true;
   if (FORBIDDEN_PHRASES.includes(normalized)) return true;
   if (siblingTexts.some((s) => s.trim().toLowerCase() === normalized)) return true;
+  if (INTERNAL_STATE_PATTERN.test(normalized)) return true;
   return false;
 }
 
