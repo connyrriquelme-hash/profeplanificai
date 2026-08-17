@@ -37,6 +37,22 @@ export const GuideSectionSchema = z.object({
 
 export type GuideSectionAI = z.infer<typeof GuideSectionSchema>;
 
+// ─── Texto de lectura (Guía Estudiante) ───
+// Hace que la Guía Estudiante sea autocontenida: antes, "Actividad 1: Lee
+// el texto..." referenciaba un texto que el profesor tenía que conseguir e
+// imprimir aparte. Ahora el texto va incluido en la guía y las actividades
+// de comprensión se construyen sobre él (ver REGLA CRÍTICA en el prompt).
+
+export const TextoLecturaSchema = z.object({
+  titulo: z.string().min(3, 'El título del texto es requerido').max(80, 'Máximo 80 caracteres'),
+  cuerpo: z.string()
+    .min(100, 'El texto debe tener al menos 100 caracteres (aprox. 5-8 oraciones)')
+    .max(800, 'Máximo 800 caracteres'),
+  fuente: z.enum(['generado_ia', 'proporcionado_profesor']),
+});
+
+export type TextoLecturaAI = z.infer<typeof TextoLecturaSchema>;
+
 // ─── Guía Estudiante ───
 
 const IntroSectionSchema = GuideSectionSchema.extend({
@@ -79,6 +95,7 @@ export const GuiaEstudianteAISchema = z.object({
     .min(10, 'El objetivo debe tener al menos 10 caracteres')
     .max(400, 'Máximo 400 caracteres')
     .describe('OA reformulado en lenguaje accesible para el estudiante'),
+  textoLectura: TextoLecturaSchema,
   sections: z.array(GuideSectionSchema)
     .min(4, 'Mínimo 4 secciones: Introducción, Vocabulario clave, al menos 1 Actividad, Reflexión')
     .max(8, 'Máximo 8 secciones (Introducción + Vocabulario + hasta 4 Actividades + Reflexión)'),

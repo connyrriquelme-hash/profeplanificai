@@ -131,6 +131,14 @@ export interface GuideSection {
   activities?: string[];
 }
 
+// Debe seguir siendo estructuralmente idéntico a GuiaTextoLectura en
+// functions/core/GuiaEngine.ts — mismo motivo que GuideSection arriba.
+export interface GuideTextoLectura {
+  titulo: string;
+  cuerpo: string;
+  fuente: 'generado_ia' | 'proporcionado_profesor';
+}
+
 export interface DUASection {
   principle: string;
   strategies: string[];
