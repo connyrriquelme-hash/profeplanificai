@@ -1,6 +1,6 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { inferRangoEtario } from './pedagogicalUtils';
+import { inferRangoEtario, isGenericOrWeak } from './pedagogicalUtils';
 import {
   SemaforoAISchema,
   type SemaforoAI,
@@ -135,18 +135,30 @@ function buildUserPrompt(input: SemaforoEngineInput): string {
   );
 }
 
-// ─── Capa 3: enrich — si la IA devolvió algo débil, se completa con el fallback ───
+// ─── Capa 3: enrich — valida que cada aspecto tenga los 3 niveles
+// 🔴🟡🟢, descripción suficientemente larga y no sea genérica.
+
+function isValidAspect(aspect: { description: string; indicator: string }): boolean {
+  if (!aspect.description || !aspect.indicator) return false;
+  if (aspect.description.trim().length < 20) return false;
+  if (isGenericOrWeak(aspect.description)) return false;
+  if (!aspect.indicator.includes('🔴') || !aspect.indicator.includes('🟡') || !aspect.indicator.includes('🟢')) return false;
+  if (aspect.indicator.trim().length < 30) return false;
+  return true;
+}
 
 function enrich(ai: SemaforoAI, fallback: SemaforoResult): SemaforoResult {
   const aspects = ai.aspects?.length >= 3 && ai.aspects.length <= 5
     ? composeAspects(ai.aspects.map((a) => ({ description: a.description, levels: a.levels })))
     : fallback.aspects;
 
+  const validAspects = aspects.filter(isValidAspect);
+
   return {
-    title: ai.title || fallback.title,
+    title: ai.title && ai.title.trim().length > 10 ? ai.title : fallback.title,
     objective: fallback.objective,
     instructions: fallback.instructions,
-    aspects,
+    aspects: validAspects.length >= 3 ? validAspects : fallback.aspects,
     colors: fallback.colors,
     teacherNotes: fallback.teacherNotes,
   };

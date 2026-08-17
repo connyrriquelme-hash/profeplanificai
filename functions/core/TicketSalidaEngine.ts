@@ -1,6 +1,6 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { inferRangoEtario } from './pedagogicalUtils';
+import { inferRangoEtario, isGenericOrWeak, mentionsTopic } from './pedagogicalUtils';
 import {
   TicketSalidaAISchema,
   type TicketSalidaAI,
@@ -122,18 +122,34 @@ function buildUserPrompt(input: TicketSalidaEngineInput): string {
   );
 }
 
-// ─── Capa 3: enrich — si la IA devolvió algo débil, se completa con el fallback ───
+// ─── Capa 3: enrich — valida que las preguntas no sean genéricas,
+// tengan largo mínimo, mencionen el tema y que la última sea de
+// aplicación/transferencia (más larga que las anteriores).
 
-function enrich(ai: TicketSalidaAI, fallback: TicketSalidaResult): TicketSalidaResult {
-  const aiQuestions = ai.questions?.length >= 3 && ai.questions.length <= 5
-    ? composeQuestions(ai.questions.map((q) => q.question))
+const MIN_QUESTION_LEN = 20;
+
+function isWeakQuestion(q: string, topic: string): boolean {
+  if (!q || q.trim().length < MIN_QUESTION_LEN) return true;
+  if (isGenericOrWeak(q)) return true;
+  if (topic && !mentionsTopic(q, topic)) return true;
+  return false;
+}
+
+function enrich(ai: TicketSalidaAI, fallback: TicketSalidaResult, topic: string): TicketSalidaResult {
+  const validQuestions = (ai.questions && ai.questions.length >= 3 && ai.questions.length <= 5)
+    ? composeQuestions(ai.questions.map((q) => q.question).map((q, i, arr) => {
+        if (isWeakQuestion(q, topic)) return fallback.questions[i]?.question || q;
+        const isLast = i === arr.length - 1;
+        if (isLast && q.trim().length < 40) return `${q} ¿Cómo podrías aplicar esto en tu vida cotidiana o en otra asignatura?`;
+        return q;
+      }))
     : fallback.questions;
 
   return {
-    title: ai.title || fallback.title,
+    title: ai.title && ai.title.trim().length > 5 ? ai.title : fallback.title,
     objective: fallback.objective,
     instructions: fallback.instructions,
-    questions: aiQuestions,
+    questions: validQuestions,
     teacherNotes: fallback.teacherNotes,
   };
 }
@@ -157,7 +173,7 @@ export async function generateTicketSalida(
       TicketSalidaAISchema,
       { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast' },
     );
-    return enrich(data, fallback);
+    return enrich(data, fallback, input.topic);
   } catch (error) {
     console.error('[TicketSalidaEngine] generateTicketSalida error:', error);
     return fallback;

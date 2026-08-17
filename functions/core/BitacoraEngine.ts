@@ -1,6 +1,6 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { inferRangoEtario } from './pedagogicalUtils';
+import { inferRangoEtario, isGenericOrWeak, mentionsTopic } from './pedagogicalUtils';
 import {
   BitacoraAISchema,
   type BitacoraAI,
@@ -75,14 +75,26 @@ function buildUserPrompt(input: BitacoraEngineInput): string {
   );
 }
 
-// ─── Capa 3: enrich — si la IA devolvió algo débil, se completa con el fallback ───
+// ─── Capa 3: enrich — valida que cada consigna no sea genérica, tenga
+// largo mínimo y mencione el tema. Una consigna débil (ej: "escribe tu
+// hipótesis" sin tema) se reemplaza con la del fallback en vez de
+// devolver algo que el estudiante no pueda usar.
 
-function enrich(ai: BitacoraAI, fallback: BitacoraResult): BitacoraResult {
+const MIN_CONSIGNA_LEN = 25;
+
+function isWeakConsigna(consigna: string, topic: string): boolean {
+  if (!consigna || consigna.trim().length < MIN_CONSIGNA_LEN) return true;
+  if (isGenericOrWeak(consigna)) return true;
+  if (topic && !mentionsTopic(consigna, topic)) return true;
+  return false;
+}
+
+function enrich(ai: BitacoraAI, fallback: BitacoraResult, topic: string): BitacoraResult {
   return {
-    hipotesis: ai.hipotesis || fallback.hipotesis,
-    observaciones: ai.observaciones || fallback.observaciones,
-    resultados: ai.resultados || fallback.resultados,
-    conclusion: ai.conclusion || fallback.conclusion,
+    hipotesis: isWeakConsigna(ai.hipotesis, topic) ? fallback.hipotesis : ai.hipotesis,
+    observaciones: isWeakConsigna(ai.observaciones, topic) ? fallback.observaciones : ai.observaciones,
+    resultados: isWeakConsigna(ai.resultados, topic) ? fallback.resultados : ai.resultados,
+    conclusion: isWeakConsigna(ai.conclusion, topic) ? fallback.conclusion : ai.conclusion,
   };
 }
 
@@ -106,7 +118,7 @@ export async function generateBitacora(
       BitacoraAISchema,
       { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast' },
     );
-    return enrich(data, fallback);
+    return enrich(data, fallback, input.topic);
   } catch (error) {
     console.error('[BitacoraEngine] generateBitacora error:', error);
     return fallback;

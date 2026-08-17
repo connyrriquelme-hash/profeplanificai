@@ -1,6 +1,6 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { inferRangoEtario } from './pedagogicalUtils';
+import { inferRangoEtario, isGenericOrWeak } from './pedagogicalUtils';
 import {
   ListaCotejoAISchema,
   type ListaCotejoAI,
@@ -105,18 +105,29 @@ function buildUserPrompt(input: ListaCotejoEngineInput): string {
   );
 }
 
-// ─── Capa 3: enrich — si la IA devolvió algo débil, se completa con el fallback ───
+// ─── Capa 3: enrich — valida que cada criterio esté en primera persona,
+// tenga largo mínimo y no sea genérico. Un criterio débil se reemplaza
+// con el del fallback en vez de devolver algo que el docente no pueda
+// usar como evidencia observable.
+
+const MIN_CRITERION_LEN = 25;
+
+function isWeakCriterion(c: string): boolean {
+  if (!c || c.trim().length < MIN_CRITERION_LEN) return true;
+  if (isGenericOrWeak(c)) return true;
+  return false;
+}
 
 function enrich(ai: ListaCotejoAI, fallback: ListaCotejoResult): ListaCotejoResult {
-  const criteria = ai.criteria?.length >= 5 && ai.criteria.length <= 8
-    ? composeCriteria(ai.criteria.map((c) => c.description))
+  const validCriteria = (ai.criteria && ai.criteria.length >= 5 && ai.criteria.length <= 8)
+    ? composeCriteria(ai.criteria.map((c) => c.description).map((c) => isWeakCriterion(c) ? fallback.criteria[0]?.description || c : c))
     : fallback.criteria;
 
   return {
-    title: ai.title || fallback.title,
+    title: ai.title && ai.title.trim().length > 5 ? ai.title : fallback.title,
     objective: fallback.objective,
     instructions: fallback.instructions,
-    criteria,
+    criteria: validCriteria,
     teacherNotes: fallback.teacherNotes,
   };
 }

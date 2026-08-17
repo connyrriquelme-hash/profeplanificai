@@ -1,6 +1,6 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { inferRangoEtario } from './pedagogicalUtils';
+import { inferRangoEtario, isGenericOrWeak } from './pedagogicalUtils';
 import {
   Format321AISchema,
   type Format321AI,
@@ -108,18 +108,38 @@ function buildUserPrompt(input: Format321EngineInput): string {
   );
 }
 
-// ─── Capa 3: enrich — si la IA devolvió algo débil, se completa con el fallback ───
+// ─── Capa 3: enrich — valida la estructura 3-2-1:
+// - "learned" debe tener 3 elementos (array o texto con 3 puntos)
+// - "interesting" debe tener 2 elementos
+// - "question" debe tener 1 elemento
+// - Cada elemento no puede ser genérico ni estar vacío
+
+function parseItems(text: string, expectedCount: number): string[] {
+  if (!text) return [];
+  const lines = text.split(/\n/).map((l) => l.replace(/^[\s\-\*•\d.]+/, '').trim()).filter(Boolean);
+  if (lines.length === expectedCount) return lines;
+  if (lines.length > 0) return lines;
+  return text.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function isWeakSection(text: string, minItems: number): boolean {
+  if (!text || text.trim().length < 10) return true;
+  const items = parseItems(text, minItems);
+  if (items.length < minItems) return true;
+  if (items.every((item) => isGenericOrWeak(item))) return true;
+  return false;
+}
 
 function enrich(ai: Format321AI, fallback: Format321Result): Format321Result {
+  const learned = isWeakSection(ai.learned, 3) ? fallback.sections[0].description : ai.learned;
+  const interesting = isWeakSection(ai.interesting, 2) ? fallback.sections[1].description : ai.interesting;
+  const question = isWeakSection(ai.question, 1) ? fallback.sections[2].description : ai.question;
+
   return {
-    title: ai.title || fallback.title,
+    title: ai.title && ai.title.trim().length > 5 ? ai.title : fallback.title,
     objective: fallback.objective,
     instructions: fallback.instructions,
-    sections: composeSections(
-      ai.learned || fallback.sections[0].description,
-      ai.interesting || fallback.sections[1].description,
-      ai.question || fallback.sections[2].description,
-    ),
+    sections: composeSections(learned, interesting, question),
     teacherNotes: fallback.teacherNotes,
   };
 }
