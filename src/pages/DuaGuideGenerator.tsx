@@ -141,48 +141,97 @@ function SkeletonLoader() {
   );
 }
 
-function FichaCard({ ficha }: { ficha: FichaDiferenciada }) {
+// EMOJI_MARKERS es un cue visual de "marca uno con el lápiz" para la
+// versión impresa (círculo alrededor de cada emoji) — nunca son elementos
+// clicables reales: #fichas-print-area está oculto en pantalla (solo se
+// muestra vía la clase body.printing-fichas-only durante window.print()),
+// así que no hay ningún contexto interactivo donde un onClick tendría efecto.
+const EMOJI_MARKERS = ['😊', '😐', '😟'];
+const RESPUESTA_LINEAS = 3;
+
+// printMode diferencia SOLO lo que la tarea pidió exclusivo del área de
+// impresión (encabezado con nombre/fecha, autoevaluación con emojis
+// marcables) — el word bank y las líneas de respuesta se ven mejorados en
+// ambos contextos porque el punto 3 de la tarea pide previsualizarlos
+// igual en pantalla antes de imprimir.
+function FichaCard({ ficha, printMode = false }: { ficha: FichaDiferenciada; printMode?: boolean }) {
   const style = NIVEL_STYLES[ficha.nivel];
 
   return (
-    <section className={`rounded-3xl border-2 ${style.border} ${style.bg} p-5 shadow-sm print:break-before-page print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white`}>
-      <p className={`text-xs font-black uppercase tracking-[0.18em] ${style.text} print:text-black`}>{NIVEL_LABELS[ficha.nivel]}</p>
-      <h3 className="mt-1 text-xl font-black text-slate-900 print:text-black">{ficha.titulo}</h3>
-      <p className="mt-2 text-sm font-semibold text-slate-700 print:text-black">{ficha.objetivo}</p>
+    <section className={`ficha-card rounded-3xl border-2 ${style.border} ${style.bg} p-5 shadow-sm print:break-after-page print:break-inside-avoid print:rounded-none print:border-2 print:border-black print:bg-white print:p-6`}>
+      {printMode && (
+        <div className="mb-4 flex flex-wrap gap-6 border-b-2 border-slate-800 pb-3 text-sm text-slate-800">
+          <p className="min-w-[200px] flex-1">Nombre: <span className="inline-block w-full border-b border-slate-800">&nbsp;</span></p>
+          <p className="w-40">Fecha: <span className="inline-block w-full border-b border-slate-800">&nbsp;</span></p>
+        </div>
+      )}
 
-      <div className="mt-4 rounded-2xl bg-white/70 border border-slate-200 p-4 print:border-slate-300 print:bg-white">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">Vocabulario clave</p>
-        <dl className="mt-2 space-y-2">
+      <p className={`inline-block rounded-full border-2 ${style.border} px-3 py-1 text-xs font-black uppercase tracking-[0.18em] ${style.text} print:border-black print:text-black`}>
+        {NIVEL_LABELS[ficha.nivel]}
+      </p>
+      <h3 className="mt-2 text-xl font-black text-slate-900 print:text-black">{ficha.titulo}</h3>
+
+      <div className="mt-3 rounded-2xl border-2 border-slate-300 bg-white/80 p-4 print:rounded-none print:border-black print:bg-white">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500 print:text-black">🎯 Objetivo</p>
+        <p className="mt-1 text-sm font-bold text-slate-800 print:text-black">{ficha.objetivo}</p>
+      </div>
+
+      <div className="mt-4 rounded-2xl border-2 border-dashed border-slate-400 bg-amber-50 p-4 print:rounded-none print:border-solid print:border-black print:bg-white">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-700 print:text-black">🔑 Palabras clave</p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 print:grid-cols-2">
           {ficha.vocabularioClave.map((item, index) => (
-            <div key={`${ficha.nivel}-vocab-${index}`}>
-              <dt className="text-sm font-black text-slate-900 print:text-black">{item.termino}</dt>
-              <dd className="text-sm text-slate-700 print:text-black">{item.definicion}</dd>
+            <div key={`${ficha.nivel}-vocab-${index}`} className="rounded-xl border border-slate-300 bg-white px-3 py-2 print:rounded-none print:border-black">
+              <p className="text-sm font-black text-slate-900 print:text-black">{item.termino}</p>
+              <p className="text-xs text-slate-600 print:text-black">{item.definicion}</p>
             </div>
           ))}
-        </dl>
+        </div>
       </div>
 
       <div className="mt-4">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">Actividades</p>
-        <ol className="mt-2 space-y-3 list-decimal list-inside text-sm text-slate-800 print:text-black">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">✏️ Actividades</p>
+        <ol className="mt-2 space-y-4 list-decimal list-inside text-sm text-slate-800 print:text-black">
           {ficha.actividades.map((actividad, index) => (
             <li key={`${ficha.nivel}-act-${index}`} className="leading-relaxed">
-              {actividad.instruccion}
+              <span className="font-black">{actividad.instruccion}</span>
               {actividad.espacioRespuesta && (
-                <div className="mt-1 ml-5 h-10 rounded-lg border border-dashed border-slate-300 print:border-slate-400" aria-hidden="true" />
+                <div className="mt-2 ml-5 space-y-4" aria-hidden="true">
+                  {Array.from({ length: RESPUESTA_LINEAS }).map((_, lineIndex) => (
+                    <div key={lineIndex} className="border-b border-dotted border-slate-400 print:border-black" />
+                  ))}
+                </div>
               )}
             </li>
           ))}
         </ol>
       </div>
 
-      <div className="mt-4 rounded-2xl bg-white/70 border border-slate-200 p-4 print:border-slate-300 print:bg-white">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600 print:text-black">Autoevaluación</p>
-        <ul className="mt-2 space-y-1 list-disc pl-4 text-sm text-slate-700 print:text-black">
-          {ficha.autoevaluacion.map((pregunta, index) => (
-            <li key={`${ficha.nivel}-auto-${index}`}>{pregunta}</li>
-          ))}
-        </ul>
+      <div className="mt-4 rounded-2xl border-2 border-slate-300 bg-white/80 p-4 print:rounded-none print:border-black print:bg-white">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-700 print:text-black">
+          {printMode ? '¿Cómo me fue?' : 'Autoevaluación'}
+        </p>
+        {printMode ? (
+          <ul className="mt-3 space-y-3 text-sm text-slate-800">
+            {ficha.autoevaluacion.map((pregunta, index) => (
+              <li key={`${ficha.nivel}-auto-${index}`} className="flex flex-wrap items-center justify-between gap-3">
+                <span>{pregunta}</span>
+                <span className="flex shrink-0 gap-2 text-lg" aria-hidden="true">
+                  {EMOJI_MARKERS.map((emoji) => (
+                    <span key={emoji} className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-slate-400 print:border-black">
+                      {emoji}
+                    </span>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="mt-2 space-y-1 list-disc pl-4 text-sm text-slate-700">
+            {ficha.autoevaluacion.map((pregunta, index) => (
+              <li key={`${ficha.nivel}-auto-${index}`}>{pregunta}</li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
@@ -202,6 +251,7 @@ export function DuaGuideGenerator() {
   const [fichasLoading, setFichasLoading] = useState(false);
   const [fichasError, setFichasError] = useState('');
   const [activeFichaTab, setActiveFichaTab] = useState<FichaDiferenciada['nivel']>('apoyo');
+  const [printingFichas, setPrintingFichas] = useState(false);
 
   console.debug('[DUA-DBG] RENDER', {
     level: curriculumSelection.level,
@@ -357,9 +407,11 @@ export function DuaGuideGenerator() {
   };
 
   const handlePrintFichas = () => {
+    setPrintingFichas(true);
     document.body.classList.add('printing-fichas-only');
     const cleanup = () => {
       document.body.classList.remove('printing-fichas-only');
+      setPrintingFichas(false);
       window.removeEventListener('afterprint', cleanup);
     };
     window.addEventListener('afterprint', cleanup);
@@ -406,8 +458,42 @@ export function DuaGuideGenerator() {
           body.printing-fichas-only #fichas-print-area * {
             visibility: visible;
           }
+
+          /* Cada ficha en su propia hoja, con tamaño e interlineado legibles
+             para un estudiante leyendo en papel — las utilidades de Tailwind
+             (text-xs/text-sm) quedan más chicas que 12pt, así que se
+             sobre-escriben acá con !important solo dentro del área de
+             fichas, sin tocar el resto del documento DUA. */
+          body.printing-fichas-only .ficha-card {
+            page-break-after: always;
+            break-after: page;
+          }
+          body.printing-fichas-only #fichas-print-area,
+          body.printing-fichas-only #fichas-print-area p,
+          body.printing-fichas-only #fichas-print-area li,
+          body.printing-fichas-only #fichas-print-area span,
+          body.printing-fichas-only #fichas-print-area dt,
+          body.printing-fichas-only #fichas-print-area dd {
+            font-size: 12pt !important;
+            line-height: 1.5 !important;
+          }
+          body.printing-fichas-only #fichas-print-area h3 {
+            font-size: 16pt !important;
+            line-height: 1.4 !important;
+          }
         }
       `}</style>
+
+      {printingFichas && (
+        <style>{`
+          @media print {
+            /* Fichas piden 15mm (vs. los 14mm del documento DUA completo);
+               este bloque solo existe en el DOM mientras se imprime fichas,
+               así que gana por orden de aparición y no afecta el otro flujo. */
+            @page { margin: 15mm; }
+          }
+        `}</style>
+      )}
 
       <div className="rounded-[2rem] bg-[var(--primary)] p-6 text-white shadow-lg print:hidden">
         <p className="text-sm font-bold uppercase tracking-[0.24em] text-white/75">Copilot pedagógico</p>
@@ -667,9 +753,9 @@ export function DuaGuideGenerator() {
             </p>
             <p className="mt-1 text-sm text-black">{duaGuide?.titulo_guia || 'Guía DUA Multinivel'}</p>
           </div>
-          <FichaCard ficha={fichas.apoyo} />
-          <FichaCard ficha={fichas.estandar} />
-          <FichaCard ficha={fichas.desafio} />
+          <FichaCard ficha={fichas.apoyo} printMode />
+          <FichaCard ficha={fichas.estandar} printMode />
+          <FichaCard ficha={fichas.desafio} printMode />
         </div>
       )}
 
