@@ -173,11 +173,12 @@ export function normalizeRubric(raw: unknown): PedagogicalProduct | null {
 
 /**
  * Normalize guide (guia_estudiante / guia_docente)
- * Raw (desde GuiaEngine, functions/core/GuiaEngine.ts): { title, objective, sections: GuideSection[], images?, imageTitles? }
+ * Raw (desde GuiaEngine, functions/core/GuiaEngine.ts): { title, objective, textoLectura?, sections: GuideSection[], images?, imageTitles? }
  * GuiaEngine ya genera "sections" en el shape exacto que GuideRenderer.tsx
  * consume (title/content/activities?) — este normalizer es un passthrough,
  * no traduce nombres de campo ni reconstruye materials/evaluation/duration
- * a partir de las secciones.
+ * a partir de las secciones. textoLectura solo viene en guia_estudiante
+ * (GuiaResult.textoLectura es opcional — la guía docente nunca lo trae).
  * NOTE: guide objects from API have NO `type` field
  */
 export function normalizeGuide(raw: unknown, guideType: 'guia_estudiante' | 'guia_docente'): PedagogicalProduct | null {
@@ -190,6 +191,7 @@ export function normalizeGuide(raw: unknown, guideType: 'guia_estudiante' | 'gui
     data: {
       sections: r.sections,
       objective: r.objective,
+      textoLectura: r.textoLectura,
       images: r.images,
       imageTitles: r.imageTitles,
     },

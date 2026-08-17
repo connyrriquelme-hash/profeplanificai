@@ -8,6 +8,11 @@ import {
   type GuiaDocenteAI,
 } from '../_lib/ai/schemas/guiaSchema';
 
+// Umbral desde el cual additionalContext se considera "largo/complejo" y
+// se le pide a la IA que lo resuma en vez de copiarlo tal cual — el mismo
+// límite superior que TextoLecturaSchema.cuerpo acepta (800 caracteres).
+const TEXTO_PROFESOR_MAX_DIRECTO = 800;
+
 // GuideSection duplicado localmente (no GuideSectionAI de guiaSchema.ts,
 // que es solo el shape de validación) porque functions/ no importa de src/
 // en ningún otro lugar del repo (verificado) — mantener ese límite en vez
@@ -19,6 +24,14 @@ export interface GuiaSection {
   activities?: string[];
 }
 
+// Debe seguir siendo estructuralmente idéntico a GuideTextoLectura en
+// src/components/products/types.ts — mismo motivo que GuiaSection arriba.
+export interface GuiaTextoLectura {
+  titulo: string;
+  cuerpo: string;
+  fuente: 'generado_ia' | 'proporcionado_profesor';
+}
+
 export interface GuiaEngineInput {
   level: string;
   subject: string;
@@ -27,11 +40,19 @@ export interface GuiaEngineInput {
   topic: string;
   indicators: string[];
   duration?: string;
+  // Texto que el profesor ya trae (pegado en el wizard). Si viene, la IA
+  // debe adaptarlo/resumirlo como textoLectura en vez de inventar uno
+  // nuevo — ver buildSystemPromptEstudiante y enrichEstudiante.
+  additionalContext?: string;
 }
 
 export interface GuiaResult {
   title: string;
   objective: string;
+  // Solo aplica a la guía estudiante: la guía docente no tiene un texto de
+  // lectura para el curso, así que buildFallbackDocente/enrichDocente
+  // nunca lo setean.
+  textoLectura?: GuiaTextoLectura;
   sections: GuiaSection[];
 }
 
@@ -41,10 +62,25 @@ export interface GuiaResult {
 // secciones que exige guiaSchema.ts, para que el caller (guide.ts) nunca
 // tenga que distinguir "vino de la IA" vs "vino del fallback".
 
+// Genérico a propósito (no usa additionalContext aunque exista): el
+// fallback solo se activa cuando la IA falló tras todos los reintentos, y
+// su único trabajo acá es cumplir el contrato del schema (textoLectura
+// siempre presente), no producir un texto de calidad — ver GuiaEditEngine
+// para el mismo criterio de fallback "limpio" en vez de "inventado".
+function buildFallbackTextoLectura(input: GuiaEngineInput): GuiaTextoLectura {
+  const tema = input.topic || 'este tema';
+  return {
+    titulo: input.topic || 'Texto de lectura',
+    cuerpo: `Hoy vamos a leer sobre ${tema}. Este texto breve te va a dar la información que necesitas para las actividades de esta guía. Léelo con calma, de principio a fin. Si encuentras una palabra que no conoces, revisa el vocabulario clave de más arriba. Cuando termines, vuelve a leerlo una segunda vez para asegurarte de que entendiste bien. Luego vas a responder algunas preguntas sobre lo que leíste.`,
+    fuente: 'generado_ia',
+  };
+}
+
 function buildFallbackEstudiante(input: GuiaEngineInput): GuiaResult {
   return {
     title: input.topic || `Guía: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    textoLectura: buildFallbackTextoLectura(input),
     sections: [
       { title: 'Introducción', content: `En esta guía vamos a trabajar: ${input.objectiveText}` },
       {
@@ -56,14 +92,14 @@ function buildFallbackEstudiante(input: GuiaEngineInput): GuiaResult {
         ],
       },
       {
-        title: 'Actividad 1: Activación',
-        content: 'Responde las siguientes preguntas sobre lo que ya sabes del tema.',
-        activities: ['¿Qué sabes sobre este tema?', '¿Dónde lo has visto antes?', 'Escribe 3 palabras que se te vengan a la mente.'],
+        title: 'Actividad 1: Comprensión del texto',
+        content: 'Responde estas preguntas sobre el texto de lectura que acabas de leer.',
+        activities: ['¿De qué trata el texto que leíste?', 'Completa la oración: "Hoy vamos a leer sobre ___".', 'Escribe una idea del texto con tus propias palabras.'],
       },
       {
         title: 'Actividad 2: Desarrollo',
-        content: 'Lee el texto y responde las preguntas de comprensión.',
-        activities: ['Lee el texto atentamente.', 'Subraya las ideas principales.', 'Responde las preguntas con tus propias palabras.'],
+        content: 'Profundiza en lo que leíste con una actividad práctica.',
+        activities: ['Subraya las ideas principales del texto.', 'Dibuja algo relacionado con lo que leíste.', 'Comenta tu dibujo con un compañero.'],
       },
       {
         title: 'Actividad 3: Aplicación',
@@ -136,10 +172,26 @@ REGLAS OBLIGATORIAS:
 7. No repitas el OA completo en cada sección — úsalo para construir "objective" y la Introducción, luego trabaja el tema con tus propias palabras.
 8. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones antes o después del JSON.
 
+REGLA CRÍTICA — TEXTO DE LECTURA:
+- El texto debe ser factualmente correcto. Si no tienes certeza sobre un dato específico (cifra, nombre científico, proceso biológico), usa una descripción funcional general en vez de un dato concreto que pueda ser inexacto.
+- NUNCA uses metáforas o analogías que produzcan información incorrecta (ej: "las antenas son como ojos" si las antenas no son órganos visuales).
+- El texto debe ser coherente con las actividades: las preguntas de comprensión y los espacios para completar DEBEN referirse a información que aparece en el texto de lectura.
+- Longitud: 5-8 oraciones, vocabulario apropiado para la edad del curso (usa el rango etario indicado arriba).
+- El texto va ANTES de las actividades en el schema: es "textoLectura", un campo propio, no una sección más.
+- Si el contexto trae "texto_proporcionado_por_profesor": ese es el texto real que el profesor ya trae a la clase. Debes usarlo como base de "textoLectura.cuerpo" (resumido o adaptado al rango etario si es muy largo o muy complejo, pero sin inventar información que no esté en él) y responder "fuente": "proporcionado_profesor". Si no viene ese campo, genera tú el texto informativo completo y responde "fuente": "generado_ia".
+- La primera actividad (Actividad 1) SIEMPRE debe ser de comprensión del texto de lectura: preguntas sobre lo que dice el texto, completar oraciones tomadas del texto, u ordenar información que aparece en el texto — nunca una instrucción genérica como "lee el texto" sin pedir nada más. Cada pregunta de comprensión debe tener una respuesta que efectivamente aparece en "textoLectura.cuerpo".
+- Cada pregunta de comprensión de la Actividad 1 debe tener su respuesta EXPLÍCITA en el texto de lectura — no preguntes por causas, razones o inferencias que el texto no explica. Si el texto dice "el caracol es lento" pero no explica POR QUÉ, la pregunta correcta es "¿Cómo es el caracol?" (respuesta en el texto) y NO "¿Por qué es lento el caracol?" (respuesta no está en el texto).
+- El texto informativo NO debe incluir personificación ni antropomorfización (no digas que el animal "tiene amigos", "le gusta", "piensa", "siente" en sentido humano). El texto debe ser informativo y factual.
+
 ESTRUCTURA JSON OBLIGATORIA:
 {
   "title": "Título motivador ligado al tema real de la clase (no genérico)",
   "objective": "El OA reformulado en lenguaje del estudiante, respetando el rango etario indicado",
+  "textoLectura": {
+    "titulo": "Título breve del texto de lectura (no repitas el título de la guía)",
+    "cuerpo": "Texto informativo de 5-8 oraciones, factualmente correcto, sobre el tema específico de la clase — ver REGLA CRÍTICA arriba",
+    "fuente": "generado_ia o proporcionado_profesor, según corresponda"
+  },
   "sections": [
     {
       "title": "Introducción",
@@ -154,9 +206,9 @@ ESTRUCTURA JSON OBLIGATORIA:
       ]
     },
     {
-      "title": "Actividad 1: [nombre concreto de la actividad, no genérico]",
-      "content": "Descripción breve de qué se hace en esta actividad",
-      "activities": ["Paso 1 concreto", "Paso 2 concreto", "Paso 3 concreto"]
+      "title": "Actividad 1: [nombre concreto ligado a comprensión de lectura, ej: 'Actividad 1: ¿Qué dice el texto?']",
+      "content": "Descripción breve: se responde sobre el texto de lectura de arriba",
+      "activities": ["Pregunta de comprensión cuya respuesta aparece en textoLectura.cuerpo", "Otra pregunta o instrucción de comprensión (completar, ordenar)", "Paso 3 concreto"]
     },
     {
       "title": "Actividad 2: [nombre concreto de la actividad]",
@@ -171,7 +223,7 @@ ESTRUCTURA JSON OBLIGATORIA:
   ]
 }
 
-El array "sections" debe tener SIEMPRE, en este orden exacto: 1 sección "Introducción" + 1 sección "Vocabulario clave" + entre 2 y 4 secciones de actividad (cada una titulada "Actividad N: ..." con un nombre concreto, progresando de más simple a más desafiante: activación → desarrollo → aplicación) + 1 sección final "Reflexión / Autoevaluación" con entre 2 y 5 preguntas en activities. No agregues secciones adicionales ni cambies estos títulos.`;
+El array "sections" debe tener SIEMPRE, en este orden exacto: 1 sección "Introducción" + 1 sección "Vocabulario clave" + entre 2 y 4 secciones de actividad (la primera SIEMPRE de comprensión del texto de lectura, las siguientes progresando de más simple a más desafiante: desarrollo → aplicación) + 1 sección final "Reflexión / Autoevaluación" con entre 2 y 5 preguntas en activities. No agregues secciones adicionales ni cambies estos títulos.`;
 }
 
 function buildSystemPromptDocente(): string {
@@ -222,29 +274,47 @@ Los tres tiempos de Inicio, Desarrollo y Cierre deben sumar exactamente la durac
 }
 
 function buildUserPrompt(input: GuiaEngineInput): string {
-  return JSON.stringify(
-    {
-      nivel: input.level,
-      asignatura: input.subject,
-      oa: input.objectiveCode,
-      objetivo: input.objectiveText,
-      indicadores: input.indicators,
-      tema: input.topic,
-      duracion_total: input.duration || '90 minutos',
-    },
-    null,
-    2,
-  );
+  const payload: Record<string, unknown> = {
+    nivel: input.level,
+    asignatura: input.subject,
+    oa: input.objectiveCode,
+    objetivo: input.objectiveText,
+    indicadores: input.indicators,
+    tema: input.topic,
+    duracion_total: input.duration || '90 minutos',
+  };
+
+  const textoProfesor = (input.additionalContext || '').trim();
+  if (textoProfesor) {
+    payload.texto_proporcionado_por_profesor = textoProfesor;
+    if (textoProfesor.length > TEXTO_PROFESOR_MAX_DIRECTO) {
+      payload.nota_texto_profesor = `El texto tiene ${textoProfesor.length} caracteres, más de lo que "textoLectura.cuerpo" acepta (máx. 800) — resúmelo o adáptalo al rango etario en vez de copiarlo completo.`;
+    }
+  }
+
+  return JSON.stringify(payload, null, 2);
 }
 
 // ─── Capa 3: enrich — si la IA devolvió algo débil, se completa con el fallback ───
 
-function enrichEstudiante(ai: GuiaEstudianteAI, fallback: GuiaResult): GuiaResult {
+function enrichEstudiante(ai: GuiaEstudianteAI, fallback: GuiaResult, input: GuiaEngineInput): GuiaResult {
+  // fuente se fuerza de forma determinista según si el profesor mandó
+  // additionalContext, en vez de confiar en que la IA haya marcado bien el
+  // campo "fuente" que le pedimos en el prompt.
+  const textoLectura = ai.textoLectura
+    ? { ...ai.textoLectura, fuente: (textoProfesorPresente(input) ? 'proporcionado_profesor' : 'generado_ia') as GuiaTextoLectura['fuente'] }
+    : fallback.textoLectura;
+
   return {
     title: ai.title || fallback.title,
     objective: ai.objective || fallback.objective,
+    textoLectura,
     sections: ai.sections?.length >= 4 ? ai.sections : fallback.sections,
   };
+}
+
+function textoProfesorPresente(input: GuiaEngineInput): boolean {
+  return (input.additionalContext || '').trim().length > 0;
 }
 
 function enrichDocente(ai: GuiaDocenteAI, fallback: GuiaResult): GuiaResult {
@@ -278,7 +348,7 @@ export async function generateGuia(
         GuiaEstudianteAISchema,
         { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast' },
       );
-      return enrichEstudiante(data, fallback);
+      return enrichEstudiante(data, fallback, input);
     }
 
     const { data } = await callAIConValidacion(

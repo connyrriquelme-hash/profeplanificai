@@ -48,6 +48,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       topic: body.topic,
       indicators: (indicators as any)?.results?.map((i: any) => i.indicator_text) || [],
       duration: body.duration,
+      additionalContext: body.additionalContext,
     };
     const guide = await generateGuia(
       { AI: context.env.AI } as AIEngineEnv,

@@ -5,7 +5,7 @@ import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
-import type { PedagogicalProduct, GuideSection } from '../types';
+import type { PedagogicalProduct, GuideSection, GuideTextoLectura } from '../types';
 
 interface GuideRendererProps {
   product: PedagogicalProduct;
@@ -16,6 +16,7 @@ interface GuideRendererProps {
 export function GuideRenderer({ product, className, style }: GuideRendererProps) {
   const { metadata, data } = product;
   const sections = (data.sections as GuideSection[]) || [];
+  const textoLectura = data.textoLectura as GuideTextoLectura | undefined;
   const objective = data.objective as string | undefined;
   const materials = (data.materials as string[]) || [];
   const evaluation = data.evaluation as string | undefined;
@@ -46,6 +47,21 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
         <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-indigo-800 mb-1">Objetivo de Aprendizaje</h3>
           <p className="text-indigo-700 text-sm">{objective}</p>
+        </div>
+      )}
+
+      {textoLectura && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+          <h3 className="text-sm font-bold text-amber-900 mb-1 flex items-center gap-1.5">
+            <span aria-hidden="true">📖</span> Texto de lectura
+            {textoLectura.fuente === 'proporcionado_profesor' && (
+              <span className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5">
+                Adaptado del material del profesor
+              </span>
+            )}
+          </h3>
+          <p className="text-amber-900 text-sm font-semibold mb-1">{textoLectura.titulo}</p>
+          <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{textoLectura.cuerpo}</p>
         </div>
       )}
 
