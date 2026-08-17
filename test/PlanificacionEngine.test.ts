@@ -104,4 +104,77 @@ describe('PlanificacionEngine.generatePlanificacion', () => {
     expect(PlanificacionSchema.safeParse(planificacion).success).toBe(true);
     expect(planificacion.classes.length).toBeGreaterThanOrEqual(3);
   });
+
+  it('usa explícitamente el modelo llama-3.3-70b (mismo argumento que GuiaEngine/RubricaEngine)', async () => {
+    const runSpy = vi.fn().mockResolvedValue(VALID_AI_RESPONSE);
+    const env: AIEngineEnv = { AI: { run: runSpy } as unknown as Ai };
+
+    await generatePlanificacion(env, 'system prompt de prueba', MOCK_OPCIONES);
+
+    expect(runSpy).toHaveBeenCalledWith('@cf/meta/llama-3.3-70b-instruct-fp8-fast', expect.anything());
+  });
+});
+
+describe('PlanificacionEngine.generatePlanificacion — enrich parcial', () => {
+  const fallback = buildFallbackPlanificacion(MOCK_OPCIONES);
+
+  function aiResponseWith(overrides: { openingIndex0?: string; developmentIndex0?: string; objectiveIndex1?: string }) {
+    const parsed = JSON.parse(VALID_AI_RESPONSE);
+    if (overrides.openingIndex0 !== undefined) parsed.classes[0].opening = overrides.openingIndex0;
+    if (overrides.developmentIndex0 !== undefined) parsed.classes[0].development = overrides.developmentIndex0;
+    if (overrides.objectiveIndex1 !== undefined) parsed.classes[1].objective = overrides.objectiveIndex1;
+    return JSON.stringify(parsed);
+  }
+
+  it('reemplaza el inicio débil (<30 caracteres) con el del fallback determinista', async () => {
+    const env = mockAI(aiResponseWith({ openingIndex0: 'Introducción al tema.' })); // 22 caracteres
+    const { planificacion } = await generatePlanificacion(env, 'prompt', MOCK_OPCIONES);
+
+    expect(planificacion.classes[0].opening).toBe(fallback.classes[0].opening);
+  });
+
+  it('reemplaza el desarrollo débil (<60 caracteres) con el del fallback determinista', async () => {
+    const env = mockAI(aiResponseWith({ developmentIndex0: 'Actividad grupal breve.' })); // 24 caracteres
+    const { planificacion } = await generatePlanificacion(env, 'prompt', MOCK_OPCIONES);
+
+    expect(planificacion.classes[0].development).toBe(fallback.classes[0].development);
+  });
+
+  it('reemplaza el objetivo repetido (segunda ocurrencia) con el del fallback, dejando la primera intacta', async () => {
+    const parsed = JSON.parse(VALID_AI_RESPONSE);
+    const objetivoRepetido = parsed.classes[0].objective;
+    const env = mockAI(aiResponseWith({ objectiveIndex1: objetivoRepetido }));
+    const { planificacion } = await generatePlanificacion(env, 'prompt', MOCK_OPCIONES);
+
+    expect(planificacion.classes[0].objective).toBe(objetivoRepetido);
+    expect(planificacion.classes[1].objective).toBe(fallback.classes[1].objective);
+    expect(planificacion.classes[1].objective).not.toBe(objetivoRepetido);
+  });
+
+  it('no toca campos fuertes: un inicio ya concreto y específico se mantiene tal cual lo devolvió la IA', async () => {
+    const env = mockAI(VALID_AI_RESPONSE);
+    const { planificacion } = await generatePlanificacion(env, 'prompt', MOCK_OPCIONES);
+
+    const parsed = JSON.parse(VALID_AI_RESPONSE);
+    expect(planificacion.classes[0].opening).toBe(parsed.classes[0].opening);
+  });
+
+  it('clases más allá de las 3 del fallback (4ª en adelante) no se enriquecen aunque tengan campos débiles', async () => {
+    const parsed = JSON.parse(VALID_AI_RESPONSE);
+    parsed.classes.push({
+      number: 4,
+      objective: 'Objetivo distinto para la cuarta clase.',
+      opening: 'Corto.', // débil (<30 chars), pero no hay fallback.classes[3]
+      development: 'Corto también.', // débil (<60 chars)
+      closure: 'Cierre breve.',
+      duration: '45 min',
+      materials: ['Material X'],
+      assessment: 'Evaluación X',
+    });
+    const env = mockAI(JSON.stringify(parsed));
+    const { planificacion } = await generatePlanificacion(env, 'prompt', MOCK_OPCIONES);
+
+    expect(planificacion.classes[3].opening).toBe('Corto.');
+    expect(planificacion.classes[3].development).toBe('Corto también.');
+  });
 });
