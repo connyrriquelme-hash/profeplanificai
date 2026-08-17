@@ -698,6 +698,7 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
 }
 
 function truncate(text: string, max: number): string {
-  if (text.length <= max) return text;
-  return text.slice(0, max - 3).trim() + '...';
+  const chars = Array.from(text);
+  if (chars.length <= max) return text;
+  return chars.slice(0, max - 3).join('').trim() + '...';
 }
