@@ -18,8 +18,13 @@ import { z } from 'zod';
  */
 
 // ─── Sección base = GuideSection exacto ───
+// Exportado además de usarse localmente: GuiaEditSchema.ts (edición puntual
+// de una sección vía chat) reusa este mismo shape para "seccionNueva" en vez
+// de duplicarlo — una sección editada individualmente no tiene por qué
+// cumplir los superRefine de tipo (Introducción/Vocabulario/Actividad N/...)
+// que sí aplican a la guía completa generada desde cero.
 
-const GuideSectionSchema = z.object({
+export const GuideSectionSchema = z.object({
   title: z.string()
     .min(3, 'El título de la sección es requerido')
     .max(100, 'Máximo 100 caracteres'),
