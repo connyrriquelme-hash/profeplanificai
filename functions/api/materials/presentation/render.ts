@@ -42,8 +42,24 @@ function isResolvedImageUrl(value: string): boolean {
 // funciona en Workers) y la convertimos a data: URI en base64 — así
 // PptRenderer nunca recibe una URL http(s), solo data: URIs, que sí
 // renderiza bien.
+// pptxgenjs, para embeber un SVG, necesita generar además una versión PNG
+// de "vista previa" (PowerPoint/OOXML exige ambas relaciones) dibujando el
+// SVG en un <canvas> vía `new Image()` — APIs de navegador que no existen
+// en el runtime de Cloudflare Workers (confirmado: pptxgen.cjs.js:4981,
+// createSvgPngPreview). Cualquier data: URI image/svg+xml — como el que
+// devuelve nuestro propio svgFallback() en _lib/images.ts — revienta el
+// render completo con "Image is not defined". No hay forma de rasterizar
+// SVG a PNG sin DOM/canvas en Workers, así que tratamos SVG como
+// "no embebible" acá y dejamos que el slide quede sin imagen (igual que
+// cualquier otro fallo de proveedor), en vez de que pptxgenjs truene.
+function isEmbeddableImageDataUri(dataUri: string): boolean {
+  return !dataUri.toLowerCase().startsWith('data:image/svg+xml');
+}
+
 async function toEmbeddableDataUri(url: string): Promise<string> {
-  if (url.startsWith('data:')) return url;
+  if (url.startsWith('data:')) {
+    return isEmbeddableImageDataUri(url) ? url : '';
+  }
   try {
     const response = await fetch(url);
     if (!response.ok) return '';
@@ -60,7 +76,8 @@ async function toEmbeddableDataUri(url: string): Promise<string> {
     for (let i = 0; i < bytes.length; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
-    return `data:${contentType};base64,${btoa(binary)}`;
+    const dataUri = `data:${contentType};base64,${btoa(binary)}`;
+    return isEmbeddableImageDataUri(dataUri) ? dataUri : '';
   } catch {
     return '';
   }
