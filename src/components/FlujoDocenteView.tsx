@@ -14,7 +14,6 @@ import { api } from '../services/apiClient';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
-import InteractiveLessonContainer from './InteractiveLesson/InteractiveLessonContainer';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 
@@ -36,7 +35,6 @@ const PRODUCTOS = [
   { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#B5471F' }, // --primary
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#E9A13B' }, // --accent-honey
   { id: 'serie_lecciones', label: 'Serie de Lecciones', icon: BookOpen, color: '#33261C' }, // --ink
-  { id: 'leccion_interactiva', label: 'Lección Interactiva', icon: Sparkles, color: '#7C2F13' }, // --primary-ink
 ];
 
 interface D1Course { id: string; code: string; name: string; objective_count: number }
@@ -243,18 +241,6 @@ export function FlujoDocenteView() {
 
   const handleGenerate = useCallback(async () => {
     if (!selectedOA || !selectedProducto) return;
-
-    if (selectedProducto === 'leccion_interactiva') {
-      // InteractiveLessonContainer genera por su cuenta al montarse (tiene su
-      // propia pantalla "Generar Lección" + loading/error): no pasa por
-      // materialGeneratorService como el resto de los productos, solo
-      // necesita llegar al step 'resultado' con el OA seleccionado.
-      setError('');
-      setResult(null);
-      setStep('resultado');
-      return;
-    }
-
       setLoading(true);
       setError('');
       setResult(null);
@@ -804,26 +790,6 @@ export function FlujoDocenteView() {
             ))}
           </div>
         </Card>
-      </div>
-    );
-  }
-
-  // Result — Lección Interactiva no pasa por el pipeline genérico de
-  // MaterialRequest/ProductRenderer: tiene su propia pantalla de
-  // generar/cargando/error, así que se renderiza aparte del bloque de abajo
-  // (que exige `result` truthy, algo que este producto todavía no tiene al
-  // llegar a este step).
-  if (step === 'resultado' && selectedProducto === 'leccion_interactiva') {
-    return (
-      <div className="max-w-3xl mx-auto">
-        <InteractiveLessonContainer
-          params={{
-            subject: selectedOA?.subject_name || '',
-            grade: selectedOA?.course_name || '',
-            oa: selectedOA?.official_text || '',
-          }}
-          onFinish={() => setStep('producto')}
-        />
       </div>
     );
   }
