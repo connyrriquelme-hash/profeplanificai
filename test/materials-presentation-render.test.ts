@@ -81,7 +81,11 @@ async function makeContext(overrides: {
       },
       body: JSON.stringify(overrides.body ?? { resourceId: 'res-valid' }),
     }),
-    env: { DB: mockDB, JWT_SECRET: TEST_SECRET },
+    // IMAGE_PROVIDER_ORDER: 'svg' evita que resolveDeckImages() (que llama
+    // generateEducationalImage() para los slides image_text con imageQuery
+    // en texto) intente red real contra Wikimedia/Pollinations en tests —
+    // mismo patrón que materials-rubric.test.ts.
+    env: { DB: mockDB, JWT_SECRET: TEST_SECRET, IMAGE_PROVIDER_ORDER: 'svg' },
   } as any;
 }
 
