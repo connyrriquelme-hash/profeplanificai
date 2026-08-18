@@ -37,6 +37,21 @@ const PRODUCTOS = [
   { id: 'serie_lecciones', label: 'Serie de Lecciones', icon: BookOpen, color: '#33261C' }, // --ink
 ];
 
+// Etiquetas del preview de PPT: antes se derivaban de slide.layout con un
+// simple replace(/_/g, ' ') + CSS capitalize, mostrando el nombre del layout
+// en inglés (Title, Bullets, Image Text...) tal cual viene del schema.
+const PPT_LAYOUT_LABELS: Record<string, string> = {
+  title: 'Portada',
+  bullets: 'Contenido',
+  image_text: 'Imagen + texto',
+  comparison: 'Comparación',
+  quote: 'Cita',
+  vocabulario: 'Vocabulario',
+  ciclo_proceso: 'Ciclo / Proceso',
+  quiz_opcion_multiple: 'Quiz',
+  verdadero_falso: 'Verdadero o Falso',
+};
+
 interface D1Course { id: string; code: string; name: string; objective_count: number }
 interface D1Subject { id: string; name: string; objective_count: number }
 interface D1Objective { id: string; code: string; official_text: string; course_name: string; subject_name: string; axis_name?: string }
@@ -830,13 +845,13 @@ export function FlujoDocenteView() {
                   Vista previa — {pptDeck.slides.length} diapositiva{pptDeck.slides.length !== 1 ? 's' : ''}
                 </h3>
                 {pptDeck.slides.map((slide, i) => {
-                  const layoutLabel = slide.layout.replace(/_/g, ' ');
+                  const layoutLabel = PPT_LAYOUT_LABELS[slide.layout] || slide.layout.replace(/_/g, ' ');
                   const slideTitle = 'title' in slide ? slide.title : '';
                   return (
                     <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
                       <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate capitalize">{layoutLabel}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{layoutLabel}</p>
                         {slideTitle && <p className="text-xs text-gray-500 truncate">{slideTitle}</p>}
                       </div>
                     </div>

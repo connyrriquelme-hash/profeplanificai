@@ -68,7 +68,39 @@ export function isTechnicalKey(key: string): boolean {
   return false;
 }
 
+// formatProductLabel() humaniza claves camelCase/snake_case de los datos
+// crudos del producto (title, teacherNotes, associateOA...) para mostrarlas
+// como encabezado — sin este mapa, cualquier clave en inglés se mostraba
+// tal cual en inglés (solo separada/capitalizada), nunca traducida.
+const PRODUCT_LABEL_TRANSLATIONS: Record<string, string> = {
+  title: 'Título',
+  subtitle: 'Subtítulo',
+  objective: 'Objetivo',
+  description: 'Descripción',
+  number: 'Número',
+  indicator: 'Indicador',
+  indicators: 'Indicadores',
+  colors: 'Colores',
+  color: 'Color',
+  meaning: 'Significado',
+  teacherNotes: 'Notas del docente',
+  studentNameField: 'Nombre del estudiante',
+  dateField: 'Fecha',
+  portfolio: 'Portafolio',
+  autoSave: 'Guardado automático',
+  associateClass: 'Asociar clase',
+  associateTeacher: 'Asociar docente',
+  associateOA: 'Asociar OA',
+  editable: 'Editable',
+  exportable: 'Exportable',
+  safetyMeasures: 'Medidas de seguridad',
+  premiumExtras: 'Extras premium',
+  fields: 'Campos',
+};
+
 export function formatProductLabel(key: string): string {
+  const translated = PRODUCT_LABEL_TRANSLATIONS[key] || PRODUCT_LABEL_TRANSLATIONS[key.toLowerCase()];
+  if (translated) return translated;
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
