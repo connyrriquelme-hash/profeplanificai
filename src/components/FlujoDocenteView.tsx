@@ -461,7 +461,7 @@ export function FlujoDocenteView() {
   // Step 1: Nivel
   if (step === 'nivel') {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -493,7 +493,7 @@ export function FlujoDocenteView() {
   // Step 2: Asignatura
   if (step === 'asignatura') {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -531,7 +531,7 @@ export function FlujoDocenteView() {
   // Step 3: OA
   if (step === 'oa') {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -605,7 +605,7 @@ export function FlujoDocenteView() {
   // Step 4: Contexto
   if (step === 'contexto') {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {renderStepper()}
         <Card variant="elevated" className="p-6 space-y-5">
           <div>
@@ -747,7 +747,7 @@ export function FlujoDocenteView() {
     ];
 
     return (
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="w-full">
         {renderStepper()}
         <Card variant="elevated" className="p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-8">
