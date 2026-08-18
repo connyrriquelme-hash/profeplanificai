@@ -32,6 +32,12 @@ function sanitizePrompt(prompt: string): string {
     .slice(0, 1000);
 }
 
+const EDUCATIONAL_PREFIX = 'Imagen educativa para aula chilena, apropiada para menores, sin texto, sin logos, sin personajes famosos. ';
+
+export function buildSafeImagePrompt(prompt: string): string {
+  return EDUCATIONAL_PREFIX + sanitizePrompt(prompt);
+}
+
 async function generateWithOpenAI(env: ImageEnv, prompt: string): Promise<ImageGenResult | null> {
   if (!env.OPENAI_API_KEY) return null;
 
@@ -138,9 +144,7 @@ export class ProviderNotConfiguredError extends Error {
 }
 
 export async function generateImage(env: ImageEnv, prompt: string): Promise<ImageGenResult> {
-  const cleaned = sanitizePrompt(prompt);
-  const educationalPrefix = 'Imagen educativa para aula chilena, apropiada para menores, sin texto, sin logos, sin personajes famosos. ';
-  const finalPrompt = educationalPrefix + cleaned;
+  const finalPrompt = buildSafeImagePrompt(prompt);
 
   const providers: { name: string; fn: () => Promise<ImageGenResult | null> }[] = [
     { name: 'openai', fn: () => generateWithOpenAI(env, finalPrompt) },
