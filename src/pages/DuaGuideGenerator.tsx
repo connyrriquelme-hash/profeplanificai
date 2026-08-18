@@ -419,7 +419,7 @@ export function DuaGuideGenerator() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 print:m-0 print:w-full print:max-w-none print:bg-white print:p-0 print:text-black">
+    <div className="w-full space-y-6 print:m-0 print:w-full print:max-w-none print:bg-white print:p-0 print:text-black">
       <style>{`
         @media print {
           @page { margin: 14mm; }
