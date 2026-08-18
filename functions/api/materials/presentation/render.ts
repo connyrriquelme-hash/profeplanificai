@@ -31,6 +31,17 @@ function isResolvedImageUrl(value: string): boolean {
   return value.startsWith('http') || value.startsWith('data:');
 }
 
+// Respaldo raster (PNG, no SVG) para cuando ningún proveedor real
+// (Wikimedia/Cloudflare AI/Pollinations/HuggingFace) entrega una imagen
+// usable. svgFallback() de _lib/images.ts sería el respaldo "nunca falla"
+// para el resto de la app, pero acá no sirve — es SVG, y eso es justo lo
+// que revienta el render en Workers (ver isEmbeddableImageDataUri más
+// abajo). 240x240, textura diagonal en turquesa de marca (#06BFAD), 1872
+// bytes — generado una sola vez con zlib.deflateSync, sin dependencias
+// nuevas ni DOM/canvas. Solo se usa cuando todo lo demás falló, así que
+// el slide siempre tiene alguna imagen en vez de quedar vacío.
+const PPT_IMAGE_PLACEHOLDER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAIAAACxN37FAAAHF0lEQVR4nO3dsQ0sRwwEUVrKTqEqBpnKQPF8/7B3uzOzBotdAAN4KLTP+uvff165v///75XTo+fkqpWmWx09OM8Lgx5cRw/Oczro2XX04DxHgx5fRw/Osz/ohDp6cJ7NQYfU0YPz7Aw6p44enGd50FF19OA8a4NOq6MH51kYdGAdPTjP00Fn1tGD8zwadGwdPTjP/aCT6+jBeW4GHV5HD87za9DW0YPzfB20dfQQPdeDto4eqOdi0NbRw/V8Dto6etCeaqXpVkcPzlOtNN3q6MF5qpWmWx09OE+10nSrowfnqVaabnX04DzvDHpqHT04zwuDHlxHD85zOujZdfTgPEeDHl9HD86zP+iEOnpwns1Bh9TRg/PsDDqnjh6cZ3nQUXX04Dxrg06rowfnWRh0YB09OM/TQWfW0YPzPBp0bB09OM/9oJPr6MF5bgYdXkcPzvNr0NbRg/N8HbR19BA914O2jh6o52LQ1tHD9XwO2jp60J5qpelWRw/OU6003erowXmqlaZbHT04T7XSdKujB+c5fV4/u44enOedQU+towfneWHQg+vowXlOBz27jh6c52jQ4+vowXn2B51QRw/OsznokDp6cJ6dQefU0YPzLA86qo4enGdt0Gl19OA8C4MOrKMH53k66Mw6enCeR4OOraMH57kfdHIdPTjPzaDD6+jBeX4N2jp6cJ6vg7aOHqLnetDW0QP1XAzaOnq4ns9BW0cP2lOtNN3q6MF5qpWmWx09OE+10nSrowfnqVaabnX04Dynz+tn19GD87wz6Kl19OA8Lwx6cB09OM/poGfX0YPzHA16fB09OM/+oBPq6MF5NgcdUkcPzrMz6Jw6enCe5UFH1dGD86wNOq2OHpxnYdCBdfTgPE8HnVlHD87zaNCxdfTgPPeDTq6jB+e5GXR4HT04z69BW0cPzvN10NbRQ/RcD9o6eqCei0FbRw/X8zlo6+hBe6qVplsdPThPtdJ0q6MH56lWmm519OA81UrTrY4enOf0ef3sOnpwnncGPbWOHpznhUEPrqMH5zkd9Ow6enCeo0GPr6MH59kfdEIdPTjP5qBD6ujBeXYGnVNHD86zPOioOnpwnrVBp9XRg/MsDDqwjh6c5+mgM+vowXkeDTq2jh6c537QyXX04Dw3gw6vowfn+TVo6+jBeb4O2jp6iJ7rQVtHD9RzMWjr6OF6PgdtHT1oT7XSdKujB+epVppudfTgPNVK062OHpynWmm61dGD85w+r59dRw/O886gp9bRg/O8MOjBdfTgPKeDnl1HD85zNOjxdfTgPPuDTqijB+fZHHRIHT04z86gc+rowXmWBx1VRw/OszbotDp6cJ6FQQfW0YPzPB10Zh09OM+jQcfW0YPz3A86uY4enOdm0OF19OA8vwZtHT04z9dBW0cP0XM9aOvogXouBm0dPVzP56CtowftqVaabnX04DzVStOtjh6cp1pputXRg/NUK023OnpwntPn9bPr6MF53hn01Dp6cJ4XBj24jh6c53TQs+vowXmOBj2+jh6cZ3/QCXX04Dybgw6powfn2Rl0Th09OM/yoKPq6MF51gadVkcPzrMw6MA6enCep4POrKMH53k06Ng6enCe+0En19GD89wMOryOHpzn16Ctowfn+Tpo6+gheq4HbR09UM/FoK2jh+v5HLR19KA91UrTrY4enKdaabrV0YPzVCtNtzp6cJ5qpelWRw/Oc/q8fnYdPTjPO4OeWkcPzvPCoAfX0YPznA56dh09OM/RoMfX0YPz7A86oY4enGdz0CF19OA8O4POqaMH51kedFQdPTjP2qDT6ujBeRYGHVhHD87zdNCZdfTgPI8GHVtHD85zP+jkOnpwnptBh9fRg/P8GrR19OA8XwdtHT1Ez/WgraMH6rkYtHX0cD2fg7aOHrSnWmm61dGD81QrTbc6enCeaqXpVkcPzlOtNN3q6MF5Tp/Xz66jB+d5Z9BT6+jBeV4Y9OA6enCe00HPrqMH5zka9Pg6enCe/UEn1NGD82wOOqSOHpxnZ9A5dfTgPMuDjqqjB+dZG3RaHT04z8KgA+vowXmeDjqzjh6c59GgY+vowXnuB51cRw/OczPo8Dp6cJ5fg7aOHpzn66Cto4fouR60dfRAPReDto4erudz0NbRg/ZUK023Onpwnmql6VZHD85TrTTd6ujBeaqVplsdPTjP6fP62XX04DzvDHpqHT04zwuDHlxHD85zOujZdfTgPEeDHl9HD86zP+iEOnpwns1Bh9TRg/PsDDqnjh6cZ3nQUXX04Dxrg06rowfnWRh0YB09OM/TQWfW0YPzPBp0bB09OM/9oJPr6MF5bgYdXkcPzvNr0NbRg/N8HbR19BA914O2jh6o52LQ1tHD9XwO2jp60J5qpelWRw/OU6003erowXmqlaZbHT04T7XSdKujB+f5A/kTBCd10HYLAAAAAElFTkSuQmCC';
+
 // pptxgenjs, cuando addImage() recibe una URL http(s):// en `path`, la
 // descarga con el módulo `https` nativo de Node (node_modules/pptxgenjs/
 // dist/pptxgen.cjs.js ~línea 4890) o, si no detecta Node, con
@@ -96,8 +107,9 @@ async function resolveSlideImage(
     slideTitle: slide.title,
     slideContent: slide.body.slice(0, 300),
   }, env);
-  if (!result.ok) return '';
-  return toEmbeddableDataUri(result.url);
+  if (!result.ok) return PPT_IMAGE_PLACEHOLDER;
+  const embeddable = await toEmbeddableDataUri(result.url);
+  return embeddable || PPT_IMAGE_PLACEHOLDER;
 }
 
 // Resuelve imageQuery (texto descriptivo generado por PptContentEngine) a
