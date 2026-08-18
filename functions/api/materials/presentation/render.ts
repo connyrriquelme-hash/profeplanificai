@@ -31,12 +31,64 @@ function isResolvedImageUrl(value: string): boolean {
   return value.startsWith('http') || value.startsWith('data:');
 }
 
+// pptxgenjs, cuando addImage() recibe una URL http(s):// en `path`, la
+// descarga con el módulo `https` nativo de Node (node_modules/pptxgenjs/
+// dist/pptxgen.cjs.js ~línea 4890) o, si no detecta Node, con
+// XMLHttpRequest (navegador). Cloudflare Workers no es ninguno de los
+// dos — no tiene `https`/`fs` de Node ni `XMLHttpRequest` — así que ese
+// download interno de pptxgenjs falla en silencio y el .pptx termina con
+// una imagen de 0 bytes (referencia XML válida, contenido vacío).
+// Por eso descargamos la imagen nosotros mismos acá con fetch() (que sí
+// funciona en Workers) y la convertimos a data: URI en base64 — así
+// PptRenderer nunca recibe una URL http(s), solo data: URIs, que sí
+// renderiza bien.
+async function toEmbeddableDataUri(url: string): Promise<string> {
+  if (url.startsWith('data:')) return url;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return '';
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    // Pollinations (y potencialmente otros proveedores gratuitos) a veces
+    // responde 200 + content-type válido pero con el body vacío para
+    // prompts largos/complejos (confirmado: Content-Length: 0 real contra
+    // el prompt educativo completo, ~1500 caracteres). Sin este check se
+    // incrusta una imagen "exitosa" pero vacía en vez de omitirla
+    // limpiamente como cuando el proveedor falla de plano.
+    if (bytes.length === 0) return '';
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return `data:${contentType};base64,${btoa(binary)}`;
+  } catch {
+    return '';
+  }
+}
+
+async function resolveSlideImage(
+  slide: ImageTextSlide,
+  imageContext: { grade: string; subject: string; oa: string },
+  env: ImageEnv,
+): Promise<string> {
+  const result = await generateEducationalImage({
+    grade: imageContext.grade,
+    subject: imageContext.subject,
+    oa: imageContext.oa,
+    resourceTitle: 'Presentación',
+    slideTitle: slide.title,
+    slideContent: slide.body.slice(0, 300),
+  }, env);
+  if (!result.ok) return '';
+  return toEmbeddableDataUri(result.url);
+}
+
 // Resuelve imageQuery (texto descriptivo generado por PptContentEngine) a
-// una URL real ANTES de renderizar — PptRenderer.isValidImageSource() solo
-// acepta data:/http(s):// y omite en silencio cualquier otra cosa, así que
-// sin este paso los slides image_text nunca llevan imagen. Mismo patrón que
-// guide.ts:62-73 (Promise.allSettled en paralelo, nunca bloquea el render
-// completo si un proveedor falla).
+// una imagen embebible ANTES de renderizar — PptRenderer.isValidImageSource()
+// solo acepta data:/http(s):// y omite en silencio cualquier otra cosa, así
+// que sin este paso los slides image_text nunca llevan imagen. Mismo patrón
+// que guide.ts:62-73 (Promise.allSettled en paralelo, nunca bloquea el
+// render completo si un proveedor o una descarga falla).
 async function resolveDeckImages(
   deck: PptDeck,
   imageContext: { grade: string; subject: string; oa: string },
@@ -51,16 +103,7 @@ async function resolveDeckImages(
   if (targets.length === 0) return;
 
   const results = await Promise.allSettled(
-    targets.map((slide) =>
-      generateEducationalImage({
-        grade: imageContext.grade,
-        subject: imageContext.subject,
-        oa: imageContext.oa,
-        resourceTitle: 'Presentación',
-        slideTitle: slide.title,
-        slideContent: slide.body.slice(0, 300),
-      }, env),
-    ),
+    targets.map((slide) => resolveSlideImage(slide, imageContext, env)),
   );
 
   results.forEach((result, i) => {
@@ -68,7 +111,7 @@ async function resolveDeckImages(
     // String vacío en vez de undefined: imageQuery no es opcional en
     // ImageTextSlide, e isValidImageSource() de PptRenderer ya trata
     // cualquier valor falsy como "sin imagen" (omite limpiamente).
-    slide.imageQuery = result.status === 'fulfilled' && result.value.ok ? result.value.url : '';
+    slide.imageQuery = result.status === 'fulfilled' ? result.value : '';
   });
 }
 
