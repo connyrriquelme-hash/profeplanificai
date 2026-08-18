@@ -812,7 +812,7 @@ export function FlujoDocenteView() {
   // Result
   if (step === 'resultado' && result) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto px-4">
         <Card variant="elevated" className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
