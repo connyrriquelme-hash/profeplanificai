@@ -94,11 +94,24 @@ async function toEmbeddableDataUri(url: string): Promise<string> {
   }
 }
 
+// Para PPT queremos SDXL (Cloudflare Workers AI) primero — ilustraciones
+// generadas específicamente para el slide, en vez de resultados de búsqueda
+// de Wikimedia — con la cadena existente como respaldo si SDXL no está
+// disponible (sin AI binding, ENABLE_IMAGE_AI no habilitado) o falla. Solo
+// se aplica como DEFAULT cuando nadie fijó IMAGE_PROVIDER_ORDER — si el
+// caller ya lo puso explícito (p.ej. los tests forzando 'svg' para no
+// pegarle a la red real), se respeta tal cual.
+const PPT_PROVIDER_ORDER_DEFAULT = 'sdxl,wikimedia,cloudflare-ai,pollinations,huggingface,svg';
+
 async function resolveSlideImage(
   slide: ImageTextSlide,
   imageContext: { grade: string; subject: string; oa: string },
   env: ImageEnv,
 ): Promise<string> {
+  const pptEnv: ImageEnv = {
+    ...env,
+    IMAGE_PROVIDER_ORDER: env.IMAGE_PROVIDER_ORDER || PPT_PROVIDER_ORDER_DEFAULT,
+  };
   const result = await generateEducationalImage({
     grade: imageContext.grade,
     subject: imageContext.subject,
@@ -106,7 +119,7 @@ async function resolveSlideImage(
     resourceTitle: 'Presentación',
     slideTitle: slide.title,
     slideContent: slide.body.slice(0, 300),
-  }, env);
+  }, pptEnv);
   if (!result.ok) return PPT_IMAGE_PLACEHOLDER;
   const embeddable = await toEmbeddableDataUri(result.url);
   return embeddable || PPT_IMAGE_PLACEHOLDER;

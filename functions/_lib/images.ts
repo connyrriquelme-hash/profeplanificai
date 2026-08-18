@@ -1,4 +1,4 @@
-export type ImageSource = 'wikimedia' | 'cloudflare-ai' | 'pollinations' | 'huggingface' | 'svg-fallback';
+export type ImageSource = 'wikimedia' | 'cloudflare-ai' | 'sdxl' | 'pollinations' | 'huggingface' | 'svg-fallback';
 
 export interface EducationalImageContext {
   grade: string;
@@ -272,6 +272,67 @@ async function tryCloudflareAI(env: ImageEnv, context: EducationalImageContext, 
   }
 }
 
+const SDXL_MODEL = '@cf/stabilityai/stable-diffusion-xl-base-1.0';
+
+// @cf/stabilityai/stable-diffusion-xl-base-1.0 devuelve un ReadableStream en
+// runtime (no el Uint8Array que declara el tipo — confirmado contra la
+// documentación de Cloudflare y un issue de workerd), así que hay que cubrir
+// los 3 casos posibles. Mismo manejo que ya se usa en
+// functions/api/images/generate-slide-image.ts.
+async function sdxlStreamToBytes(stream: ReadableStream<Uint8Array>): Promise<Uint8Array> {
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  const reader = stream.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      chunks.push(value);
+      total += value.length;
+    }
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    bytes.set(c, offset);
+    offset += c.length;
+  }
+  return bytes;
+}
+
+async function trySdxl(env: ImageEnv, prompt: string, cacheKey: string): Promise<EducationalImageResult | null> {
+  if (!env.AI || String(env.ENABLE_IMAGE_AI || 'false').toLowerCase() !== 'true') return null;
+  try {
+    const result = await env.AI.run(SDXL_MODEL, { prompt });
+    let bytes: Uint8Array;
+    if (result instanceof ReadableStream) {
+      bytes = await sdxlStreamToBytes(result);
+    } else if (result instanceof ArrayBuffer) {
+      bytes = new Uint8Array(result);
+    } else {
+      bytes = result as Uint8Array;
+    }
+    if (!bytes || bytes.length === 0) return null;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return {
+      ok: true,
+      url: `data:image/png;base64,${btoa(binary)}`,
+      source: 'sdxl',
+      license: 'Generada por IA para uso educativo',
+      author: 'PlanificaIA Chile + Cloudflare Workers AI (SDXL)',
+      attribution: 'Imagen generada por IA (Stable Diffusion XL) desde backend Cloudflare.',
+      prompt,
+      cached: false,
+      cacheKey,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function tryPollinations(context: EducationalImageContext, prompt: string, cacheKey: string): Promise<EducationalImageResult | null> {
   const encoded = encodeURIComponent(prompt);
   const url = `https://image.pollinations.ai/prompt/${encoded}?width=1280&height=720&nologo=true&safe=true&enhance=true&seed=${encodeURIComponent(cacheKey.slice(-12))}`;
@@ -411,6 +472,7 @@ export async function generateEducationalImage(input: unknown, env: ImageEnv): P
   for (const provider of order) {
     if (provider === 'wikimedia') result = await tryWikimedia(context, prompt, cacheKey);
     if (provider === 'cloudflare-ai') result = await tryCloudflareAI(env, context, prompt, cacheKey);
+    if (provider === 'sdxl') result = await trySdxl(env, prompt, cacheKey);
     if (provider === 'pollinations') result = await tryPollinations(context, prompt, cacheKey);
     if (provider === 'huggingface' || provider === 'hf') result = await tryHuggingFace(env, prompt, cacheKey);
     if (provider === 'svg') result = svgFallback(context, prompt, cacheKey);
