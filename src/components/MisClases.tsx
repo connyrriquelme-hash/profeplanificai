@@ -620,11 +620,11 @@ export function MisClases() {
 
           <div className="space-y-3">
             <label className={LC}>Nombre de la clase<input value={selectedBundle?.plan?.title || selectedBundle?.lesson?.title || draftLesson.title} onChange={(e) => { if (selectedBundle) updatePlanField('title', e.target.value); else setDraftLesson((p) => ({ ...p, title: e.target.value })); }} placeholder="Ej: Lenguaje 4A - Taller de lectura" className={IC} /></label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <label className={LC}>Fecha<input type="date" value={selectedBundle?.lesson?.lesson_date || draftLesson.lesson_date} onChange={(e) => { if (selectedBundle) updateLessonField({ lesson_date: e.target.value }); else setDraftLesson((p) => ({ ...p, lesson_date: e.target.value })); }} className={IC} /></label>
               <div />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <label className={LC}>Inicio<input type="time" value={selectedBundle?.lesson?.start_time || draftLesson.start_time} onChange={(e) => { if (selectedBundle) updateLessonField({ start_time: e.target.value }); else setDraftLesson((p) => ({ ...p, start_time: e.target.value })); }} className={IC} /></label>
               <label className={LC}>Termino<input type="time" value={selectedBundle?.lesson?.end_time || draftLesson.end_time} onChange={(e) => { if (selectedBundle) updateLessonField({ end_time: e.target.value }); else setDraftLesson((p) => ({ ...p, end_time: e.target.value })); }} className={IC} /></label>
             </div>
@@ -741,7 +741,7 @@ export function MisClases() {
             {/* RESUMEN: Datos de clase */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 mb-5">
               <h4 className="text-xs font-black tracking-wide uppercase text-slate-500 mb-3">Datos de clase</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 text-sm">
                 <div><span className="text-[11px] font-bold text-slate-400 uppercase">Curso</span><p className="font-semibold text-slate-800">{courses.find((c) => c.id === lessonCurriculum.levelId)?.name || lessonCurriculum.levelId || '-'}</p></div>
                 <div><span className="text-[11px] font-bold text-slate-400 uppercase">Asignatura</span><p className="font-semibold text-slate-800">{lcSubjects.find((s) => s.id === lessonCurriculum.subjectId)?.name || lessonCurriculum.subjectId || '-'}</p></div>
                 <div><span className="text-[11px] font-bold text-slate-400 uppercase">OA</span><p className="font-semibold text-slate-800">{lessonCurriculum.objectiveId ? lcObjectives.find((o) => o.id === lessonCurriculum.objectiveId)?.code || 'Seleccionado' : <span className="text-slate-400 italic">Opcional</span>}</p></div>
@@ -834,7 +834,7 @@ export function MisClases() {
           <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Recursos con IA</h3>
             <p className="text-sm text-slate-500">{hasOA ? 'Cada recurso usa el contexto curricular guardado: nivel, asignatura y OA seleccionados.' : 'Genera recursos usando nivel y asignatura. Seleccionar OA mejora la alineacion curricular.'}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
               {[['Guia de aprendizaje', 'guia', 'resource'], ['Ficha de trabajo', 'ficha_trabajo', 'resource'], ['Actividad pedagogica', 'actividad_pedagogica', 'resource'], ['Recurso DUA', 'recurso_dua', 'resource'], ['Reforzamiento', 'reforzamiento', 'resource'], ['Extension para avanzados', 'extension_avanzados', 'resource'], ['Material para apoderados', 'material_apoderados', 'resource'], ['Banco de preguntas', 'banco_preguntas', 'resource'], ['Crear presentacion', 'presentation', 'presentation'], ['Crear ticket de salida', 'ticket', 'evaluation']].map(([label, action, kind]) => (
                 <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
               ))}
@@ -877,7 +877,7 @@ export function MisClases() {
         {rightTab === 'evaluacion' && (<div>
           <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Evaluaciones con IA</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
               {[['Crear evaluacion', 'evaluacion', 'evaluation'], ['Crear rubrica', 'rubrica', 'evaluation'], ['Crear pauta', 'pauta', 'evaluation'], ['Crear evaluacion tipo SIMCE', 'simce', 'evaluation'], ['Crear retroalimentacion', 'retroalimentacion', 'evaluation']].map(([label, action, kind]) => (
                 <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Basado en el OA seleccionado' : 'Genera con curso y asignatura'}</p></button>
               ))}
@@ -896,7 +896,7 @@ export function MisClases() {
             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-3 text-amber-500"><Clock size={24} /></div>
             <h3 className="font-black text-slate-900">No hay bloques no lectivos esta semana.</h3>
             <p className="text-sm text-slate-500 mt-1">Crea uno desde el panel izquierdo o este boton.</p>
-          </div>) : (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          </div>) : (<div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
             {ntbBlocks.map((block) => (<div key={block.id} className={`rounded-2xl border p-4 ${block.status === 'realizado' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-white border">{NON_TEACHING_TYPES.find((t) => t.value === block.non_teaching_type)?.label || block.non_teaching_type}</span>
@@ -947,13 +947,13 @@ export function MisClases() {
           <div><h3 className="font-black text-slate-900 text-lg">{editingNtb ? 'Editar bloque no lectivo' : 'Nuevo bloque no lectivo'}</h3><p className="text-xs text-slate-500 mt-0.5">Actividades del trabajo docente que no son clases lectivas.</p></div>
           <button onClick={() => { setShowNtbForm(false); setEditingNtb(null); }} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"><X size={18} /></button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
           <label className={LC}>Tipo de actividad<select value={ntbForm.non_teaching_type} onChange={(e) => setNtbForm((p) => ({ ...p, non_teaching_type: e.target.value }))} className={IC}>{(cfgNtbTypes.length > 0 ? cfgNtbTypes : NON_TEACHING_TYPES).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
           <label className={LC}>Titulo<input value={ntbForm.title} onChange={(e) => setNtbForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Reunion de departamento" className={IC} /></label>
           <label className={LC}>Lugar<input value={ntbForm.location} onChange={(e) => setNtbForm((p) => ({ ...p, location: e.target.value }))} placeholder="Sala, online, etc." className={IC} /></label>
           <label className={`${LC} sm:col-span-2 lg:col-span-3`}>Descripcion<textarea value={ntbForm.description} onChange={(e) => setNtbForm((p) => ({ ...p, description: e.target.value }))} rows={2} className={IC} /></label>
           <label className={LC}>Fecha<input type="date" value={ntbForm.block_date} onChange={(e) => setNtbForm((p) => ({ ...p, block_date: e.target.value }))} className={IC} /></label>
-          <div className="grid grid-cols-2 gap-2"><label className={LC}>Inicio<input type="time" value={ntbForm.start_time} onChange={(e) => setNtbForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label><label className={LC}>Termino<input type="time" value={ntbForm.end_time} onChange={(e) => setNtbForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><label className={LC}>Inicio<input type="time" value={ntbForm.start_time} onChange={(e) => setNtbForm((p) => ({ ...p, start_time: e.target.value }))} className={IC} /></label><label className={LC}>Termino<input type="time" value={ntbForm.end_time} onChange={(e) => setNtbForm((p) => ({ ...p, end_time: e.target.value }))} className={IC} /></label></div>
           <label className={LC}>Prioridad<select value={ntbForm.priority} onChange={(e) => setNtbForm((p) => ({ ...p, priority: e.target.value }))} className={IC}>{(cfgPriorities.length > 0 ? cfgPriorities : PRIORITY_OPTIONS).map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}</select></label>
           <label className="flex items-center gap-2 text-sm font-bold text-slate-600 mt-5"><input type="checkbox" checked={ntbForm.reminder_enabled} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_enabled: e.target.checked }))} /> Activar recordatorio</label>
           {ntbForm.reminder_enabled && (<><label className={LC}>Minutos antes<input type="number" min={5} max={1440} value={ntbForm.reminder_minutes_before} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_minutes_before: Number(e.target.value) }))} className={IC} /></label><label className={LC}>Correo destinatario<input type="email" value={ntbForm.reminder_email} onChange={(e) => setNtbForm((p) => ({ ...p, reminder_email: e.target.value }))} placeholder="profesor@correo.cl" className={IC} /></label></>)}
@@ -967,6 +967,6 @@ export function MisClases() {
       </Card>
     </div>)}
 
-    {classes.length > 0 && (<div className="mt-5"><Card><h3 className="font-black text-slate-900">Cursos</h3><div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">{classes.map((item) => (<div key={item.id} className="rounded-2xl border border-slate-100 p-4"><span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} /><h4 className="mt-2 font-black text-slate-900">{item.class_name}</h4><p className="text-sm text-slate-500">{item.course_name}</p><button onClick={() => void deleteTeacherClass(item.id).then(loadMain)} className="mt-3 text-xs font-bold text-red-600 inline-flex gap-1 items-center"><Trash2 size={12} /> Quitar</button></div>))}</div></Card></div>)}
+    {classes.length > 0 && (<div className="mt-5"><Card><h3 className="font-black text-slate-900">Cursos</h3><div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">{classes.map((item) => (<div key={item.id} className="rounded-2xl border border-slate-100 p-4"><span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} /><h4 className="mt-2 font-black text-slate-900">{item.class_name}</h4><p className="text-sm text-slate-500">{item.course_name}</p><button onClick={() => void deleteTeacherClass(item.id).then(loadMain)} className="mt-3 text-xs font-bold text-red-600 inline-flex gap-1 items-center"><Trash2 size={12} /> Quitar</button></div>))}</div></Card></div>)}
   </div>);
 }

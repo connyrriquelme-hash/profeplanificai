@@ -28,15 +28,15 @@ export function GeneratedResourceCard({
   className = '',
 }: GeneratedResourceCardProps) {
   return (
-    <div className={`relative max-w-4xl mx-auto ${className}`}>
+    <div className={`relative max-w-5xl mx-auto ${className}`}>
       {/* Document surface */}
-      <div className="bg-white rounded-2xl border border-[var(--border)] shadow-lg shadow-black/5 overflow-hidden">
+      <div className="bg-white rounded-xl border border-[var(--border)] shadow-lg shadow-black/5 overflow-hidden">
         {/* Top accent line */}
         <div className="h-1 bg-gradient-to-r from-[var(--primary)] via-[var(--accent-honey)] to-[var(--primary)]" />
 
         {/* Document header */}
         {(title || badges.length > 0) && (
-          <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-[var(--border)]">
+          <div className="px-6 sm:px-10 lg:px-14 pt-8 pb-6 border-b border-[var(--border)]">
             {badges.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {badges.map((badge, i) => (
@@ -59,13 +59,13 @@ export function GeneratedResourceCard({
         )}
 
         {/* Document body */}
-        <div className="px-6 sm:px-10 py-8 leading-relaxed text-[var(--ink)]">
+        <div className="px-6 sm:px-10 lg:px-14 py-8 leading-relaxed text-[var(--ink)]">
           {children}
         </div>
 
         {/* Actions bar */}
         {contenido && (
-          <div className="px-6 sm:px-10 py-4 border-t border-[var(--border)] bg-[var(--bg)]">
+          <div className="px-6 sm:px-10 lg:px-14 py-4 border-t border-[var(--border)] bg-[var(--bg)]">
             <ResultActions
               contenido={contenido}
               titulo={title}

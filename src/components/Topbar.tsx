@@ -17,7 +17,8 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
     : 'P';
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--border)] px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3 sm:gap-4 bg-white/80 backdrop-blur-xl" style={{ minHeight: '80px' }}>
+    <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-white/80 backdrop-blur-xl" style={{ minHeight: '80px' }}>
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center gap-3 sm:gap-4">
       {title && (
         <h1 className="text-base sm:text-lg font-semibold text-slate-900 lg:hidden">{title}</h1>
       )}
@@ -71,6 +72,7 @@ export function Topbar({ title, onNavigate }: TopbarProps) {
             <p className="text-[11px] text-[var(--muted)] font-medium leading-tight">{user?.rol === 'admin' ? 'Administrador' : 'Docente'}</p>
           </div>
         </div>
+      </div>
       </div>
     </header>
   );

@@ -461,7 +461,7 @@ export function FlujoDocenteView() {
               <p className="text-sm text-gray-500">¿A qué nivel pertenece tu clase?</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3">
             {courses.filter(c => (c.objective_count || 0) > 0).map(c => (
               <button
                 key={c.id}
@@ -493,7 +493,7 @@ export function FlujoDocenteView() {
               <p className="text-sm text-gray-500">{selectedCourse?.name} — ¿Qué asignatura?</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
             {subjects.map(s => (
               <button
                 key={s.id}
@@ -732,7 +732,7 @@ export function FlujoDocenteView() {
               <p className="text-sm text-gray-500">Selecciona el tipo de recurso a generar</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
             {PRODUCTOS.map(p => {
               const Icon = p.icon;
               return (

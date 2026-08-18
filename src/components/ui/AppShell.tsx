@@ -13,8 +13,10 @@ export function AppShell({ sidebar, topbar, bottomNav, children }: AppShellProps
       {sidebar}
       <div className="flex-1 flex flex-col min-w-0">
         {topbar}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-7 xl:p-8 pb-24 lg:pb-8 animate-fade-in">
-          {children}
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 animate-fade-in">
+          <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-7 xl:py-8">
+            {children}
+          </div>
         </main>
       </div>
       {bottomNav}
