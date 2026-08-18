@@ -21,7 +21,7 @@ export function MobileBottomNav({ activeView, onViewChange }: MobileBottomNavPro
   const bottomNavItems = allBottomNavItems.filter(item => !ADMIN_ONLY_VIEW_IDS.has(item.id) || isAdmin);
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200/60 safe-area-bottom no-print">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-[var(--border)] safe-area-bottom no-print">
       <div className="flex items-center justify-around px-1 py-1">
         {bottomNavItems.map((item) => {
           const isActive = activeView === item.id;
@@ -33,12 +33,12 @@ export function MobileBottomNav({ activeView, onViewChange }: MobileBottomNavPro
               className={`flex flex-col items-center justify-center min-w-[56px] py-2 px-1 rounded-xl transition-all duration-200 ${
                 isActive
                   ? 'text-[var(--primary)]'
-                  : 'text-gray-400 active:text-[var(--primary)]/70'
+                  : 'text-[var(--muted)] active:text-[var(--primary)]/70'
               }`}
               aria-label={item.label}
             >
               <div className={`p-1.5 rounded-xl transition-all duration-200 ${
-                isActive ? 'bg-[var(--primary)]/10' : ''
+                isActive ? 'bg-[var(--primary-tint)]' : ''
               }`}>
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
               </div>

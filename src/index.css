@@ -4,21 +4,21 @@
 @theme {
   --color-theme-beige: #F8FAFC;
   --color-theme-gray: #E2E8F0;
-  --color-theme-primary: #8B5CF6;
-  --color-theme-text: #0F172A;
+  --color-theme-primary: #B5471F;
+  --color-theme-text: #1E293B;
   --color-theme-secondary: #64748B;
-  --color-theme-accent: #3B82F6;
-  --color-brand: #8B5CF6;
-  --color-brand2: #D946EF;
+  --color-theme-accent: #B5471F;
+  --color-brand: #B5471F;
+  --color-brand2: #D97706;
   --color-bg: #F8FAFC;
   --color-bg2: #F1F5F9;
   --color-card: #FFFFFF;
-  --color-ink: #0F172A;
+  --color-ink: #1E293B;
   --color-muted: #64748B;
   --color-line: #E2E8F0;
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --radius-card: 20px;
-  --radius-btn: 14px;
+  --radius-card: 12px;
+  --radius-btn: 8px;
 }
 
 :root {
@@ -30,39 +30,39 @@
   --card3: #F1F5F9;
   --elevated: #FFFFFF;
   --surface: #F8FAFC;
-  --ink: #0F172A;
-  --ink2: #475569;
+  --ink: #1E293B;
+  --ink2: #334155;
   --muted: #64748B;
-  --muted2: #8B5CF6;
+  --muted2: #94A3B8;
   --disabled: #CBD5E1;
-  --brand: #8B5CF6;
-  --brand2: #D946EF;
-  --brand3: #3B82F6;
-  --brand-glow: rgba(139,92,246,0.15);
-  --brand-gradient: linear-gradient(135deg, #8B5CF6, #D946EF);
+  --brand: #B5471F;
+  --brand2: #D97706;
+  --brand3: #0EA5E9;
+  --brand-glow: rgba(181,71,31,0.12);
+  --brand-gradient: linear-gradient(135deg, #B5471F, #D97706);
   --line: #E2E8F0;
   --line2: #F1F5F9;
-  --line-focus: #8B5CF6;
+  --line-focus: #B5471F;
   --success: #10B981;
   --success-bg: rgba(16,185,129,0.1);
   --warning: #F59E0B;
   --warning-bg: rgba(245,158,11,0.1);
   --error: #EF4444;
   --error-bg: rgba(239,68,68,0.1);
-  --info: #3B82F6;
-  --info-bg: rgba(59,130,246,0.1);
-  --shadow-sm: 0 1px 3px rgba(15,23,42,0.04), 0 1px 2px rgba(15,23,42,0.06);
-  --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.05), 0 2px 4px -2px rgba(15,23,42,0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(15,23,42,0.06), 0 4px 6px -4px rgba(15,23,42,0.03);
-  --shadow-xl: 0 20px 45px rgba(15,23,42,0.08);
+  --info: #0EA5E9;
+  --info-bg: rgba(14,165,233,0.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
   --shadow-glow: 0 0 20px var(--brand-glow);
-  --shadow: 0 4px 6px -1px rgba(15,23,42,0.05), 0 2px 4px -2px rgba(15,23,42,0.03);
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
-  --radius: 20px;
+  --radius: 12px;
   --t-fast: 150ms cubic-bezier(.4,0,.2,1);
   --t-base: 250ms cubic-bezier(.4,0,.2,1);
   --t-slow: 400ms cubic-bezier(.4,0,.2,1);
@@ -85,54 +85,53 @@
   /* Colores */
   --primary: #B5471F;
   --primary-hover: #9A3A17;
-  --primary-tint: #FBE3D6;
+  --primary-tint: #FEF3E2;
   --primary-ink: #7C2F13;
-  --bg: #FBF5EC;
-  --sidebar: #F4E8D7;
-  --sidebar-hover: #EEDDC5;
+  --bg: #F8FAFC;
+  --sidebar: #FFFFFF;
+  --sidebar-hover: #F1F5F9;
   --surface: #FFFFFF;
-  --surface-soft: #FFFDF9;
-  --ink: #33261C;
-  --ink-soft: #6B5B4E;
-  --ink-mid: #5A483A;
-  --border: #D9CBB8;
-  --border-strong: #E8DCC9;
-  --success: #5B7B5E;
-  --success-bg: #EAF0E7;
-  --success-ink: #2E4630;
-  --warn-bg: #FCEFD3;
-  --warn-ink: #8A5A00;
-  --accent-honey: #E9A13B;
+  --surface-soft: #F8FAFC;
+  --ink: #1E293B;
+  --ink-soft: #64748B;
+  --ink-mid: #475569;
+  --border: #E2E8F0;
+  --border-strong: #F1F5F9;
+  --success: #10B981;
+  --success-bg: #ECFDF5;
+  --success-ink: #065F46;
+  --warn-bg: #FFFBEB;
+  --warn-ink: #92400E;
+  --accent-honey: #D97706;
 
   /* Tipografia */
-  --font-display: 'Baloo 2', sans-serif;
-  --font-body: 'Nunito Sans', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Outfit', sans-serif;
 
   /* Radios */
-  --radius-card: 21px;
-  --radius-input: 14px;
-  --radius-icon: 13px;
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-icon: 8px;
   --radius-pill: 999px;
 
   /* Sombras */
-  --shadow-card: 0 2px 10px rgba(51, 38, 28, 0.06);
-  --shadow-card-hover: 0 6px 18px rgba(181, 71, 31, 0.18);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
 
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
 }
 
-/* Nunito Sans en body (heredado desde .theme-calida arriba); Baloo 2 solo
-   en headings — el resto de textos (títulos de tarjeta, etc.) lo aplica
-   cada componente puntualmente con font-family:var(--font-display). */
+/* Outfit en body y headings (unified typography) */
 .theme-calida h1,
 .theme-calida h2 {
   font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-/* Foco visible (WCAG AA) — README: "outline 2px --primary, offset 2px"
-   en todos los interactivos. */
+/* Foco visible (WCAG AA) */
 .theme-calida button:focus-visible,
 .theme-calida a:focus-visible,
 .theme-calida input:focus-visible,
@@ -173,6 +172,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   min-height: 100vh;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -192,8 +192,8 @@ body {
 .sidebar {
   width: 288px;
   min-width: 288px;
-  background: #FFFFFF;
-  border-right: 1px solid var(--line);
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
   padding: 20px 12px;
   display: flex;
   flex-direction: column;
@@ -216,13 +216,13 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #8B5CF6, #D946EF);
+  background: linear-gradient(135deg, #B5471F, #D97706);
   display: grid;
   place-items: center;
   color: white;
   font-weight: 900;
   font-size: 20px;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(181, 71, 31, 0.25);
 }
 
 .sidebar h2 {
@@ -260,13 +260,13 @@ body {
 }
 
 .nav-btn:hover {
-  background: rgba(139, 92, 246, 0.08);
+  background: rgba(181, 71, 31, 0.06);
   color: var(--ink);
 }
 
 .nav-btn.active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(217, 70, 239, 0.08));
-  color: #7C3AED;
+  background: rgba(181, 71, 31, 0.1);
+  color: var(--primary);
 }
 
 .nav-icon {
@@ -302,7 +302,7 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8B5CF6, #D946EF);
+  background: linear-gradient(135deg, #B5471F, #D97706);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -360,6 +360,7 @@ body {
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
 }
 
 .card h2 {
@@ -428,8 +429,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(181, 71, 31, 0.1);
 }
 
 textarea {
@@ -449,13 +450,14 @@ button {
 }
 
 .primary {
-  background: linear-gradient(135deg, var(--brand), #6366F1);
+  background: var(--primary);
   color: white;
 }
 
 .primary:hover {
-  opacity: 0.92;
+  background: var(--primary-hover);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .secondary {
@@ -728,8 +730,8 @@ button {
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(14, 165, 233, 0.04));
-  border: 1px solid rgba(79, 70, 229, 0.15);
+  background: linear-gradient(135deg, rgba(181, 71, 31, 0.04), rgba(217, 119, 6, 0.03));
+  border: 1px solid rgba(181, 71, 31, 0.12);
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 18px;
@@ -1183,8 +1185,8 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--brand) !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(181, 71, 31, 0.1);
 }
 
 /* Project Copilot — print-only layout */

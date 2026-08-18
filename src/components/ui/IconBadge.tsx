@@ -15,7 +15,7 @@ interface IconBadgeProps {
   className?: string;
 }
 
-export function IconBadge({ icon: Icon, size = 'md', color = '#4f46e5', variant = 'soft', className = '' }: IconBadgeProps) {
+export function IconBadge({ icon: Icon, size = 'md', color = '#B5471F', variant = 'soft', className = '' }: IconBadgeProps) {
   const px = typeof size === 'number' ? size : sizeMap[size] ?? sizeMap.md;
   const container = px * 2;
   const radius = px * 0.5;

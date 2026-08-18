@@ -91,15 +91,15 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                     key={item.id}
                     title={collapsed ? item.label : undefined}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-[14px] text-[15px] transition-all duration-200 group ${
+                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-xl text-[14px] transition-all duration-200 group ${
                       isActive
-                        ? 'bg-[var(--primary)] text-[#FFF6ED] font-bold'
-                        : 'text-[var(--ink-mid)] font-semibold hover:bg-[var(--sidebar-hover)]'
+                        ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+                        : 'text-[var(--ink-mid)] font-medium hover:bg-[var(--sidebar-hover)]'
                     }`}
                     onClick={() => handleNavigate(item.id)}
                   >
                     <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200">
-                      <Icon size={18} strokeWidth={2} />
+                      <Icon size={18} strokeWidth={isActive ? 2.25 : 2} />
                     </span>
                     {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
                   </button>
@@ -124,15 +124,15 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   key={item.id}
                   title={collapsed ? item.label : undefined}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-[14px] text-[15px] transition-all duration-200 group ${
+                  className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-[14px]'} py-[11px] rounded-xl text-[14px] transition-all duration-200 group ${
                     isActive
-                      ? 'bg-[var(--primary)] text-[#FFF6ED] font-bold'
-                      : 'text-[var(--ink-mid)] font-semibold hover:bg-[var(--sidebar-hover)]'
+                      ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+                      : 'text-[var(--ink-mid)] font-medium hover:bg-[var(--sidebar-hover)]'
                   }`}
                   onClick={() => handleNavigate(item.id)}
                 >
                   <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-colors duration-200">
-                    <Icon size={18} strokeWidth={2} />
+                    <Icon size={18} strokeWidth={isActive ? 2.25 : 2} />
                   </span>
                   {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
                 </button>
@@ -149,7 +149,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       {/* Logo */}
       <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-5 mb-2`}>
         <div
-          className="w-[38px] h-[38px] rounded-xl bg-[var(--primary)] flex items-center justify-center text-white font-bold text-[19px] flex-shrink-0"
+          className="w-[38px] h-[38px] rounded-xl bg-[var(--primary)] flex items-center justify-center text-white font-bold text-[19px] flex-shrink-0 shadow-sm"
           style={{ fontFamily: 'var(--font-display)' }}
         >
           P
@@ -165,9 +165,9 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
       {/* Idea de la semana — widget decorativo, sin estado */}
       {!collapsed && (
-        <div className="mx-3 mb-3 flex flex-col gap-1.5 rounded-2xl border-[1.5px] border-dashed border-[#D9A76A] bg-[#FFF9F0] p-3.5">
-          <span className="text-[14px] font-semibold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>Idea de la semana</span>
-          <span className="text-[13px] leading-[1.45] text-[var(--ink-soft)]">Prueba generar una guía con adecuaciones DUA en dos niveles de complejidad.</span>
+        <div className="mx-3 mb-3 flex flex-col gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3.5">
+          <span className="text-[13px] font-semibold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>Idea de la semana</span>
+          <span className="text-[12px] leading-[1.5] text-[var(--ink-soft)]">Prueba generar una guia con adecuaciones DUA en dos niveles de complejidad.</span>
         </div>
       )}
 

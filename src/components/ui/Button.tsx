@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 
 const variantStyles: Record<string, string> = {
   primary:
-    'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] shadow-md shadow-black/10 hover:shadow-lg hover:shadow-black/15 active:scale-[0.98]',
+    'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] shadow-sm hover:shadow-md active:scale-[0.98]',
   secondary:
     'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
   ghost:
@@ -12,15 +12,15 @@ const variantStyles: Record<string, string> = {
   outline:
     'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
   premium:
-    'bg-[var(--primary)] text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/15 hover:bg-[var(--primary-hover)] active:scale-[0.98]',
+    'bg-[var(--primary)] text-white shadow-md hover:shadow-lg hover:bg-[var(--primary-hover)] active:scale-[0.98]',
   danger:
     'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 hover:border-red-200',
 };
 
 const sizeStyles: Record<string, string> = {
-  sm: 'px-3 py-1.5 text-xs rounded-xl gap-1.5 h-8',
-  md: 'px-4 py-2 text-sm rounded-xl gap-2 h-10',
-  lg: 'px-6 py-3 text-base rounded-2xl gap-2.5 h-12',
+  sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5 h-8',
+  md: 'px-4 py-2 text-sm rounded-lg gap-2 h-10',
+  lg: 'px-6 py-3 text-base rounded-xl gap-2.5 h-12',
 };
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

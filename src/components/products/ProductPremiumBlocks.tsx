@@ -120,13 +120,13 @@ export function PremiumCallout({ callout }: { callout: CalloutLike }) {
   }[type] || 'Importante';
   const text = callout.text || callout.texto || '';
   const palette = {
-    docente: 'border-violet-200 bg-violet-50 text-violet-900',
+    docente: 'border-blue-200 bg-blue-50 text-blue-900',
     familia: 'border-emerald-200 bg-emerald-50 text-emerald-900',
     estudiante: 'border-sky-200 bg-sky-50 text-sky-900',
-    dua: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-900',
-    evaluacion: 'border-amber-200 bg-amber-50 text-amber-900',
-    importante: 'border-indigo-200 bg-indigo-50 text-indigo-900',
-  }[type] || 'border-indigo-200 bg-indigo-50 text-indigo-900';
+    dua: 'border-amber-200 bg-amber-50 text-amber-900',
+    evaluacion: 'border-orange-200 bg-orange-50 text-orange-900',
+    importante: 'border-[var(--primary)]/20 bg-[var(--primary-tint)] text-[var(--primary-ink)]',
+  }[type] || 'border-[var(--primary)]/20 bg-[var(--primary-tint)] text-[var(--primary-ink)]';
 
   if (!text) return null;
 
@@ -146,26 +146,26 @@ export function PremiumTable({ table }: { table: TableLike }) {
   if (columns.length === 0 || rows.length === 0) return null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm break-inside-avoid">
-      <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-        <h4 className="text-sm font-black text-slate-900">{title}</h4>
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm break-inside-avoid">
+      <div className="bg-[var(--bg2)] px-4 py-3 border-b border-[var(--border)]">
+        <h4 className="text-sm font-bold text-[var(--ink)]">{title}</h4>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-violet-50">
+          <thead className="bg-[var(--primary-tint)]">
             <tr>
               {columns.map((column, index) => (
-                <th key={index} className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-wider text-violet-700">
+                <th key={index} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--primary-ink)]">
                   {column}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[var(--line)]">
             {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="odd:bg-white even:bg-slate-50/60">
+              <tr key={rowIndex} className="odd:bg-white even:bg-[var(--bg)]">
                 {columns.map((_, cellIndex) => (
-                  <td key={cellIndex} className="px-4 py-3 align-top text-slate-700 leading-relaxed">
+                  <td key={cellIndex} className="px-4 py-3 align-top text-[var(--ink-soft)] leading-relaxed">
                     {row[cellIndex] || ''}
                   </td>
                 ))}
@@ -186,20 +186,20 @@ export function PremiumChart({ chart }: { chart: ChartLike }) {
   if (data.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm break-inside-avoid">
-      <h4 className="text-sm font-black text-slate-900 mb-4">{title}</h4>
+    <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm break-inside-avoid">
+      <h4 className="text-sm font-bold text-[var(--ink)] mb-4">{title}</h4>
       <div className="space-y-3">
         {data.map((item, index) => {
           const value = Number(item.value || 0);
           const width = Math.max(8, Math.round((value / max) * 100));
           return (
             <div key={index}>
-              <div className="flex items-center justify-between gap-3 text-xs font-bold text-slate-600 mb-1">
+              <div className="flex items-center justify-between gap-3 text-xs font-semibold text-[var(--ink-soft)] mb-1">
                 <span>{item.label}</span>
                 <span>{value}</span>
               </div>
-              <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${width}%` }} />
+              <div className="h-2.5 rounded-full bg-[var(--bg2)] overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--accent-honey)]" style={{ width: `${width}%` }} />
               </div>
             </div>
           );
@@ -214,12 +214,12 @@ export function PremiumChecklist({ items }: { items: unknown[] }) {
   if (normalized.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 break-inside-avoid">
-      <h4 className="text-sm font-black text-emerald-900 mb-3">Checklist de uso docente</h4>
+    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 break-inside-avoid">
+      <h4 className="text-sm font-bold text-emerald-900 mb-3">Checklist de uso docente</h4>
       <ul className="grid gap-2 sm:grid-cols-2">
         {normalized.map((item, index) => (
-          <li key={index} className="flex items-start gap-2 rounded-xl bg-white/80 border border-emerald-100 px-3 py-2 text-sm text-emerald-900">
-            <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-black text-emerald-700">✓</span>
+          <li key={index} className="flex items-start gap-2 rounded-lg bg-white/80 border border-emerald-100 px-3 py-2 text-sm text-emerald-900">
+            <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-bold text-emerald-700">✓</span>
             <span>{item}</span>
           </li>
         ))}
@@ -322,7 +322,7 @@ function renderNestedValue(value: unknown, depth: number): React.ReactNode {
       <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
         {value.filter(isRenderableValue).map((item, index) => (
           <li key={index} className="flex items-start gap-2">
-            <span className="text-violet-500 mt-0.5">•</span>
+            <span className="text-[var(--primary)] mt-0.5">•</span>
             <span className="min-w-0 flex-1">
               {asRecord(item) ? <PremiumKeyValueGrid data={item} depth={depth + 1} /> : asString(item)}
             </span>
@@ -353,8 +353,8 @@ export function PremiumKeyValueGrid({ data, depth = 0 }: { data: Record<string, 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {entries.map(([key, value]) => (
-        <div key={key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm break-inside-avoid">
-          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">{formatProductLabel(key)}</p>
+        <div key={key} className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm break-inside-avoid">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">{formatProductLabel(key)}</p>
           {renderNestedValue(value, depth)}
         </div>
       ))}

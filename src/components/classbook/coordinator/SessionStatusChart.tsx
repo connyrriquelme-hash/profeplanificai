@@ -25,8 +25,8 @@ export default function SessionStatusChart({
     {
       label: 'Programadas',
       count: summary.sessionsScheduled,
-      colorClass: 'bg-violet-500',
-      bgClass: 'bg-violet-100',
+      colorClass: 'bg-[var(--primary)]',
+      bgClass: 'bg-[var(--primary-tint)]',
     },
     {
       label: 'Completadas',

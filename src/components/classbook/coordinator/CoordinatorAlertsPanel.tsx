@@ -27,9 +27,9 @@ function severityConfig(severity: CoordinatorAlert['severity']) {
     default:
       return {
         icon: Info,
-        iconColor: 'text-violet-500',
-        bgClass: 'bg-violet-50 border-violet-100',
-        dotColor: 'bg-violet-500',
+        iconColor: 'text-[var(--primary)]',
+        bgClass: 'bg-[var(--primary-tint)] border-[var(--primary)]/20',
+        dotColor: 'bg-[var(--primary)]',
       };
   }
 }

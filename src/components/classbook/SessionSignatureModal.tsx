@@ -90,14 +90,14 @@ export function SessionSignatureModal({ session, institutionId, onSuccess, onCan
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+            className="flex-1 text-sm font-semibold px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--ink-soft)] hover:bg-[var(--bg2)] transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
           >
             Cancelar
           </button>
           <button
             onClick={handleSign}
             disabled={loading || pin.length !== 6}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2"
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition focus-visible:outline-2 focus-visible:outline-[var(--primary)] focus-visible:outline-offset-2"
           >
             {loading ? 'Firmando...' : 'Firmar sesión'}
           </button>

@@ -1,12 +1,12 @@
 const colorMap = {
   indigo: { bg: 'bg-[var(--primary-tint)]', text: 'text-[var(--primary-ink)]', dot: 'bg-[var(--primary)]' },
   violet: { bg: 'bg-[var(--primary-tint)]', text: 'text-[var(--primary-ink)]', dot: 'bg-[var(--primary)]' },
-  teal: { bg: 'bg-teal-100', text: 'text-teal-700', dot: 'bg-teal-500' },
-  orange: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
-  pink: { bg: 'bg-pink-100', text: 'text-pink-700', dot: 'bg-pink-500' },
+  teal: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  orange: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  pink: { bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
   slate: { bg: 'bg-slate-100', text: 'text-slate-700', dot: 'bg-slate-500' },
-  green: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
-  amber: { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' },
+  green: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  amber: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
 } as const;
 
 const sizeStyles = {

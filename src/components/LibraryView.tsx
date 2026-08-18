@@ -373,7 +373,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
 
   const renderHub = () => (
     <div className="max-w-5xl mx-auto">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 p-7 sm:p-10 mb-10 shadow-xl shadow-indigo-200/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--primary)] to-[var(--accent-honey)] p-7 sm:p-10 mb-10 shadow-xl shadow-indigo-200/30">
         <div className="absolute inset-0 bg-noise opacity-[0.06]" />
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3" />
         <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/[0.03] rounded-full translate-y-1/3 -translate-x-1/4" />
