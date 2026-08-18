@@ -334,7 +334,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent-honey)] p-6 text-white shadow-lg">
         <p className="text-sm font-bold uppercase tracking-widest text-white/75">PROJECT COPILOT</p>
         <h1 className="mt-2 text-3xl font-black">Generador de Guía DUA Multinivel</h1>

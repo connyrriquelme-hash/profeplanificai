@@ -372,7 +372,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   // ── Hub ──
 
   const renderHub = () => (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--primary)] to-[var(--accent-honey)] p-7 sm:p-10 mb-10 shadow-xl shadow-indigo-200/30">
         <div className="absolute inset-0 bg-noise opacity-[0.06]" />
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3" />
@@ -441,7 +441,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   // ── Curriculum ──
 
   const renderCurriculum = () => (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       {renderStepper()}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-5">
@@ -613,7 +613,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   // ── Topic ──
 
   const renderTopic = () => (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full">
       {renderStepper()}
       <div className="space-y-5">
         <Card variant="default" className="p-5 sm:p-6 space-y-5">
@@ -714,7 +714,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   // ── Refine ──
 
   const renderRefine = () => (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full">
       {renderStepper()}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
         {REFINE_OPTIONS.map(opt => {
@@ -755,7 +755,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   // ── Design ──
 
   const renderDesign = () => (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       {renderStepper()}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {DESIGN_STYLES.map(st => {

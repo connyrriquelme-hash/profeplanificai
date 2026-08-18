@@ -240,7 +240,7 @@ export function ReportesView() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto animate-fade-in">
+    <div className="w-full animate-fade-in">
       <SectionHeader
         icon={BarChart2}
         iconColor="#B5471F"

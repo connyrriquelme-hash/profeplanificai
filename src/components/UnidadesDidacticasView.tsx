@@ -142,7 +142,7 @@ export function UnidadesDidacticasView() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto animate-fade-in">
+    <div className="w-full animate-fade-in">
       <SectionHeader
         icon={BookOpen}
         iconColor="#B5471F"

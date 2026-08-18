@@ -25,7 +25,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
   const firstName = user?.nombre?.split(' ')[0] || 'Profe';
 
   return (
-    <div className="max-w-6xl mx-auto animate-fade-in flex flex-col gap-7">
+    <div className="w-full animate-fade-in flex flex-col gap-7">
       <div className="flex flex-col gap-1">
         <h1 className="text-[32px] font-bold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
           ¡Hola, profe {firstName}!

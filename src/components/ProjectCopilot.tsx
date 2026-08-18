@@ -140,7 +140,7 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="w-full py-8 space-y-8">
       <header className="no-print text-center space-y-2">
         <div className="inline-flex items-center gap-2 bg-[var(--primary-tint)] text-[var(--primary-ink)] px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">
           <Bot size={14} /> Project Copilot
