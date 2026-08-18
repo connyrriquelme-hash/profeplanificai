@@ -1,10 +1,19 @@
 import { PptDeckSchema } from '../../../../schemas/PptDeckSchema';
-import type { PptDeck } from '../../../../schemas/PptDeckSchema';
+import type { PptDeck, ImageTextSlide } from '../../../../schemas/PptDeckSchema';
 import { buildRenderableDeck } from '../../../core/PptLayoutEngine';
 import { renderPptx } from '../../../core/PptRenderer';
 import { getAuthenticatedUserId } from '../../../_lib/auth';
+import { generateEducationalImage, type ImageEnv } from '../../../_lib/images';
 
-interface Env { DB: D1Database; JWT_SECRET: string }
+interface Env {
+  DB: D1Database;
+  JWT_SECRET: string;
+  AI?: ImageEnv['AI'];
+  ENABLE_IMAGE_AI?: string;
+  IMAGE_PROVIDER_ORDER?: string;
+  HF_API_TOKEN?: string;
+  IMAGE_CACHE_TTL_DAYS?: string;
+}
 
 interface RenderRequest {
   resourceId?: string;
@@ -16,6 +25,51 @@ async function getUserInstitution(db: D1Database, userId: string): Promise<strin
     `SELECT institution_id FROM institution_members WHERE user_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1`,
   ).bind(userId).first<{ institution_id: string }>();
   return row?.institution_id || null;
+}
+
+function isResolvedImageUrl(value: string): boolean {
+  return value.startsWith('http') || value.startsWith('data:');
+}
+
+// Resuelve imageQuery (texto descriptivo generado por PptContentEngine) a
+// una URL real ANTES de renderizar — PptRenderer.isValidImageSource() solo
+// acepta data:/http(s):// y omite en silencio cualquier otra cosa, así que
+// sin este paso los slides image_text nunca llevan imagen. Mismo patrón que
+// guide.ts:62-73 (Promise.allSettled en paralelo, nunca bloquea el render
+// completo si un proveedor falla).
+async function resolveDeckImages(
+  deck: PptDeck,
+  imageContext: { grade: string; subject: string; oa: string },
+  env: ImageEnv,
+): Promise<void> {
+  const targets: ImageTextSlide[] = [];
+  for (const slide of deck.slides) {
+    if (slide.layout === 'image_text' && slide.imageQuery && !isResolvedImageUrl(slide.imageQuery)) {
+      targets.push(slide);
+    }
+  }
+  if (targets.length === 0) return;
+
+  const results = await Promise.allSettled(
+    targets.map((slide) =>
+      generateEducationalImage({
+        grade: imageContext.grade,
+        subject: imageContext.subject,
+        oa: imageContext.oa,
+        resourceTitle: 'Presentación',
+        slideTitle: slide.title,
+        slideContent: slide.body.slice(0, 300),
+      }, env),
+    ),
+  );
+
+  results.forEach((result, i) => {
+    const slide = targets[i];
+    // String vacío en vez de undefined: imageQuery no es opcional en
+    // ImageTextSlide, e isValidImageSource() de PptRenderer ya trata
+    // cualquier valor falsy como "sin imagen" (omite limpiamente).
+    slide.imageQuery = result.status === 'fulfilled' && result.value.ok ? result.value.url : '';
+  });
 }
 
 function slugify(text: string): string {
@@ -42,11 +96,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     let deck: PptDeck;
+    let imageContext = { grade: '', subject: '', oa: '' };
 
     if (body.resourceId) {
       const resource = await db.prepare(
-        `SELECT content_json, user_id FROM generated_resources WHERE id = ?`,
-      ).bind(body.resourceId).first<{ content_json: string; user_id: string | null }>();
+        `SELECT content_json, user_id, level, subject, objective_code FROM generated_resources WHERE id = ?`,
+      ).bind(body.resourceId).first<{ content_json: string; user_id: string | null; level: string | null; subject: string | null; objective_code: string | null }>();
 
       if (!resource) {
         return Response.json({ error: 'Recurso no encontrado' }, { status: 400 });
@@ -74,6 +129,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       }
 
       deck = contentJson.pptDeck as PptDeck;
+      imageContext = { grade: resource.level || '', subject: resource.subject || '', oa: resource.objective_code || '' };
     } else {
       deck = body.deck!;
     }
@@ -86,6 +142,17 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         details: parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
       }, { status: 400 });
     }
+
+    // Resuelve imageQuery -> URL real antes de renderizar (ver resolveDeckImages)
+    const imageEnv: ImageEnv = {
+      DB: context.env.DB,
+      AI: context.env.AI,
+      ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI,
+      IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER,
+      HF_API_TOKEN: context.env.HF_API_TOKEN,
+      IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS,
+    };
+    await resolveDeckImages(parsed.data, imageContext, imageEnv);
 
     // Render
     const renderables = buildRenderableDeck(parsed.data);

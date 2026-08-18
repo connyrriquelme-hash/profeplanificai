@@ -3,7 +3,7 @@ import { SLIDE_WIDTH, SLIDE_HEIGHT, type RenderableSlide } from './PptLayoutEngi
 // Minimal types for pptxgenjs to avoid static import issues
 interface PptxSlide {
   addText(text: string | Array<{ text: string; options?: Record<string, unknown> }>, options?: Record<string, unknown>): PptxSlide;
-  addImage(options: { x: number; y: number; w: number; h: number; path: string }): PptxSlide;
+  addImage(options: { x: number; y: number; w: number; h: number; path?: string; data?: string }): PptxSlide;
   background: { fill: string };
 }
 
@@ -178,12 +178,18 @@ function renderImageTextSlide(pres: PptxPres, slide: RenderableSlide): void {
   const img = asImageRect(slide.image);
   if (img && img.query && isValidImageSource(img.query)) {
     try {
+      // pptxgenjs distingue "path" (URL http(s):// o ruta de archivo, la
+      // descarga/lee él mismo) de "data" (payload base64 ya en memoria,
+      // con el prefijo data: completo) — son mutuamente excluyentes.
+      // Pasar un data: URI por "path" lo trata como ruta de archivo
+      // literal y revienta con ENOENT.
+      const isDataUri = img.query.startsWith('data:');
       pptxSlide.addImage({
         x: img.x,
         y: img.y,
         w: img.width,
         h: img.height,
-        path: img.query,
+        ...(isDataUri ? { data: img.query } : { path: img.query }),
       });
     } catch (err) {
       console.warn('[PptRenderer] imagen no cargable, omitiendo:', img.query, err);
