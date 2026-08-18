@@ -121,7 +121,7 @@ export function GenericProductRenderer({ product, className, style }: GenericPro
 
   return (
     <div
-      className={`generic-product-renderer mx-auto max-w-5xl space-y-6 p-4 md:p-6 lg:p-8 print:m-0 print:max-w-none print:p-0 ${className || ''}`}
+      className={`generic-product-renderer w-full space-y-6 p-4 md:p-6 lg:p-8 print:m-0 print:max-w-none print:p-0 ${className || ''}`}
       style={style}
     >
       <ProductHeader

@@ -37,6 +37,21 @@ const PRODUCTOS = [
   { id: 'serie_lecciones', label: 'Serie de Lecciones', icon: BookOpen, color: '#33261C' }, // --ink
 ];
 
+// Etiquetas del preview de PPT: antes se derivaban de slide.layout con un
+// simple replace(/_/g, ' ') + CSS capitalize, mostrando el nombre del layout
+// en inglés (Title, Bullets, Image Text...) tal cual viene del schema.
+const PPT_LAYOUT_LABELS: Record<string, string> = {
+  title: 'Portada',
+  bullets: 'Contenido',
+  image_text: 'Imagen + texto',
+  comparison: 'Comparación',
+  quote: 'Cita',
+  vocabulario: 'Vocabulario',
+  ciclo_proceso: 'Ciclo / Proceso',
+  quiz_opcion_multiple: 'Quiz',
+  verdadero_falso: 'Verdadero o Falso',
+};
+
 interface D1Course { id: string; code: string; name: string; objective_count: number }
 interface D1Subject { id: string; name: string; objective_count: number }
 interface D1Objective { id: string; code: string; official_text: string; course_name: string; subject_name: string; axis_name?: string }
@@ -775,7 +790,7 @@ export function FlujoDocenteView() {
   // Generating
   if (step === 'generando') {
     return (
-      <div className="max-w-lg mx-auto flex flex-col items-center justify-center py-20">
+      <div className="w-full flex flex-col items-center justify-center py-32">
         <Card variant="elevated" className="p-10 text-center w-full">
           <div className="w-16 h-16 rounded-3xl bg-[var(--primary-tint)] flex items-center justify-center mx-auto mb-6">
             <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
@@ -797,7 +812,7 @@ export function FlujoDocenteView() {
   // Result
   if (step === 'resultado' && result) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto px-4">
         <Card variant="elevated" className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -830,13 +845,13 @@ export function FlujoDocenteView() {
                   Vista previa — {pptDeck.slides.length} diapositiva{pptDeck.slides.length !== 1 ? 's' : ''}
                 </h3>
                 {pptDeck.slides.map((slide, i) => {
-                  const layoutLabel = slide.layout.replace(/_/g, ' ');
+                  const layoutLabel = PPT_LAYOUT_LABELS[slide.layout] || slide.layout.replace(/_/g, ' ');
                   const slideTitle = 'title' in slide ? slide.title : '';
                   return (
                     <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
                       <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate capitalize">{layoutLabel}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{layoutLabel}</p>
                         {slideTitle && <p className="text-xs text-gray-500 truncate">{slideTitle}</p>}
                       </div>
                     </div>
