@@ -89,7 +89,7 @@ function FormativeEvaluationPreview({
                 <div className="flex gap-2 flex-wrap">
                   {q.options?.map((opt: string, j: number) => (
                     <label key={j} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-sm cursor-pointer hover:bg-gray-50">
-                      <input type="radio" name={`q${i}`} className="text-violet-600 focus:ring-violet-500" />
+                      <input type="radio" name={`q${i}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                       <span>{opt}</span>
                     </label>
                   ))}
@@ -97,7 +97,7 @@ function FormativeEvaluationPreview({
               )}
               {q.type === 'open' && (
                 <textarea
-                  className="w-full p-3 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none resize-none"
+                  className="w-full p-3 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none resize-none"
                   rows={3}
                   placeholder="Tu respuesta..."
                 />
@@ -108,11 +108,11 @@ function FormativeEvaluationPreview({
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" placeholder="Tu nombre" />
+            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" />
+            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ function FormativeEvaluationPreview({
                   <input
                     key={i}
                     type="text"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
                     placeholder={`Escribe aquí...`}
                   />
                 ))}
@@ -151,11 +151,11 @@ function FormativeEvaluationPreview({
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" placeholder="Tu nombre" />
+            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" />
+            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
       </div>
@@ -203,11 +203,11 @@ function FormativeEvaluationPreview({
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" placeholder="Tu nombre" />
+            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" />
+            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
     </div>
@@ -247,7 +247,7 @@ function FormativeEvaluationPreview({
                 <div className="mt-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Retroalimentación obligatoria:</label>
                   <textarea
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none resize-none"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none resize-none"
                     rows={2}
                     placeholder="Escribe retroalimentación específica para este criterio..."
                   />
@@ -263,11 +263,11 @@ function FormativeEvaluationPreview({
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
           <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-          <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" placeholder="Tu nombre" />
+          <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
         </div>
         <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
           <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-          <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" />
+          <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
         </div>
       </div>
     </div>
@@ -291,7 +291,7 @@ function FormativeEvaluationPreview({
               <p className="text-xs text-gray-500 mb-3">{a.indicator}</p>
               <div className="grid grid-cols-3 gap-2">
                 {evaluation.colors?.map((col: any) => (
-                  <label key={col.color} className="flex items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-violet-400 cursor-pointer transition-colors">
+                  <label key={col.color} className="flex items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-[var(--primary)] cursor-pointer transition-colors">
                     <input type="radio" name={`a${a.number}`} className="text-indigo-600 focus:ring-indigo-500" />
                     <span className="text-sm font-medium">{col.color}</span>
                   </label>
@@ -306,11 +306,11 @@ function FormativeEvaluationPreview({
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
-            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" placeholder="Tu nombre" />
+            <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 outline-none" />
+            <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
       </div>

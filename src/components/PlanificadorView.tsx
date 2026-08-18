@@ -24,8 +24,8 @@ type MarkdownComponentProps = {
 type MarkdownComponents = Record<string, (props: MarkdownComponentProps) => ReactNode>;
 
 const markdownComponents: MarkdownComponents = {
-  h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 border-b-2 border-violet-500 pb-2">{children}</h1>,
-  h2: ({ children }) => <h2 className="text-xl font-bold text-slate-800 mt-6 mb-3 text-violet-700">{children}</h2>,
+  h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 border-b-2 border-[var(--primary)] pb-2">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-xl font-bold text-slate-800 mt-6 mb-3 text-[var(--primary-ink)]">{children}</h2>,
   h3: ({ children }) => <h3 className="text-lg font-semibold text-slate-700 mt-4 mb-2">{children}</h3>,
   p: ({ children }) => <p className="text-sm text-slate-700 leading-relaxed mb-3">{children}</p>,
   ul: ({ children }) => <ul className="list-disc list-inside text-sm text-slate-700 mb-3 space-y-1">{children}</ul>,
@@ -34,13 +34,13 @@ const markdownComponents: MarkdownComponents = {
   strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
   em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
   blockquote: ({ children }) => (
-    <blockquote className="border-l-4 border-violet-300 pl-4 italic text-slate-600 my-3">{children}</blockquote>
+    <blockquote className="border-l-4 border-[var(--primary)]/30 pl-4 italic text-slate-600 my-3">{children}</blockquote>
   ),
   table: ({ children }) => (
     <table className="w-full text-sm border-collapse my-3">{children}</table>
   ),
   th: ({ children }) => (
-    <th className="border border-slate-300 bg-violet-50 px-3 py-2 text-left font-bold text-slate-700">{children}</th>
+    <th className="border border-slate-300 bg-[var(--primary-tint)] px-3 py-2 text-left font-bold text-slate-700">{children}</th>
   ),
   td: ({ children }) => (
     <td className="border border-slate-200 px-3 py-2 text-slate-700">{children}</td>
@@ -335,7 +335,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 p-6 text-white shadow-lg">
+      <div className="rounded-3xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent-honey)] p-6 text-white shadow-lg">
         <p className="text-sm font-bold uppercase tracking-widest text-white/75">PROJECT COPILOT</p>
         <h1 className="mt-2 text-3xl font-black">Generador de Guía DUA Multinivel</h1>
         <p className="mt-2 max-w-2xl text-sm text-white/85">
@@ -366,7 +366,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
             value={tema}
             onChange={(e) => setTema(e.target.value)}
             placeholder="Ej: La célula o Los cuentos populares"
-            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/20"
           />
         </div>
 
@@ -380,7 +380,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
                 const c = d1Courses.find((c: any) => c.id === e.target.value);
                 if (c) setForm(prev => ({ ...prev, nivel: c.name }));
               }}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/20"
             >
               <option value="">Seleccionar nivel</option>
               {d1Courses.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -396,7 +396,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
                 if (s) setForm(prev => ({ ...prev, asignatura: s.name }));
               }}
               disabled={!selectedCourseId}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:opacity-50"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/20 disabled:opacity-50"
             >
               <option value="">{loadingSubjects ? 'Cargando...' : selectedCourseId ? 'Seleccionar asignatura' : 'Primero selecciona nivel'}</option>
               {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -431,7 +431,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
                   key={obj.id}
                   className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition ${
                     selectedOas.includes(obj.id)
-                      ? 'bg-violet-50 border-l-2 border-l-violet-500'
+                      ? 'bg-[var(--primary-tint)] border-l-2 border-l-[var(--primary)]'
                       : 'hover:bg-slate-50'
                   }`}
                 >
@@ -439,10 +439,10 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
                     type="checkbox"
                     checked={selectedOas.includes(obj.id)}
                     onChange={() => toggleObjective(obj.id)}
-                    className="mt-0.5 accent-violet-600"
+                    className="mt-0.5 accent-[var(--primary)]"
                   />
                   <div className="flex-1 min-w-0">
-                    <span className="font-mono text-xs font-bold text-violet-600">{obj.code}</span>
+                    <span className="font-mono text-xs font-bold text-[var(--primary)]">{obj.code}</span>
                     <span className="ml-2 text-sm text-slate-700">{obj.official_text || ''}</span>
                   </div>
                 </label>
@@ -462,7 +462,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
               onChange={(e) => updateField('contexto', e.target.value)}
               placeholder="Ej.: curso heterogéneo, algunos estudiantes con dificultades de lectura..."
               rows={3}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 resize-none"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/20 resize-none"
             />
           </div>
           <div>
@@ -472,7 +472,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
               onChange={(e) => updateField('extra', e.target.value)}
               placeholder="Ej.: incorporar lectura guiada, trabajo en parejas, material imprimible..."
               rows={3}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 resize-none"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/20 resize-none"
             />
           </div>
         </div>
@@ -481,7 +481,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
           <button
             onClick={handleGenerar}
             disabled={!canGenerate || isGenerating}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--accent-honey)] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isGenerating ? (
               <>
@@ -509,7 +509,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
             <div className="flex gap-2">
               <button
                 onClick={handleGuardar}
-                className="rounded-xl bg-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-200 transition"
+                className="rounded-xl bg-[var(--primary-tint)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-ink)] hover:bg-[var(--primary-tint)] transition"
               >
                 Guardar
               </button>

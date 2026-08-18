@@ -69,14 +69,14 @@ export function ClassbookOverview({ sessions, onNavigate, onRefresh }: Props) {
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   const colorMap: Record<string, string> = {
-    violet: 'bg-violet-50 text-violet-700',
+    violet: 'bg-[var(--primary-tint)] text-[var(--primary-ink)]',
     blue: 'bg-blue-50 text-blue-700',
-    green: 'bg-green-50 text-green-700',
+    green: 'bg-emerald-50 text-emerald-700',
     amber: 'bg-amber-50 text-amber-700',
   };
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
+    <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
+      <p className="text-xs font-medium text-[var(--muted)]">{label}</p>
       <p className={`text-2xl font-black mt-1 ${colorMap[color]?.split(' ')[1] ?? 'text-slate-900'}`}>{value}</p>
     </div>
   );

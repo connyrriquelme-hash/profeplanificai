@@ -80,7 +80,7 @@ export function GenericProductRenderer({ product, className, style }: GenericPro
             <ul className="mt-3 space-y-2">
               {items.map((item, index) => (
                 <li key={index} className="flex items-start gap-2 text-sm leading-relaxed text-slate-700">
-                  <span className="mt-0.5 text-violet-500">•</span>
+                  <span className="mt-0.5 text-[var(--primary)]">•</span>
                   <span>{formatValue(item)}</span>
                 </li>
               ))}

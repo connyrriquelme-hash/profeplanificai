@@ -4,13 +4,13 @@ import { Badge } from './Badge';
 
 const iconColorMap: Record<string, string> = {
   indigo: '#B5471F',
-  violet: '#9A3A17',
+  violet: '#B5471F',
   teal: '#0d9488',
-  orange: '#ea580c',
+  orange: '#D97706',
   pink: '#db2777',
   slate: '#475569',
-  green: '#16a34a',
-  blue: '#2563eb',
+  green: '#10B981',
+  blue: '#0EA5E9',
 };
 
 interface PageHeaderProps {
