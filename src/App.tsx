@@ -128,8 +128,9 @@ function AppContent() {
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':
-      case 'biblioteca-creativa':
         return <BancoRecursosView onNavigate={handleViewChange} />;
+      case 'biblioteca-creativa':
+        return <LibraryView onNavigate={handleViewChange} />;
       case 'evaluaciones':
         return <EvaluacionesView onNavigate={handleViewChange} />;
       case 'banco-recursos':
