@@ -422,34 +422,46 @@ export function FlujoDocenteView() {
   const stepIndex = ['nivel', 'asignatura', 'oa', 'contexto', 'producto', 'generando', 'resultado'].indexOf(step);
 
   const renderStepper = () => (
-    <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
-      {['nivel', 'asignatura', 'oa', 'contexto', 'producto'].map((s, i) => {
-        const labels: Record<string, string> = { nivel: 'Nivel', asignatura: 'Asignatura', oa: 'OA', contexto: 'Contexto', producto: 'Producto' };
-        const isActive = step === s;
-        const isPast = stepIndex > i;
-        return (
-          <div key={s} className="flex items-center flex-shrink-0">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              isActive ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)]' : isPast ? 'text-gray-500' : 'text-gray-400'
-            }`}>
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                isActive ? 'bg-[var(--primary)] text-white' : isPast ? 'bg-gray-200 text-gray-500' : 'bg-gray-100 text-gray-300'
+    <div className="w-full mb-8">
+      <div className="flex items-center justify-between relative">
+        {/* Background connecting line */}
+        <div className="absolute top-4 left-0 right-0 h-0.5 bg-[var(--border)]" />
+        {/* Active connecting line */}
+        <div
+          className="absolute top-4 left-0 h-0.5 bg-[var(--primary)] transition-all duration-500"
+          style={{ width: `${(stepIndex / 4) * 100}%` }}
+        />
+        {['nivel', 'asignatura', 'oa', 'contexto', 'producto'].map((s, i) => {
+          const labels: Record<string, string> = { nivel: 'Nivel', asignatura: 'Asignatura', oa: 'OA', contexto: 'Contexto', producto: 'Producto' };
+          const isActive = step === s;
+          const isPast = stepIndex > i;
+          return (
+            <div key={s} className="flex flex-col items-center relative z-10">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                isActive
+                  ? 'bg-[var(--primary)] text-white shadow-md shadow-[var(--primary)]/30 scale-110'
+                  : isPast
+                    ? 'bg-[var(--primary)] text-white'
+                    : 'bg-[var(--bg2)] text-[var(--muted)] border-2 border-[var(--border)]'
               }`}>
-                {isPast ? <Check size={12} /> : <span>{i + 1}</span>}
+                {isPast ? <Check size={14} strokeWidth={3} /> : <span>{i + 1}</span>}
               </div>
-              <span className="hidden sm:inline">{labels[s]}</span>
+              <span className={`mt-2 text-[11px] font-semibold hidden sm:block ${
+                isActive ? 'text-[var(--primary)]' : isPast ? 'text-[var(--ink)]' : 'text-[var(--muted)]'
+              }`}>
+                {labels[s]}
+              </span>
             </div>
-            {i < 4 && <div className={`w-4 h-px mx-0.5 ${isPast || isActive ? 'bg-[var(--primary)]/30' : 'bg-gray-200'}`} />}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 
   // Step 1: Nivel
   if (step === 'nivel') {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -481,7 +493,7 @@ export function FlujoDocenteView() {
   // Step 2: Asignatura
   if (step === 'asignatura') {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -519,7 +531,7 @@ export function FlujoDocenteView() {
   // Step 3: OA
   if (step === 'oa') {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {renderStepper()}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -593,7 +605,7 @@ export function FlujoDocenteView() {
   // Step 4: Contexto
   if (step === 'contexto') {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {renderStepper()}
         <Card variant="elevated" className="p-6 space-y-5">
           <div>
@@ -719,47 +731,78 @@ export function FlujoDocenteView() {
 
 // Step 5: Producto
   if (step === 'producto') {
+    const categorias = [
+      {
+        label: 'Planificación',
+        items: PRODUCTOS.filter(p => ['planificacion', 'serie_lecciones', 'guia_docente'].includes(p.id)),
+      },
+      {
+        label: 'Aula',
+        items: PRODUCTOS.filter(p => ['guia_estudiante', 'presentacion', 'bitacora_cientifica'].includes(p.id)),
+      },
+      {
+        label: 'Evaluación',
+        items: PRODUCTOS.filter(p => ['evaluation_exit_ticket', 'evaluation_321', 'evaluation_checklist', 'evaluation_formative_rubric', 'evaluation_traffic_light', 'rubrica'].includes(p.id)),
+      },
+    ];
+
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full max-w-5xl mx-auto">
         {renderStepper()}
-        <Card variant="elevated" className="p-6">
-          <div className="flex items-center gap-3 mb-6">
+        <Card variant="elevated" className="p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-[var(--primary-tint)] flex items-center justify-center">
               <WandSparkles size={20} className="text-[var(--primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Paso 5: ¿Qué necesitas?</h2>
-              <p className="text-sm text-gray-500">Selecciona el tipo de recurso a generar</p>
+              <h2 className="text-lg font-bold text-[var(--ink)]">Paso 5: ¿Qué necesitas?</h2>
+              <p className="text-sm text-[var(--muted)]">Selecciona el tipo de recurso a generar</p>
             </div>
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
-            {PRODUCTOS.map(p => {
-              const Icon = p.icon;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedProducto(p.id)}
-                  className={`p-4 rounded-xl border-2 transition-all text-center ${
-                    selectedProducto === p.id
-                      ? 'border-[var(--primary)] bg-[var(--primary-tint)]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center" style={{ backgroundColor: p.color + '20' }}>
-                    <Icon size={20} style={{ color: p.color }} />
-                  </div>
-                  <p className="text-sm font-semibold text-gray-800">{p.label}</p>
-                </button>
-              );
-            })}
+
+          <div className="space-y-8">
+            {categorias.map(cat => (
+              <div key={cat.label}>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-4 col-span-full">
+                  {cat.label}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                  {cat.items.map(p => {
+                    const Icon = p.icon;
+                    const isSelected = selectedProducto === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setSelectedProducto(p.id)}
+                        className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all group w-full ${
+                          isSelected
+                            ? 'border-[var(--primary)] bg-[var(--primary-tint)] shadow-md shadow-[var(--primary)]/10'
+                            : 'border-[var(--border)] bg-white hover:border-[var(--primary)] hover:shadow-md'
+                        }`}
+                      >
+                        <div className={`p-3 rounded-full mb-3 transition-transform group-hover:scale-110 ${
+                          isSelected ? 'bg-[var(--primary)]/15' : 'bg-[var(--primary-tint)]'
+                        }`}>
+                          <Icon size={24} className={isSelected ? 'text-[var(--primary)]' : 'text-[var(--primary)]/70'} />
+                        </div>
+                        <span className={`text-sm font-semibold ${isSelected ? 'text-[var(--primary)]' : 'text-[var(--ink)]'}`}>
+                          {p.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
+
           {selectedProducto && (
-            <div className="mt-4 p-4 bg-[var(--primary-tint)] rounded-xl">
+            <div className="mt-8 p-5 bg-[var(--primary-tint)] rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <Lightbulb size={16} className="text-[var(--primary)]" />
                 <span className="text-sm font-medium text-[var(--primary-ink)]">Resumen</span>
               </div>
-              <div className="flex flex-wrap gap-1.5 mb-3">
+              <div className="flex flex-wrap gap-1.5 mb-4">
                 <Badge color="indigo" size="sm">{selectedOA?.course_name}</Badge>
                 <Badge color="teal" size="sm">{selectedOA?.subject_name}</Badge>
                 <Badge color="amber" size="sm">{selectedOA?.code}</Badge>
