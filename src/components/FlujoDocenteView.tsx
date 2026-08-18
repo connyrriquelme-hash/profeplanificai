@@ -790,7 +790,7 @@ export function FlujoDocenteView() {
   // Generating
   if (step === 'generando') {
     return (
-      <div className="max-w-lg mx-auto flex flex-col items-center justify-center py-20">
+      <div className="w-full flex flex-col items-center justify-center py-32">
         <Card variant="elevated" className="p-10 text-center w-full">
           <div className="w-16 h-16 rounded-3xl bg-[var(--primary-tint)] flex items-center justify-center mx-auto mb-6">
             <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
