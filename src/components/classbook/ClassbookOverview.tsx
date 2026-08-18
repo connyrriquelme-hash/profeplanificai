@@ -21,7 +21,7 @@ export function ClassbookOverview({ sessions, onNavigate, onRefresh }: Props) {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
         <StatCard label="Total sesiones" value={total} color="violet" />
         <StatCard label="Programadas" value={scheduled} color="blue" />
         <StatCard label="Completadas" value={completed} color="green" />

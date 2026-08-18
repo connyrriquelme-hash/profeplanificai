@@ -219,17 +219,17 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
         teachers={filterOptions.teachers}
       />
 
-      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto" role="tablist">
+      <div className="w-full flex border-b border-[var(--border)]" role="tablist">
         {tabs.map(tab => (
           <button
             key={tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`flex-1 whitespace-nowrap px-4 py-2.5 text-sm font-medium text-center transition-all border-b-2 -mb-px ${
               activeTab === tab.id
-                ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'text-[var(--primary)] border-[var(--primary)]'
+                : 'text-slate-500 hover:text-slate-700 border-transparent'
             }`}
           >
             {tab.label}
@@ -265,11 +265,11 @@ export function CoordinatorDashboardView({ onNavigate }: Props) {
           {activeTab === 'overview' && (
             <>
               <CoordinatorSummaryCards summary={summary} />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-6">
                 <SessionStatusChart summary={summary} />
                 <CurriculumCoverageChart coverage={coverage} />
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-6">
                 <PendingReviewsPanel
                   reviews={reviews}
                   onAction={handleReviewAction}

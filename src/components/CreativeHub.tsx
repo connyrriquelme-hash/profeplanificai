@@ -17,7 +17,7 @@ export function CreativeHub({ onSelect }: CreativeHubProps) {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">¿Qué creamos hoy? ✨</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 mb-8">
         {ACTIONS.map(({ tipo, icon: Icon, title, desc, color }) => (
           <div
             key={tipo}

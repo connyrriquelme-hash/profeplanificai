@@ -168,7 +168,7 @@ function CurriculumStep({ state, dispatch }: { state: WizardState; dispatch: Rea
       {/* Nivel */}
       <div>
         <label className="block text-sm font-semibold text-[var(--ink-mid)] mb-2">Nivel educativo</label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
           {levels.map((lvl) => (
             <button
               key={lvl}
@@ -189,7 +189,7 @@ function CurriculumStep({ state, dispatch }: { state: WizardState; dispatch: Rea
       {state.nivel && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <label className="block text-sm font-semibold text-[var(--ink-mid)] mb-2">Asignatura</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
             {subjects.map((asig) => (
               <button
                 key={asig}
@@ -269,7 +269,7 @@ function ResourceTypeStep({ state, dispatch }: { state: WizardState; dispatch: R
         <p className="text-sm text-gray-500">Elige que tipo de documento educativo generar.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
         {RESOURCE_TYPES.map((rt) => {
           const Icon = rt.icon;
           const isSelected = state.resourceType === rt.id;

@@ -37,7 +37,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         <h2 className="text-[19px] font-semibold text-[var(--ink)]" style={{ fontFamily: 'var(--font-display)' }}>
           Acciones rápidas
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {QUICK_ACTIONS.map((a) => {
             const Icon = a.icon;
             return (
@@ -45,10 +45,10 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
                 key={a.view}
                 type="button"
                 onClick={() => handleClick(a.view)}
-                className="group flex flex-col items-start gap-2.5 rounded-[20px] bg-[var(--surface)] p-4 text-left shadow-[0_2px_10px_rgba(51,38,28,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(181,71,31,0.18)]"
+                className="group flex flex-col items-start gap-2.5 rounded-xl bg-[var(--surface)] p-4 text-left shadow-[0_2px_10px_rgba(51,38,28,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(181,71,31,0.18)]"
               >
                 <div
-                  className="flex h-11 w-11 items-center justify-center rounded-[14px]"
+                  className="flex h-11 w-11 items-center justify-center rounded-lg"
                   style={{ backgroundColor: a.tint }}
                 >
                   <Icon size={22} style={{ color: a.iconColor }} strokeWidth={2} />

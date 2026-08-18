@@ -267,7 +267,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
         description="Accede rápidamente a tipos de recursos pedagógicos."
         className="mb-4"
       />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 mb-8">
         {QUICK_CATEGORIES.map(cat => (
           <Card key={cat.label} variant="interactive" className="p-3.5 flex items-center gap-3">
             <IconBadge icon={cat.icon} size="md" color={cat.color} variant="soft" />
@@ -276,14 +276,14 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
         ))}
       </div>
 
-      <div className="flex gap-2 mb-6 flex-wrap" role="tablist">
+      <div className="w-full flex gap-2 mb-6" role="tablist">
         {TABS.map(({ id, label, icon }) => (
           <button
             key={id}
             role="tab"
             aria-selected={activeTab === id}
             onClick={() => setActiveTab(id)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 ${
+            className={`flex-1 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 ${
               activeTab === id
                 ? 'bg-[var(--primary)] text-white shadow-sm shadow-[var(--primary-tint)]'
                 : 'bg-white text-gray-600 border border-gray-200/80 hover:bg-gray-50 hover:border-gray-300'
@@ -310,7 +310,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
               }
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
               {filteredPlans.map(item => {
                 const isCloud = (item as any).source === 'cloud';
                 const hasContent = item.inicio || item.desarrollo || item.cierre;
@@ -421,7 +421,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
           )}
 
           {filteredResources.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
               {filteredResources.map(r => {
                 let meta: Record<string, string> = {};
                 try { meta = JSON.parse(r.metadata_json || '{}'); } catch {}
@@ -476,7 +476,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
               />
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
               {filteredEvaluations.map(r => {
                 let meta: Record<string, string> = {};
                 try { meta = JSON.parse(r.metadata_json || '{}'); } catch {}

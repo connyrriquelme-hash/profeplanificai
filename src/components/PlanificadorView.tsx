@@ -370,7 +370,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">NIVEL</label>
             <select
@@ -454,7 +454,7 @@ Devuelve SOLO formato Markdown limpio, estructurado con títulos (# y ##), sin s
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">CONTEXTO DEL CURSO</label>
             <textarea
