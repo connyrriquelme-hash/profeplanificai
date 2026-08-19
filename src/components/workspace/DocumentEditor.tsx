@@ -326,12 +326,12 @@ export function DocumentEditor({ product, onProductChange, className }: Document
       </div>
 
       {/* ── A4 Paper ────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8">
+      <div className="flex-1 overflow-y-auto px-2 py-6 md:px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white shadow-xl mx-auto p-12 max-w-3xl min-h-[1056px] rounded-sm relative"
+          className="bg-white shadow-xl mx-auto p-10 md:p-12 max-w-4xl min-h-[1056px] rounded-sm relative"
           style={{
             boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)',
           }}
