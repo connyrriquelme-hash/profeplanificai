@@ -14,6 +14,8 @@ import { api } from '../services/apiClient';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
+import { ProductActionBar } from './products/ProductActionBar';
+import type { PedagogicalProduct } from './products/types';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 
@@ -881,30 +883,9 @@ export function FlujoDocenteView() {
             </div>
           )}
 
-          <div className="prose prose-sm max-w-none">
-            {selectedProducto === 'presentacion' && pptDeck ? (
-              <div className="not-prose space-y-2">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                  Vista previa — {pptDeck.slides.length} diapositiva{pptDeck.slides.length !== 1 ? 's' : ''}
-                </h3>
-                {pptDeck.slides.map((slide, i) => {
-                  const layoutLabel = PPT_LAYOUT_LABELS[slide.layout] || slide.layout.replace(/_/g, ' ');
-                  const slideTitle = 'title' in slide ? slide.title : '';
-                  return (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
-                      <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{layoutLabel}</p>
-                        {slideTitle && <p className="text-xs text-gray-500 truncate">{slideTitle}</p>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : selectedProducto === 'rubrica' && premiumRubric ? (
+          <div className="prose prose-sm max-w-none" id="flujo-product-content">
+            {selectedProducto === 'rubrica' && premiumRubric ? (
               <PremiumRubricPreview rubric={premiumRubric} />
-            ) : selectedProducto === 'serie_lecciones' && unidadDidactica ? (
-              <UnidadDidacticaPreview unidad={unidadDidactica} />
             ) : (
               <ProductRenderer product={result} selectedProducto={selectedProducto} />
             )}
@@ -957,66 +938,20 @@ export function FlujoDocenteView() {
             </div>
           )}
 
-          <div className="mt-6 flex items-center gap-3 flex-wrap">
-            <Button variant="primary" iconLeft={Save} onClick={handleSave}>Guardar en Biblioteca</Button>
-            {selectedProducto === 'presentacion' && pptDeck && (
-              <>
-                {renderError && (
-                  <p className="text-xs text-red-600">{renderError}</p>
-                )}
-                <Button
-                  variant="primary"
-                  iconLeft={Download}
-                  disabled={pptxLoading || !resourceId}
-                  onClick={async () => {
-                    if (!resourceId) return;
-                    setPptxLoading(true);
-                    setRenderError('');
-                    try {
-                      const tokenRaw = localStorage.getItem('planificaia_token');
-                      const token = tokenRaw ? JSON.parse(tokenRaw).token : '';
-                      const resp = await fetch('/api/materials/presentation/render', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                        },
-                        body: JSON.stringify({ resourceId }),
-                      });
-                      if (!resp.ok) {
-                        const text = await resp.text();
-                        throw new Error(text || `Error ${resp.status}`);
-                      }
-                      const blob = await resp.blob();
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `presentacion-${selectedOA?.code || 'recurso'}.pptx`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      URL.revokeObjectURL(url);
-                    } catch (e) {
-                      setRenderError(e instanceof Error ? e.message : 'Error al generar PPTX');
-                    } finally {
-                      setPptxLoading(false);
-                    }
-                  }}
-                >
-                  {pptxLoading ? 'Generando PPTX...' : 'Descargar PPTX'}
-                </Button>
-              </>
-            )}
-            <Button variant="secondary" iconLeft={Download} onClick={() => {
-              const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${selectedProducto}-${selectedOA?.code}.json`;
-              a.click();
-            }}>Descargar JSON</Button>
-            <Button variant="outline" iconLeft={RefreshCw} onClick={() => setStep('producto')}>Generar otro</Button>
-            <Button variant="ghost" iconLeft={ArrowLeft} onClick={() => setStep('nivel')}>Nuevo recurso</Button>
+          {/* Action bar */}
+          <div className="mt-6 print:hidden">
+            <ProductActionBar
+              product={result as PedagogicalProduct}
+              selectedProducto={selectedProducto}
+              resourceId={resourceId}
+              onSave={handleSave}
+              elementId="flujo-product-content"
+              onEditWithAI={selectedProducto === 'guia_estudiante' && resourceId ? undefined : undefined}
+            />
+            <div className="flex items-center gap-3 mt-3">
+              <Button variant="outline" iconLeft={RefreshCw} onClick={() => setStep('producto')}>Generar otro</Button>
+              <Button variant="ghost" iconLeft={ArrowLeft} onClick={() => setStep('nivel')}>Nuevo recurso</Button>
+            </div>
           </div>
         </Card>
       </div>

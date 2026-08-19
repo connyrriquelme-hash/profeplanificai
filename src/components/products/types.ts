@@ -20,7 +20,11 @@ export type SupportedProductType =
   | 'organizador_grafico'
   | 'evaluacion'
   | 'semaforo'
-  | 'bitacora_cientifica';
+  | 'bitacora_cientifica'
+  | 'planificacion'
+  | 'presentacion'
+  | 'unidad_didactica'
+  | 'serie_lecciones';
 
 export interface ProductMetadata {
   title: string;

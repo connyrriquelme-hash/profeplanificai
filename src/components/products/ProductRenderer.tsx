@@ -20,6 +20,10 @@ import { ThreeTwoOneRenderer } from './renderers/ThreeTwoOneRenderer';
 import { GraphicOrganizerRenderer } from './renderers/GraphicOrganizerRenderer';
 import { EvaluationRenderer } from './renderers/EvaluationRenderer';
 import { GenericProductRenderer } from './renderers/GenericProductRenderer';
+import { PlanificacionRenderer } from './renderers/PlanificacionRenderer';
+import { PresentacionRenderer } from './renderers/PresentacionRenderer';
+import { UnidadDidacticaRenderer } from './renderers/UnidadDidacticaRenderer';
+import { SemaforoRenderer } from './renderers/SemaforoRenderer';
 import type { PedagogicalProduct } from './types';
 import { normalizeProduct } from './normalizers';
 
@@ -76,10 +80,20 @@ const rendererRegistry: Record<string, RendererComponent> = {
 
   // Evaluations
   evaluacion: EvaluationRenderer,
-  semaforo: GenericProductRenderer,
+  semaforo: SemaforoRenderer,
 
   // Scientific notebook
   bitacora_cientifica: GenericProductRenderer,
+
+  // Planificacion
+  planificacion: PlanificacionRenderer,
+
+  // Presentacion
+  presentacion: PresentacionRenderer,
+
+  // Unidad Didactica
+  unidad_didactica: UnidadDidacticaRenderer,
+  serie_lecciones: UnidadDidacticaRenderer,
 };
 
 /** Type guard for ClassroomScientificNotebook */
