@@ -36,6 +36,22 @@ REGLAS DE VARIEDAD PARA DIAPOSITIVAS:
    - Siempre imagen + texto, nunca solo texto
    - Instrucciones en negrita o color distinto
 
+DOMINIOS EN LAS DIAPOSITIVAS:
+1. CURRICULAR: al menos 1 diapositiva debe mostrar el OA y su relacion con la vida real
+
+2. PRODUCTO TANGIBLE: incluye 1 diapositiva que muestre el PRODUCTO que los
+   estudiantes fabricaran (foto de ejemplo, pasos de construccion, materiales)
+
+3. MAKER: si el tema lo permite, incluye diapositiva de "VAMOS A CREAR" con:
+   - Materiales necesarios (reciclados/bajo costo)
+   - Pasos de construccion (con imagenes si es posible)
+   - Criterios de exito
+
+4. TECNOLOGIA: en diapositivas de actividades, sugiere herramientas digitales
+
+5. FORMATO: las diapositivas deben ser visuales (max 5 lineas, imagen + texto,
+   colores de alto contraste, font 24pt+)
+
 CONTEXTO DE ESTA CLASE:
 - Tema: ${plan.tema}
 - Curso: ${plan.curso} — rango etario aproximado: ${rangoEtario}

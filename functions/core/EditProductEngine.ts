@@ -46,6 +46,32 @@ REGLAS DE VARIEDAD PARA EDICION DE PRODUCTOS:
    - "Reflexionar" -> "Escribe 3 oraciones: Lo que aprendi... Un ejemplo real...
      todavia no entiendo..."
 
+DOMINIOS AL EDITAR PRODUCTOS:
+1. VERIFICA CURRICULAR: si el producto no tiene OA alineado, sugiere agregarlo.
+   Si no tiene evaluacion coherente con Decreto 67, sugiere agregarla.
+
+2. TRANSFORMA EN PRODUCTO: si el producto es una "guia para rellenar" (solo
+   preguntas para responder), TRANSFORMALO en un producto concreto:
+   - "Responde sobre el volcan" -> "CREA un pasaporte de exploracion volcanica"
+   - "Dibuja el ciclo del agua" -> "CONSTRUYE un prototipo con botellas recicladas"
+
+3. AGREGA MAKER: si no tiene producto tangible, sugiere uno:
+   - Prototipo, maqueta, poster digital, podcast, video, codigo
+   - Materiales necesarios (reciclados/bajo costo)
+   - Pasos de fabricacion
+
+4. AGREGA TECNOLOGIA: si no usa herramientas digitales, sugiere:
+   - Canva para posters/presentaciones
+   - Scratch/Code.org para simulaciones
+   - Google Forms para evaluacion
+   - Incluye alternativa no digital
+
+5. AGREGA INSTITUCIONAL: sugiere como conectar con PEI/PME
+   y extension a la comunidad
+
+6. VERIFICA NEURODIVERSIDAD: si no tiene adaptaciones, agrega al menos 1
+   adaptacion concreta (TEA, TDAH, discalculia, disgrafia, TDL)
+
 REGLAS DE EDICION EXPERTA:
 1. Devuelve SOLO el JSON del producto modificado, sin texto adicional
 2. Manten la estructura original del producto (mismas keys, mismos tipos)

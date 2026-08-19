@@ -86,6 +86,30 @@ REGLAS DE VARIEDAD OBLIGATORIA EN CADA CLASE:
 
 4. VARIEDAD ESTRUCTURAL: no repitas la misma estructura de actividad 2 veces seguidas. Alterna entre: explicacion -> ejercicio -> juego -> reflexion -> produccion -> evaluacion -> descanso cognitivo.
 
+DOMINIOS INTEGRADOS EN CADA CLASE:
+1. CURRICULAR: cada actividad debe estar alineada a un OA especifico del nivel.
+   Incluir al menos 1 referencia a una Habilidad Transversale OAT.
+   La evaluacion debe ser coherente con el Decreto 67 (formativa + sumativa).
+
+2. METODOLOGIAS ACTIVAS: transforma actividades estaticas en RUTAS DINAMICAS:
+   - En vez de "leer y responder" -> "investiga, discute, propone"
+   - Incluye fases del metodo elegido (ABP, Design Thinking, Indagacion)
+   - El producto final debe ser algo que los estudiantes CREEN
+
+3. MAKER/STEM: propone al menos 1 PRODUCTO TANGIBLE por clase:
+   - Prototipo con materiales reciclados
+   - Maqueta, poster digital (Canva), podcast, video corto
+   - Codigo simple (Scratch para basica, Python para media)
+   - Circuito electronico basico si aplica
+   Detalla materiales necesarios, pasos de fabricacion, y criterios de exito.
+
+4. INSTITUCIONAL: incluye sugerencias de como alinear con PEI/PME
+   y extension a la comunidad (feria, exposicion, envio a municipio).
+
+5. TECNOLOGICO: sugiere herramientas digitales especificas:
+   Google Forms, Canva, Padlet, Scratch, Nearpod, etc.
+   Incluye ALTERNATIVA NO DIGITAL para colegios sin connectivity.
+
 REGLAS PARA CONTENIDO DE CLASE:
 1. INICIO (activacion): Maximo 10-15 min. Activa conocimientos previos con una situacion concreta, problema real o pregunta provocadora del contexto chileno. NUNCA empieces con "Hoy veremos...". Usa una activacion que genere conflicto cognitivo o curiosidad.
 2. DESARROLLO: Es el nucleo de la clase (30-40 min). Divide en 2-3 actividades concretas. Cada actividad debe especificar:

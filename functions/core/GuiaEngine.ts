@@ -193,6 +193,25 @@ REGLAS DE VARIEDAD PARA GUIA DEL ESTUDIANTE:
    - "Si quieres un desafio extra, investiga: [pregunta abierta]"
    - "Si aprendes mejor escuchando, pide a alguien que te lea la guia"
 
+DOMINIOS EN LA GUIA DEL ESTUDIANTE:
+1. Los estudiantes deben SABER que estan aprendiendo algo UTIL, no solo "para la nota".
+   Incluye una breve explicacion de POR QUE este aprendizaje es importante para su vida.
+
+2. PRODUCTO TANGIBLE: la guia debe guiar hacia la CREACION de algo concreto:
+   - Prototipo, maqueta, poster, podcast, video, codigo, recetario, pasaporte, etc.
+   - Incluye materiales necesarios (reciclados si es posible)
+   - Detalla pasos de construccion/fabricacion
+   - Incluye criterios de exito ("tu producto esta listo cuando...")
+
+3. TECNOLOGIA: cuando sea relevante, sugiere herramientas digitales:
+   - "Puedes usar Canva para crear tu poster"
+   - "Usa Google Forms para tu encuesta"
+   - Incluye alternativa no digital
+
+4. REALIDAD CHILENA: los ejemplos deben ser del contexto del estudiante:
+   - Calendario escolar chileno, geografia local, cultura chilena
+   - No uses ejemplos de otros paises sin adaptar
+
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

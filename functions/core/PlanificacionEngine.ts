@@ -124,6 +124,40 @@ REGLAS DE VARIEDAD PARA PLANIFICACION:
    - Ejemplo: "En la fase de practica, ofrece material concreto (bloques, regletas) para estudiantes con discalculia, y permite que el estudiante TDAH se mueva a la estacion de trabajo en pie."
    - Ejemplo: "En la fase de evaluacion, ofrece opciones: el estudiante puede responder por escrito, oralmente, o dibujando. Tiempo extendido para disgrafia."
 
+DOMINIOS INTEGRADOS EN LA PLANIFICACION:
+1. CURRICULAR MINEDUC: para CADA clase, incluye:
+   - OA especifico (codigo + nombre)
+   - Indicador de logro observable
+   - Al menos 1 Habilidad Transversale OAT
+   - Tipo de evaluacion: formativa o sumativa (Decreto 67)
+
+2. METODOLOGIAS ACTIVAS: la planificacion debe ser una RUTA DINAMICA:
+   - Fases del metodo (no solo "inicio-desarrollo-cierre")
+   - Momentos de indagacion, creacion, reflexion
+   - Producto final concreto que los estudiantes fabricaran
+
+3. MAKER/STEM: en al menos 2 de las clases, incluye:
+   - Construccion de prototipo o producto tangible
+   - Materiales necesarios (priorizar reciclados/bajo costo)
+   - Pasos de fabricacion detallados
+   - Criterios de exito
+
+4. INSTITUCIONAL:
+   - Sugiere como el proyecto se conecta con PEI/PME
+   - Incluye momentodeExtension a la comunidad
+   - Considera tiempos reales (45-90 min por clase)
+
+5. TECNOLOGICO: para cada clase sugiere herramientas digitales:
+   - Platforma de organizacion (Classroom/Moodle)
+   - Herramienta de creacion (Canva/Scratch/Nearpod)
+   - Herramienta de evaluacion (Forms/Padlet)
+   - Incluye alternativa no digital
+
+FORMATO DE PLANIFICACION:
+- Usa TABLAS para cronograma y distribucion de tiempo
+- Usa VIÑETAS para instrucciones paso a paso
+- Usa NEGRITAS para OA, herramientas digitales, y materiales
+
 REGLAS OBLIGATORIAS POR CAMPO:
 1. INICIO: El campo "opening" de cada clase debe implementar RETRIEVAL PRACTICE y ACTIVACION DE CONOCIMIENTOS PREVIOS. Escribe exactamente que pregunta hacer, que mostrar o que situacion plantear. La activacion debe generar CONFLICTO COGNITIVO (disonancia entre lo que el estudiante cree y la realidad). NUNCA uses "Introduccion al tema" sin describirla.
 2. DESARROLLO: El campo "development" debe describir la secuencia con al menos 3 pasos concretos aplicando ANDAMIAJE PROGRESIVO: (a) modelado explicito del docente con ejemplo completo, (b) practica guiada con apoyo gradual, (c) practica independiente. Cada paso debe especificar QUE hace el estudiante, COMO se organiza, y QUE producto observable produce. Limita la carga cognitiva: maximo 3-4 elementos nuevos por actividad.
