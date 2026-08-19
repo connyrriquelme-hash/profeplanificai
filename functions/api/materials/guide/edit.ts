@@ -6,6 +6,7 @@ import type { AIEngineEnv } from '../../../core/types';
 interface Env extends AIEngineEnv {
   DB: D1Database;
   JWT_SECRET: string;
+  GEMINI_API_KEY?: string;
 }
 
 interface EditGuideRequest {
@@ -68,7 +69,14 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       ? body.seccionIndex
       : undefined;
 
-    const result = await editSeccionGuia(context.env, {
+    // Inyectar explícitamente GEMINI_API_KEY para que callAIConValidacion
+    // en GuiaEditEngine tenga el fallback a Gemini 2.5 Flash disponible.
+    const aiEnv: AIEngineEnv = {
+      AI: context.env.AI,
+      GEMINI_API_KEY: context.env.GEMINI_API_KEY,
+    };
+
+    const result = await editSeccionGuia(aiEnv, {
       guia: body.guia,
       instruccion,
       seccionIndex,

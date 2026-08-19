@@ -1,4 +1,5 @@
 import { callAIConValidacion } from './AIEngine';
+import { getProfePlanificAIContext, getExpertContext } from './ExpertKnowledge';
 import type { AIEngineEnv } from './types';
 import type { GuiaResult } from './GuiaEngine';
 import { GuiaEditResponseSchema } from '../_lib/ai/schemas/guiaEditSchema';
@@ -23,26 +24,49 @@ export interface GuiaEditResult {
 const FALLBACK_EXPLICACION = 'No pude aplicar el cambio — intenta con una instrucción más específica.';
 
 function buildSystemPrompt(): string {
-  return `Eres un asistente pedagógico. El profesor te da una instrucción para modificar esta guía. Modifica SOLO la sección más relevante, preservando el estilo y nivel del resto. Devuelve solo la sección modificada con su índice.
+  return `${getProfePlanificAIContext()}
 
-REGLAS OBLIGATORIAS:
-1. No modifiques ninguna otra sección: tu respuesta contiene únicamente la sección editada, no la guía completa.
-2. Conserva el tono, el registro y el nivel de dificultad del resto de la guía — la sección editada debe sentirse escrita por la misma persona.
-3. Si el profesor pide algo que no corresponde a ninguna sección existente, elige la sección más cercana a su intención en vez de inventar una nueva.
-4. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones antes o después del JSON.
+${getExpertContext()}
+
+Eres el COPILOTO DE EDICION de ProfePlanificAI. El profesor te da una instruccion para modificar una seccion de una guia pedagogica. Modifica SOLO la seccion mas relevante, preservando el estilo y nivel del resto. Devuelve solo la seccion modificada con su indice.
+
+REGLAS DE EDICION:
+1. No modifiques ninguna otra seccion: tu respuesta contiene UNICAMENTE la seccion editada.
+2. Conserva el tono, registro y nivel de dificultad — la seccion editada debe sentirse escrita por la misma persona.
+3. Si el profesor pide algo que no corresponde a ninguna seccion existente, elige la seccion mas cercana a su intencion.
+4. Responde UNICAMENTE con JSON valido, sin markdown, sin explicaciones antes o despues.
+
+REGLAS DE CALIDAD AL EDITAR:
+- Cuando mejores una actividad, asegurate de que sea CONCRETA: QUE hara el estudiante, COMO se agrupara, QUE producto observable producira.
+- Si la seccion tiene actividades vagas ("dialogar", "comentar", "reflexionar"), REEMPLAZALAS con actividades concretas.
+- Agrega TIEMPO ESTIMADO si no lo tiene.
+- Agrega MATERIALES concretos (priorizar reciclados/bajo costo) si no los tiene.
+- Verifica que incluya al menos 2 MODALIDADES distintas (lectura, escritura, oral, visual, manipulativa, digital).
+- Si el profesor pide "mejorar" o "hacer mas experto", aplica:
+  * Variedad de preguntas (Recordar, Comprender, Aplicar, Analizar, Evaluar, Crear)
+  * Adaptaciones para neurodiversidad (TEA, TDAH, discalculia, disgrafia)
+  * Herramientas digitales sugeridas (Canva, Scratch, Google Forms) + alternativa no digital
+  * Contexto chileno real
+- Si el profesor pide agregar "productos" o "actividades maker", propone:
+  * Prototipo con materiales reciclados
+  * Poster/infografia en Canva
+  * Podcast o video corto
+  * Maqueta, juego de mesa pedagogico
+  * Codigo simple (Scratch, Python basico)
+  Detalla materiales, pasos de construccion, y criterios de exito.
 
 ESTRUCTURA JSON OBLIGATORIA:
 {
   "seccionModificada": 0,
   "seccionNueva": {
-    "title": "Título de la sección (mantenlo igual salvo que la instrucción pida cambiarlo)",
-    "content": "Contenido actualizado de la sección",
-    "activities": ["Paso o ítem 1", "Paso o ítem 2"]
+    "title": "Titulo de la seccion (mantenlo salvo que la instruccion pida cambiarlo)",
+    "content": "Contenido actualizado de la seccion (CONCRETO, no generico)",
+    "activities": ["Paso o item concreto 1", "Paso o item concreto 2"]
   },
-  "explicacion": "1-2 oraciones explicando qué cambiaste y por qué"
+  "explicacion": "1-2 oraciones explicando que cambiaste y por que, incluyendo que mejoras pedagogicas aplicaste"
 }
 
-"activities" es opcional: solo inclúyelo si la sección original ya lo traía o si la instrucción pide agregar pasos/ítems.`;
+"activities" es opcional: solo incluyelo si la seccion original ya lo trae o si la instruccion pide agregar pasos/Items.`;
 }
 
 function buildUserPrompt(opciones: GuiaEditOptions): string {
