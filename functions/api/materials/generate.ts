@@ -1,4 +1,5 @@
 import { generatePlanificacion } from '../../core/PlanificacionEngine';
+import { getProfePlanificAIContext, getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from '../../core/ExpertKnowledge';
 import type { AIEngineEnv } from '../../core/types';
 
 interface Env { DB: D1Database; AI?: Ai }
@@ -45,113 +46,417 @@ function buildMaterialPrompt(type: string, req: GenerateRequest, context: any): 
     indList.length > 0 ? `Indicadores: ${indList.join('; ')}` : '',
     methList.length > 0 ? `Metodología sugerida: ${methList.map((m: any) => m.name).join(', ')}` : '',
     req.topic ? `Tema: ${req.topic}` : '',
-    req.additionalContext ? `Contexto: ${req.additionalContext}` : '',
-    req.duration ? `Duración: ${req.duration}` : '',
+    req.additionalContext ? `Contexto adicional del docente: ${req.additionalContext}` : '',
+    req.duration ? `Duración disponible: ${req.duration}` : '',
     req.studentCount ? `Estudiantes: ${req.studentCount}` : '',
   ].filter(Boolean).join('\n');
 
+  // Contexto experto completo inyectado en TODOS los productos
+  const expertBlock = `
+${getProfePlanificAIContext()}
+
+${getExpertContext()}
+
+${getExpertEvaluationContext()}
+
+${getExpertDUAContext()}
+`;
+
   const prompts: Record<string, string> = {
-    guia_estudiante: `Genera una guía de estudiante en formato JSON con:
-{
-  "title": "Título atractivo",
-  "objective": "Objetivo de aprendizaje",
-  "instructions": "Instrucciones claras",
-  "activities": [{"name": "...", "description": "...", "steps": ["..."]}],
-  "vocabulary": ["término: definición"],
-  "selfAssessment": ["preguntas de autoevaluación"]
-}
-Contexto: ${baseContext}
-Requisitos: lenguaje accesible, máximo 3 actividades, contexto chileno/latinoamericano, DUA implícito.`,
+    guia_estudiante: `${expertBlock}
 
-    guia_docente: `Genera una guía docente en formato JSON con:
-{
-  "title": "Título",
-  "objective": "OA completo",
-  "duration": "tiempo estimado",
-  "materials": ["lista de materiales"],
-  "opening": {"activity": "...", "time": "min"},
-  "development": {"activity": "...", "time": "min"},
-  "closure": {"activity": "...", "time": "min"},
-  "differentiation": ["adaptaciones DUA"],
-  "assessment": "criterios de evaluación"
-}
-Contexto: ${baseContext}
-Requisitos: estructura clara inicio-desarrollo-cierre, tiempos realistas, adaptaciones DUA.`,
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
 
-    planificacion: `Genera una planificación clase a clase en formato JSON con:
+TAREA: Genera una GUIA DE ESTUDIANTE en formato JSON que sea un PRODUCTO CONCRETO que los estudiantes FABRICARAN, no una guia para rellenar.
+
+ESTRUCTURA JSON REQUERIDA:
 {
-  "unit": "Nombre de unidad",
+  "title": "Titulo atractivo que refleje el producto a crear",
+  "objective": "Que aprenderan los estudiantes (NO copiar el OA literal, reformular en lenguaje simple)",
+  "productType": "Tipo de producto tangible a fabricar (pasaporte, prototipo, poster, podcast, maqueta, etc.)",
+  "instructions": "Instrucciones paso a paso para crear el producto",
+  "activities": [
+    {
+      "name": "Nombre de la actividad",
+      "type": "tipo (exploracion/creacion/evaluacion/investigacion)",
+      "description": "Descripcion concreta con QUE hara el estudiante, COMO se agrupara, y QUE producto observable producira",
+      "steps": ["Paso 1 con accion concreta", "Paso 2...", "Paso 3..."],
+      "time": "minutos estimados",
+      "materials": ["materiales necesarios (priorizar reciclados/bajo costo)"],
+      "bloomLevel": "nivel de Bloom que evalua"
+    }
+  ],
+  "vocabulary": ["termino: definicion simple"],
+  "selfAssessment": [
+    {"question": "pregunta de metacognicion", "type": "reflexion"},
+    {"question": "pregunta de aplicacion", "type": "aplicacion"}
+  ],
+  "adaptations": {
+    "tea": "adaptacion concreta para TEA",
+    "tdah": "adaptacion concreta para TDAH",
+    "discalculia": "adaptacion si aplica",
+    "disgrafia": "adaptacion si aplica"
+  },
+  "techTools": ["herramienta digital sugerida (Canva, Scratch, Google Forms, etc.)"],
+  "techAlternative": "alternativa no digital para colegios sin connectivity"
+}
+
+REGLAS OBLIGATORIAS:
+1. El producto debe ser ALGO QUE LOS ESTUDIANTES CREEN (no solo preguntas para responder)
+2. Minimo 3 actividades con TIPO y NIVEL DE BLOOM distintos
+3. Cada actividad con TIEMPO ESTIMADO y MATERIALES concretos
+4. Minimo 5 TIPOS DE PREGUNTAS distintos en toda la guia (Recordar, Comprender, Aplicar, Analizar, Evaluar, Crear)
+5. Al menos 1 adaptacion concreta por perfil neurodiverso (TEA, TDAH, discalculia, disgrafia)
+6. Materiales prioritariamente reciclados o de bajo costo
+7. Ejemplos del contexto chileno (geografia, cultura, calendario escolar)
+8. Herramienta digital sugerida + alternativa no digital
+9. Lenguaje accesible para el rango etario de ${req.level}
+10. Cada paso de instruccion debe ser ACCIONABLE y CONCRETO (nunca "dialogar", "comentar", "reflexionar" sin especificar QUE exactamente haran)`,
+
+    guia_docente: `${expertBlock}
+
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
+
+TAREA: Genera una GUIA DOCENTE en formato JSON que sea una RUTA DE APRENDIZAJE DINAMICA, no una planificacion estatica.
+
+ESTRUCTURA JSON REQUERIDA:
+{
+  "title": "Titulo de la ruta de aprendizaje",
+  "objective": "OA reformulado en lenguaje docente (NO copiar literal)",
+  "duration": "tiempo total estimado",
+  "materials": ["materiales necesarios (reciclados/bajo costo)"],
+  "digitalTools": ["herramientas digitales sugeridas"],
+  "digitalAlternative": "alternativa no digital",
+  "phases": [
+    {
+      "name": "Fase del metodo (Empatizar/Definir/Idear/Prototipar/Testear o similar)",
+      "activity": "Descripcion concreta de la actividad",
+      "time": "minutos",
+      "grouping": "como se agrupan (individual/pareja/grupo/estacion)",
+      "bloomLevel": "nivel de Bloom",
+      "product": "que producto observable producen los estudiantes"
+    }
+  ],
+  "opening": {"activity": "...", "time": "min", "retrieval": "pregunta de recuperacion activa"},
+  "development": {"activity": "...", "time": "min", "movement": "momento de movimiento si aplica"},
+  "closure": {"activity": "...", "time": "min", "metacognition": "pregunta metacognitiva"},
+  "differentiation": {
+    "apoyo": "estrategia para tier 1 (apoyo maximo)",
+    "estandar": "estrategia para tier 2",
+    "desafio": "estrategia para tier 3 (extension)"
+  },
+  "neurodiversity": {
+    "tea": "adaptacion concreta (agenda visual, instrucciones literales, etc.)",
+    "tdah": "adaptacion concreta (chunks, movimiento, cronometro, etc.)",
+    "otras": "otras adaptaciones relevantes"
+  },
+  "assessment": {
+    "type": "formativa o sumativa (Decreto 67)",
+    "methods": ["metodos de evaluacion variados"],
+    "rubric": "criterios de evaluacion observables"
+  },
+  "peAlignment": "como se conecta con PEI/PME del establecimiento",
+  "communityExtension": "posible extension a la comunidad"
+}
+
+REGLAS OBLIGATORIAS:
+1. Estructura DINAMICA: no repetir "inicio-desarrollo-cierre" identico. Varia por clase.
+2. Cada fase debe tener: tiempo, agrupacion, nivel Bloom, producto observable
+3. Minimo 3 MODALIDADES distintas (visual, auditiva, kinestesica, lecto-escritura, digital, social)
+4. Minimo 5 TIPOS DE PREGUNTAS distintos
+5. Al menos 1 momento de MOVIMIENTO FISICO por clase
+6. Al menos 1 adaptacion neurodiversidad por fase
+7. Retrieval practice al inicio, metacognicion al cierre
+8. Materiales reciclados/bajo costo
+9. Herramientas digitales + alternativa no digital
+10. Coherencia con Decreto 67 (evaluacion formativa) y Decreto 83 (DUA)
+11. Contexto chileno real (geografia, cultura, calendario)
+12. OA reformulado, NUNCA copiado literal`,
+
+    planificacion: `${expertBlock}
+
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
+
+TAREA: Genera una PLANIFICACION CLASE A CLASE en formato JSON que sea una RUTA DE APRENDIZAJE DINAMICA con productos concretos.
+
+ESTRUCTURA JSON REQUERIDA:
+{
+  "unit": "Nombre de la unidad (creativo, no generico)",
   "classes": [
-    {"number": 1, "objective": "OA específico", "opening": "...", "development": "...", "closure": "...", "duration": "min", "materials": ["..."], "assessment": "..."}
+    {
+      "number": 1,
+      "objective": "OA reformulado en lenguaje simple (NUNCA copiar literal)",
+      "methodology": "metodo utilizado (ABP, Indagacion, Design Thinking, etc.)",
+      "phases": [
+        {
+          "name": "Fase del metodo",
+          "activity": "Descripcion concreta",
+          "time": "min",
+          "grouping": "como se agrupan",
+          "product": "que crean los estudiantes"
+        }
+      ],
+      "opening": {"activity": "...", "time": "min"},
+      "development": {"activity": "...", "time": "min"},
+      "closure": {"activity": "...", "time": "min", "product": "producto tangible de la clase"},
+      "duration": "min total",
+      "materials": ["materiales (reciclados/bajo costo)"],
+      "digitalTools": ["herramientas digitales"],
+      "assessment": {"type": "formativa", "method": "metodo especifico"},
+      "differentiation": {"apoyo": "...", "desafio": "..."},
+      "neurodiversity": {"tea": "...", "tdah": "..."},
+      "movement": "momento de movimiento fisico",
+      "bloom": ["niveles de Bloom utilizados"]
+    }
   ],
-  "methodology": "metodología principal",
-  "dua": ["adaptaciones"],
-  "evaluation": "tipo de evaluación"
+  "methodology": "metodologia principal de la unidad",
+  "productType": "tipo de producto tangible que crearan al final",
+  "dua": {"representation": "...", "action": "...", "engagement": "..."},
+  "evaluation": {
+    "formativa": "estrategias formativas por clase",
+    "sumativa": "producto final evaluado",
+    "rubric": "criterios de la rúbrica"
+  },
+  "peAlignment": "conexion con PEI/PME",
+  "communityExtension": "extension a la comunidad"
 }
-REGLA MÁS IMPORTANTE: el OA citado arriba en "Contexto" es el objetivo curricular formal, escrito para docentes — NUNCA lo copies literalmente en el campo "objective" de una clase. Reformúlalo siempre con tus propias palabras, en lenguaje simple y concreto, adaptado a estudiantes de ${req.level}.
-Contexto: ${baseContext}
-Requisitos: 3-5 clases, progresión lógica, contexto chileno, DUA en cada clase.`,
 
-    evaluacion: `Genera una evaluación en formato JSON con:
+REGLAS OBLIGATORIAS:
+1. REGLA MAS IMPORTANTE: el OA es el objetivo curricular formal — NUNCA lo copies
+   literalmente en "objective". Reformulo SIEMPRE con propias palabras.
+2. Cada clase debe tener ESTRUCTURA DIFERENTE (no repetir secuencia identica)
+3. Cada clase con PRODUCTO TANGIBLE que los estudiantes creen
+4. Minimo 3 MODALIDADES distintas por clase
+5. Minimo 5 TIPOS DE PREGUNTAS distintos en toda la planificacion
+6. Al menos 1 momento de MOVIMIENTO FISICO por clase
+7. Al menos 1 adaptacion neurodiversidad por clase
+8. Retrieval practice al inicio de cada clase, metacognicion al cierre
+9. Materiales reciclados/bajo costo
+10. Herramientas digitales + alternativa no digital
+11. Tiempos REALES (45-90 min por clase)
+12. Progresion logica entre clases
+13. Coherencia con Decreto 67 y Decreto 83
+14. Contexto chileno real`,
+
+    evaluacion: `${expertBlock}
+
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
+
+TAREA: Genera una EVALUACION AUTENTICA en formato JSON que evalua COMPETENCIAS reales, no solo memoria.
+
+ESTRUCTURA JSON REQUERIDA:
 {
-  "title": "Título de evaluación",
-  "objective": "OA evaluado",
-  "type": "formativa|sumativa|diagnóstica",
+  "title": "Titulo de la evaluacion",
+  "objective": "OA evaluado (reformulado)",
+  "type": "formativa|sumativa|diagnostica",
+  "productType": "tipo de producto que evalua",
   "questions": [
-    {"number": 1, "type": "multiple_choice|open|matching", "question": "...", "options": ["A)", "B)", "C)", "D)"], "correct": "A", "skill": "habilidad evaluada"}
+    {
+      "number": 1,
+      "type": "multiple_choice|open|matching|drawing|oral|project",
+      "question": "Pregunta con contexto real chileno",
+      "options": ["A)", "B)", "C)", "D)"],
+      "correct": "respuesta correcta",
+      "bloomLevel": "Recordar|Comprender|Aplicar|Analizar|Evaluar|Crear",
+      "skill": "habilidad evaluada",
+      "time": "minutos estimados",
+      "adaptation": "adaptacion para neurodiversidad si aplica"
+    }
   ],
-  "rubric": {"criteria": [{"name": "...", "levels": ["logrado", "en proceso", "no logrado"]}]},
-  "answerKey": "pauta de corrección"
+  "rubric": {
+    "criteria": [
+      {
+        "name": "Criterio",
+        "description": "Que se evalua",
+        "levels": [
+          {"level": "Logrado", "score": 4, "description": "Descriptor claro y observable"},
+          {"level": "En proceso", "score": 2, "description": "Descriptor"},
+          {"level": "Inicio", "score": 1, "description": "Descriptor"}
+        ]
+      }
+    ]
+  },
+  "answerKey": "pauta de correccion con retroalimentacion sugerida",
+  "timeTotal": "tiempo total estimado",
+  "differentiation": {
+    "timeExtension": "tiempo extra para necesidades",
+    "formatAlternative": "formato alternativo (oral, dibujo, etc.)",
+    "simplification": "simplificacion si aplica"
+  }
 }
-Contexto: ${baseContext}
-Requisitos: 8-12 preguntas, progresión de dificultad, alineadas a indicadores, contexto chileno.`,
 
-    rubrica: `Genera una rúbrica en formato JSON con:
+REGLAS OBLIGATORIAS:
+1. Preguntas variadas: minimo 4 TIPOS DISTINTOS de las siguientes:
+   Recordar, Comprender, Aplicar, Analizar, Evaluar, Crear
+2. Formatos variados: no todo opcion multiple. Incluir:
+   respuesta abierta, completar, matching, dibujo, oral, proyecto
+3. Contexto CHILENO real en cada pregunta
+4. Progresion de dificultad (facil -> dificil)
+5. Al menos 1 pregunta de nivel ANALIZAR o superior
+6. Rúbrica con descriptores OBSERVABLES (no subjetivos)
+7. Retroalimentacion sugerida para cada pregunta
+8. Adaptaciones para neurodiversidad (tiempo extra, formato alternativo)
+9. Tiempo total realista
+10. Coherencia con Decreto 67 (formativa vs sumativa)`,
+
+    rubrica: `${expertBlock}
+
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
+
+TAREA: Genera una RUBRICA DE DESEMPENO en formato JSON con descriptores OBSERVABLES y MEDIBLES.
+
+ESTRUCTURA JSON REQUERIDA:
 {
-  "title": "Título de rúbrica",
-  "objective": "OA evaluado",
+  "title": "Titulo de la rubrica",
+  "objective": "OA evaluado (reformulado)",
+  "productType": "tipo de producto que evalua",
   "criteria": [
-    {"name": "Criterio 1", "description": "...", "levels": [
-      {"level": "Excelente", "description": "..."},
-      {"level": "Bueno", "description": "..."},
-      {"level": "Satisfactorio", "description": "..."},
-      {"level": "En proceso", "description": "..."}
-    ]}
+    {
+      "name": "Criterio 1",
+      "description": "Que se evalua especificamente",
+      "bloomLevel": "nivel de Bloom que evalua",
+      "levels": [
+        {"level": "Logrado", "score": 4, "description": "Descriptor observable y medible"},
+        {"level": "En proceso", "score": 2, "description": "Descriptor"},
+        {"level": "Inicio", "score": 1, "description": "Descriptor"}
+      ]
+    }
   ],
-  "scoring": "escala de puntaje",
-  "feedback": "espacio para retroalimentación"
+  "scoring": {
+    "scale": "escala de puntaje",
+    "passing": "puntaje minimo para logro",
+    "distribution": "distribucion de puntajes sugerida"
+  },
+  "feedback": {
+    "teacherNotes": "espacio para retroalimentacion del docente",
+    "studentSelfAssessment": "criterios para autoevaluacion"
+  },
+  "differentiation": {
+    "apoyo": "criterios simplificados para tier 1",
+    "desafio": "criterios extendidos para tier 3"
+  }
 }
-Contexto: ${baseContext}
-Requisitos: 3-5 criterios, descriptores claros por nivel, lenguaje accesible.`,
 
-    ticket_salida: `Genera un ticket de salida en formato JSON con:
+REGLAS OBLIGATORIAS:
+1. Minimo 4 CRITERIOS evaluados
+2. Cada criterio debe evaluar un nivel BLOOM DISTINTO
+3. Descriptores OBSERVABLES y MEDIBLES (nunca "participa activamente")
+4. 3 o 4 niveles de logro maximo
+5. Incluir al menos 1 criterio de PRODUCTO TANGIBLE
+6. Incluir al menos 1 criterio de TRABAJO COLABORATIVO
+7. Rango de puntaje claro
+8. Criterios de autoevaluacion para el estudiante
+9. Adaptaciones para neurodiversidad en la evaluacion
+10. Coherencia con el tipo de producto generado`,
+
+    ticket_salida: `${expertBlock}
+
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
+
+TAREA: Genera un TICKET DE SALIDA en formato JSON con preguntas VARIADAS y METACOGNITIVAS.
+
+ESTRUCTURA JSON REQUERIDA:
 {
-  "title": "Ticket de salida",
-  "objective": "OA de la clase",
+  "title": "Titulo del ticket",
+  "objective": "OA de la clase (reformulado)",
   "questions": [
-    {"question": "Pregunta de comprensión", "type": "open"},
-    {"question": "Ejemplo aplicado", "type": "open"},
-    {"question": "Metacognición", "type": "open"}
+    {
+      "question": "Pregunta concreta",
+      "type": "recordar|comprender|aplicar|analizar|evaluar|crear|metacognicion",
+      "format": "written|drawing|oral|matching|oral_or_written",
+      "time": "minutos",
+      "adaptation": "adaptacion para neurodiversidad"
+    }
   ],
-  "selfAssessment": "¿Cómo te fue hoy? 😊 😐 😞",
-  "teacherNotes": "notas para el docente"
+  "selfAssessment": {
+    "question": "pregunta metacognitiva",
+    "options": ["caritas o escala visual"]
+  },
+  "teacherNotes": "notas para el docente: que observar, que ajustar"
 }
-Contexto: ${baseContext}
-Requisitos: máximo 3 preguntas, breves, alineadas al OA, contexto chileno.`,
 
-    actividad_dua: `Genera una actividad DUA en formato JSON con:
+REGLAS OBLIGATORIAS:
+1. Minimo 3 PREGUNTAS con TIPOS DISTINTOS (no repetir el mismo tipo)
+2. Al menos 1 pregunta de NIVEL ALTO Bloom (Analizar/Evaluar/Crear)
+3. Al menos 1 pregunta METACOGNITIVA
+4. Formatos variados: no todo escrito. Incluir dibujo, oral, matching
+5. Contexto chileno real
+6. Tiempo total: maximo 5 minutos
+7. Adaptaciones: ofrecer opciones (oral, dibujo) para disgrafia/TDAH
+8. Incluir "para mi ritmo": opciones de simplificacion
+9. Teacher notes: que buscar en las respuestas, que ajustar manana
+10. RETRIEVAL PRACTICE: al menos 1 pregunta que recupere contenido anterior`,
+
+    actividad_dua: `${expertBlock}
+
+CONTEXTO DEL PRODUCTO A GENERAR:
+${baseContext}
+
+TAREA: Genera una ACTIVIDAD DUA en formato JSON con los 3 principios CAST explícitos y adaptaciones por perfil.
+
+ESTRUCTURA JSON REQUERIDA:
 {
-  "title": "Título de actividad",
-  "objective": "OA",
-  "representation": ["múltiples formas de presentar contenido"],
-  "action": ["múltiples formas de acción y expresión"],
-  "engagement": ["múltiples formas de motivación"],
-  "activity": {"description": "...", "steps": ["..."], "materials": ["..."]},
-  "adaptations": ["adaptaciones específicas"],
-  "assessment": "criterios flexibles"
+  "title": "Titulo de la actividad",
+  "objective": "OA (reformulado)",
+  "representation": [
+    {"method": "metodo de representacion", "description": "como se presenta el contenido", "tool": "herramienta si aplica"}
+  ],
+  "action": [
+    {"method": "metodo de accion/expression", "description": "como demuestra el estudiante", "tool": "herramienta si aplica"}
+  ],
+  "engagement": [
+    {"method": "metodo de implicacion", "description": "como se motiva y conecta", "tool": "herramienta si aplica"}
+  ],
+  "activity": {
+    "description": "descripcion concreta de la actividad",
+    "product": "producto tangible que crean los estudiantes",
+    "steps": ["paso 1 con accion concreta", "paso 2...", "paso 3..."],
+    "time": "minutos totales",
+    "materials": ["materiales (reciclados/bajo costo)"]
+  },
+  "tierApoyo": {
+    "textReduction": "reduccion de texto (50-70%)",
+    "visualSupport": "apoyo visual especifico",
+    "timeExtension": "tiempo extendido (1.5x-2x)",
+    "simplification": "simplificacion de la tarea",
+    "alternativeProduct": "producto alternativo mas accesible"
+  },
+  "tierDesafio": {
+    "extension": "actividad de extension",
+    "complexity": "complejidad adicional",
+    "autonomy": "proyecto autonomo"
+  },
+  "neurodiversity": {
+    "tea": "adaptacion concreta (agenda visual, instrucciones literales, espacio calmado)",
+    "tdah": "adaptacion concreta (chunks, movimiento, cronometro, listas)",
+    "discalculia": "adaptacion si aplica (material concreto, linea numerica)",
+    "disgrafia": "adaptacion si aplica (oral, dibujo, dictado)",
+    "tdl": "adaptacion si aplica (multimodal, tiempo procesamiento)"
+  },
+  "assessment": {
+    "type": "formativa",
+    "methods": ["metodos variados"],
+    "criteria": "criterios observables"
+  }
 }
-Contexto: ${baseContext}
-Requisitos: 3 principios DUA explícitos, accesible para todos, contexto chileno.`,
+
+REGLAS OBLIGATORIAS:
+1. Los 3 principios DUA deben tener MINIMO 3 estrategias cada uno
+2. Al menos 3 MODALIDADES distintas de representacion
+3. Al menos 3 OPCIONES de accion/expression
+4. Tier Apoyo con 5 estrategias CONCRETAS (no solo "simplificar")
+5. Tier Desafio con actividades de extension
+6. Adaptaciones neurodiversidad ESPECIFICAS para cada perfil
+7. Producto TANGIBLE que los estudiantes creen
+8. Materiales reciclados/bajo costo
+9. Herramientas digitales + alternativa no digital
+10. Evaluacion formativa con metodos variados`,
   };
 
   return prompts[type] || prompts.guia_estudiante;
