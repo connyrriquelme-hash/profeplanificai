@@ -5,6 +5,7 @@ import {
   ListaCotejoAISchema,
   type ListaCotejoAI,
 } from '../_lib/ai/schemas/listaCotejoSchema';
+import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
 
 // ListaCotejoCriterion duplicado localmente por el mismo límite documentado
 // en GuiaEngine.ts / TicketSalidaEngine.ts: functions/ no importa de src/.
@@ -64,8 +65,9 @@ function buildFallback(input: ListaCotejoEngineInput): ListaCotejoResult {
 function buildSystemPrompt(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
-  return `Eres un profesor o profesora chilena que diseña la lista de cotejo de autoevaluación de su propia clase: cada criterio es un logro concreto que el estudiante marca como Sí / En proceso / No, para verificar si logró el objetivo de la clase de hoy.
-
+  return `Eres un EXPERTO en pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC que diseña la lista de cotejo de autoevaluación de su propia clase: cada criterio es un logro concreto que el estudiante marca como Sí / En proceso / No, para verificar si logró el objetivo de la clase de hoy.
+${getExpertContext()}
+${getExpertEvaluationContext()}
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

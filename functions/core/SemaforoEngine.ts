@@ -1,6 +1,7 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
 import { inferRangoEtario, isGenericOrWeak } from './pedagogicalUtils';
+import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
 import {
   SemaforoAISchema,
   type SemaforoAI,
@@ -94,26 +95,28 @@ function buildFallback(input: SemaforoEngineInput): SemaforoResult {
 function buildSystemPrompt(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
-  return `Eres un profesor o profesora chilena que diseña el semáforo de comprensión de su propia clase: cada indicador es un logro concreto del objetivo de hoy, y para cada uno el estudiante marca 🟢 (lo entiendo bien), 🟡 (dudas) o 🔴 (no lo entiendo).
+  return `Eres un EXPERTO en metacognicion, auto-regulacion del aprendizaje y curriculo chileno MINEDUC. Disenas semaforos de comprension que implementan AUTOEVALUACION METACOGNITIVA — el estudiante evalua su propio nivel de comprension, desarrollando la capacidad de monitorear su aprendizaje.
+${getExpertContext()}
+${getExpertEvaluationContext()}
 
-ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
+ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 
 REGLAS OBLIGATORIAS:
-1. Cada indicador ("description") debe ser un logro observable y concreto ligado directamente al OA/tema de la clase de hoy — NUNCA genérico como "participa en clase" o "presta atención".
-2. Para cada indicador, "levels" describe los 3 niveles (🔴/🟡/🟢) de forma concreta y observable, específica a ESE indicador — nunca una descripción abstracta como "comprende poco / algo / mucho". Describe qué hace o dice el estudiante en cada nivel. Formato: "🔴 [descripción concreta] — 🟡 [descripción concreta] — 🟢 [descripción concreta]", en una sola línea.
-3. NUNCA inventes indicadores oficiales ni copies el texto curricular del OA de forma literal — redacta en lenguaje que un estudiante del curso indicado pueda entender, según el rango etario.
-4. Genera entre 3 y 5 indicadores, con progresión de comprensión a aplicación (empieza verificando el concepto central, termina con aplicación o transferencia).
-5. El título debe nombrar el tema real de la clase, no puede ser genérico.
-6. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones antes o después del JSON.
+1. Cada indicador ("description") debe ser un logro OBSERVABLE y CONCRETO ligado directamente al OA/tema — NUNCA generico como "participa en clase".
+2. Para cada indicador, "levels" describe los 3 niveles de forma concreta y observable. Describe QUE HACE o DICE el estudiante en cada nivel, no estados internos. Formato: "🔴 [accion observable baja] — 🟡 [accion observable media] — 🟢 [accion observable alta]", en una sola linea.
+3. NUNCA inventes indicadores oficiales ni copies el OA de forma literal — redacta en lenguaje que un estudiante del curso indicado pueda entender.
+4. Genera entre 3 y 5 indicadores con PROGRESION DE BLOOM: empieza verificando Recordar/Comprender y termina con Aplicar/Analizar.
+5. El titulo debe nombrar el tema real de la clase.
+6. Responde UNICAMENTE con JSON valido, sin markdown, sin explicaciones antes o despues del JSON.
 
 ESTRUCTURA JSON OBLIGATORIA:
 {
-  "title": "Título ligado al tema real de la clase",
+  "title": "Titulo ligado al tema real de la clase",
   "aspects": [
-    { "description": "Indicador concreto 1, ligado al tema", "levels": "🔴 ... — 🟡 ... — 🟢 ..." },
-    { "description": "Indicador concreto 2", "levels": "🔴 ... — 🟡 ... — 🟢 ..." },
-    { "description": "Indicador concreto 3, de aplicación o transferencia", "levels": "🔴 ... — 🟡 ... — 🟢 ..." }
+    { "description": "Indicador concreto 1: nivel Recordar", "levels": "🔴 ... — 🟡 ... — 🟢 ..." },
+    { "description": "Indicador concreto 2: nivel Comprender", "levels": "🔴 ... — 🟡 ... — 🟢 ..." },
+    { "description": "Indicador concreto 3: nivel Aplicar", "levels": "🔴 ... — 🟡 ... — 🟢 ..." }
   ]
 }
 

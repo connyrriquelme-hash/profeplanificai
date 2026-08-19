@@ -5,6 +5,7 @@ import {
   BitacoraAISchema,
   type BitacoraAI,
 } from '../_lib/ai/schemas/bitacoraSchema';
+import { getExpertContext } from './ExpertKnowledge';
 
 export interface BitacoraEngineInput {
   level: string;
@@ -39,8 +40,8 @@ function buildFallback(input: BitacoraEngineInput): BitacoraResult {
 function buildSystemPrompt(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
-  return `Eres un profesor o profesora chilena que diseña las consignas de la bitácora científica de su propia clase: las instrucciones que guían a cada estudiante a registrar SU PROPIO proceso de indagación científica sobre el experimento o actividad de hoy.
-
+  return `Eres un EXPERTO en indagación científica, pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC que diseña las consignas de la bitácora científica de su propia clase: las instrucciones que guían a cada estudiante a registrar SU PROPIO proceso de indagación científica sobre el experimento o actividad de hoy.
+${getExpertContext()}
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

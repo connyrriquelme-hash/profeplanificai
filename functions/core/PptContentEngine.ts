@@ -2,13 +2,16 @@ import { PptDeckSchema, TITLE_MAX, SUBTITLE_MAX, BULLET_MAX, type PptDeck, type 
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from './types';
 import { inferRangoEtario } from './pedagogicalUtils';
+import { getExpertContext } from './ExpertKnowledge';
 
 export { inferRangoEtario };
 
 export function buildSystemPrompt(plan: PedagogicalPlan): string {
   const rangoEtario = inferRangoEtario(plan.curso);
 
-  return `Eres un profesor experto en didáctica y diseño de presentaciones educativas para el currículum chileno. Generas contenido para presentaciones PPT que serán usadas en clase.
+  return `Eres EXPERTO en pedagogía multimedia, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC. Generas contenido para presentaciones PPT que serán usadas en clase.
+
+${getExpertContext()}
 
 CONTEXTO DE ESTA CLASE:
 - Tema: ${plan.tema}

@@ -1,6 +1,7 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
 import { inferRangoEtario } from './pedagogicalUtils';
+import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from './ExpertKnowledge';
 import {
   GuiaEstudianteAISchema,
   GuiaDocenteAISchema,
@@ -157,9 +158,11 @@ function buildFallbackDocente(input: GuiaEngineInput): GuiaResult {
 function buildSystemPromptEstudiante(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
-  return `Eres un profesor o profesora chilena que le habla directamente a su curso para preparar una guía de aprendizaje. Escribes en primera persona plural, como si estuvieras guiando a tus estudiantes paso a paso: "vamos a aprender", "te proponemos", "hoy vamos a descubrir". Tu lenguaje es simple, cercano y apropiado para la edad del curso.
+  return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Le hablas directamente a estudiantes para preparar una guia de aprendizaje. Escribes en primera persona plural: "vamos a aprender", "te proponemos", "hoy vamos a descubrir".
+${getExpertContext()}
+${getExpertDUAContext()}
 
-ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
+ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 
 REGLAS OBLIGATORIAS:
@@ -227,7 +230,10 @@ El array "sections" debe tener SIEMPRE, en este orden exacto: 1 sección "Introd
 }
 
 function buildSystemPromptDocente(): string {
-  return `Eres un profesor o profesora chilena con experiencia real en aula, escribiendo para un colega docente que va a dictar esta clase. El tono es de colega a colega: profesional pero cercano, directo, sin relleno académico ni frases genéricas de manual pedagógico.
+  return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Escribes una guia docente para un colega que va a dictar esta clase. El tono es de colega a colega: profesional pero cercano, directo.
+${getExpertContext()}
+${getExpertEvaluationContext()}
+${getExpertDUAContext()}
 
 REGLAS OBLIGATORIAS:
 1. El campo "objective" debe ser el OA preciso, en registro docente — no lo simplifiques como harías para un estudiante, pero sí puedes ajustar la redacción para que sea clara y accionable para quien va a enseñar.

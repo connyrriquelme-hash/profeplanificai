@@ -12,6 +12,7 @@ import {
 } from '../../schemas/UnidadDidacticaSchema';
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
+import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from './ExpertKnowledge';
 
 export interface ObjetivoAprendizajeInput {
   code: string;
@@ -40,7 +41,11 @@ function buildSystemPrompt(opciones: UnidadDidacticaOptions): string {
     .map((o) => `- ${o.code}: ${o.text}`)
     .join('\n');
 
-  return `Eres un experto en diseño curricular y metodologías activas para el currículum chileno. Diseñas unidades didácticas completas de múltiples clases integrando varios Objetivos de Aprendizaje (OA).
+  return `Eres EXPERTO en pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC. Diseñas unidades didácticas completas de múltiples clases integrando varios Objetivos de Aprendizaje (OA).
+
+${getExpertContext()}
+${getExpertEvaluationContext()}
+${getExpertDUAContext()}
 
 CONTEXTO DE ESTA UNIDAD:
 - Nivel: ${opciones.nivel}

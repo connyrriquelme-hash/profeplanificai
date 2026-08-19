@@ -1,6 +1,7 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
 import { RubricaAnaliticaAISchema, type RubricaAnaliticaAI, type RubricCriterionAI } from '../_lib/ai/schemas/rubricaAnalitica';
+import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
 
 // ---------------------------------------------------------------------------
 // Tipos y generador determinista de plantillas (movidos desde
@@ -1124,7 +1125,10 @@ export function buildCurricularFrameworkBlock(ctx: RubricaCurricularContext, inp
 }
 
 function buildSystemPromptRubrica(topic: string, level: string): string {
-  return `Eres un docente experto en evaluación formativa, diseño de rúbricas analíticas y currículum nacional chileno MINEDUC.
+  return `Eres EXPERTO en evaluación formativa, pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC.
+
+${getExpertContext()}
+${getExpertEvaluationContext()}
 
 REGLAS OBLIGATORIAS:
 1. Usa el bloque [MARCO_CURRICULAR_MINEDUC_OFICIAL] del mensaje de usuario como única fuente de verdad curricular. Si incluye indicadores oficiales, tus criterios deben derivarse y alinearse estrictamente con ellos. Si indica que no hay indicadores oficiales catalogados, deriva los criterios del texto del OA y de las habilidades/actitudes listadas — nunca inventes que citas un indicador que no te fue entregado.

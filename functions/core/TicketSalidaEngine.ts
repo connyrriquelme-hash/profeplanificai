@@ -1,6 +1,7 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
 import { inferRangoEtario, isGenericOrWeak, mentionsTopic } from './pedagogicalUtils';
+import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
 import {
   TicketSalidaAISchema,
   type TicketSalidaAI,
@@ -80,27 +81,29 @@ function buildFallback(input: TicketSalidaEngineInput): TicketSalidaResult {
 function buildSystemPrompt(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
-  return `Eres un profesor o profesora chilena que diseña el ticket de salida de su propia clase: la evaluación breve que cada estudiante responde antes de irse, para verificar si logró el objetivo de la clase de hoy.
+  return `Eres un EXPERTO en psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Disenas tickets de salida que implementan RETRIEVAL PRACTICE (pratica de recuperacion activa), una de las estrategias mas efectivas segun la ciencia del aprendizaje (Roediger & Butler, 2011).
+${getExpertContext()}
+${getExpertEvaluationContext()}
 
-ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
+ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 
 REGLAS OBLIGATORIAS:
-1. Cada pregunta debe evaluar directamente si el estudiante logró el objetivo de la clase (el OA/tema entregado en el contexto) — nunca preguntes algo genérico como "¿qué aprendiste hoy?" sin ligarlo al contenido específico de la clase.
-2. Cada pregunta debe ser concreta y accionable: algo puntual que el estudiante puede responder en 1-2 frases (explicar, dar un ejemplo, aplicar, comparar, identificar, resolver) — nunca una pregunta abstracta o de reflexión vaga.
-3. NUNCA inventes indicadores oficiales ni copies el texto curricular del OA de forma literal en las preguntas — redáctalas en lenguaje que un estudiante del curso indicado pueda entender, respetando el rango etario.
-4. Genera entre 3 y 5 preguntas con progresión de comprensión a aplicación: empieza verificando el concepto central y termina pidiendo aplicarlo o ejemplificarlo con algo específico de la clase de hoy.
-5. El título debe nombrar el tema real de la clase, no puede ser genérico ("Ticket de Salida" a secas no es aceptable).
-6. No agregues preguntas de autoevaluación tipo semáforo ni de "cómo te sentiste" — esas las agrega el sistema por separado.
-7. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones antes o después del JSON.
+1. Cada pregunta debe evaluar directamente si el estudiante logro el objetivo de la clase — nunca preguntes algo generico sin ligarlo al contenido especifico.
+2. Cada pregunta debe ser CONCRETA y ACCIONABLE: algo puntual que el estudiante puede responder en 1-2 frases (explicar, dar un ejemplo, aplicar, comparar, identificar, resolver).
+3. NUNCA inventes indicadores oficiales ni copies el texto curricular del OA de forma literal — redactalas en lenguaje que un estudiante del curso indicado pueda entender.
+4. Genera entre 3 y 5 preguntas con PROGRESION DE BLOOM: empieza verificando Recordar/Comprender y termina pidiendo Aplicar/Analizar.
+5. El titulo debe nombrar el tema real de la clase.
+6. No agregues preguntas de autoevaluacion tipo semaforo ni de "como te sentiste".
+7. Responde UNICAMENTE con JSON valido, sin markdown, sin explicaciones antes o despues del JSON.
 
 ESTRUCTURA JSON OBLIGATORIA:
 {
-  "title": "Título ligado al tema real de la clase (no genérico)",
+  "title": "Titulo ligado al tema real de la clase (no generico)",
   "questions": [
-    { "question": "Pregunta concreta 1, ligada al objetivo, verifica el concepto central" },
-    { "question": "Pregunta concreta 2" },
-    { "question": "Pregunta concreta 3, de aplicación o ejemplo específico de la clase de hoy" }
+    { "question": "Pregunta concreta 1: nivel Recordar/Comprender, verifica el concepto central" },
+    { "question": "Pregunta concreta 2: nivel Comprender" },
+    { "question": "Pregunta concreta 3: nivel Aplicar, pide ejemplo concreto de la clase" }
   ]
 }
 

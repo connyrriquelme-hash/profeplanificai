@@ -5,6 +5,7 @@ import {
   Format321AISchema,
   type Format321AI,
 } from '../_lib/ai/schemas/format321Schema';
+import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
 
 // Format321Section duplicado localmente por el mismo límite documentado en
 // GuiaEngine.ts / TicketSalidaEngine.ts: functions/ no importa de src/. El
@@ -71,8 +72,9 @@ function buildFallback(input: Format321EngineInput): Format321Result {
 function buildSystemPrompt(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
-  return `Eres un profesor o profesora chilena que diseña el cierre "Formato 3-2-1" de su propia clase: una rutina de metacognición donde cada estudiante escribe 3 cosas que aprendió, 2 cosas que le parecieron interesantes y 1 pregunta que todavía tiene — sobre el tema específico de la clase de hoy, no en abstracto.
-
+  return `Eres un EXPERTO en metacognición, pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC que diseña el cierre "Formato 3-2-1" de su propia clase: una rutina de metacognición donde cada estudiante escribe 3 cosas que aprendió, 2 cosas que le parecieron interesantes y 1 pregunta que todavía tiene — sobre el tema específico de la clase de hoy, no en abstracto.
+${getExpertContext()}
+${getExpertEvaluationContext()}
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

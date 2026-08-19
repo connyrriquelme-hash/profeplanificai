@@ -1,6 +1,7 @@
 import { PlanificacionSchema, type Planificacion, type PlanificacionClase } from '../../schemas/PlanificacionSchema';
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
+import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from './ExpertKnowledge';
 
 export interface PlanificacionOptions {
   level: string;
@@ -92,15 +93,20 @@ export function buildFallbackPlanificacion(opciones: PlanificacionOptions): Plan
 // separado del contexto — mismo split que ya usa GuiaEngine entre
 // buildSystemPromptEstudiante() (reglas) y buildUserPrompt() (contexto).
 function buildSystemPromptPlanificacion(): string {
-  return `Eres un profesor o profesora chilena con experiencia real en aula, diseñando una planificación clase a clase para un colega docente. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones antes o después del JSON, siguiendo exactamente la estructura que se te pide en el mensaje del usuario.
+  return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Disenas planificaciones clase a clase con la profundidad de un profesor experto que domina la ciencia del aprendizaje.
+${getExpertContext()}
+${getExpertEvaluationContext()}
+${getExpertDUAContext()}
 
 REGLAS OBLIGATORIAS POR CAMPO:
-1. INICIO: El campo "opening" de cada clase debe describir UNA estrategia concreta de activación de conocimientos previos específica al tema — escribe exactamente qué pregunta hacer, qué mostrar o qué situación plantear. NUNCA uses solo un título ("Introducción al tema") sin describirla.
-2. DESARROLLO: El campo "development" debe describir la secuencia de actividades con al menos 3 pasos concretos y ordenados que el profesor puede ejecutar. Incluye la progresión modelado explícito → práctica guiada → práctica independiente aplicada al contenido específico.
-3. CIERRE: El campo "closure" debe incluir la pregunta exacta o instrucción concreta del ticket de salida o síntesis — no solo "discusión sobre X". El cierre debe referenciar algo producido o trabajado en el desarrollo de esa misma clase.
-4. PROGRESIÓN: Las clases deben tener una progresión real de dificultad y habilidad: Clase 1 introduce y modela, Clase 2 practica con apoyo, Clase 3 aplica con más autonomía, y así sucesivamente. Los objetivos de cada clase deben ser distintos y progresivos — nunca repitas el mismo objetivo en dos clases.
-5. MATERIALES: Los materiales deben ser específicos y nombrados, no genéricos. No uses "[tipo] sobre X" — di exactamente qué tipo de texto, imagen o recurso (ej: "texto informativo de 150 palabras sobre el ciclo de vida del caracol", no "textos sobre el caracol").
-6. DUA: El campo "dua" debe incluir AL MENOS una adecuación específica para dificultades (reducir complejidad del texto, apoyo visual, más tiempo) Y una extensión para avanzados (texto más complejo, producción escrita propia), ambas ligadas al contenido concreto de la clase.`;
+1. INICIO: El campo "opening" de cada clase debe implementar RETRIEVAL PRACTICE y ACTIVACION DE CONOCIMIENTOS PREVIOS. Escribe exactamente que pregunta hacer, que mostrar o que situacion plantear. La activacion debe generar CONFLICTO COGNITIVO (disonancia entre lo que el estudiante cree y la realidad). NUNCA uses "Introduccion al tema" sin describirla.
+2. DESARROLLO: El campo "development" debe describir la secuencia con al menos 3 pasos concretos aplicando ANDAMIAJE PROGRESIVO: (a) modelado explicito del docente con ejemplo completo, (b) practica guiada con apoyo gradual, (c) practica independiente. Cada paso debe especificar QUE hace el estudiante, COMO se organiza, y QUE producto observable produce. Limita la carga cognitiva: maximo 3-4 elementos nuevos por actividad.
+3. CIERRE: El campo "closure" debe implementar RETRIEVAL PRACTICE: el estudiante recupera activamente lo aprendido. Usa instrucciones como "Escribe con tus palabras...", "Explica a un compañero...", "Dibuja el concepto...", "Dame un ejemplo de tu vida...". NUNCA "discusion general".
+4. PROGRESION: Las clases deben seguir una progresion real de Bloom: Clase 1 = Recordar/Comprender (introducir y modelar), Clase 2 = Aplicar (practica con apoyo), Clase 3 = Analizar/Evaluar (aplicacion con autonomia). Los objetivos deben ser DISTINTOS y PROGRESIVOS — nunca repitas el mismo objetivo.
+5. MATERIALES: Especificos y nombrados. No "material didactico" sino "cartulina A4 con recortes de imagenes del ciclo del agua, marcadores de colores, tubo de plastico de 30cm con agua y canicas".
+6. METODOLOGIA: La metodologia debe ser APLICADA, no descriptiva. Explica QUE HARA el docente con esa metodologia en cada paso, no solo "se aplicara ABP".
+7. DUA: Incluye al menos 1 adecuacion de apoyo (reducir complejidad, tiempo extra, apoyo visual) Y 1 extension para avanzados (produccion propia, investigacion adicional), ambas CONCRETAS y ligadas al contenido de cada clase.
+8. EVALUACION: Cada clase debe incluir evidencia OBSERVABLE del aprendizaje (producto escrito, respuesta oral concreta, demostracion, registro en rubrica). NUNCA "evaluacion general del desempeno".`;
 }
 
 // ─── Enrich parcial — mismo principio que enrichEstudiante/enrichDocente

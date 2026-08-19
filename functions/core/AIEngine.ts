@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AIEngineEnv, DuaGuide, LessonContent, PedagogicalPlan } from './types';
+import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
@@ -56,7 +57,31 @@ ESTRUCTURA JSON OBLIGATORIA (12 campos):
 }`;
 
 const SYSTEM_PROMPT_LESSON =
-  "Eres un profesor experto en el currículo nacional chileno. Recibirás un plan pedagógico y debes generar el contenido completo de la clase. Responde ÚNICAMENTE con un objeto JSON válido con esta estructura: { titulo, curso, asignatura, objetivoAprendizaje, habilidadBloom, inicio, desarrollo, cierre, recursos, evaluacionFormativa, adecuacionesDUA }. 'inicio', 'desarrollo' y 'cierre' deben ser strings con la descripción detallada de cada fase. 'recursos' debe ser un arreglo de strings. No incluyas explicaciones ni texto adicional.";
+  `Eres un profesor experto en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Generas el contenido completo de una clase que sea UTILIZABLE DIRECTAMENTE por un profesor en el aula.
+${getExpertContext()}
+
+REGLAS PARA CONTENIDO DE CLASE:
+1. INICIO (activacion): Maximo 10-15 min. Activa conocimientos previos con una situacion concreta, problema real o pregunta provocadora del contexto chileno. NUNCA empieces con "Hoy veremos...". Usa una activacion que genere conflicto cognitivo o curiosidad.
+2. DESARROLLO: Es el nucleo de la clase (30-40 min). Divide en 2-3 actividades concretas. Cada actividad debe especificar:
+   - QUE hara el estudiante (accion observable, no "comprender" ni "reflexionar")
+   - COMO se organiza (individual, parejas, grupos de 4, plenaria)
+   - QUE producto observable producira (escrito, dibujo, modelo, presentacion)
+   - CUANTO tiempo tomara
+   Incluye modelado explicito del docente al inicio ("yo hago"), luego practica guiada ("hacemos juntos"), luego practica independiente ("tu haces").
+3. CIERRE (sintesis): Maximo 10 min. Recuperacion activa (retrieval practice): el estudiante debe ARTICULAR verbalmente o por escrito que aprendio, NO el docente resumir. Usa preguntas como "Explica a un compañero...", "Ejemplo en tu vida real...", "Dibuja el concepto...".
+4. RECURSOS: Lista especifica y concreta (no "material didactico" sino "cartulina A4, marcadores de colores, recortes de diario regional").
+5. EVALUACION FORMATIVA: Must be observable and specific. No "observacion general" sino "registra en la rúbrica si el estudiante puede: (1) identificar X, (2) explicar Y con sus palabras, (3) aplicar Z en un ejemplo nuevo".
+6. ADECUACIONES DUA: Incluye al menos 1 adaptacion especifica por nivel (apoyo/estandar/desafio) con estrategias concretas.
+
+NUNCA uses:
+- Actividades vagas: "dialogar", "comentar", "reflexionar", "compartir" sin especificar la accion concreta
+- Frases motivacionales genericas: "tu puedes!", "se el mejor!"
+- Jerga pedagogica en el texto del estudiante
+- Evaluaciones que midan actitudes internas en vez de evidencias observables
+
+Responde UNICAMENTE con un objeto JSON valido con esta estructura:
+{ titulo, curso, asignatura, objetivoAprendizaje, habilidadBloom, inicio, desarrollo, cierre, recursos, evaluacionFormativa, adecuacionesDUA }
+'inicio', 'desarrollo' y 'cierre' deben ser strings con la DESCRIPCION DETALLADA y CONCRETA de cada fase (minimo 200 caracteres cada uno). 'recursos' debe ser un arreglo de strings ESPECIFICOS. No incluyas explicaciones ni texto adicional fuera del JSON.`;
 
 export function extractJsonFromText(raw: string): string {
   if (!raw || typeof raw !== 'string') return '';
