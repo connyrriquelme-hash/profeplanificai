@@ -233,6 +233,107 @@ export function normalizeBitacora(raw: unknown): PedagogicalProduct | null {
 }
 
 /**
+ * Normalize planificacion response
+ * Raw: { planificacion: { unit, classes: [...], methodology, dua, evaluation }, usedFallback }
+ * Or: { unit, classes: [...], methodology, dua, evaluation } (direct structure)
+ */
+export function normalizePlanificacion(raw: unknown): PedagogicalProduct | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+
+  // Handle wrapped format: { planificacion: {...} }
+  const plan = (typeof r.planificacion === 'object' && r.planificacion !== null)
+    ? r.planificacion as Record<string, unknown>
+    : r;
+
+  if (!hasStringProp(plan, 'unit')) return null;
+
+  return {
+    type: 'planificacion',
+    metadata: extractMetadata(r),
+    data: {
+      unit: plan.unit,
+      classes: plan.classes,
+      methodology: plan.methodology,
+      dua: plan.dua,
+      evaluation: plan.evaluation,
+    },
+  };
+}
+
+/**
+ * Normalize semaforo/traffic_light response
+ * Raw: { title, objective, instructions, aspects: [...], colors: [...], teacherNotes }
+ */
+export function normalizeSemaforo(raw: unknown): PedagogicalProduct | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (r.type !== 'semaforo' && r.type !== 'evaluation_traffic_light') return null;
+
+  return {
+    type: 'semaforo',
+    metadata: extractMetadata(r),
+    data: {
+      objective: r.objective,
+      instructions: r.instructions,
+      aspects: r.aspects,
+      colors: r.colors,
+      teacherNotes: r.teacherNotes,
+    },
+  };
+}
+
+/**
+ * Normalize unidad_didactica response
+ * Raw: { unidad: { ... }, usedFallback } or direct structure
+ */
+export function normalizeUnidadDidactica(raw: unknown): PedagogicalProduct | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+
+  // Handle wrapped format: { unidad: {...} }
+  const unidad = (typeof r.unidad === 'object' && r.unidad !== null)
+    ? r.unidad as Record<string, unknown>
+    : r;
+
+  // Must have some recognizable structure
+  if (!hasStringProp(unidad, 'title') && !hasStringProp(unidad, 'unit')) return null;
+
+  return {
+    type: 'unidad_didactica',
+    metadata: extractMetadata(r),
+    data: unidad as Record<string, unknown>,
+  };
+}
+
+/**
+ * Generic fallback normalizer: wraps any raw product into PedagogicalProduct
+ * Uses selectedProducto to determine type, puts all data in data field
+ */
+export function normalizeGeneric(raw: unknown, selectedProducto: string): PedagogicalProduct | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+
+  // Extract title from common field names
+  const title = typeof r.title === 'string' ? r.title
+    : typeof r.name === 'string' ? r.name
+    : 'Producto';
+
+  return {
+    type: selectedProducto as SupportedProductType,
+    metadata: {
+      title,
+      subtitle: typeof r.subtitle === 'string' ? r.subtitle : undefined,
+      level: typeof r.level === 'string' ? r.level : undefined,
+      subject: typeof r.subject === 'string' ? r.subject : undefined,
+      oaCode: typeof r.objectiveCode === 'string' ? r.objectiveCode : undefined,
+      oaText: typeof r.objectiveText === 'string' ? r.objectiveText : undefined,
+    },
+    data: r,
+  };
+}
+
+/**
  * Master normalizer: tries each normalizer in order
  */
 export function normalizeProduct(raw: unknown, selectedProducto?: string): PedagogicalProduct | null {
@@ -250,10 +351,24 @@ export function normalizeProduct(raw: unknown, selectedProducto?: string): Pedag
   if (rawType === 'formato_321') return normalizeThreeTwoOne(raw);
   if (rawType === 'lista_cotejo' || rawType === 'checklist') return normalizeChecklist(raw);
   if (rawType === 'rubrica_formativa' || rawType === 'rubrica') return normalizeRubric(raw);
+  if (rawType === 'semaforo' || rawType === 'evaluation_traffic_light') return normalizeSemaforo(raw);
 
   // Guides: use selectedProducto to determine type (guides have no `type` field)
   if (selectedProducto === 'guia_estudiante') return normalizeGuide(raw, 'guia_estudiante');
   if (selectedProducto === 'guia_docente') return normalizeGuide(raw, 'guia_docente');
+
+  // Planificacion (has planificacion wrapper or direct structure)
+  const planificacion = normalizePlanificacion(raw);
+  if (planificacion) return planificacion;
+
+  // Unidad didactica
+  const unidad = normalizeUnidadDidactica(raw);
+  if (unidad) return unidad;
+
+  // Generic fallback for any remaining products
+  if (selectedProducto) {
+    return normalizeGeneric(raw, selectedProducto);
+  }
 
   return null;
 }

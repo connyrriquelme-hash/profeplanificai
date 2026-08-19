@@ -840,6 +840,9 @@ export function FlujoDocenteView() {
 
     // Workspace mode for all products (Tiptap editor + AI copilot)
     if (normalizedProduct) {
+      // Determine if this is a PPT presentation
+      const isPPT = normalizedProduct.type === 'presentacion' || selectedProducto === 'presentacion';
+
       return (
         <WorkspaceLayout
           product={normalizedProduct}
@@ -847,6 +850,7 @@ export function FlujoDocenteView() {
           onBack={() => setStep('producto')}
           onExport={handleSave}
           onProductChange={(updated) => setResult(updated)}
+          mode={isPPT ? 'ppt' : 'document'}
         />
       );
     }

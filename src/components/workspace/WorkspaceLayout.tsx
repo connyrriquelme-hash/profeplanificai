@@ -1,8 +1,12 @@
 /**
  * WorkspaceLayout — Main workspace shell for Flujo Docente
  *
- * 70/30 split: left = DocumentEditor, right = AICopilotSidebar
+ * 70/30 split: left = content, right = AICopilotSidebar
  * Top bar with navigation, undo/redo, print, and export.
+ *
+ * Supports two modes:
+ * - 'document' (default): Tiptap editor for Word-like products
+ * - 'ppt': Slide grid for PPT presentations
  */
 
 import React, { useState, useCallback } from 'react';
@@ -17,6 +21,7 @@ import {
 } from 'lucide-react';
 import { DocumentEditor } from './DocumentEditor';
 import { AICopilotSidebar } from './AICopilotSidebar';
+import { PresentacionRenderer } from '../products/renderers/PresentacionRenderer';
 import type { PedagogicalProduct } from '../products/types';
 
 const PALETTE = {
@@ -34,6 +39,7 @@ interface WorkspaceLayoutProps {
   onBack?: () => void;
   onExport?: () => void;
   onProductChange?: (updated: PedagogicalProduct) => void;
+  mode?: 'document' | 'ppt';
   className?: string;
 }
 
@@ -43,6 +49,7 @@ export function WorkspaceLayout({
   onBack,
   onExport,
   onProductChange,
+  mode = 'document',
   className,
 }: WorkspaceLayoutProps) {
   const [activeProduct, setActiveProduct] = useState<PedagogicalProduct>(product);
@@ -170,12 +177,18 @@ export function WorkspaceLayout({
 
       {/* ── Workspace body: 70/30 split ──────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Document editor (70%) */}
+        {/* Left: Content area (70%) */}
         <div className="flex-[7] min-w-0 overflow-y-auto bg-slate-100">
-          <DocumentEditor
-            product={activeProduct}
-            onProductChange={handleProductChange}
-          />
+          {mode === 'ppt' ? (
+            <div className="p-4">
+              <PresentacionRenderer product={activeProduct} />
+            </div>
+          ) : (
+            <DocumentEditor
+              product={activeProduct}
+              onProductChange={handleProductChange}
+            />
+          )}
         </div>
 
         {/* Right: AI Copilot sidebar (30%) */}
