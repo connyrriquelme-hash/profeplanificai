@@ -20,10 +20,11 @@ import { AICopilotSidebar } from './AICopilotSidebar';
 import type { PedagogicalProduct } from '../products/types';
 
 const PALETTE = {
-  turquoise: '#06BFAD',
-  turquoiseDark: '#059E8F',
-  fuchsia: '#F24162',
-  orange: '#F2A413',
+  primary: '#B5471F',
+  primaryHover: '#9A3A17',
+  primaryTint: '#FEF3E2',
+  primaryInk: '#7C2F13',
+  accentHoney: '#E9A13B',
   purple: '#7F58A6',
 } as const;
 
@@ -154,7 +155,7 @@ export function WorkspaceLayout({
             whileTap={{ scale: 0.98 }}
             disabled={exporting}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-60"
-            style={{ backgroundColor: PALETTE.turquoise }}
+            style={{ backgroundColor: PALETTE.primary }}
             title="Exportar"
           >
             {exporting ? (

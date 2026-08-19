@@ -22,10 +22,11 @@ import { api } from '../../services/apiClient';
 import type { PedagogicalProduct } from '../products/types';
 
 const PALETTE = {
-  turquoise: '#06BFAD',
-  turquoiseDark: '#059E8F',
-  fuchsia: '#F24162',
-  orange: '#F2A413',
+  primary: '#B5471F',
+  primaryHover: '#9A3A17',
+  primaryTint: '#FEF3E2',
+  primaryInk: '#7C2F13',
+  accentHoney: '#E9A13B',
   purple: '#7F58A6',
 } as const;
 
@@ -238,14 +239,14 @@ export function AICopilotSidebar({
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-lg border overflow-hidden"
-                style={{ borderColor: PALETTE.turquoiseDark, backgroundColor: '#F0FDF9' }}
+                style={{ borderColor: PALETTE.primary, backgroundColor: PALETTE.primaryTint }}
               >
                 <button
                   type="button"
                   onClick={() => toggleNotification(n.id)}
                   className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
                 >
-                  <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: PALETTE.turquoiseDark }}>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: PALETTE.primaryInk }}>
                     <Pencil className="w-3 h-3" />
                     Edición realizada
                     {n.camposModificados.length > 0 && (
@@ -276,7 +277,7 @@ export function AICopilotSidebar({
                               <span
                                 key={campo}
                                 className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white border"
-                                style={{ borderColor: PALETTE.turquoise, color: PALETTE.turquoiseDark }}
+                                style={{ borderColor: PALETTE.primary, color: PALETTE.primaryInk }}
                               >
                                 {campo}
                               </span>
@@ -374,7 +375,7 @@ export function AICopilotSidebar({
             whileTap={!loading ? { scale: 0.95 } : undefined}
             disabled={loading || !input.trim()}
             className="flex items-center justify-center w-9 h-9 rounded-xl text-white transition-all disabled:opacity-40"
-            style={{ backgroundColor: PALETTE.turquoise }}
+            style={{ backgroundColor: PALETTE.primary }}
             title="Enviar"
           >
             {loading ? (

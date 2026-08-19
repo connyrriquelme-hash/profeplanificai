@@ -38,8 +38,11 @@ interface DocumentEditorProps {
 }
 
 const PALETTE = {
-  turquoise: '#06BFAD',
-  turquoiseDark: '#059E8F',
+  primary: '#B5471F',
+  primaryHover: '#9A3A17',
+  primaryTint: '#FEF3E2',
+  primaryInk: '#7C2F13',
+  accentHoney: '#E9A13B',
   purple: '#7F58A6',
 } as const;
 
@@ -74,7 +77,7 @@ function productToHtml(product: PedagogicalProduct): string {
   // Render objective if present
   if (typeof data.objective === 'string' && data.objective.trim()) {
     lines.push(`<h2 style="font-size:0.95rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px">Objetivo de Aprendizaje</h2>`);
-    lines.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.7;background:#F8FAFC;border-left:3px solid #06BFAD;padding:12px 16px;border-radius:0 8px 8px 0">${escapeHtml(data.objective)}</p>`);
+    lines.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.7;background:#F8FAFC;border-left:3px solid #B5471F;padding:12px 16px;border-radius:0 8px 8px 0">${escapeHtml(data.objective)}</p>`);
   }
 
   // Render other fields that are NOT sections/objective/images/imageTitles
