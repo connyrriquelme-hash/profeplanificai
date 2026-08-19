@@ -16,7 +16,7 @@ import { exportElementToWord } from '../../utils/exportProductWord';
 import { exportAsJSON } from '../../utils/exportUtils';
 
 interface ProductActionBarProps {
-  product: PedagogicalProduct;
+  product: PedagogicalProduct | Record<string, unknown>;
   selectedProducto?: string;
   resourceId?: string;
   onSave?: () => void;
@@ -39,7 +39,10 @@ export function ProductActionBar({
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState<'pdf' | 'docx' | 'pptx' | null>(null);
 
-  const safeName = (filename || product.metadata.title || 'recurso')
+  const meta = (product?.metadata && typeof product.metadata === 'object') ? product.metadata as Record<string, unknown> : {};
+  const data = (product?.data && typeof product.data === 'object' && !Array.isArray(product.data)) ? product.data as Record<string, unknown> : {};
+
+  const safeName = (filename || (meta.title as string) || 'recurso')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-zA-Z0-9-_ ]/g, '').trim().slice(0, 60) || 'recurso';
 
@@ -48,17 +51,17 @@ export function ProductActionBar({
     try {
       await exportProductToPremiumPDF({
         id: resourceId || '',
-        title: product.metadata.title || 'Producto',
-        type: selectedProducto || product.type,
-        displayType: selectedProducto || product.type,
-        level: product.metadata.level || '',
-        subject: product.metadata.subject || '',
-        oaCode: product.metadata.oaCode || '',
-        oaText: product.metadata.oaText || '',
+        title: (meta.title as string) || 'Producto',
+        type: selectedProducto || (product?.type as string) || '',
+        displayType: selectedProducto || (product?.type as string) || '',
+        level: (meta.level as string) || '',
+        subject: (meta.subject as string) || '',
+        oaCode: (meta.oaCode as string) || '',
+        oaText: (meta.oaText as string) || '',
         classTitle: '',
         sourceTab: '',
         createdAt: new Date().toISOString(),
-        sections: Object.entries(product.data)
+        sections: Object.entries(data)
           .filter(([, v]) => v != null && v !== '')
           .map(([key, value]) => ({
             title: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
@@ -86,7 +89,7 @@ export function ProductActionBar({
   };
 
   const handleCopy = async () => {
-    const text = JSON.stringify(product.data, null, 2);
+    const text = JSON.stringify(data, null, 2);
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -102,7 +105,7 @@ export function ProductActionBar({
   };
 
   const handleJSON = () => {
-    exportAsJSON(product, `${safeName}.json`);
+    exportAsJSON(product || {}, `${safeName}.json`);
   };
 
   const handlePrint = () => window.print();
