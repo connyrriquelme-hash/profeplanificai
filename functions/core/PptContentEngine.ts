@@ -20,21 +20,31 @@ REGLA MÁS IMPORTANTE: el texto del OA de arriba es el objetivo curricular forma
 REGLAS OBLIGATORIAS:
 1. Cada slide debe tener un título claro y conciso (máximo 80 caracteres). El slide "title" puede tener además un subtitle breve (máximo 120 caracteres) — nunca copies ahí el objetivo de aprendizaje completo, eso va en su propio slide de bullets, y siempre reformulado.
 2. Los slides de tipo "bullets" deben tener ENTRE 2 Y 6 bullets, nunca menos de 2 ni más de 6. Cada bullet máximo 140 caracteres, en lenguaje simple (no copiado del OA).
-3. Los slides de tipo "image_text" deben tener un imageQuery descriptivo (máximo 100 caracteres) para buscar una imagen relacionada.
+3. Los slides de tipo "image_text" deben tener un imageQuery descriptivo (máximo 100 caracteres) para buscar una imagen relacionada. El imageQuery debe ser una búsqueda específica y concreta que encontraría una imagen real en Wikimedia Commons — por ejemplo "mapuche ruka vivienda tradicional" en vez de "pueblo indígena feliz". Nunca uses términos abstractos o emocionales como imageQuery.
 4. Los slides de tipo "comparison" deben tener left y right con label y al menos 1 point cada uno.
 5. Los slides de tipo "quote" deben tener text (máximo 200 caracteres) y author opcional.
-6. El deck debe tener entre 5 y 20 slides.
+6. Genera SIEMPRE entre 10 y 14 slides para una clase completa. Nunca menos de 10 — una presentación con menos slides no cubre el OA de forma suficiente para una clase real.
 7. NO incluyas explicaciones ni texto adicional fuera del JSON.
 8. Responde ÚNICAMENTE con JSON válido que cumpla el esquema PptDeckSchema.
 
+PROGRESIÓN PEDAGÓGICA OBLIGATORIA:
+Los slides deben seguir esta progresión:
+- 1 slide de título (portada con el tema real)
+- 1-2 slides de activación (pregunta o situación del contexto cotidiano del estudiante que conecte con el tema)
+- 3-5 slides de desarrollo del contenido (conceptos clave, ejemplos concretos, datos reales — nunca frases vacías)
+- 1-2 slides de actividad o práctica (algo que el estudiante hace: responde, compara, opina, relaciona)
+- 1 slide de síntesis o cierre con pregunta reflexiva concreta
+
 REGLA CRÍTICA — PRECISIÓN FACTUAL:
-Si no tienes certeza sobre un dato específico (nombre científico, cifra, proceso biológico, característica anatómica), usa una descripción funcional general en vez de un dato concreto que pueda ser inexacto. NUNCA inventes términos, palabras o conceptos que no existan. NUNCA uses metáforas o analogías que produzcan información incorrecta.
+Si no tienes certeza sobre un dato específico (nombre científico, cifra, fecha, proceso biológico, característica anatómica), usa una descripción funcional general en vez de un dato concreto que pueda ser inexacto. NUNCA inventes datos, nombres, fechas, características, términos, palabras o conceptos que no existan. NUNCA uses metáforas, analogías o frases que suenen educativas pero no digan nada concreto ni produzcan información incorrecta.
 
 CITAS PROHIBIDAS:
 PROHIBIDO incluir slides de tipo "quote" con citas atribuidas a "Un biólogo", "Un experto", "Un científico" o cualquier autoridad genérica sin nombre real verificable. Si usas el layout "quote", la cita debe ser un refrán popular, un dicho conocido, o una pregunta reflexiva del propio contenido — nunca una atribución a una persona o fuente que no puedas verificar.
 
 COHERENCIA CON EL OA — HABILIDAD, NO SOLO TEMA:
 El contenido de los slides debe enseñar o modelar la HABILIDAD del OA, no solo información sobre el tema. Por ejemplo, si el OA es de comprensión lectora, incluye slides que modelen cómo identificar información explícita vs. implícita, cómo interpretar ilustraciones, y un espacio para que el estudiante practique formular una opinión — no solo datos sobre el tema. Siempre pregúntate: ¿este slide ayuda al estudiante a desarrollar la habilidad del OA, o solo informa sobre el tema?
+
+CADA slide debe relacionarse directamente con el OA y desarrollar UNA habilidad o concepto específico del OA. Nunca incluyas slides con frases motivacionales genéricas ("La historia nos hace únicos", "Nuestra identidad es especial") que no enseñen nada concreto. Pregúntate: ¿este slide ayuda al estudiante a lograr el OA, o es relleno motivacional?
 
 TIPOGRAFÍA Y ORTOGRAFÍA:
 Cuida la ortografía española: usa tildes correctamente (imagen, no imagén), escribe con mayúscula solo al inicio de oraciones y en nombres propios.
@@ -234,11 +244,14 @@ function safeguardEmptyArrays(deck: PptDeck): PptDeck {
 // schema pero es débil o genérico se reemplaza por el fallback determinista
 // en la misma posición, en vez de descartar el deck completo.
 
-// 3, no 5: para 2° básico un bullet de 4-5 palabras ("Tiene un caparazón
-// duro") es correcto y específico — GuiaEngine mismo recomienda oraciones
-// muy cortas para 1°-2° básico. Con 3 solo se filtra lo realmente vacío
-// ("Sí", "El caracol", "Actividad 1"), no contenido bueno pero breve.
-const MIN_WORDS_PER_BULLET = 3;
+// 4: umbral pedido explícitamente para la revisión de calidad de PPT (deck
+// de 10-14 slides, cobertura real del OA) — antes era 3 para no filtrar
+// bullets cortos pero específicos en 1°-2° básico ("Tiene un caparazón
+// duro" = 4 palabras, sobrevivía igual). Con 4, un bullet de exactamente
+// 3 palabras específicas para cursos bajos ahora puede marcarse como débil
+// y reemplazarse por el fallback determinista — vale la pena vigilar si
+// esto genera falsos positivos en decks de 1°-2° básico.
+const MIN_WORDS_PER_BULLET = 4;
 // A propósito NO incluye "desarrollo"/"cierre"/"actividad"/"ejercicio":
 // son los rótulos de sección estándar y deseables de una clase
 // (Inicio/Desarrollo/Cierre, el mismo patrón que ya usa GuiaEngine para
@@ -345,10 +358,16 @@ export async function generateDeckContent(
       buildSystemPrompt(plan),
       JSON.stringify(plan, null, 2),
       PptDeckSchema,
-      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 3000 },
+      // 4000, no 3000: un deck de 10-14 slides con bullets/body completos
+      // no entra cómodo en 3000 tokens (mismo ajuste que UnidadDidacticaEngine
+      // hace para su generación multi-clase).
+      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 4000 },
     );
 
     let deck = data;
+    if (deck.slides.length < 10) {
+      console.warn(`[PptContentEngine] la IA devolvió ${deck.slides.length} slides, bajo el mínimo pedido de 10`);
+    }
     deck = enrichDeck(deck, fallback);
     deck = safeguardBulletsFromPlan(deck, plan);
     deck = safeguardEmptyArrays(deck);

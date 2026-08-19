@@ -1,236 +1,173 @@
-/**
- * ProductActionBar — Unified export/action bar for all product renderers.
- *
- * Replaces PrintToolbar with a full set of export options:
- * PDF, DOCX, PPTX, HTML, Copy, Print, Save, Edit with AI.
- */
-
-import { useState } from 'react';
-import {
-  FileDown, FileText, Presentation, Copy, Check, Printer,
-  Save, Sparkles, Loader2,
-} from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { FileText, Presentation, Download, Printer, Copy, Check, Loader2 } from 'lucide-react';
 import type { PedagogicalProduct } from './types';
-import { exportProductToPremiumPDF } from '../../utils/productPdf';
-import { exportElementToWord } from '../../utils/exportProductWord';
-import { exportAsJSON } from '../../utils/exportUtils';
+import { exportProductToWord, exportProductToPptx } from '../../services/productExportService';
+
+const PALETTE = {
+  turquoise: '#06BFAD',
+  fuchsia: '#F24162',
+  orange: '#F2A413',
+  purple: '#7F58A6',
+} as const;
 
 interface ProductActionBarProps {
-  product: PedagogicalProduct | Record<string, unknown>;
+  product: PedagogicalProduct;
   selectedProducto?: string;
   resourceId?: string;
   onSave?: () => void;
   onEditWithAI?: () => void;
   elementId?: string;
-  filename?: string;
   className?: string;
 }
 
-export function ProductActionBar({
-  product,
-  selectedProducto,
-  resourceId,
-  onSave,
-  onEditWithAI,
-  elementId,
-  filename,
-  className = '',
-}: ProductActionBarProps) {
+type ExportStatus = 'idle' | 'exporting';
+
+interface ExportButton {
+  label: string;
+  icon: typeof FileText;
+  color: string;
+  action: () => Promise<void>;
+}
+
+export default function ProductActionBar({ product, onSave, className }: ProductActionBarProps) {
+  const [status, setStatus] = useState<ExportStatus>('idle');
+  const [activeExport, setActiveExport] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [exporting, setExporting] = useState<'pdf' | 'docx' | 'pptx' | null>(null);
 
-  const meta = (product?.metadata && typeof product.metadata === 'object') ? product.metadata as Record<string, unknown> : {};
-  const data = (product?.data && typeof product.data === 'object' && !Array.isArray(product.data)) ? product.data as Record<string, unknown> : {};
-
-  const safeName = (filename || (meta.title as string) || 'recurso')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9-_ ]/g, '').trim().slice(0, 60) || 'recurso';
-
-  const handlePDF = async () => {
-    setExporting('pdf');
+  const handleExport = useCallback(async (label: string, action: () => Promise<void>) => {
+    setStatus('exporting');
+    setActiveExport(label);
     try {
-      await exportProductToPremiumPDF({
-        id: resourceId || '',
-        title: (meta.title as string) || 'Producto',
-        type: selectedProducto || (product?.type as string) || '',
-        displayType: selectedProducto || (product?.type as string) || '',
-        level: (meta.level as string) || '',
-        subject: (meta.subject as string) || '',
-        oaCode: (meta.oaCode as string) || '',
-        oaText: (meta.oaText as string) || '',
-        classTitle: '',
-        sourceTab: '',
-        createdAt: new Date().toISOString(),
-        sections: Object.entries(data)
-          .filter(([, v]) => v != null && v !== '')
-          .map(([key, value]) => ({
-            title: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-            content: typeof value === 'string' ? value : JSON.stringify(value, null, 2),
-            kind: 'text' as const,
-          })),
-        tables: [],
-        callouts: [],
-        charts: [],
-        checklist: [],
-        footerNotes: [],
-        rawMarkdown: '',
-      });
-    } catch { /* silent */ }
-    setExporting(null);
-  };
+      await action();
+    } catch (err) {
+      console.error(`[ProductActionBar] Error exporting ${label}:`, err);
+    } finally {
+      setStatus('idle');
+      setActiveExport(null);
+    }
+  }, []);
 
-  const handleDOCX = () => {
-    if (!elementId) return;
-    setExporting('docx');
-    try {
-      exportElementToWord(elementId, `${safeName}.docx`);
-    } catch { /* silent */ }
-    setExporting(null);
-  };
-
-  const handleCopy = async () => {
-    const text = JSON.stringify(data, null, 2);
+  const handleCopy = useCallback(async () => {
+    const text = productToPlainText(product);
     try {
       await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
+      console.error('[ProductActionBar] Copy failed');
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  }, [product]);
 
-  const handleJSON = () => {
-    exportAsJSON(product || {}, `${safeName}.json`);
-  };
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
 
-  const handlePrint = () => window.print();
+  const exports: ExportButton[] = [
+    { label: 'Word', icon: FileText, color: PALETTE.turquoise, action: () => exportProductToWord(product) },
+    { label: 'PPTX', icon: Presentation, color: PALETTE.fuchsia, action: () => exportProductToPptx(product) },
+  ];
 
-  const isPresentation = selectedProducto === 'presentacion';
+  const isBusy = status === 'exporting';
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 print:hidden ${className}`} role="toolbar" aria-label="Exportar recurso">
-      {/* PDF */}
-      <button
-        type="button"
-        onClick={handlePDF}
-        disabled={exporting === 'pdf'}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors disabled:opacity-50"
-      >
-        {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
-        PDF
-      </button>
-
-      {/* DOCX */}
-      {elementId && (
-        <button
-          type="button"
-          onClick={handleDOCX}
-          disabled={exporting === 'docx'}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] bg-white text-[var(--ink)] hover:bg-[var(--bg2)] transition-colors disabled:opacity-50"
+    <div className={`flex flex-wrap items-center gap-2 ${className || ''}`}>
+      {exports.map(exp => (
+        <motion.button
+          key={exp.label}
+          whileHover={!isBusy ? { scale: 1.05 } : undefined}
+          whileTap={!isBusy ? { scale: 0.95 } : undefined}
+          onClick={() => handleExport(exp.label, exp.action)}
+          disabled={isBusy}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-40"
+          style={{ backgroundColor: isBusy && activeExport === exp.label ? '#9ca3af' : exp.color }}
         >
-          {exporting === 'docx' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
-          DOCX
-        </button>
-      )}
+          {isBusy && activeExport === exp.label ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <exp.icon className="w-3.5 h-3.5" />
+          )}
+          {exp.label}
+        </motion.button>
+      ))}
 
-      {/* PPTX — only for presentations */}
-      {isPresentation && resourceId && (
-        <button
-          type="button"
-          onClick={async () => {
-            setExporting('pptx');
-            try {
-              const tokenRaw = localStorage.getItem('planificaia_token');
-              const token = tokenRaw ? JSON.parse(tokenRaw).token : '';
-              const resp = await fetch('/api/materials/presentation/render', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-                body: JSON.stringify({ resourceId }),
-              });
-              if (!resp.ok) throw new Error(await resp.text() || `Error ${resp.status}`);
-              const blob = await resp.blob();
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${safeName}.pptx`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-            } catch { /* silent */ }
-            setExporting(null);
-          }}
-          disabled={exporting === 'pptx'}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] bg-white text-[var(--ink)] hover:bg-[var(--bg2)] transition-colors disabled:opacity-50"
-        >
-          {exporting === 'pptx' ? <Loader2 size={14} className="animate-spin" /> : <Presentation size={14} />}
-          PPTX
-        </button>
-      )}
+      <div className="w-px h-5 bg-gray-200 mx-1" />
 
-      {/* Separator */}
-      <div className="w-px h-5 bg-[var(--border)]" />
-
-      {/* Copy */}
-      <button
-        type="button"
+      <motion.button
+        whileHover={!isBusy ? { scale: 1.05 } : undefined}
+        whileTap={!isBusy ? { scale: 0.95 } : undefined}
         onClick={handleCopy}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--bg2)] transition-colors"
+        disabled={isBusy}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-40"
       >
-        {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+        {copied ? <Check className="w-3.5 h-3.5" style={{ color: PALETTE.turquoise }} /> : <Copy className="w-3.5 h-3.5" />}
         {copied ? 'Copiado' : 'Copiar'}
-      </button>
+      </motion.button>
 
-      {/* Print */}
-      <button
-        type="button"
+      <motion.button
+        whileHover={!isBusy ? { scale: 1.05 } : undefined}
+        whileTap={!isBusy ? { scale: 0.95 } : undefined}
         onClick={handlePrint}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--bg2)] transition-colors"
+        disabled={isBusy}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-40"
       >
-        <Printer size={14} />
+        <Printer className="w-3.5 h-3.5" />
         Imprimir
-      </button>
+      </motion.button>
 
-      {/* JSON */}
-      <button
-        type="button"
-        onClick={handleJSON}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:bg-[var(--bg2)] transition-colors"
-      >
-        <FileDown size={14} />
-        JSON
-      </button>
-
-      <div className="flex-1" />
-
-      {/* Save */}
       {onSave && (
-        <button
-          type="button"
-          onClick={onSave}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors"
-        >
-          <Save size={14} />
-          Guardar
-        </button>
-      )}
-
-      {/* Edit with AI */}
-      {onEditWithAI && (
-        <button
-          type="button"
-          onClick={onEditWithAI}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary-tint)] text-[var(--primary-ink)] hover:bg-[var(--primary)]/15 transition-colors"
-        >
-          <Sparkles size={14} />
-          Editar con IA
-        </button>
+        <>
+          <div className="w-px h-5 bg-gray-200 mx-1" />
+          <motion.button
+            whileHover={!isBusy ? { scale: 1.05 } : undefined}
+            whileTap={!isBusy ? { scale: 0.95 } : undefined}
+            onClick={onSave}
+            disabled={isBusy}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-40"
+            style={{ backgroundColor: PALETTE.orange }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Guardar
+          </motion.button>
+        </>
       )}
     </div>
   );
 }
+
+function productToPlainText(product: PedagogicalProduct): string {
+  const { metadata, data, type } = product;
+  const lines: string[] = [];
+
+  lines.push(metadata.title || 'Producto Educativo');
+  if (metadata.subtitle) lines.push(metadata.subtitle);
+  const meta: string[] = [];
+  if (metadata.level) meta.push(`Nivel: ${metadata.level}`);
+  if (metadata.subject) meta.push(`Asignatura: ${metadata.subject}`);
+  if (metadata.oaCode) meta.push(`OA: ${metadata.oaCode}`);
+  if (meta.length) lines.push(meta.join(' | '));
+  lines.push('');
+
+  const addValue = (key: string, val: unknown, indent = 0) => {
+    const prefix = '  '.repeat(indent);
+    if (typeof val === 'string' && val.trim()) {
+      lines.push(`${prefix}${key.replace(/_/g, ' ')}: ${val}`);
+    } else if (Array.isArray(val)) {
+      lines.push(`${prefix}${key.replace(/_/g, ' ')}:`);
+      val.forEach(item => {
+        if (typeof item === 'string') lines.push(`${prefix}  • ${item}`);
+        else if (typeof item === 'object' && item !== null) {
+          const obj = item as Record<string, unknown>;
+          const text = Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(' | ');
+          lines.push(`${prefix}  • ${text}`);
+        }
+      });
+    }
+  };
+
+  Object.entries(data).forEach(([key, val]) => addValue(key, val));
+
+  return lines.join('\n');
+}
+
+export { ProductActionBar };

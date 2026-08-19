@@ -1,12 +1,18 @@
 /**
  * Product Renderer — Registry-based router
  *
- * Routes to the appropriate renderer based on product type.
+ * Routes to the appropriate renderer based product type.
  * Accepts both raw API responses and typed PedagogicalProduct objects.
  * Auto-normalizes raw responses using minimal normalizers.
+ *
+ * Supports two view modes:
+ *  - "visual": type-specific premium renderers (default)
+ *  - "document": Word-like DocumentPreview with AI editing
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { FileText, Layout, Sparkles } from 'lucide-react';
 import { ChecklistRenderer } from './renderers/ChecklistRenderer';
 import { RubricRenderer } from './renderers/RubricRenderer';
 import { ScaleRenderer } from './renderers/ScaleRenderer';
@@ -24,6 +30,9 @@ import { PlanificacionRenderer } from './renderers/PlanificacionRenderer';
 import { PresentacionRenderer } from './renderers/PresentacionRenderer';
 import { UnidadDidacticaRenderer } from './renderers/UnidadDidacticaRenderer';
 import { SemaforoRenderer } from './renderers/SemaforoRenderer';
+import { ProductActionBar } from './ProductActionBar';
+import { DocumentPreview } from './DocumentPreview';
+import { AIEditorAssistant } from './AIEditorAssistant';
 import type { PedagogicalProduct } from './types';
 import { normalizeProduct } from './normalizers';
 
@@ -127,44 +136,148 @@ function isPedagogicalProduct(
 interface ProductRendererProps {
   product: PedagogicalProduct | ClassroomScientificNotebook | unknown;
   selectedProducto?: string;
+  onSave?: () => void;
+  resourceId?: string;
+  showActionBar?: boolean;
+  enableAIEdit?: boolean;
+  defaultMode?: 'visual' | 'document';
   className?: string;
   style?: React.CSSProperties;
 }
 
-export default function ProductRenderer({ product, selectedProducto, className, style }: ProductRendererProps) {
-  // Handle ClassroomScientificNotebook format (existing)
-  if (isClassroomScientificNotebook(product)) {
-    return <ScientificNotebookRenderer notebook={product} className={className} style={style} />;
-  }
+type ViewMode = 'visual' | 'document';
 
-  // Handle PedagogicalProduct format (new, already typed)
-  if (isPedagogicalProduct(product)) {
-    const Renderer = rendererRegistry[product.type];
-    if (Renderer) {
-      return <Renderer product={product} className={className} style={style} />;
+const PALETTE = {
+  turquoise: '#06BFAD',
+  purple: '#7F58A6',
+} as const;
+
+export default function ProductRenderer({
+  product,
+  selectedProducto,
+  onSave,
+  resourceId,
+  showActionBar = true,
+  enableAIEdit = true,
+  defaultMode = 'visual',
+  className,
+  style,
+}: ProductRendererProps) {
+  const [mode, setMode] = useState<ViewMode>(defaultMode);
+  const [activeProduct, setActiveProduct] = useState<PedagogicalProduct | null>(() => {
+    if (isPedagogicalProduct(product)) return product;
+    if (isClassroomScientificNotebook(product)) return null;
+    const normalized = normalizeProduct(product as Record<string, unknown>, selectedProducto);
+    return normalized;
+  });
+
+  const handleProductUpdated = useCallback((updated: PedagogicalProduct, _explanation: string) => {
+    setActiveProduct(updated);
+  }, []);
+
+  // Resolve the working product
+  const workingProduct = activeProduct || (() => {
+    if (isPedagogicalProduct(product)) return product;
+    if (isClassroomScientificNotebook(product)) return null;
+    return normalizeProduct(product as Record<string, unknown>, selectedProducto);
+  })();
+
+  const renderVisualMode = () => {
+    if (isClassroomScientificNotebook(product)) {
+      return <ScientificNotebookRenderer notebook={product} className={className} style={style} />;
     }
-    return <GenericProductRenderer product={product} className={className} style={style} />;
-  }
 
-  // Try normalizing raw API response
-  const normalized = normalizeProduct(product as Record<string, unknown>, selectedProducto);
-  if (normalized) {
-    const Renderer = rendererRegistry[normalized.type];
+    const prod = workingProduct || (isPedagogicalProduct(product) ? product : null);
+    if (!prod) return <GenericProductRenderer product={product as PedagogicalProduct} className={className} style={style} />;
+
+    const Renderer = rendererRegistry[prod.type];
     if (Renderer) {
-      return <Renderer product={normalized} className={className} style={style} />;
+      return <Renderer product={prod} className={className} style={style} />;
     }
-    return <GenericProductRenderer product={normalized} className={className} style={style} />;
-  }
-
-  // Ultimate fallback: try to extract title/data from raw object
-  const raw = typeof product === 'object' && product !== null ? product as Record<string, unknown> : null;
-  const fallbackProduct: PedagogicalProduct = {
-    type: 'material_didactico',
-    metadata: {
-      title: raw && typeof raw.title === 'string' ? raw.title : 'Producto',
-      subtitle: raw && typeof raw.subtitle === 'string' ? raw.subtitle : undefined,
-    },
-    data: raw || {},
+    return <GenericProductRenderer product={prod} className={className} style={style} />;
   };
-  return <GenericProductRenderer product={fallbackProduct} className={className} style={style} />;
+
+  const renderDocumentMode = () => {
+    if (!workingProduct) {
+      return (
+        <div className="py-12 text-center text-gray-400">
+          <p className="text-sm">No hay producto para mostrar en formato documento</p>
+        </div>
+      );
+    }
+    return <DocumentPreview product={workingProduct} className={className} style={style} />;
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Mode toggle + AI edit toggle */}
+      <div className="flex items-center justify-between print:hidden">
+        <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setMode('visual')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              mode === 'visual'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Layout className="w-3.5 h-3.5" />
+            Visual
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('document')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              mode === 'document'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Documento
+          </button>
+        </div>
+
+        {enableAIEdit && mode === 'document' && workingProduct && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-600">
+            <Sparkles className="w-3 h-3" />
+            IA habilitada
+          </div>
+        )}
+      </div>
+
+      {/* Main content area */}
+      <div className={`flex gap-4 ${mode === 'document' && enableAIEdit ? 'lg:flex-row' : ''}`}>
+        {/* Product content */}
+        <div className="flex-1 min-w-0">
+          {mode === 'visual' ? renderVisualMode() : renderDocumentMode()}
+        </div>
+
+        {/* AI Editor sidebar — only in document mode */}
+        {mode === 'document' && enableAIEdit && workingProduct && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="w-full lg:w-80 flex-shrink-0 print:hidden"
+          >
+            <div className="lg:sticky lg:top-4">
+              <AIEditorAssistant
+                product={workingProduct}
+                resourceId={resourceId}
+                onProductUpdated={handleProductUpdated}
+              />
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Action bar */}
+      {showActionBar && workingProduct && (
+        <div className="print:hidden">
+          <ProductActionBar product={workingProduct} onSave={onSave} />
+        </div>
+      )}
+    </div>
+  );
 }
