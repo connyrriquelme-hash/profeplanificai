@@ -175,71 +175,32 @@ REGLAS OBLIGATORIAS:
 11. Contexto chileno real (geografia, cultura, calendario)
 12. OA reformulado, NUNCA copiado literal`,
 
-    planificacion: `${expertBlock}
-
-CONTEXTO DEL PRODUCTO A GENERAR:
+    planificacion: `CONTEXTO DEL PRODUCTO A GENERAR:
 ${baseContext}
 
-TAREA: Genera una PLANIFICACION CLASE A CLASE en formato JSON que sea una RUTA DE APRENDIZAJE DINAMICA con productos concretos.
+TAREA: Genera una PLANIFICACION CLASE A CLASE en formato JSON (3 a 5 clases), con contenido real y especifico del OA — nunca generico.
 
-ESTRUCTURA JSON REQUERIDA:
+ESTRUCTURA JSON REQUERIDA (respeta el shape exacto, no agregues ni cambies campos):
 {
   "unit": "Nombre de la unidad (creativo, no generico)",
   "classes": [
     {
       "number": 1,
       "objective": "OA reformulado en lenguaje simple (NUNCA copiar literal)",
-      "methodology": "metodo utilizado (ABP, Indagacion, Design Thinking, etc.)",
-      "phases": [
-        {
-          "name": "Fase del metodo",
-          "activity": "Descripcion concreta",
-          "time": "min",
-          "grouping": "como se agrupan",
-          "product": "que crean los estudiantes"
-        }
-      ],
-      "opening": {"activity": "...", "time": "min"},
-      "development": {"activity": "...", "time": "min"},
-      "closure": {"activity": "...", "time": "min", "product": "producto tangible de la clase"},
+      "opening": "inicio de la clase — ver reglas de campo del system prompt",
+      "development": "desarrollo de la clase — ver reglas de campo del system prompt",
+      "closure": "cierre de la clase — ver reglas de campo del system prompt",
       "duration": "min total",
-      "materials": ["materiales (reciclados/bajo costo)"],
-      "digitalTools": ["herramientas digitales"],
-      "assessment": {"type": "formativa", "method": "metodo especifico"},
-      "differentiation": {"apoyo": "...", "desafio": "..."},
-      "neurodiversity": {"tea": "...", "tdah": "..."},
-      "movement": "momento de movimiento fisico",
-      "bloom": ["niveles de Bloom utilizados"]
+      "materials": ["material especifico y nombrado 1", "material especifico y nombrado 2"],
+      "assessment": "evidencia observable del aprendizaje en esta clase"
     }
   ],
-  "methodology": "metodologia principal de la unidad",
-  "productType": "tipo de producto tangible que crearan al final",
-  "dua": {"representation": "...", "action": "...", "engagement": "..."},
-  "evaluation": {
-    "formativa": "estrategias formativas por clase",
-    "sumativa": "producto final evaluado",
-    "rubric": "criterios de la rúbrica"
-  },
-  "peAlignment": "conexion con PEI/PME",
-  "communityExtension": "extension a la comunidad"
+  "methodology": "metodologia principal de la unidad, aplicada concretamente",
+  "dua": ["adecuacion o extension especifica 1", "adecuacion o extension especifica 2"],
+  "evaluation": "como se evalua la unidad completa (formativa y sumativa)"
 }
 
-REGLAS OBLIGATORIAS:
-1. REGLA MAS IMPORTANTE: el OA es el objetivo curricular formal — NUNCA lo copies
-   literalmente en "objective". Reformulo SIEMPRE con propias palabras.
-2. Cada clase debe tener ESTRUCTURA DIFERENTE (no repetir secuencia identica)
-3. Cada clase con PRODUCTO TANGIBLE que los estudiantes creen
-4. Minimo 3 MODALIDADES distintas por clase
-5. Minimo 5 TIPOS DE PREGUNTAS distintos en toda la planificacion
-6. Al menos 1 momento de MOVIMIENTO FISICO por clase
-7. Al menos 1 adaptacion neurodiversidad por clase
-8. Retrieval practice al inicio de cada clase, metacognicion al cierre
-9. Materiales reciclados/bajo costo
-10. Herramientas digitales + alternativa no digital
-11. Tiempos REALES (45-90 min por clase)
-12. Progresion logica entre clases
-13. Coherencia con Decreto 67 y Decreto 83
-14. Contexto chileno real`,
+REGLA MAS IMPORTANTE: el OA citado arriba en "Contexto" es el objetivo curricular formal, escrito para docentes — NUNCA lo copies literalmente en el campo "objective" de una clase. Reformulalo siempre con tus propias palabras, en lenguaje simple y concreto, adaptado a estudiantes de ${req.level}.`,
 
     evaluacion: `${expertBlock}
 

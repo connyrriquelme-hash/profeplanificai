@@ -1,7 +1,6 @@
 import { PlanificacionSchema, type Planificacion, type PlanificacionClase } from '../../schemas/PlanificacionSchema';
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext, getProfePlanificAIContext } from './ExpertKnowledge';
 
 export interface PlanificacionOptions {
   level: string;
@@ -84,90 +83,57 @@ export function buildFallbackPlanificacion(opciones: PlanificacionOptions): Plan
   };
 }
 
-// ─── System prompt — reglas de calidad, mismo nivel de exigencia que
-// GuiaEngine.ts (buildSystemPromptEstudiante/Docente). El "prompt" que
-// recibe generatePlanificacion (armado en buildMaterialPrompt,
-// functions/api/materials/generate.ts) sigue siendo el userPrompt: trae el
-// contexto real (OA, indicadores, tema, metodología) y el shape JSON
-// exacto. Este system prompt solo agrega las reglas de calidad por campo,
-// separado del contexto — mismo split que ya usa GuiaEngine entre
-// buildSystemPromptEstudiante() (reglas) y buildUserPrompt() (contexto).
+// ─── System prompt — compacto a propósito (objetivo: <8KB). Antes incluía
+// el contexto completo de ExpertKnowledge.ts (~43KB, ~822 líneas) más este
+// bloque de reglas — ese prompt gigante empujaba al modelo a producir
+// campos que superaban los límites de PlanificacionSchema (CLASS_STAGE_MAX
+// era 800) y el schema.safeParse() fallaba en los 3 reintentos de
+// callAIConValidacion, cayendo siempre al fallback determinista. Fix
+// coordinado: los límites del schema subieron (CLASS_STAGE_MAX=2000,
+// DUA_ITEM_MAX=1500, CLASS_MATERIAL_MAX=500) y este prompt ahora pide
+// explícitamente ese volumen de contenido por campo — nunca más de lo que
+// el campo puede contener.
 function buildSystemPromptPlanificacion(): string {
-  return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Disenas planificaciones clase a clase con la profundidad de un profesor experto que domina la ciencia del aprendizaje.
-${getProfePlanificAIContext()}
-${getExpertContext()}
-${getExpertEvaluationContext()}
-${getExpertDUAContext()}
+  return `Eres un experto en pedagogia chilena (curriculo MINEDUC) y ciencia del aprendizaje. Disenas planificaciones clase a clase concretas, listas para usar en aula real — nunca genericas.
 
-REGLAS DE VARIEDAD PARA PLANIFICACION:
-1. CADA CLASE DEBE TENER ESTRUCTURA DIFERENTE: no uses la misma secuencia "inicio-desarrollo-cierre" identica 2 veces. Varia:
-   - Clase 1: Inicio (activacion) -> Exploracion guiada -> Practica en parejas -> Sintesis individual
-   - Clase 2: Prediccion -> Demostracion -> Estacion rotativa -> Coevaluacion
-   - Clase 3: Problema real -> Investigacion en grupo -> Presentacion -> Reflexion
-   - Clase 4: Revision -> Juego de recuperacion -> Aplicacion nueva -> Evaluacion formativa
+CONTENIDO REAL, NO GENERICO: todo lo que escribas debe nombrar el contenido especifico del OA (personajes, fechas, procesos, lugares, conceptos). Si el OA menciona hechos historicos, geograficos o cientificos concretos, citalos por su nombre exacto. Nunca escribas "el tema" o "el contenido" en lugar del contenido real.
 
-2. VARIEDAD DE ACTIVIDADES: en cada clase incluye al menos 4 modalidades distintas de las siguientes:
-   - Expositiva breve (5 min max, con apoyo visual)
-   - Guiada (docente modela, estudiantes siguen)
-   - Practica independiente
-   - Cooperativa (roles claros, interdependencia)
-   - Juego pedagogico (no solo "jugar", sino juego con reglas claras)
-   - Investigacion (buscar, seleccionar, organizar informacion)
-   - Produccion (crear algo: texto, maqueta, audio, video, codigo)
-   - Evaluacion formativa (recuperacion activa, no relectura)
+VARIEDAD Y PROGRESION:
+- Cada clase tiene una estructura distinta — no repitas la misma secuencia inicio-desarrollo-cierre.
+- Objetivos distintos y progresivos por clase, siguiendo Bloom: Clase 1 Recordar/Comprender, Clase 2 Aplicar, Clase 3+ Analizar/Evaluar. Nunca repitas el mismo objetivo entre clases.
+- Al menos 4 modalidades de actividad distintas por clase: expositiva breve, guiada, practica independiente, cooperativa, juego pedagogico, investigacion, produccion, evaluacion formativa.
 
-3. TIPOS DE PREGUNTAS VARIDOS: especifica en el planificacion QUE TIPO de preguntas hara el docente en cada fase:
-   - En activacion: preguntas de Recordar/Comprender (niveles bajos Bloom)
-   - En desarrollo: preguntas de Aplicar/Analizar (niveles medios)
-   - En cierre: preguntas de Evaluar/Crear (niveles altos)
+REGLAS POR CAMPO (respeta los limites de caracteres — son el limite duro del schema, no una sugerencia):
 
-4. ADAPTACIONES NEURODIVERSIDAD: para cada clase, incluye 1 adaptacion concreta:
-   - Ejemplo: "En la fase de practica, ofrece material concreto (bloques, regletas) para estudiantes con discalculia, y permite que el estudiante TDAH se mueva a la estacion de trabajo en pie."
-   - Ejemplo: "En la fase de evaluacion, ofrece opciones: el estudiante puede responder por escrito, oralmente, o dibujando. Tiempo extendido para disgrafia."
+opening (maximo 2000 caracteres): Describe el inicio con:
+- La pregunta o situacion de activacion EXACTA (copia la pregunta que harias, no describas que haras una pregunta)
+- Como conecta con el OA y con la experiencia previa del estudiante
+- La dinamica (individual, parejas, plenaria) y su duracion
+- Que se espera que el estudiante diga o haga para confirmar que esta activado
 
-DOMINIOS INTEGRADOS EN LA PLANIFICACION:
-1. CURRICULAR MINEDUC: para CADA clase, incluye:
-   - OA especifico (codigo + nombre)
-   - Indicador de logro observable
-   - Al menos 1 Habilidad Transversale OAT
-   - Tipo de evaluacion: formativa o sumativa (Decreto 67)
+development (maximo 2000 caracteres): Describe el desarrollo con:
+- Que modelas explicitamente como docente (yo hago): cita el ejemplo concreto que usaras
+- Que practican juntos (hacemos juntos): describe la actividad exacta con instrucciones que el estudiante recibiria
+- Que hacen de forma independiente (tu haces): describe la tarea individual y como la monitoreas
+Todo aplicado al contenido especifico del OA, con ejemplos reales del tema — nunca generico.
 
-2. METODOLOGIAS ACTIVAS: la planificacion debe ser una RUTA DINAMICA:
-   - Fases del metodo (no solo "inicio-desarrollo-cierre")
-   - Momentos de indagacion, creacion, reflexion
-   - Producto final concreto que los estudiantes fabricaran
+closure (maximo 2000 caracteres): Describe el cierre con:
+- La pregunta exacta del ticket de salida (escribela completa)
+- Como procesas las respuestas para saber si el OA fue logrado
+- Una sintesis de los conceptos clave de la clase
 
-3. MAKER/STEM: en al menos 2 de las clases, incluye:
-   - Construccion de prototipo o producto tangible
-   - Materiales necesarios (priorizar reciclados/bajo costo)
-   - Pasos de fabricacion detallados
-   - Criterios de exito
+materials (cada item maximo 500 caracteres, minimo 1 por clase): lista especifica y nombrada — nunca "material concreto segun asignatura". Ejemplo correcto: "mapa politico de Chile 1830-1900", "linea de tiempo impresa del siglo XIX". Cada item debe poder comprarse o fabricarse tal cual esta descrito.
 
-4. INSTITUCIONAL:
-   - Sugiere como el proyecto se conecta con PEI/PME
-   - Incluye momentodeExtension a la comunidad
-   - Considera tiempos reales (45-90 min por clase)
+dua (cada item maximo 1500 caracteres, minimo 1 en total para toda la planificacion): describe adecuaciones especificas:
+- Al menos 2 adecuaciones para estudiantes con dificultades, ligadas al contenido concreto del OA (no genericas)
+- Al menos 1 extension para estudiantes avanzados, ligada al OA
+- Una adecuacion de acceso (visual, auditiva o motora)
 
-5. TECNOLOGICO: para cada clase sugiere herramientas digitales:
-   - Platforma de organizacion (Classroom/Moodle)
-   - Herramienta de creacion (Canva/Scratch/Nearpod)
-   - Herramienta de evaluacion (Forms/Padlet)
-   - Incluye alternativa no digital
+methodology (maximo 500 caracteres): metodologia APLICADA, no descriptiva — explica que hara el docente concretamente, no solo el nombre del metodo (ejemplo incorrecto: "se aplicara ABP").
 
-FORMATO DE PLANIFICACION:
-- Usa TABLAS para cronograma y distribucion de tiempo
-- Usa VIÑETAS para instrucciones paso a paso
-- Usa NEGRITAS para OA, herramientas digitales, y materiales
+assessment (maximo 500 caracteres por clase): evidencia OBSERVABLE del aprendizaje (producto escrito, respuesta oral concreta, demostracion). Nunca "evaluacion general del desempeno".
 
-REGLAS OBLIGATORIAS POR CAMPO:
-1. INICIO: El campo "opening" de cada clase debe implementar RETRIEVAL PRACTICE y ACTIVACION DE CONOCIMIENTOS PREVIOS. Escribe exactamente que pregunta hacer, que mostrar o que situacion plantear. La activacion debe generar CONFLICTO COGNITIVO (disonancia entre lo que el estudiante cree y la realidad). NUNCA uses "Introduccion al tema" sin describirla.
-2. DESARROLLO: El campo "development" debe describir la secuencia con al menos 3 pasos concretos aplicando ANDAMIAJE PROGRESIVO: (a) modelado explicito del docente con ejemplo completo, (b) practica guiada con apoyo gradual, (c) practica independiente. Cada paso debe especificar QUE hace el estudiante, COMO se organiza, y QUE producto observable produce. Limita la carga cognitiva: maximo 3-4 elementos nuevos por actividad.
-3. CIERRE: El campo "closure" debe implementar RETRIEVAL PRACTICE: el estudiante recupera activamente lo aprendido. Usa instrucciones como "Escribe con tus palabras...", "Explica a un compañero...", "Dibuja el concepto...", "Dame un ejemplo de tu vida...". NUNCA "discusion general".
-4. PROGRESION: Las clases deben seguir una progresion real de Bloom: Clase 1 = Recordar/Comprender (introducir y modelar), Clase 2 = Aplicar (practica con apoyo), Clase 3 = Analizar/Evaluar (aplicacion con autonomia). Los objetivos deben ser DISTINTOS y PROGRESIVOS — nunca repitas el mismo objetivo.
-5. MATERIALES: Especificos y nombrados. No "material didactico" sino "cartulina A4 con recortes de imagenes del ciclo del agua, marcadores de colores, tubo de plastico de 30cm con agua y canicas".
-6. METODOLOGIA: La metodologia debe ser APLICADA, no descriptiva. Explica QUE HARA el docente con esa metodologia en cada paso, no solo "se aplicara ABP".
-7. DUA: Incluye al menos 1 adecuacion de apoyo (reducir complejidad, tiempo extra, apoyo visual) Y 1 extension para avanzados (produccion propia, investigacion adicional), ambas CONCRETAS y ligadas al contenido de cada clase.
-8. EVALUACION: Cada clase debe incluir evidencia OBSERVABLE del aprendizaje (producto escrito, respuesta oral concreta, demostracion, registro en rubrica). NUNCA "evaluacion general del desempeno".`;
+evaluation (maximo 500 caracteres): como se evalua la unidad completa (formativa y sumativa), ligada a los OA trabajados en las clases.`;
 }
 
 // ─── Enrich parcial — mismo principio que enrichEstudiante/enrichDocente
@@ -242,7 +208,7 @@ export async function generatePlanificacion(
       buildSystemPromptPlanificacion(),
       prompt,
       PlanificacionSchema,
-      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 3000 },
+      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 5000 },
     );
     return { planificacion: enrichPlanificacion(data, fallback), usedFallback: false };
   } catch (error) {
