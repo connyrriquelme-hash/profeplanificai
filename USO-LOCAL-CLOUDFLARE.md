@@ -60,6 +60,7 @@ El archivo `.dev.vars` no debe subirse a Git. Incluye valores de desarrollo para
 - `IMAGE_PROVIDER_ORDER`
 - `ENABLE_IMAGE_AI`
 - `IMAGE_CACHE_TTL_DAYS`
+- `GEMINI_API_KEY` (opcional): proveedor alternativo cuando Workers AI (`env.AI`) no está configurado o agotó su cupo diario de neurons — ver `callAIConValidacion()` en `functions/core/AIEngine.ts`. Sin esta variable, el comportamiento es el mismo de siempre (solo Workers AI). Consíguela en [Google AI Studio](https://aistudio.google.com/apikey) y nunca la hardcodees — solo va en `.dev.vars` local (gitignored) o como variable de entorno en Cloudflare Pages → Settings → Environment variables para producción.
 
 ## Base de datos local
 
