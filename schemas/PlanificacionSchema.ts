@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 export const UNIT_MAX = 200;
 export const CLASS_OBJECTIVE_MAX = 400;
-export const CLASS_STAGE_MAX = 800;
+export const CLASS_STAGE_MAX = 2000;
 export const CLASS_DURATION_MAX = 50;
-export const CLASS_MATERIAL_MAX = 200;
+export const CLASS_MATERIAL_MAX = 500;
 export const CLASS_ASSESSMENT_MAX = 500;
-export const METHODOLOGY_MAX = 200;
-export const DUA_ITEM_MAX = 300;
+export const METHODOLOGY_MAX = 500;
+export const DUA_ITEM_MAX = 1500;
 export const EVALUATION_MAX = 500;
 
 const MIN_CLASSES = 3;
