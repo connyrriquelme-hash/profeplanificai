@@ -1,17 +1,20 @@
 /**
- * DocumentPreview — Word-like structured renderer
+ * DocumentPreview — Editable Word-like document renderer
  *
- * Renders any PedagogicalProduct in a clean, document-style layout
- * with proper headings, sections, and editable appearance.
+ * Renders any PedagogicalProduct as a fully editable Word-like document.
+ * Users can click to edit any text field directly inline.
+ * Changes propagate back via onProductChange callback.
  */
 
-import React from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Plus, Trash2, GripVertical } from 'lucide-react';
 import type { PedagogicalProduct } from './types';
 import { formatProductLabel } from './ProductPremiumBlocks';
 
 interface DocumentPreviewProps {
   product: PedagogicalProduct;
+  onProductChange?: (updated: PedagogicalProduct) => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -26,94 +29,6 @@ function formatValue(value: unknown): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value === 'object') return JSON.stringify(value);
   return '';
-}
-
-function renderArrayItems(items: unknown[]): React.ReactNode {
-  const validItems = items.filter(item => {
-    if (item === null || item === undefined || item === '') return false;
-    if (typeof item === 'object' && !Array.isArray(item) && Object.keys(item as object).length === 0) return false;
-    return true;
-  });
-
-  if (validItems.length === 0) return null;
-
-  return (
-    <ul className="space-y-1.5 ml-1">
-      {validItems.map((item, i) => {
-        if (typeof item === 'string' || typeof item === 'number') {
-          return (
-            <li key={i} className="flex items-start gap-2 text-[13px] text-gray-700 leading-relaxed">
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
-              <span>{String(item)}</span>
-            </li>
-          );
-        }
-        if (isRecord(item)) {
-          const entries = Object.entries(item).filter(([, v]) => v !== null && v !== undefined && v !== '');
-          return (
-            <li key={i} className="pl-4 border-l-2 border-gray-200 py-1">
-              {entries.map(([k, v]) => (
-                <p key={k} className="text-[13px] text-gray-700 leading-relaxed">
-                  <span className="font-semibold text-gray-900">{formatProductLabel(k)}: </span>
-                  {Array.isArray(v) ? renderArrayItems(v) : formatValue(v)}
-                </p>
-              ))}
-            </li>
-          );
-        }
-        return null;
-      })}
-    </ul>
-  );
-}
-
-function renderSectionContent(key: string, value: unknown): React.ReactNode {
-  if (value === null || value === undefined) return null;
-
-  if (typeof value === 'string') {
-    return (
-      <p className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap">
-        {value}
-      </p>
-    );
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return (
-      <p className="text-[13px] text-gray-700 leading-relaxed">
-        {String(value)}
-      </p>
-    );
-  }
-
-  if (Array.isArray(value)) {
-    return renderArrayItems(value);
-  }
-
-  if (isRecord(value)) {
-    const entries = Object.entries(value).filter(([, v]) => {
-      if (v === null || v === undefined || v === '') return false;
-      if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v as object).length === 0) return false;
-      return true;
-    });
-
-    if (entries.length === 0) return null;
-
-    return (
-      <div className="space-y-2">
-        {entries.map(([k, v]) => (
-          <div key={k}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              {formatProductLabel(k)}
-            </p>
-            {renderSectionContent(k, v)}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return null;
 }
 
 function getSectionIcon(key: string): string {
@@ -140,8 +55,134 @@ function getSectionIcon(key: string): string {
 
 const SKIP_KEYS = new Set(['ai_model', 'generated_at', 'template_id', 'templateName', 'generatedBy']);
 
-export function DocumentPreview({ product, className, style }: DocumentPreviewProps) {
+/* ─── Editable primitives ─────────────────────────────────────────────── */
+
+interface EditableTextProps {
+  value: string;
+  onChange: (val: string) => void;
+  tag?: 'p' | 'h1' | 'h2' | 'h3' | 'span';
+  className?: string;
+  placeholder?: string;
+}
+
+function EditableText({ value, onChange, tag: Tag = 'p', className, placeholder }: EditableTextProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  return (
+    <div className="relative group">
+      <Tag
+        ref={ref as React.Ref<HTMLDivElement>}
+        contentEditable
+        suppressContentEditableWarning
+        className={`${className || ''} outline-none rounded px-1 -mx-1 transition-all ${
+          isFocused ? 'bg-blue-50 ring-2 ring-blue-200' : 'hover:bg-gray-50'
+        }`}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false);
+          if (ref.current) {
+            const text = ref.current.innerText || '';
+            if (text !== value) onChange(text);
+          }
+        }}
+        dangerouslySetInnerHTML={{ __html: value || '' }}
+      />
+      {!value && !isFocused && (
+        <span className="absolute inset-0 flex items-center px-1 text-gray-300 pointer-events-none text-inherit">
+          {placeholder || 'Escribir aqui...'}
+        </span>
+      )}
+    </div>
+  );
+}
+
+interface EditableListItemProps {
+  value: string;
+  onChange: (val: string) => void;
+  onRemove: () => void;
+  index: number;
+}
+
+function EditableListItem({ value, onChange, onRemove, index }: EditableListItemProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  return (
+    <li className="flex items-start gap-2 group">
+      <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        className={`flex-1 text-[13px] text-gray-700 leading-relaxed outline-none rounded px-1 -mx-1 transition-all ${
+          isFocused ? 'bg-blue-50 ring-2 ring-blue-200' : 'hover:bg-gray-50'
+        }`}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false);
+          if (ref.current) {
+            const text = ref.current.innerText || '';
+            if (text !== value) onChange(text);
+          }
+        }}
+        dangerouslySetInnerHTML={{ __html: value || '' }}
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        className="mt-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-50 text-red-400 hover:text-red-600 transition-all"
+        title="Eliminar"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+    </li>
+  );
+}
+
+/* ─── Main component ──────────────────────────────────────────────────── */
+
+export function DocumentPreview({ product, onProductChange, className, style }: DocumentPreviewProps) {
   const { metadata, data, type } = product;
+
+  const updateMetadata = useCallback((field: keyof typeof metadata, value: string | number) => {
+    if (!onProductChange) return;
+    onProductChange({
+      ...product,
+      metadata: { ...product.metadata, [field]: value },
+    });
+  }, [product, onProductChange]);
+
+  const updateDataField = useCallback((key: string, value: unknown) => {
+    if (!onProductChange) return;
+    onProductChange({
+      ...product,
+      data: { ...product.data, [key]: value },
+    });
+  }, [product, onProductChange]);
+
+  const updateArrayItem = useCallback((key: string, index: number, newValue: string) => {
+    if (!onProductChange) return;
+    const arr = product.data[key];
+    if (!Array.isArray(arr)) return;
+    const updated = arr.map((item, i) => (i === index ? newValue : item));
+    onProductChange({ ...product, data: { ...product.data, [key]: updated } });
+  }, [product, onProductChange]);
+
+  const removeArrayItem = useCallback((key: string, index: number) => {
+    if (!onProductChange) return;
+    const arr = product.data[key];
+    if (!Array.isArray(arr)) return;
+    const updated = arr.filter((_, i) => i !== index);
+    onProductChange({ ...product, data: { ...product.data, [key]: updated } });
+  }, [product, onProductChange]);
+
+  const addArrayItem = useCallback((key: string) => {
+    if (!onProductChange) return;
+    const arr = product.data[key];
+    if (!Array.isArray(arr)) return;
+    onProductChange({ ...product, data: { ...product.data, [key]: [...arr, ''] } });
+  }, [product, onProductChange]);
 
   const sections = Object.entries(data).filter(([key, value]) => {
     if (SKIP_KEYS.has(key)) return false;
@@ -160,11 +201,9 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
       className={`document-preview ${className || ''}`}
       style={style}
     >
-      {/* Document container — mimics a Word page */}
       <div className="bg-white rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.08)] border border-gray-200 max-w-4xl mx-auto">
-        {/* Header area */}
+        {/* ── Header ─────────────────────────────────────────────── */}
         <div className="px-8 pt-8 pb-6 border-b border-gray-200">
-          {/* Product type badge */}
           <div className="flex items-center gap-2 mb-4">
             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-gray-100 text-gray-500">
               {formatProductLabel(type)}
@@ -181,17 +220,22 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
             )}
           </div>
 
-          {/* Title */}
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">
-            {metadata.title}
-          </h1>
-          {metadata.subtitle && (
-            <p className="mt-2 text-base text-gray-500 leading-relaxed">
-              {metadata.subtitle}
-            </p>
-          )}
+          <EditableText
+            value={metadata.title}
+            onChange={(v) => updateMetadata('title', v)}
+            tag="h1"
+            className="text-2xl font-bold text-gray-900 leading-tight tracking-tight"
+            placeholder="Titulo del producto..."
+          />
 
-          {/* Metadata line */}
+          <EditableText
+            value={metadata.subtitle || ''}
+            onChange={(v) => updateMetadata('subtitle', v)}
+            tag="p"
+            className="mt-2 text-base text-gray-500 leading-relaxed"
+            placeholder="Subtitulo (opcional)..."
+          />
+
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-400">
             {metadata.oaCode && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-50 font-mono font-semibold text-gray-500">
@@ -223,7 +267,7 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
           </div>
         </div>
 
-        {/* Content body */}
+        {/* ── Content body ───────────────────────────────────────── */}
         <div className="px-8 py-6">
           {sections.length === 0 ? (
             <div className="py-12 text-center text-gray-400 border border-dashed border-gray-200 rounded-lg">
@@ -234,9 +278,6 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
               {sections.map(([key, value], idx) => {
                 const icon = getSectionIcon(key);
                 const label = formatProductLabel(key);
-                const content = renderSectionContent(key, value);
-
-                if (!content) return null;
 
                 return (
                   <motion.div
@@ -244,7 +285,7 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.03, duration: 0.2 }}
-                    className="group"
+                    className="group/section"
                   >
                     {/* Section heading */}
                     <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-gray-100">
@@ -254,9 +295,17 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
                       </h2>
                     </div>
 
-                    {/* Section content */}
+                    {/* Section content — editable */}
                     <div className="pl-1">
-                      {content}
+                      <EditableSectionContent
+                        sectionKey={key}
+                        value={value}
+                        onChange={(v) => updateDataField(key, v)}
+                        onArrayItemChange={(i, v) => updateArrayItem(key, i, v)}
+                        onArrayItemRemove={(i) => removeArrayItem(key, i)}
+                        onArrayItemAdd={() => addArrayItem(key)}
+                        canEdit={!!onProductChange}
+                      />
                     </div>
                   </motion.div>
                 );
@@ -274,4 +323,163 @@ export function DocumentPreview({ product, className, style }: DocumentPreviewPr
       </div>
     </motion.div>
   );
+}
+
+/* ─── Editable section content renderer ────────────────────────────────── */
+
+interface EditableSectionContentProps {
+  sectionKey: string;
+  value: unknown;
+  onChange: (val: unknown) => void;
+  onArrayItemChange: (index: number, val: string) => void;
+  onArrayItemRemove: (index: number) => void;
+  onArrayItemAdd: () => void;
+  canEdit: boolean;
+}
+
+function EditableSectionContent({
+  sectionKey,
+  value,
+  onChange,
+  onArrayItemChange,
+  onArrayItemRemove,
+  onArrayItemAdd,
+  canEdit,
+}: EditableSectionContentProps) {
+  /* ── String value ── */
+  if (typeof value === 'string') {
+    if (canEdit) {
+      return (
+        <EditableText
+          value={value}
+          onChange={onChange}
+          tag="p"
+          className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap"
+          placeholder="Escribir contenido..."
+        />
+      );
+    }
+    return (
+      <p className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap">{value}</p>
+    );
+  }
+
+  /* ── Number / Boolean ── */
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return (
+      <p className="text-[13px] text-gray-700 leading-relaxed">{String(value)}</p>
+    );
+  }
+
+  /* ── Array of strings ── */
+  if (Array.isArray(value)) {
+    const validItems = value.filter(item => {
+      if (item === null || item === undefined || item === '') return false;
+      if (typeof item === 'object' && !Array.isArray(item) && Object.keys(item as object).length === 0) return false;
+      return true;
+    });
+
+    if (validItems.length === 0 && !canEdit) return null;
+
+    return (
+      <div>
+        <ul className="space-y-1.5 ml-1">
+          {validItems.map((item, i) => {
+            if (typeof item === 'string' || typeof item === 'number') {
+              if (canEdit) {
+                return (
+                  <EditableListItem
+                    key={i}
+                    value={String(item)}
+                    onChange={(v) => onArrayItemChange(i, v)}
+                    onRemove={() => onArrayItemRemove(i)}
+                    index={i}
+                  />
+                );
+              }
+              return (
+                <li key={i} className="flex items-start gap-2 text-[13px] text-gray-700 leading-relaxed">
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
+                  <span>{String(item)}</span>
+                </li>
+              );
+            }
+            if (isRecord(item)) {
+              const entries = Object.entries(item).filter(([, v]) => v !== null && v !== undefined && v !== '');
+              return (
+                <li key={i} className="pl-4 border-l-2 border-gray-200 py-1">
+                  {entries.map(([k, v]) => (
+                    <p key={k} className="text-[13px] text-gray-700 leading-relaxed">
+                      <span className="font-semibold text-gray-900">{formatProductLabel(k)}: </span>
+                      {Array.isArray(v) ? (
+                        <EditableSectionContent
+                          sectionKey={`${sectionKey}.${i}.${k}`}
+                          value={v}
+                          onChange={() => {}}
+                          onArrayItemChange={() => {}}
+                          onArrayItemRemove={() => {}}
+                          onArrayItemAdd={() => {}}
+                          canEdit={false}
+                        />
+                      ) : (
+                        formatValue(v)
+                      )}
+                    </p>
+                  ))}
+                </li>
+              );
+            }
+            return null;
+          })}
+        </ul>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={onArrayItemAdd}
+            className="mt-2 flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-700 transition-colors"
+          >
+            <Plus className="w-3 h-3" />
+            Agregar elemento
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Object (nested sections) ── */
+  if (isRecord(value)) {
+    const entries = Object.entries(value).filter(([, v]) => {
+      if (v === null || v === undefined || v === '') return false;
+      if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v as object).length === 0) return false;
+      return true;
+    });
+
+    if (entries.length === 0) return null;
+
+    return (
+      <div className="space-y-2">
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              {formatProductLabel(k)}
+            </p>
+            <EditableSectionContent
+              sectionKey={`${sectionKey}.${k}`}
+              value={v}
+              onChange={(newV) => {
+                const parent = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {};
+                onChange({ ...parent, [k]: newV });
+              }}
+              onArrayItemChange={() => {}}
+              onArrayItemRemove={() => {}}
+              onArrayItemAdd={() => {}}
+              canEdit={canEdit}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
 }

@@ -197,6 +197,10 @@ export default function ProductRenderer({
     return <GenericProductRenderer product={prod} className={className} style={style} />;
   };
 
+  const handleInlineEdit = useCallback((updated: PedagogicalProduct) => {
+    setActiveProduct(updated);
+  }, []);
+
   const renderDocumentMode = () => {
     if (!workingProduct) {
       return (
@@ -205,7 +209,14 @@ export default function ProductRenderer({
         </div>
       );
     }
-    return <DocumentPreview product={workingProduct} className={className} style={style} />;
+    return (
+      <DocumentPreview
+        product={workingProduct}
+        onProductChange={handleInlineEdit}
+        className={className}
+        style={style}
+      />
+    );
   };
 
   return (
