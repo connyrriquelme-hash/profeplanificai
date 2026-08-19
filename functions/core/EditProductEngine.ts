@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { AIEngineEnv } from '../../core/types';
-import { getExpertContext } from './ExpertKnowledge';
+import { getExpertContext, getProfePlanificAIContext } from './ExpertKnowledge';
 
 export const EditProductResponseSchema = z.object({
   productoModificado: z.record(z.unknown()),
@@ -22,6 +22,7 @@ function buildSystemPrompt(): string {
   return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Editas productos educativos con la profundidad de un profesor experto con formacion en ciencias del aprendizaje.
 
 Tu tarea es modificar el contenido de un producto educativo segun la instruccion del usuario, MEJORANDO la calidad pedagogica en el proceso.
+${getProfePlanificAIContext()}
 ${getExpertContext()}
 
 REGLAS DE VARIEDAD PARA EDICION DE PRODUCTOS:

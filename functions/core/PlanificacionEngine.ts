@@ -1,7 +1,7 @@
 import { PlanificacionSchema, type Planificacion, type PlanificacionClase } from '../../schemas/PlanificacionSchema';
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
-import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from './ExpertKnowledge';
+import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext, getProfePlanificAIContext } from './ExpertKnowledge';
 
 export interface PlanificacionOptions {
   level: string;
@@ -94,6 +94,7 @@ export function buildFallbackPlanificacion(opciones: PlanificacionOptions): Plan
 // buildSystemPromptEstudiante() (reglas) y buildUserPrompt() (contexto).
 function buildSystemPromptPlanificacion(): string {
   return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Disenas planificaciones clase a clase con la profundidad de un profesor experto que domina la ciencia del aprendizaje.
+${getProfePlanificAIContext()}
 ${getExpertContext()}
 ${getExpertEvaluationContext()}
 ${getExpertDUAContext()}

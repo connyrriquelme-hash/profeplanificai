@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { AIEngineEnv, DuaGuide, LessonContent, PedagogicalPlan } from './types';
-import { getExpertContext, getExpertEvaluationContext } from './ExpertKnowledge';
+import { getExpertContext, getExpertEvaluationContext, getProfePlanificAIContext } from './ExpertKnowledge';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
@@ -58,6 +58,7 @@ ESTRUCTURA JSON OBLIGATORIA (12 campos):
 
 const SYSTEM_PROMPT_LESSON =
   `Eres un profesor experto en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Generas el contenido completo de una clase que sea UTILIZABLE DIRECTAMENTE por un profesor en el aula.
+${getProfePlanificAIContext()}
 ${getExpertContext()}
 
 REGLAS DE VARIEDAD OBLIGATORIA EN CADA CLASE:

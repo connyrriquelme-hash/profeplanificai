@@ -2,7 +2,7 @@ import { PptDeckSchema, TITLE_MAX, SUBTITLE_MAX, BULLET_MAX, type PptDeck, type 
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from './types';
 import { inferRangoEtario } from './pedagogicalUtils';
-import { getExpertContext } from './ExpertKnowledge';
+import { getExpertContext, getProfePlanificAIContext } from './ExpertKnowledge';
 
 export { inferRangoEtario };
 
@@ -11,6 +11,7 @@ export function buildSystemPrompt(plan: PedagogicalPlan): string {
 
   return `Eres EXPERTO en pedagogía multimedia, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC. Generas contenido para presentaciones PPT que serán usadas en clase.
 
+${getProfePlanificAIContext()}
 ${getExpertContext()}
 
 REGLAS DE VARIEDAD PARA DIAPOSITIVAS:

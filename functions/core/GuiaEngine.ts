@@ -1,7 +1,7 @@
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
 import { inferRangoEtario } from './pedagogicalUtils';
-import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from './ExpertKnowledge';
+import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext, getProfePlanificAIContext } from './ExpertKnowledge';
 import {
   GuiaEstudianteAISchema,
   GuiaDocenteAISchema,
@@ -159,6 +159,7 @@ function buildSystemPromptEstudiante(level: string): string {
   const rangoEtario = inferRangoEtario(level);
 
   return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Le hablas directamente a estudiantes para preparar una guia de aprendizaje. Escribes en primera persona plural: "vamos a aprender", "te proponemos", "hoy vamos a descubrir".
+${getProfePlanificAIContext()}
 ${getExpertContext()}
 ${getExpertDUAContext()}
 
@@ -281,6 +282,7 @@ El array "sections" debe tener SIEMPRE, en este orden exacto: 1 sección "Introd
 
 function buildSystemPromptDocente(): string {
   return `Eres un EXPERTO en pedagogia, psicologia cognitiva, neurociencias del aprendizaje y curriculo chileno MINEDUC. Escribes una guia docente para un colega que va a dictar esta clase. El tono es de colega a colega: profesional pero cercano, directo.
+${getProfePlanificAIContext()}
 ${getExpertContext()}
 ${getExpertEvaluationContext()}
 ${getExpertDUAContext()}
