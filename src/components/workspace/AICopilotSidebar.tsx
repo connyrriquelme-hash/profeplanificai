@@ -30,6 +30,8 @@ const PALETTE = {
   purple: '#7F58A6',
 } as const;
 
+const EDIT_REQUEST_TIMEOUT_MS = 30_000;
+
 /* ── Types ──────────────────────────────────────────────────────────── */
 
 type TabId = 'chat' | 'diferenciacion' | 'diseno';
@@ -126,6 +128,9 @@ export function AICopilotSidebar({
     setInput('');
     setLoading(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), EDIT_REQUEST_TIMEOUT_MS);
+
     try {
       const response = await api.post<{
         ok: boolean;
@@ -136,7 +141,7 @@ export function AICopilotSidebar({
         instruccion: text.trim(),
         producto: product,
         resourceId,
-      });
+      }, controller.signal);
 
       if (response.ok) {
         const aiMsg: ChatMessage = {
@@ -173,19 +178,23 @@ export function AICopilotSidebar({
         setMessages(prev => [...prev, errorMsg]);
       }
     } catch (err) {
+      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
       const detail = err instanceof Error ? err.message : 'Error desconocido';
       const errorMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: 'ai',
-        content: detail.includes('401') || detail.includes('Sesion')
-          ? 'Sesion expirada. Recarga la pagina e inicia sesion de nuevo.'
-          : detail.includes('conectar')
-            ? detail
-            : `Error al editar: ${detail.substring(0, 150)}`,
+        content: isTimeout
+          ? 'La IA está tardando más de lo esperado. Intenta de nuevo en unos segundos.'
+          : detail.includes('401') || detail.includes('Sesion')
+            ? 'Sesion expirada. Recarga la pagina e inicia sesion de nuevo.'
+            : detail.includes('conectar')
+              ? detail
+              : `Error al editar: ${detail.substring(0, 150)}`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [product, resourceId, loading, onProductEdited]);
