@@ -63,15 +63,29 @@ function productToHtml(product: PedagogicalProduct): string {
     lines.push(`<p style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">${badges.join('')}</p>`);
   }
 
-  // Sections
+  // Smart rendering based on product structure
   const SKIP = new Set(['ai_model', 'generated_at', 'template_id', 'templateName', 'generatedBy']);
+
+  // Check if this is a guide-like product with sections array
+  if (Array.isArray(data.sections) && data.sections.length > 0) {
+    lines.push(renderGuideSections(data.sections));
+  }
+
+  // Render objective if present
+  if (typeof data.objective === 'string' && data.objective.trim()) {
+    lines.push(`<h2 style="font-size:0.95rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px">Objetivo de Aprendizaje</h2>`);
+    lines.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.7;background:#F8FAFC;border-left:3px solid #06BFAD;padding:12px 16px;border-radius:0 8px 8px 0">${escapeHtml(data.objective)}</p>`);
+  }
+
+  // Render other fields that are NOT sections/objective/images/imageTitles
   for (const [key, value] of Object.entries(data)) {
     if (SKIP.has(key)) continue;
+    if (key === 'sections' || key === 'objective' || key === 'images' || key === 'imageTitles') continue;
     if (value === null || value === undefined) continue;
     if (typeof value === 'string' && !value.trim()) continue;
     if (Array.isArray(value) && value.length === 0) continue;
 
-    const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const label = formatFieldLabel(key);
     lines.push(`<h2 style="font-size:0.85rem;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2E8F0;padding-bottom:4px;margin-top:20px;margin-bottom:8px">${label}</h2>`);
     lines.push(htmlFromValue(value));
   }
@@ -81,6 +95,67 @@ function productToHtml(product: PedagogicalProduct): string {
   lines.push(`<p style="text-align:center;font-size:0.6rem;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Generado por ProfePlanificAI</p>`);
 
   return lines.join('\n');
+}
+
+/** Render guide-like sections (Inicio, Desarrollo, Cierre, etc.) */
+function renderGuideSections(sections: unknown[]): string {
+  const parts: string[] = [];
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i] as Record<string, unknown>;
+    if (!section || typeof section !== 'object') continue;
+
+    const title = typeof section.title === 'string' ? section.title : `Seccion ${i + 1}`;
+    const content = typeof section.content === 'string' ? section.content : '';
+    const activities = Array.isArray(section.activities) ? section.activities : [];
+
+    // Section heading with phase number
+    parts.push(`<h2 style="font-size:1rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E2E8F0">${escapeHtml(title)}</h2>`);
+
+    // Section content
+    if (content.trim()) {
+      parts.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.8;white-space:pre-wrap">${escapeHtml(content)}</p>`);
+    }
+
+    // Activities list
+    if (activities.length > 0) {
+      parts.push(`<p style="font-size:0.75rem;font-weight:600;color:#64748B;text-transform:uppercase;margin-top:8px;margin-bottom:4px">Actividades:</p>`);
+      parts.push(`<ul style="margin:0;padding-left:20px">`);
+      for (const act of activities) {
+        if (typeof act === 'string') {
+          parts.push(`<li style="font-size:0.85rem;color:#334155;line-height:1.6;margin-bottom:2px">${escapeHtml(act)}</li>`);
+        }
+      }
+      parts.push(`</ul>`);
+    }
+  }
+
+  return parts.join('\n');
+}
+
+/** Format field key into readable label */
+function formatFieldLabel(key: string): string {
+  const map: Record<string, string> = {
+    methodology: 'Metodologia',
+    materials: 'Materiales',
+    evaluation: 'Evaluacion',
+    assessment: 'Evaluacion',
+    duration: 'Duracion',
+    resources: 'Recursos',
+    competencies: 'Competencias',
+    indicators: 'Indicadores',
+    skills: 'Habilidades',
+    differentiation: 'Diferenciacion',
+    adaptations: 'Adecuaciones',
+    references: 'Referencias',
+    summary: 'Resumen',
+    description: 'Descripcion',
+    instructions: 'Instrucciones',
+    procedure: 'Procedimiento',
+    considerations: 'Consideraciones',
+  };
+  if (map[key]) return map[key];
+  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function htmlFromValue(value: unknown): string {
