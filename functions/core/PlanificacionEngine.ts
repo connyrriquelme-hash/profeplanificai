@@ -133,7 +133,7 @@ methodology (maximo 500 caracteres): metodologia APLICADA, no descriptiva — ex
 
 assessment (maximo 500 caracteres por clase): evidencia OBSERVABLE del aprendizaje (producto escrito, respuesta oral concreta, demostracion). Nunca "evaluacion general del desempeno".
 
-evaluation (maximo 500 caracteres): como se evalua la unidad completa (formativa y sumativa), ligada a los OA trabajados en las clases.`;
+evaluation (maximo 900 caracteres): como se evalua la unidad completa (formativa y sumativa), ligada a los OA trabajados en las clases.`;
 }
 
 // ─── Enrich parcial — mismo principio que enrichEstudiante/enrichDocente

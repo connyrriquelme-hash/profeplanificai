@@ -8,7 +8,7 @@ export const CLASS_MATERIAL_MAX = 500;
 export const CLASS_ASSESSMENT_MAX = 500;
 export const METHODOLOGY_MAX = 500;
 export const DUA_ITEM_MAX = 1500;
-export const EVALUATION_MAX = 500;
+export const EVALUATION_MAX = 900;
 
 const MIN_CLASSES = 3;
 const MAX_CLASSES = 5;
