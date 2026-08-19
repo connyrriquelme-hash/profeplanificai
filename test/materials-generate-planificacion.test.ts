@@ -166,7 +166,7 @@ describe('POST /api/materials/generate?type=planificacion', () => {
     expect(res.status).toBe(200);
     expect(json.ok).toBe(true);
     expect(typeof json.prompt).toBe('string');
-    expect(json.prompt).toContain('Genera una guía de estudiante');
+    expect(json.prompt).toContain('Genera una GUIA DE ESTUDIANTE');
     expect(json.planificacion).toBeUndefined();
   });
 

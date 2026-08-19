@@ -291,7 +291,7 @@ describe('FlujoDocenteView integration', () => {
 
     // Find the result rendering block (after "Recurso generado")
     const resultBlockStart = content.indexOf('Recurso generado');
-    const resultBlockEnd = content.indexOf('mt-6 flex items-center', resultBlockStart);
+    const resultBlockEnd = content.indexOf('mt-6 print:hidden', resultBlockStart);
     const resultBlock = content.substring(resultBlockStart, resultBlockEnd);
 
     // Should NOT contain JSON.stringify in the result display area
@@ -306,7 +306,7 @@ describe('FlujoDocenteView integration', () => {
 
     // Find the result rendering block
     const resultBlockStart = content.indexOf('Recurso generado');
-    const resultBlockEnd = content.indexOf('mt-6 flex items-center', resultBlockStart);
+    const resultBlockEnd = content.indexOf('mt-6 print:hidden', resultBlockStart);
     const resultBlock = content.substring(resultBlockStart, resultBlockEnd);
 
     // Should NOT contain <pre in the result display area
@@ -322,8 +322,9 @@ describe('FlujoDocenteView integration', () => {
     // Should import ProductRenderer
     expect(content).toContain("import ProductRenderer from './products/ProductRenderer'");
 
-    // Should use ProductRenderer in the result block
-    expect(content).toContain('<ProductRenderer product={result}');
+    // Should use ProductRenderer in the result block (tolerante a que
+    // Prettier ponga la prop en su propia línea, como hace hoy).
+    expect(content).toMatch(/<ProductRenderer\s+product=\{result\}/);
   });
 
   // Skipped: verifica la versión de FlujoDocenteView.tsx de main
