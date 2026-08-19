@@ -4,7 +4,7 @@ import { generateListaCotejo, type ListaCotejoEngineInput } from '../../../../co
 import { generateSemaforo, type SemaforoEngineInput } from '../../../../core/SemaforoEngine';
 import type { AIEngineEnv } from '../../../../core/types';
 
-interface Env { DB: D1Database; AI?: Ai }
+interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
 
 interface FormativeEvaluationRequest {
   level: string;
@@ -103,7 +103,7 @@ async function buildExitTicketAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const ticket = await generateTicketSalida({ AI: env.AI } as AIEngineEnv, ticketInput);
+  const ticket = await generateTicketSalida({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, ticketInput);
 
   return {
     title: ticket.title,
@@ -140,7 +140,7 @@ async function build321FormatAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const formato = await generateFormato321({ AI: env.AI } as AIEngineEnv, formatoInput);
+  const formato = await generateFormato321({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, formatoInput);
 
   return {
     title: formato.title,
@@ -178,7 +178,7 @@ async function buildChecklistAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const lista = await generateListaCotejo({ AI: env.AI } as AIEngineEnv, checklistInput);
+  const lista = await generateListaCotejo({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, checklistInput);
 
   return {
     title: lista.title,
@@ -270,7 +270,7 @@ async function buildTrafficLightAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const semaforo = await generateSemaforo({ AI: env.AI } as AIEngineEnv, semaforoInput);
+  const semaforo = await generateSemaforo({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, semaforoInput);
 
   return {
     title: semaforo.title,

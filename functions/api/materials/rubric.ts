@@ -15,6 +15,7 @@ export { buildPremiumRubric, detectSubjectCategory };
 interface Env {
   DB: D1Database;
   AI?: ImageEnv['AI'];
+  GEMINI_API_KEY?: string;
   ENABLE_IMAGE_AI?: string;
   IMAGE_PROVIDER_ORDER?: string;
   HF_API_TOKEN?: string;
@@ -73,7 +74,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const rubric = context.env.AI
       ? await generateRubricaContent(
-          { AI: context.env.AI },
+          { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY },
           contextInput,
           await fetchRubricaCurricularContext(db, body.objectiveCode, officialObjectiveText, officialIndicators),
         )

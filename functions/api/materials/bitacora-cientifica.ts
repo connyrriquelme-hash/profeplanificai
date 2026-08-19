@@ -1,7 +1,7 @@
 import { generateBitacora, type BitacoraEngineInput } from '../../core/BitacoraEngine';
 import type { AIEngineEnv } from '../../core/types';
 
-interface Env { DB: D1Database; AI?: Ai }
+interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
 
 interface BitacoraCientificaRequest {
   level: string;
@@ -47,7 +47,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       topic: body.topic,
       indicators: (indicators as any)?.results?.map((i: any) => i.indicator_text).filter(Boolean) || [],
     };
-    const consignasIA = await generateBitacora({ AI: context.env.AI } as AIEngineEnv, bitacoraInput);
+    const consignasIA = await generateBitacora({ AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv, bitacoraInput);
 
     const evaluation = { ...baseBitacora, consignasIA };
 

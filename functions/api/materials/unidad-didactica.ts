@@ -3,7 +3,7 @@ import type { AIEngineEnv } from '../../core/types';
 import { METODOLOGIAS_ACTIVAS, type MetodologiaActiva } from '../../../schemas/UnidadDidacticaSchema';
 import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; AI?: Ai; JWT_SECRET: string }
+interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string; JWT_SECRET: string }
 
 interface UnidadDidacticaRequestBody {
   titulo?: string;
@@ -57,7 +57,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const { unidad, usedFallback } = await generateUnidadDidactica(
-      { AI: context.env.AI } as AIEngineEnv,
+      { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
       {
         nivel: body.nivel,
         asignatura,
