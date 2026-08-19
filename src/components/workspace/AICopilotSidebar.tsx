@@ -172,11 +172,16 @@ export function AICopilotSidebar({
         };
         setMessages(prev => [...prev, errorMsg]);
       }
-    } catch {
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Error desconocido';
       const errorMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: 'ai',
-        content: 'Error de conexion. Verifica tu internet e intenta de nuevo.',
+        content: detail.includes('401') || detail.includes('Sesion')
+          ? 'Sesion expirada. Recarga la pagina e inicia sesion de nuevo.'
+          : detail.includes('conectar')
+            ? detail
+            : `Error al editar: ${detail.substring(0, 150)}`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMsg]);

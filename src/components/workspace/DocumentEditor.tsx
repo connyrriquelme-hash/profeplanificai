@@ -69,13 +69,17 @@ function productToHtml(product: PedagogicalProduct): string {
   // Smart rendering based on product structure
   const SKIP = new Set(['ai_model', 'generated_at', 'template_id', 'templateName', 'generatedBy']);
 
+  // Special rendering for planificacion type
+  if (type === 'planificacion') {
+    lines.push(renderPlanificacion(data));
+  }
   // Check if this is a guide-like product with sections array
-  if (Array.isArray(data.sections) && data.sections.length > 0) {
+  else if (Array.isArray(data.sections) && data.sections.length > 0) {
     lines.push(renderGuideSections(data.sections));
   }
 
-  // Render objective if present
-  if (typeof data.objective === 'string' && data.objective.trim()) {
+  // Render objective if present (not for planificacion)
+  if (type !== 'planificacion' && typeof data.objective === 'string' && data.objective.trim()) {
     lines.push(`<h2 style="font-size:0.95rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px">Objetivo de Aprendizaje</h2>`);
     lines.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.7;background:#F8FAFC;border-left:3px solid #B5471F;padding:12px 16px;border-radius:0 8px 8px 0">${escapeHtml(data.objective)}</p>`);
   }
@@ -84,6 +88,7 @@ function productToHtml(product: PedagogicalProduct): string {
   for (const [key, value] of Object.entries(data)) {
     if (SKIP.has(key)) continue;
     if (key === 'sections' || key === 'objective' || key === 'images' || key === 'imageTitles') continue;
+    if (key === 'unit' || key === 'classes' || key === 'methodology' || key === 'dua' || key === 'evaluation') continue;
     if (value === null || value === undefined) continue;
     if (typeof value === 'string' && !value.trim()) continue;
     if (Array.isArray(value) && value.length === 0) continue;
@@ -131,6 +136,97 @@ function renderGuideSections(sections: unknown[]): string {
       }
       parts.push(`</ul>`);
     }
+  }
+
+  return parts.join('\n');
+}
+
+/** Render planificacion structure (unit, classes, methodology, dua, evaluation) */
+function renderPlanificacion(data: Record<string, unknown>): string {
+  const parts: string[] = [];
+
+  // Unit title
+  if (typeof data.unit === 'string' && data.unit.trim()) {
+    parts.push(`<div style="background:#FEF3E2;border-radius:8px;padding:16px;margin-bottom:24px">`);
+    parts.push(`<h2 style="font-size:1.1rem;font-weight:700;color:#B5471F;margin:0 0 8px 0">Unidad</h2>`);
+    parts.push(`<p style="font-size:0.9rem;color:#1E293B;line-height:1.6;margin:0">${escapeHtml(data.unit)}</p>`);
+    parts.push(`</div>`);
+  }
+
+  // Classes
+  if (Array.isArray(data.classes) && data.classes.length > 0) {
+    parts.push(`<h2 style="font-size:1rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #E2E8F0">Clases</h2>`);
+    
+    for (const cls of data.classes) {
+      if (typeof cls !== 'object' || cls === null) continue;
+      const c = cls as Record<string, unknown>;
+      
+      const num = typeof c.number === 'number' ? c.number : 0;
+      const objective = typeof c.objective === 'string' ? c.objective : '';
+      const opening = typeof c.opening === 'string' ? c.opening : '';
+      const development = typeof c.development === 'string' ? c.development : '';
+      const closure = typeof c.closure === 'string' ? c.closure : '';
+      const duration = typeof c.duration === 'string' ? c.duration : '';
+      const materials = Array.isArray(c.materials) ? c.materials : [];
+      const assessment = typeof c.assessment === 'string' ? c.assessment : '';
+      
+      parts.push(`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;margin-bottom:16px">`);
+      parts.push(`<h3 style="font-size:0.95rem;font-weight:700;color:#7C2F13;margin:0 0 12px 0">Clase ${num}</h3>`);
+      
+      if (objective) {
+        parts.push(`<p style="font-size:0.85rem;color:#334155;margin:0 0 8px 0"><strong>Objetivo:</strong> ${escapeHtml(objective)}</p>`);
+      }
+      
+      if (opening) {
+        parts.push(`<p style="font-size:0.85rem;color:#334155;margin:0 0 8px 0"><strong>Inicio:</strong> ${escapeHtml(opening)}</p>`);
+      }
+      
+      if (development) {
+        parts.push(`<p style="font-size:0.85rem;color:#334155;margin:0 0 8px 0"><strong>Desarrollo:</strong> ${escapeHtml(development)}</p>`);
+      }
+      
+      if (closure) {
+        parts.push(`<p style="font-size:0.85rem;color:#334155;margin:0 0 8px 0"><strong>Cierre:</strong> ${escapeHtml(closure)}</p>`);
+      }
+      
+      if (duration) {
+        parts.push(`<p style="font-size:0.8rem;color:#64748B;margin:0 0 4px 0"><strong>Duracion:</strong> ${escapeHtml(duration)}</p>`);
+      }
+      
+      if (materials.length > 0) {
+        parts.push(`<p style="font-size:0.8rem;color:#64748B;margin:0 0 4px 0"><strong>Materiales:</strong> ${materials.map(m => escapeHtml(String(m))).join(', ')}</p>`);
+      }
+      
+      if (assessment) {
+        parts.push(`<p style="font-size:0.8rem;color:#64748B;margin:0"><strong>Evaluacion:</strong> ${escapeHtml(assessment)}</p>`);
+      }
+      
+      parts.push(`</div>`);
+    }
+  }
+
+  // Methodology
+  if (typeof data.methodology === 'string' && data.methodology.trim()) {
+    parts.push(`<h2 style="font-size:0.95rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px">Metodologia</h2>`);
+    parts.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.7;background:#F8FAFC;border-left:3px solid #E9A13B;padding:12px 16px;border-radius:0 8px 8px 0">${escapeHtml(data.methodology)}</p>`);
+  }
+
+  // DUA
+  if (Array.isArray(data.dua) && data.dua.length > 0) {
+    parts.push(`<h2 style="font-size:0.95rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px">DUA (Diseño Universal para el Aprendizaje)</h2>`);
+    parts.push(`<ul style="margin:0;padding-left:20px">`);
+    for (const item of data.dua) {
+      if (typeof item === 'string') {
+        parts.push(`<li style="font-size:0.85rem;color:#334155;line-height:1.6;margin-bottom:4px">${escapeHtml(item)}</li>`);
+      }
+    }
+    parts.push(`</ul>`);
+  }
+
+  // Evaluation
+  if (typeof data.evaluation === 'string' && data.evaluation.trim()) {
+    parts.push(`<h2 style="font-size:0.95rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px">Evaluacion</h2>`);
+    parts.push(`<p style="font-size:0.85rem;color:#334155;line-height:1.7;background:#F8FAFC;border-left:3px solid #7F58A6;padding:12px 16px;border-radius:0 8px 8px 0">${escapeHtml(data.evaluation)}</p>`);
   }
 
   return parts.join('\n');
@@ -329,15 +425,12 @@ export function DocumentEditor({ product, onProductChange, className }: Document
       </div>
 
       {/* ── A4 Paper ────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-2 py-6 md:px-4">
+      <div className="flex-1 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white shadow-xl mx-auto p-10 md:p-12 max-w-4xl min-h-[1056px] rounded-sm relative"
-          style={{
-            boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)',
-          }}
+          className="bg-white p-8 md:p-10 min-h-[1056px] relative"
         >
           <EditorContent editor={editor} />
 

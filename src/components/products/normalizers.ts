@@ -248,9 +248,16 @@ export function normalizePlanificacion(raw: unknown): PedagogicalProduct | null 
 
   if (!hasStringProp(plan, 'unit')) return null;
 
+  const unitTitle = typeof plan.unit === 'string' ? plan.unit : 'Planificacion';
+
   return {
     type: 'planificacion',
-    metadata: extractMetadata(r),
+    metadata: {
+      title: unitTitle,
+      subtitle: typeof r.subtitle === 'string' ? r.subtitle : undefined,
+      level: typeof r.level === 'string' ? r.level : undefined,
+      subject: typeof r.subject === 'string' ? r.subject : undefined,
+    },
     data: {
       unit: plan.unit,
       classes: plan.classes,
