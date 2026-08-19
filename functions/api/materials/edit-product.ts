@@ -1,6 +1,6 @@
-import { getAuthenticatedUserId } from '../../../_lib/auth';
-import { editProduct } from '../../../core/EditProductEngine';
-import type { AIEngineEnv } from '../../../core/types';
+import { getAuthenticatedUserId } from '../../_lib/auth';
+import { editProduct } from '../../core/EditProductEngine';
+import type { AIEngineEnv } from '../../core/types';
 
 interface Env extends AIEngineEnv {
   DB: D1Database;
