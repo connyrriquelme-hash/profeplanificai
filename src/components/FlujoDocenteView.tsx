@@ -14,7 +14,9 @@ import { api } from '../services/apiClient';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
 import ProductRenderer from './products/ProductRenderer';
+import { WorkspaceLayout } from './workspace/WorkspaceLayout';
 import type { PedagogicalProduct } from './products/types';
+import { normalizeProduct } from './products/normalizers';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 
@@ -56,6 +58,17 @@ const PPT_LAYOUT_LABELS: Record<string, string> = {
 interface D1Course { id: string; code: string; name: string; objective_count: number }
 interface D1Subject { id: string; name: string; objective_count: number }
 interface D1Objective { id: string; code: string; official_text: string; course_name: string; subject_name: string; axis_name?: string }
+
+function isPedagogicalProduct(product: unknown): product is PedagogicalProduct {
+  return (
+    typeof product === 'object' &&
+    product !== null &&
+    'type' in product &&
+    typeof (product as PedagogicalProduct).type === 'string' &&
+    'metadata' in product &&
+    'data' in product
+  );
+}
 
 // Preview simple para "Serie de Lecciones" — solo lectura, sin edición ni
 // exportación propia (eso ya lo dan los botones genéricos de abajo:
@@ -821,6 +834,24 @@ export function FlujoDocenteView() {
 
   // Result
   if (step === 'resultado' && result) {
+    const normalizedProduct = isPedagogicalProduct(result)
+      ? result
+      : normalizeProduct(result as Record<string, unknown>, selectedProducto);
+
+    // Workspace mode for all products (Tiptap editor + AI copilot)
+    if (normalizedProduct) {
+      return (
+        <WorkspaceLayout
+          product={normalizedProduct}
+          resourceId={resourceId}
+          onBack={() => setStep('producto')}
+          onExport={handleSave}
+          onProductChange={(updated) => setResult(updated)}
+        />
+      );
+    }
+
+    // Fallback for non-normalizable products (e.g., raw rubrica)
     return (
       <div className="w-full max-w-7xl mx-auto px-4">
         <Card variant="elevated" className="p-6">
@@ -841,26 +872,15 @@ export function FlujoDocenteView() {
             </div>
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-2">
-              <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <div className="prose prose-sm max-w-none" id="flujo-product-content">
-            {selectedProducto === 'rubrica' && premiumRubric ? (
-              <PremiumRubricPreview rubric={premiumRubric} />
-            ) : (
-              <ProductRenderer
-                product={result}
-                selectedProducto={selectedProducto}
-                resourceId={resourceId}
-                enableAIEdit={true}
-                defaultMode="document"
-                onSave={handleSave}
-              />
-            )}
+            <ProductRenderer
+              product={result}
+              selectedProducto={selectedProducto}
+              resourceId={resourceId}
+              enableAIEdit={true}
+              defaultMode="document"
+              onSave={handleSave}
+            />
           </div>
 
           <div className="mt-6 print:hidden">
