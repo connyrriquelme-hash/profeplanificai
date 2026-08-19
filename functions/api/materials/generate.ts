@@ -2,7 +2,7 @@ import { generatePlanificacion } from '../../core/PlanificacionEngine';
 import { getProfePlanificAIContext, getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from '../../core/ExpertKnowledge';
 import type { AIEngineEnv } from '../../core/types';
 
-interface Env { DB: D1Database; AI?: Ai }
+interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
 
 interface GenerateRequest {
   level: string;
@@ -479,7 +479,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     if (type === 'planificacion') {
       const { planificacion, usedFallback } = await generatePlanificacion(
-        { AI: context.env.AI } as AIEngineEnv,
+        { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
         prompt,
         {
           level: body.level,

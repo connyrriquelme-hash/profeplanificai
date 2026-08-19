@@ -201,6 +201,74 @@ export interface CallAIConValidacionOptions {
   model?: string;
 }
 
+// gemini-1.5-pro (pedido originalmente) ya no está disponible — retirado por
+// Google. gemini-2.5-pro tampoco ("no longer available to new users") y su
+// alias "gemini-pro-latest" (-> gemini-3.1-pro) devuelve limit:0 en el free
+// tier de la API key real de esta cuenta — los modelos "pro" simplemente no
+// están habilitados sin billing en Google Cloud. El alias "gemini-flash-latest"
+// devolvió 503 (modelo preview saturado); "gemini-2.5-flash" fijo sí responde
+// 200 contra el servidor real, con cupo gratuito y contexto largo (1M tokens).
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
+// env.AI.run() (binding nativo de Workers AI) lanza un Error cuando el cupo
+// diario gratuito de neurons se agota — confirmado contra el servidor real:
+// "AiError: ... you have used up your daily free allocation of 10,000
+// neurons ..." con code 4006. No hay un tipo/código estable documentado
+// para el binding nativo (a diferencia del REST directo, que sí devuelve
+// {code: 4006} en el body), así que se detecta por patrón en el mensaje.
+function esErrorDeCupoAgotado(error: unknown): boolean {
+  const mensaje = error instanceof Error ? error.message : String(error);
+  return /neuron|4006|allocation|quota/i.test(mensaje);
+}
+
+// Llama a la API REST de Gemini (Google AI Studio) directamente por fetch,
+// sin SDK — mismo criterio que env.AI.run(): un solo intento, sin retry
+// propio (el retry vive en callAIConValidacion(), a nivel de proveedor).
+// Devuelve el texto crudo envuelto en { response } — el mismo shape que ya
+// entiende resolveAIResponseText(), así que callAIConValidacion() no
+// necesita saber qué proveedor respondió.
+async function callGemini(
+  systemPrompt: string,
+  userPrompt: string,
+  apiKey: string,
+  opciones: { temperature: number; maxOutputTokens: number },
+): Promise<{ response: string }> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: userPrompt }] }],
+      ...(systemPrompt ? { systemInstruction: { parts: [{ text: systemPrompt }] } } : {}),
+      generationConfig: {
+        temperature: opciones.temperature,
+        maxOutputTokens: opciones.maxOutputTokens,
+        // Sin esto, los modelos gemini-2.x gastan una porción no controlable
+        // de maxOutputTokens en "thinking" interno antes del JSON visible —
+        // confirmado contra el servidor real: la respuesta se cortaba a
+        // mitad del JSON (contenido bueno, pero incompleto -> JSON inválido
+        // -> fallback tras 3 reintentos). thinkingBudget: 0 lo desactiva.
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    }),
+  });
+
+  const data = await res.json() as any;
+
+  if (!res.ok) {
+    throw new Error(`Gemini error ${res.status}: ${data?.error?.message ?? JSON.stringify(data)}`);
+  }
+
+  const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('') ?? '';
+  if (!text) {
+    const finishReason = data?.candidates?.[0]?.finishReason ?? 'desconocido';
+    throw new Error(`Gemini no devolvió texto (finishReason: ${finishReason}).`);
+  }
+
+  return { response: text };
+}
+
 // Llama a env.AI.run(), valida la respuesta contra `schema` y, si falla
 // (JSON inválido o schema.safeParse() rechaza), reintenta hasta
 // maxReintentos veces (default 2, o sea 3 intentos en total) agregando al
@@ -217,7 +285,10 @@ export async function callAIConValidacion<T>(
   schema: z.ZodType<T>,
   opciones?: CallAIConValidacionOptions,
 ): Promise<{ data: T; usedFallback: false; intentos: number }> {
-  if (!env.AI) {
+  const hayWorkersAI = !!env.AI;
+  const hayGemini = !!env.GEMINI_API_KEY;
+
+  if (!hayWorkersAI && !hayGemini) {
     throw new Error('AI no está configurado en el entorno.');
   }
 
@@ -229,6 +300,10 @@ export async function callAIConValidacion<T>(
 
   let currentUserPrompt = userPrompt;
   let ultimoError = 'Sin detalle.';
+  // Una vez que Workers AI falla por cupo agotado, se asume agotado para el
+  // resto de los intentos de esta misma llamada — evita gastar 429s de más
+  // en cada reintento cuando ya sabemos que va a seguir fallando igual.
+  let workersAIAgotado = false;
 
   for (let intento = 1; intento <= maxIntentos; intento++) {
     const messages = systemPrompt
@@ -238,7 +313,30 @@ export async function callAIConValidacion<T>(
         ]
       : [{ role: 'user' as const, content: currentUserPrompt }];
 
-    const response = await env.AI.run(model, { messages, temperature, max_tokens: maxTokens });
+    let response: unknown;
+    if (hayWorkersAI && !workersAIAgotado) {
+      try {
+        response = await env.AI.run(model, { messages, temperature, max_tokens: maxTokens });
+      } catch (error) {
+        if (hayGemini && esErrorDeCupoAgotado(error)) {
+          workersAIAgotado = true;
+          response = await callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, {
+            temperature,
+            maxOutputTokens: maxTokens,
+          });
+        } else {
+          throw error;
+        }
+      }
+    } else if (hayGemini) {
+      response = await callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, {
+        temperature,
+        maxOutputTokens: maxTokens,
+      });
+    } else {
+      throw new Error('AI no está configurado en el entorno.');
+    }
+
     const raw = resolveAIResponseText(response);
     const candidate = extractJsonFromText(raw);
 

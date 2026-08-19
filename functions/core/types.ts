@@ -26,6 +26,11 @@ export interface PedagogicalEngineEnv {
 
 export interface AIEngineEnv {
   AI: Ai;
+  // Proveedor alternativo cuando Workers AI no está disponible o agotó su
+  // cupo diario de neurons (error 4006) — ver callGemini()/callAIConValidacion()
+  // en AIEngine.ts. Opcional: si no está seteada, el comportamiento es
+  // idéntico al de antes (solo Workers AI).
+  GEMINI_API_KEY?: string;
 }
 
 export interface LessonContent {
