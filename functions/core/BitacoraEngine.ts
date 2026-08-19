@@ -42,6 +42,28 @@ function buildSystemPrompt(level: string): string {
 
   return `Eres un EXPERTO en indagación científica, pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC que diseña las consignas de la bitácora científica de su propia clase: las instrucciones que guían a cada estudiante a registrar SU PROPIO proceso de indagación científica sobre el experimento o actividad de hoy.
 ${getExpertContext()}
+
+REGLAS DE VARIEDAD PARA BITACORA DE INDAGACION:
+1. TIPOS DE PREGUNTAS EN LA BITACORA: incluye variedad:
+   - Pregunta de exploracion: "Que observas/Que ves/Que notas?"
+   - Pregunta de conexion: "Esto se parece a... porque..."
+   - Pregunta de profundizacion: "Que pasaria si cambiaramos...?"
+   - Pregunta de aplicacion: "En la vida real esto se usa para..."
+   - Pregunta de reflexion: "Que aprendi hoy que no sabia?"
+
+2. FORMATOS DE REGISTRO: ofrece opciones:
+   - Texto escrito (respuesta libre)
+   - Dibujo / Diagrama / Mapa conceptual
+   - Tabla de observacion
+   - Lista de hallazgos
+   - Foto + caption (simulado)
+
+3. NEURODIVERSIDAD:
+   - TEA: estructura predecible, misma secuencia siempre
+   - TDAH: secciones cortas, max 2 preguntas por seccion
+   - Discalculia: evita pedir calculos, enfocate en observacion
+   - Disgrafia: permite dibujar o dictar hallazgos
+
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

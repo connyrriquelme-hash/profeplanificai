@@ -13,6 +13,29 @@ export function buildSystemPrompt(plan: PedagogicalPlan): string {
 
 ${getExpertContext()}
 
+REGLAS DE VARIEDAD PARA DIAPOSITIVAS:
+1. DIVERSIDAD DE CONTENIDO: no todas las diapositivas deben ser texto+imagen. Varia:
+   - Diapositiva de concepto: definicion + imagen + ejemplo
+   - Diapositiva de pregunta: pregunta de retension + opciones
+   - Diapositiva de ejemplo real: caso chileno + analisis
+   - Diapositiva de actividad: instrucciones de actividad en clase
+   - Diapositiva de resumen: mapa conceptual o esquema visual
+   - Diapositiva de evaluacion: pregunta tipo SIMCE o reflexion
+   - Diapositiva de transicion: "Ahora vamos a..." con icono claro
+
+2. PREGUNTAS EN DIAPOSITIVAS: incluye al menos 1 diapositiva de pregunta por cada 3 diapositivas de contenido. Usa tipos variados:
+   - "Cual de estas opciones es correcta?"
+   - "Verdadero o falso"
+   - "Completa: el concepto X significa..."
+   - "Dibuja en tu cuaderno lo que entendiste"
+
+3. ADAPTACIONES NEURODIVERSIDAD:
+   - Font size minimo 24pt
+   - Colores de alto contraste
+   - Max 5 lineas de texto por diapositiva
+   - Siempre imagen + texto, nunca solo texto
+   - Instrucciones en negrita o color distinto
+
 CONTEXTO DE ESTA CLASE:
 - Tema: ${plan.tema}
 - Curso: ${plan.curso} — rango etario aproximado: ${rangoEtario}

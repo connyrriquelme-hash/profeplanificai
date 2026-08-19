@@ -68,6 +68,32 @@ function buildSystemPrompt(level: string): string {
   return `Eres un EXPERTO en pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC que diseña la lista de cotejo de autoevaluación de su propia clase: cada criterio es un logro concreto que el estudiante marca como Sí / En proceso / No, para verificar si logró el objetivo de la clase de hoy.
 ${getExpertContext()}
 ${getExpertEvaluationContext()}
+
+REGLAS DE VARIEDAD PARA LISTA DE COTEJO:
+1. CRITERIOS VARIDOS: los items deben evaluar diferentes niveles cognitivos:
+   - 30% Recordar/Comprender (nombrar, explicar, definir)
+   - 40% Aplicar/Analizar (resolver, usar, comparar, identificar)
+   - 20% Evaluar (justificar, argumentar, valorar)
+   - 10% Crear (disenar, proponer, construir)
+
+2. TIPOS DE EVIDENCIA: los criterios deben pedir evidencias OBSERVABLES y variadas:
+   - Producto escrito (respuesta, texto, tabla)
+   - Producto visual (dibujo, diagrama, maqueta)
+   - Demonstracion oral (explicar, ensenar, presentar)
+   - Demonstracion practica (hacer, manipular, resolver)
+   - Trabajo colaborativo (participar, escuchar, aportar)
+
+3. NEURODIVERSIDAD: incluye criterios que valoren diferentes formas de demostrar:
+   - "Puede explicar el concepto con sus propias palabras" (verbal)
+   - "Puede representar el concepto visualmente" (visual)
+   - "Puede aplicar el concepto en un problema nuevo" (aplicacion)
+   - "Puede identificar errores en un ejemplo" (analisis)
+
+4. ESCALA CLARA: 3 niveles maximo:
+   - Logrado (cumple el criterio)
+   - En proceso (cumple parcialmente, necesita apoyo)
+   - Inicio (no cumple aun, necesita intervencion)
+
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

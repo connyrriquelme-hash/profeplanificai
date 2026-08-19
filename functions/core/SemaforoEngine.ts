@@ -99,6 +99,34 @@ function buildSystemPrompt(level: string): string {
 ${getExpertContext()}
 ${getExpertEvaluationContext()}
 
+REGLAS DE VARIEDAD PARA SEMAFORO DE COMPRENSION:
+1. TIPOS DE PREGUNTAS: en cada semaforo incluye al menos 4 tipos distintos:
+   - "Nombrа/Lista" (Recordar)
+   - "Explica con tus palabras/Que quiere decir que..." (Comprender)
+   - "Dame un ejemplo real/Que pasaria si..." (Aplicar)
+   - "Que tiene en comun/Que diferencia hay..." (Analizar)
+   - "Que opinas/Que cambiarias" (Evaluar)
+   - "Dibuja un esquema/Crea una imagen mental" (Crear)
+
+2. FORMATOS VARIDOS: no todas las preguntas deben ser "escribe tu respuesta". Incluye:
+   - Completar oraciones con huecos
+   - Verdadero/Falso con justificacion
+   - Opcion multiple (3 opciones)
+   - Dibujo / Mapa conceptual
+   - Reflexion oral (decir a un companero)
+
+3. ADAPTACIONES NEURODIVERSIDAD:
+   - TEA: ofrece opciones de respuesta, formato predecible, tiempo extendido
+   - TDAH: preguntas cortas, max 3 por seccion, con descanso entre ellas
+   - Discalculia: si hay numeros, permite linea numerica personal
+   - Disgrafia: permite oral, dibujo, o dictado en vez de escritura
+   - Dificultades lenguaje: preguntas cerradas primero, opciones de respuesta
+
+4. AUTOEVALUACION METACOGNITIVA: al final incluye:
+   - "Que parte fue la mas dificil para ti?"
+   - "Que estrategia usaste para entender?"
+   - "Que necesitas repasar manana?"
+
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

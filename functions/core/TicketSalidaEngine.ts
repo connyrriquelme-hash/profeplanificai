@@ -85,6 +85,30 @@ function buildSystemPrompt(level: string): string {
 ${getExpertContext()}
 ${getExpertEvaluationContext()}
 
+REGLAS DE VARIEDAD PARA TICKET DE SALIDA:
+1. DIVERSIDAD DE PREGUNTAS: en cada ticket incluye al menos 3 tipos distintos de los siguientes:
+   - Recordar: "Nombrа 2 cosas que aprendiste hoy"
+   - Comprender: "Explica con tus palabras el concepto de..."
+   - Aplicar: "En tu vida real, cuando usarias esto?"
+   - Analizar: "Que tiene en comun X e Y?"
+   - Evaluar: "Que parte fue la mas importante? Por que?"
+   - Crear: "Si tuvieras que ensenar esto a alguien, como lo harias?"
+
+2. FORMATOS VARIDOS: alterna entre:
+   - Respuesta escrita breve (1-2 oraciones)
+   - Completar oracion: "Hoy aprendi que..."
+   - Dibujar: "Dibuja el concepto clave"
+   - Verdadero/Falso con justificacion
+   - Opcion multiple con reflexion
+
+3. ADAPTACIONES: al final del ticket incluye una nota:
+   "Si necesitas apoyo: puedes responderoralmente al docente, dibujar tu respuesta,
+   o usar material de apoyo. No hay respuesta incorrecta en la reflexion."
+
+4. METACOGNICION: incluye siempre:
+   - "Como te sentiste aprendiendo esto?" (con iconos de caritas)
+   - "Que necesitas para aprender mejor?"
+
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

@@ -75,6 +75,28 @@ function buildSystemPrompt(level: string): string {
   return `Eres un EXPERTO en metacognición, pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC que diseña el cierre "Formato 3-2-1" de su propia clase: una rutina de metacognición donde cada estudiante escribe 3 cosas que aprendió, 2 cosas que le parecieron interesantes y 1 pregunta que todavía tiene — sobre el tema específico de la clase de hoy, no en abstracto.
 ${getExpertContext()}
 ${getExpertEvaluationContext()}
+
+REGLAS DE VARIEDAD PARA FORMATO 3-2-1:
+1. DIVERSIDAD EN LOS 3: los 3 conceptos deben ser de distintos tipos:
+   - 1 concepto concreto (hecho, dato, definicion)
+   - 1 concepto procedural (como se hace, pasos, proceso)
+   - 1 concepto relativo (conexion entre ideas, comparacion, relacion)
+
+2. DIVERSIDAD EN LOS 2: los 2 ejemplos deben ser de distintos contextos:
+   - 1 ejemplo del contexto escolar/academico
+   - 1 ejemplo de la vida real / contexto chileno
+
+3. DIVERSIDAD EN LA 1: la pregunta debe ser de nivel alto Bloom:
+   - Evaluar: "Que opinas de...? Justifica"
+   - Crear: "Como mejorarias...?"
+   - Analizar: "Que pasaria si...?"
+   - NUNCA preguntas de Recordar/Comprender (ya cubiertas arriba)
+
+4. ADAPTACIONES:
+   - Si el estudiante tiene discalculia: los 3 conceptos pueden ser no-numericos
+   - Si tiene disgrafia: puede completar con dibujos, no solo texto
+   - Si tiene TDAH: puede completar en formato de lista, no parrafo
+
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

@@ -162,6 +162,37 @@ function buildSystemPromptEstudiante(level: string): string {
 ${getExpertContext()}
 ${getExpertDUAContext()}
 
+REGLAS DE VARIEDAD PARA GUIA DEL ESTUDIANTE:
+1. DIVERSIDAD DE PREGUNTAS: en la guia incluye al menos 5 tipos distintos de preguntas:
+   - "Nombrа/Lista/Ordena" (Recordar)
+   - "Explica con tus palabras/Dibuja/Resume" (Comprender)
+   - "Usa para resolver/Dame un ejemplo real/Que pasaria si" (Aplicar)
+   - "Que tienen en comun/Por que/Que relacion hay" (Analizar)
+   - "Cual es mejor/Que opinas/Que cambiarias" (Evaluar)
+   - "Disena/Crea/Propone/Inventa" (Crear)
+
+2. FORMATOS VARIDOS: no todo es "escribe tu respuesta". Incluye:
+   - Completar oraciones con huecos
+   - Verdadero/Falso con justificacion
+   - Opcion multiple (3-4 opciones)
+   - Unir con flechas / Matching
+   - Dibujar / Esquema / Mapa conceptual
+   - Dramatizar / Explicar a un companero
+   - Investigar un dato
+   - Reflexion personal (primera persona)
+
+3. ADAPTACIONES VISUALES: toda la guia debe ser visualmente atractiva:
+   - Iconos por cada seccion
+   - Espacio entre actividades (no bloque de texto)
+   - Cajas destacadas para instrucciones clave
+   - Linea numerica pegada si es de matematicas
+   - Espacio para dibujar cuando se pida
+
+4. INCLUSION: al final de la guia, incluye una seccion "Para mi ritmo" con opciones:
+   - "Si necesitas mas tiempo, haz solo las actividades 1, 2 y 3"
+   - "Si quieres un desafio extra, investiga: [pregunta abierta]"
+   - "Si aprendes mejor escuchando, pide a alguien que te lea la guia"
+
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
 

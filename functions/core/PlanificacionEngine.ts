@@ -98,6 +98,32 @@ ${getExpertContext()}
 ${getExpertEvaluationContext()}
 ${getExpertDUAContext()}
 
+REGLAS DE VARIEDAD PARA PLANIFICACION:
+1. CADA CLASE DEBE TENER ESTRUCTURA DIFERENTE: no uses la misma secuencia "inicio-desarrollo-cierre" identica 2 veces. Varia:
+   - Clase 1: Inicio (activacion) -> Exploracion guiada -> Practica en parejas -> Sintesis individual
+   - Clase 2: Prediccion -> Demostracion -> Estacion rotativa -> Coevaluacion
+   - Clase 3: Problema real -> Investigacion en grupo -> Presentacion -> Reflexion
+   - Clase 4: Revision -> Juego de recuperacion -> Aplicacion nueva -> Evaluacion formativa
+
+2. VARIEDAD DE ACTIVIDADES: en cada clase incluye al menos 4 modalidades distintas de las siguientes:
+   - Expositiva breve (5 min max, con apoyo visual)
+   - Guiada (docente modela, estudiantes siguen)
+   - Practica independiente
+   - Cooperativa (roles claros, interdependencia)
+   - Juego pedagogico (no solo "jugar", sino juego con reglas claras)
+   - Investigacion (buscar, seleccionar, organizar informacion)
+   - Produccion (crear algo: texto, maqueta, audio, video, codigo)
+   - Evaluacion formativa (recuperacion activa, no relectura)
+
+3. TIPOS DE PREGUNTAS VARIDOS: especifica en el planificacion QUE TIPO de preguntas hara el docente en cada fase:
+   - En activacion: preguntas de Recordar/Comprender (niveles bajos Bloom)
+   - En desarrollo: preguntas de Aplicar/Analizar (niveles medios)
+   - En cierre: preguntas de Evaluar/Crear (niveles altos)
+
+4. ADAPTACIONES NEURODIVERSIDAD: para cada clase, incluye 1 adaptacion concreta:
+   - Ejemplo: "En la fase de practica, ofrece material concreto (bloques, regletas) para estudiantes con discalculia, y permite que el estudiante TDAH se mueva a la estacion de trabajo en pie."
+   - Ejemplo: "En la fase de evaluacion, ofrece opciones: el estudiante puede responder por escrito, oralmente, o dibujando. Tiempo extendido para disgrafia."
+
 REGLAS OBLIGATORIAS POR CAMPO:
 1. INICIO: El campo "opening" de cada clase debe implementar RETRIEVAL PRACTICE y ACTIVACION DE CONOCIMIENTOS PREVIOS. Escribe exactamente que pregunta hacer, que mostrar o que situacion plantear. La activacion debe generar CONFLICTO COGNITIVO (disonancia entre lo que el estudiante cree y la realidad). NUNCA uses "Introduccion al tema" sin describirla.
 2. DESARROLLO: El campo "development" debe describir la secuencia con al menos 3 pasos concretos aplicando ANDAMIAJE PROGRESIVO: (a) modelado explicito del docente con ejemplo completo, (b) practica guiada con apoyo gradual, (c) practica independiente. Cada paso debe especificar QUE hace el estudiante, COMO se organiza, y QUE producto observable produce. Limita la carga cognitiva: maximo 3-4 elementos nuevos por actividad.

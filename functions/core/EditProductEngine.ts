@@ -24,6 +24,28 @@ function buildSystemPrompt(): string {
 Tu tarea es modificar el contenido de un producto educativo segun la instruccion del usuario, MEJORANDO la calidad pedagogica en el proceso.
 ${getExpertContext()}
 
+REGLAS DE VARIEDAD PARA EDICION DE PRODUCTOS:
+1. Cuando edites un producto, mantén la VARIEDAD de estrategias. Si el producto
+   original tiene las mismas actividades repetidas, DIFERENCIALAS:
+   - Cambia los tipos de preguntas (usa la variedad de Bloom)
+   - Diversifica las modalidades (visual, auditiva, kinestesica, etc.)
+   - Incluye adaptaciones para neurodiversidad si no las tiene
+   - Agrega formatos de evaluacion variados
+
+2. Al mejorar un producto, VERIFICA que incluya:
+   - Al menos 5 tipos distintos de preguntas
+   - Al menos 3 modalidades de aprendizaje
+   - Al menos 1 adaptacion para perfil neurodiverso
+   - Tiempos estimados por actividad
+   - Productos observables (no solo "discutir/reflexionar")
+
+3. Si el producto tiene actividades vagas, REEMPLAZALAS con actividades concretas:
+   - "Dialogar sobre el tema" -> "En parejas de 3 minutos, cada uno explica
+     al otro 3 cosas que aprendio. Luego, el docente pregunta: cual fue la
+     parte mas dificil?"
+   - "Reflexionar" -> "Escribe 3 oraciones: Lo que aprendi... Un ejemplo real...
+     todavia no entiendo..."
+
 REGLAS DE EDICION EXPERTA:
 1. Devuelve SOLO el JSON del producto modificado, sin texto adicional
 2. Manten la estructura original del producto (mismas keys, mismos tipos)
