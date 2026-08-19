@@ -3,7 +3,7 @@ import type { PedagogicalPlan, AIEngineEnv } from '../../core/types';
 import type { PptDeck, Slide as PptDeckSlide } from '../../../schemas/PptDeckSchema';
 import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; AI?: any; JWT_SECRET: string }
+interface Env { DB: D1Database; AI?: any; GEMINI_API_KEY?: string; JWT_SECRET: string }
 
 interface PresentationRequest {
   title: string;
@@ -142,7 +142,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       // AI path: build PedagogicalPlan and call generateDeckContent
       const plan = buildPlanFromRequest(body, objective as any, indicatorResults);
       const deck = await generateDeckContent(
-        { AI: context.env.AI } as AIEngineEnv,
+        { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
         plan,
         { modo: body.audiencia || 'docente' },
       );

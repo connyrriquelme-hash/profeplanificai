@@ -2,7 +2,7 @@ import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
 import { generateGuia, type GuiaEngineInput } from '../../core/GuiaEngine';
 import type { AIEngineEnv } from '../../core/types';
 
-interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
+interface Env { DB: D1Database; AI?: ImageEnv['AI']; GEMINI_API_KEY?: string; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
 interface GuideRequest {
   type: 'guia_estudiante' | 'guia_docente';
@@ -51,7 +51,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       additionalContext: body.additionalContext,
     };
     const guide = await generateGuia(
-      { AI: context.env.AI } as AIEngineEnv,
+      { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
       guiaInput,
       body.type === 'guia_estudiante' ? 'estudiante' : 'docente',
     );
