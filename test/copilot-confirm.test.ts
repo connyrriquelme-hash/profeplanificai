@@ -151,13 +151,15 @@ describe('POST /api/copilot/confirm', () => {
     expect(JSON.parse(toolMessages.results[0].tool_result_json).ok).toBe(false);
   });
 
-  it('edit_material sin instruccion → argumentos inválidos, no ejecuta la edición (400/500, nunca 200)', async () => {
+  it('edit_material sin instruccion → argumentos inválidos: 400 con mensaje accionable, no ejecuta la edición', async () => {
     const ctx = await makeContext({
       body: { conversationId: 'conv-1', confirmedAction: { tool: 'edit_material', arguments: { resourceId: 'res-1' } } },
     });
     const response = await onRequestPost(ctx);
+    const data = await response.json();
 
-    expect(response.status).not.toBe(200);
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('instruccion');
   });
 
   it('método distinto de POST → 405', async () => {
