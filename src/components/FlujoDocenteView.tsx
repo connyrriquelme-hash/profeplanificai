@@ -378,6 +378,8 @@ export function FlujoDocenteView() {
           setResult(res.evaluation);
         } else if (selectedProducto === 'serie_lecciones' && res.unidad) {
           setResult(res.unidad);
+        } else if (selectedProducto === 'presentacion' && res.pptDeck) {
+          setResult(res.pptDeck);
         } else {
           setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         }
