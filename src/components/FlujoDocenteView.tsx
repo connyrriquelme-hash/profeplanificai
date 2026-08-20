@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import {
   BookOpenCheck, Target, Layers3, WandSparkles, FileText,
   ClipboardCheck, ClipboardList, Presentation, Loader2, Check,
@@ -22,6 +23,8 @@ import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 import { defaultClassroomConfiguration, groupingLabel, recommendLessonCount, type ClassroomConfiguration } from '../utils/pedagogicalHeuristics';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
+
+const GENERATION_TIMEOUT_MS = 60_000;
 
 // Paleta cálida educativa: tonos tomados directo de los tokens del tema
 // (.theme-calida en index.css) en vez de un arcoíris genérico de Tailwind —
@@ -274,6 +277,12 @@ export function FlujoDocenteView() {
     if (file) handleExtractFromFile(file);
   }, [handleExtractFromFile]);
 
+  const generationAbortRef = useRef<AbortController | null>(null);
+
+  const handleCancelGeneration = useCallback(() => {
+    generationAbortRef.current?.abort();
+  }, []);
+
   const handleGenerate = useCallback(async () => {
     if (!selectedOA || !selectedProducto) return;
       setLoading(true);
@@ -286,6 +295,11 @@ export function FlujoDocenteView() {
       setUnidadDidactica(null);
       setQualityReport(undefined);
       setStep('generando');
+
+    const controller = new AbortController();
+    generationAbortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), GENERATION_TIMEOUT_MS);
+    const { signal } = controller;
 
     const classroomInstructions = [
       `Configuración escolar: bloque de ${classroomConfig.classDurationMinutes} minutos; ${classroomConfig.studentCount} estudiantes; ${groupingLabel(classroomConfig.grouping)}.`,
@@ -327,9 +341,9 @@ export function FlujoDocenteView() {
       const isSerieLecciones = selectedProducto === 'serie_lecciones';
 
       if (isFormativeEvaluation) {
-        res = await generateFormativeEvaluation(req, selectedProducto as FormativeEvaluationType);
+        res = await generateFormativeEvaluation(req, selectedProducto as FormativeEvaluationType, signal);
       } else if (isBitacoraCientifica) {
-        res = await generateBitacoraCientifica(req);
+        res = await generateBitacoraCientifica(req, signal);
       } else if (isSerieLecciones) {
         // Contrato real de /api/materials/unidad-didactica (distinto al de
         // MaterialRequest): nivel + metodologiaActiva + oas[] + titulo?.
@@ -348,24 +362,24 @@ export function FlujoDocenteView() {
           grouping: groupingLabel(classroomConfig.grouping),
           availableResources: classroomConfig.availableResources,
           outputFormat: classroomConfig.outputFormat,
-        });
+        }, signal);
       } else {
         switch (selectedProducto) {
           case 'guia_estudiante':
           case 'guia_docente':
-            res = await generateGuide(req, selectedProducto as 'guia_estudiante' | 'guia_docente');
+            res = await generateGuide(req, selectedProducto as 'guia_estudiante' | 'guia_docente', signal);
             break;
           case 'evaluacion':
-            res = await generateEvaluation(req);
+            res = await generateEvaluation(req, signal);
             break;
           case 'rubrica':
-            res = await generateRubric(req);
+            res = await generateRubric(req, signal);
             break;
           case 'presentacion':
-            res = await generatePresentation(req);
+            res = await generatePresentation(req, signal);
             break;
           default:
-            res = await generateMaterial(req, selectedProducto);
+            res = await generateMaterial(req, selectedProducto, signal);
         }
       }
 
@@ -396,19 +410,27 @@ export function FlujoDocenteView() {
         }
         setStep('resultado');
       } else {
-        setError(res?.error || 'Error al generar');
+        setError(signal.aborted
+          ? 'La generación tardó demasiado o fue cancelada. Intenta de nuevo.'
+          : (res?.error || 'Error al generar'));
         setStep('producto');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error inesperado');
+      setError(signal.aborted
+        ? 'La generación tardó demasiado o fue cancelada. Intenta de nuevo.'
+        : (err instanceof Error ? err.message : 'Error inesperado'));
       setStep('producto');
     } finally {
+      clearTimeout(timeoutId);
+      generationAbortRef.current = null;
       setLoading(false);
     }
   }, [selectedOA, selectedProducto, indicators, skills, topic, additionalContext, selectedMethodology, classroomConfig, recommendedLessons]);
 
   const handleSave = useCallback(async () => {
     if (!resourceId) return;
+    const TOAST_ID = 'flujo-docente-save';
+    toast.loading('Guardando...', { id: TOAST_ID });
     try {
       await api.post('/api/resources', {
           title: `${selectedProducto} — ${selectedOA?.code}`,
@@ -418,7 +440,12 @@ export function FlujoDocenteView() {
           subject: selectedOA?.subject_name,
           objectiveCode: selectedOA?.code,
         });
-    } catch {}
+      toast.dismiss(TOAST_ID);
+      toast.success('Guardado');
+    } catch {
+      toast.dismiss(TOAST_ID);
+      toast.error('No se pudo guardar. Intenta de nuevo.');
+    }
   }, [resourceId, result, selectedProducto, selectedOA]);
 
   const suggestedMethodologies = useMemo(() => {
@@ -886,6 +913,13 @@ export function FlujoDocenteView() {
               <div key={i} className="w-2 h-2 rounded-full bg-[var(--primary)]/50 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
+          <button
+            type="button"
+            onClick={handleCancelGeneration}
+            className="mt-8 text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2"
+          >
+            Cancelar
+          </button>
         </Card>
       </div>
     );
@@ -923,6 +957,7 @@ export function FlujoDocenteView() {
             onProductChange={(updated) => setResult(updated)}
             mode={isPPT ? 'ppt' : 'document'}
           />
+          <Toaster position="top-center" />
         </div>
       );
     }
@@ -966,6 +1001,7 @@ export function FlujoDocenteView() {
             </div>
           </div>
         </Card>
+        <Toaster position="top-center" />
       </div>
     );
   }

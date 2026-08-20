@@ -211,7 +211,7 @@ function AppContent() {
       topbar={<Topbar onNavigate={handleViewChange} />}
       bottomNav={<MobileBottomNav activeView={activeView} onViewChange={handleViewChange} />}
     >
-      <ErrorBoundary>
+      <ErrorBoundary key={activeView + (viewState?.tab || '')}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeView + (viewState?.tab || '')}

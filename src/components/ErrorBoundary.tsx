@@ -18,13 +18,28 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div className="error-boundary">
-        <h2>Error en la aplicación</h2>
-        <pre>{this.state.error?.message}</pre>
-        <pre style={{ fontSize: 11, maxHeight: 300, overflow: 'auto' }}>{this.state.info?.componentStack}</pre>
-        <button onClick={() => { this.setState({ hasError: false, error: undefined }); window.location.reload(); }}>
-          Recargar página
-        </button>
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <div className="w-full max-w-md text-center bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center text-2xl">
+            ⚠️
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Algo salió mal</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Esta sección tuvo un problema inesperado. Puedes intentar recargar la página; si el
+            error persiste, contacta al soporte.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
+            style={{ backgroundColor: '#B5471F' }}
+          >
+            Recargar página
+          </button>
+          {this.state.error?.message && (
+            <p className="mt-4 text-xs text-gray-400 break-words">{this.state.error.message}</p>
+          )}
+        </div>
       </div>
     );
   }

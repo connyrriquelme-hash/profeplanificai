@@ -58,41 +58,41 @@ export interface MaterialResult {
   error?: string;
 }
 
-async function postJSON(url: string, body: MaterialRequest): Promise<MaterialResult> {
+async function postJSON(url: string, body: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
   try {
-    return await api.post<MaterialResult>(url, body);
+    return await api.post<MaterialResult>(url, body, signal);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return { ok: false, error: message };
   }
 }
 
-export async function generateGuide(req: MaterialRequest, type: 'guia_estudiante' | 'guia_docente'): Promise<MaterialResult> {
-  return postJSON(`/api/materials/guide?type=${type}`, { ...req, type });
+export async function generateGuide(req: MaterialRequest, type: 'guia_estudiante' | 'guia_docente', signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON(`/api/materials/guide?type=${type}`, { ...req, type }, signal);
 }
 
-export async function generateEvaluation(req: MaterialRequest): Promise<MaterialResult> {
-  return postJSON('/api/materials/evaluation', req);
+export async function generateEvaluation(req: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON('/api/materials/evaluation', req, signal);
 }
 
-export async function generateFormativeEvaluation(req: MaterialRequest, subType: FormativeEvaluationType): Promise<MaterialResult> {
-  return postJSON('/api/materials/evaluation/formative', { ...req, evaluationSubType: subType });
+export async function generateFormativeEvaluation(req: MaterialRequest, subType: FormativeEvaluationType, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON('/api/materials/evaluation/formative', { ...req, evaluationSubType: subType }, signal);
 }
 
-export async function generateRubric(req: MaterialRequest): Promise<MaterialResult> {
-  return postJSON('/api/materials/rubric', req);
+export async function generateRubric(req: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON('/api/materials/rubric', req, signal);
 }
 
-export async function generatePresentation(req: MaterialRequest): Promise<MaterialResult> {
-  return postJSON('/api/materials/presentation', req);
+export async function generatePresentation(req: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON('/api/materials/presentation', req, signal);
 }
 
-export async function generateMaterial(req: MaterialRequest, type: string): Promise<MaterialResult> {
-  return postJSON(`/api/materials/generate?type=${type}`, req);
+export async function generateMaterial(req: MaterialRequest, type: string, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON(`/api/materials/generate?type=${type}`, req, signal);
 }
 
-export async function generateBitacoraCientifica(req: MaterialRequest): Promise<MaterialResult> {
-  return postJSON('/api/materials/bitacora-cientifica', req);
+export async function generateBitacoraCientifica(req: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON('/api/materials/bitacora-cientifica', req, signal);
 }
 
 export interface UnidadDidacticaRequest {
@@ -114,11 +114,12 @@ export interface UnidadDidacticaRequest {
 // en el endpoint), y postJSON nunca manda Authorization. api.post (ya usado
 // por UnidadesDidacticasView.tsx contra este mismo endpoint) sí lo adjunta
 // desde localStorage — sin eso, todo llamado del wizard terminaría en 401.
-export async function generateUnidadDidactica(req: UnidadDidacticaRequest): Promise<MaterialResult> {
+export async function generateUnidadDidactica(req: UnidadDidacticaRequest, signal?: AbortSignal): Promise<MaterialResult> {
   try {
     const res = await api.post<{ ok: boolean; id: string; unidad: UnidadDidactica; usedFallback: boolean }>(
       '/api/materials/unidad-didactica',
       req,
+      signal,
     );
     return { ok: res.ok, resourceId: res.id, unidad: res.unidad };
   } catch (err: unknown) {
