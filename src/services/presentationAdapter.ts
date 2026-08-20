@@ -76,6 +76,31 @@ function convertSlide(slide: Slide, idx: number, lesson: SlideLesson): LessonSli
   };
 }
 
+// Si un slide en la posicion i del deck anterior tiene exactamente el mismo
+// imagePrompt (derivado del contenido: titulo, texto, curso, asignatura...)
+// y ya tiene una imagen generada, la reusamos en vez de perderla — de otro
+// modo cada edicion de la IA (que reconstruye el deck entero desde `lesson`)
+// dispara una regeneracion de TODAS las imagenes, incluidas las de slides
+// que no cambiaron.
+function carryForwardGeneratedVisuals(slides: LessonSlide[], previousDeck?: VisualLessonDeck): LessonSlide[] {
+  if (!previousDeck) return slides;
+  return slides.map((slide, i) => {
+    const prev = previousDeck.slides[i];
+    if (!prev || prev.visual.status !== 'generated' || !prev.visual.imageUrl) return slide;
+    if (prev.visual.imagePrompt !== slide.visual.imagePrompt) return slide;
+    return {
+      ...slide,
+      visual: {
+        ...slide.visual,
+        imageUrl: prev.visual.imageUrl,
+        status: 'generated',
+        caption: prev.visual.caption,
+        sourceLabel: prev.visual.sourceLabel,
+      },
+    };
+  });
+}
+
 export function normalizeLessonSlidesToVisualDeck(
   raw: SlideLesson,
   overrides?: {
@@ -84,6 +109,7 @@ export function normalizeLessonSlidesToVisualDeck(
     visualStyle?: string;
     preferRegionalContext?: boolean;
     includeImages?: boolean;
+    previousDeck?: VisualLessonDeck;
   },
 ): VisualLessonDeck {
   const deck: VisualLessonDeck = {
@@ -103,5 +129,6 @@ export function normalizeLessonSlidesToVisualDeck(
     createdAt: new Date().toISOString(),
   };
 
-  return enhanceDeckWithVisualPrompts(deck);
+  const enhanced = enhanceDeckWithVisualPrompts(deck);
+  return { ...enhanced, slides: carryForwardGeneratedVisuals(enhanced.slides, overrides?.previousDeck) };
 }
