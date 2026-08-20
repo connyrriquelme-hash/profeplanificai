@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getAuthenticatedUserId } from '../../_lib/auth';
 import {
   WRITE_TOOLS,
@@ -43,6 +44,14 @@ function parseActiveContext(raw: string | null | undefined): Record<string, unkn
   } catch {
     return {};
   }
+}
+
+// Los argumentos que llegan acá los "escribió" la IA, no el profesor — un
+// ZodError es una acción mal formada, no una falla del servidor. Separarlo
+// de errores de ejecución reales evita mostrarle al profesor un 500 genérico
+// cuando en realidad falta un dato que puede dar en el siguiente mensaje.
+function summarizeZodError(error: z.ZodError): string {
+  return error.issues.map((issue) => `${issue.path.join('.') || 'argumento'}: ${issue.message}`).join('; ');
 }
 
 const MATERIAL_LABELS: Record<string, string> = {
@@ -138,7 +147,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     return jsonResponse({ ok: true, conversationId, tool, message, result });
   } catch (err: unknown) {
+    const isValidationError = err instanceof z.ZodError;
     const detail = err instanceof Error ? err.message : String(err);
+    const status = isValidationError ? 400 : 500;
+    const publicMessage = isValidationError
+      ? `Me faltan o son inválidos estos datos para poder generar el material: ${summarizeZodError(err as z.ZodError)}. Dime esos datos y lo vuelvo a intentar.`
+      : 'Error al ejecutar la acción confirmada';
     console.error('[copilot/confirm] error:', err);
 
     // Auditoría best-effort también en caso de fallo, si ya sabemos qué se
@@ -151,7 +165,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
           crypto.randomUUID(),
           conversationId,
           'tool',
-          'No pude completar esa acción.',
+          publicMessage,
           JSON.stringify({ tool, arguments: toolArguments }),
           JSON.stringify({ ok: false, error: detail }),
         ).run();
@@ -160,7 +174,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       }
     }
 
-    return jsonResponse({ error: 'Error al ejecutar la acción confirmada', details: detail }, 500);
+    return jsonResponse({ error: publicMessage, details: detail }, status);
   }
 }
 

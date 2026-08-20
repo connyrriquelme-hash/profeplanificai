@@ -279,7 +279,10 @@ export const GenerateMaterialArgsSchema = z.object({
   methodology: z.string().optional(),
   duration: z.string().optional(),
   designStyle: z.string().optional(),
-  studentCount: z.number().int().positive().optional(),
+  // .min(0) en vez de .positive(): un LLM que no sabe el valor a veces manda
+  // 0 en lugar de omitir el campo — tratamos 0 como "no especificado" en vez
+  // de rechazar la acción entera por eso.
+  studentCount: z.number().int().min(0).optional(),
   criteria: z.array(z.string()).optional(),
   title: z.string().optional(),
   audiencia: z.enum(['docente', 'estudiante']).optional(),
