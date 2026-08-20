@@ -8,7 +8,16 @@ export const FASE_NOMBRE_MAX = 60;
 export const FASE_DESCRIPCION_MAX = 300;
 export const CLASE_TEMA_MAX = 100;
 export const OBJETIVO_ESPECIFICO_MAX = 300;
-export const ETAPA_DESCRIPCION_MAX = 500;
+// 500 (valor original) resultaba muy justo para "desarrollo": la regla 5 de
+// UnidadDidacticaEngine.ts exige minimo 3 pasos concretos (modelado ->
+// practica guiada -> practica independiente) aplicados al contenido
+// especifico del OA, ademas de tiempoMinutos por etapa. PlanificacionEngine
+// tuvo el mismo problema con su campo equivalente (opening/development/
+// closure) y lo resolvio subiendo el limite a 2000 (ver
+// PlanificacionEngine.ts:86-95) — acá se sube a 900, no a 2000, porque esta
+// unidad permite hasta 12 clases (vs. 3-5 de Planificacion) con menos
+// maxTokens por clase disponible.
+export const ETAPA_DESCRIPCION_MAX = 900;
 export const ETAPA_TIEMPO_MAX_MINUTOS = 180;
 
 const MIN_OAS = 1;
