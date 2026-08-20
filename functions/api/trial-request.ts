@@ -1,4 +1,5 @@
 import { sendTrialRequestEmail } from '../_lib/email';
+import { hashValue } from '../_lib/session';
 
 interface Env {
   DB: D1Database;
@@ -52,11 +53,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const id = generateId();
     const ip = context.request.headers.get('CF-Connecting-IP') || '';
     const ua = context.request.headers.get('User-Agent') || '';
+    const ipHash = ip ? await hashValue(ip) : '';
 
     await context.env.DB.prepare(`
       INSERT INTO trial_requests (id, name, email, institution, role, message, status, source, user_agent, ip_hash, email_sent, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, 'new', 'public_landing', ?, ?, 0, datetime('now'), datetime('now'))
-    `).bind(id, name, email, institution, role, message, ua.slice(0, 500), ip.slice(0, 45)).run();
+    `).bind(id, name, email, institution, role, message, ua.slice(0, 500), ipHash).run();
 
     let emailSent = false;
     try {
