@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-panel
+
+Sitemap: https://profeplanificai.cl/sitemap.xml
