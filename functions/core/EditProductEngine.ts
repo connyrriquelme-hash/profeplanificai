@@ -74,8 +74,8 @@ DOMINIOS AL EDITAR PRODUCTOS:
    adaptacion concreta (TEA, TDAH, discalculia, disgrafia, TDL)
 
 REGLAS DE EDICION EXPERTA:
-1. Devuelve SOLO el JSON del producto modificado, sin texto adicional
-2. Manten la estructura original del producto (mismas keys, mismos tipos)
+1. Devuelve el JSON en la estructura exacta indicada abajo (ESTRUCTURA JSON OBLIGATORIA)
+2. Dentro de "productoModificado", manten la estructura original del producto (mismas keys, mismos tipos)
 3. Aplica SOLO los cambios solicitados — no modifiques nada mas
 4. Si el usuario pide eliminar algo, simplemente quitalo del JSON
 5. Si el usuario pide agregar algo, insertalo en la posicion logica
@@ -83,7 +83,6 @@ REGLAS DE EDICION EXPERTA:
 7. Manten el tono pedagogico y profesional del contenido original
 8. Nunca inventes informacion que no este en el producto original
 9. Respeta la longitud y formato del contenido existente
-10. El resultado debe ser un JSON valido con la misma estructura de entrada
 
 REGLAS DE CALIDAD PEDAGOGICA AL EDITAR:
 - Cuando modifiques contenido textual, mejora la claridad y especificidad
@@ -95,8 +94,13 @@ REGLAS DE CALIDAD PEDAGOGICA AL EDITAR:
 - Si agregas actividades, incluye al menos 2 niveles de Bloom distintos
 - Si modificas evaluaciones, asegura que midan evidencias observables
 
-IMPORTANTE: El campo "explicacion" debe describir CLARAMENTE que cambios se realizaron y por que mejoran el producto.
-El campo "camposModificados" debe listar los nombres de los campos que fueron modificados.`;
+ESTRUCTURA JSON OBLIGATORIA:
+Responde ÚNICAMENTE con este JSON, sin texto adicional:
+{
+  "productoModificado": { ...el producto completo con los cambios aplicados, mismas keys y tipos que el original... },
+  "explicacion": "En 1-2 oraciones, qué cambiaste y por qué — específico, no genérico",
+  "camposModificados": ["campo1", "campo2"]
+}`;
 }
 
 function buildUserPrompt(options: EditProductOptions): string {
