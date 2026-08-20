@@ -3,6 +3,7 @@ import { generateFormato321, type Format321EngineInput } from '../../../../core/
 import { generateListaCotejo, type ListaCotejoEngineInput } from '../../../../core/ListaCotejoEngine';
 import { generateSemaforo, type SemaforoEngineInput } from '../../../../core/SemaforoEngine';
 import type { AIEngineEnv } from '../../../../core/types';
+import { validatePedagogicalProduct } from '../../../../_lib/pedagogicalQualityGate';
 
 interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
 
@@ -46,6 +47,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
             ? await buildTrafficLightAI(context.env, body, objective as any, (indicators as any)?.results || [])
             : buildFormativeEvaluation(body, objective as any, (indicators as any)?.results || []);
 
+    const quality = validatePedagogicalProduct(evaluation, {
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      productType: body.evaluationSubType,
+    });
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
       `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
@@ -63,7 +69,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Evaluación formativa generada para ${body.objectiveCode} tipo ${body.evaluationSubType}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, evaluation, context: { objective, indicators: (indicators as any)?.results || [] } });
+    return Response.json({ ok: true, resourceId, evaluation, quality, context: { objective, indicators: (indicators as any)?.results || [] } });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar evaluación formativa', details: err.message }, { status: 500 });
   }

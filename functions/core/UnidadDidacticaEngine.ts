@@ -25,6 +25,11 @@ export interface UnidadDidacticaOptions {
   metodologiaActiva: MetodologiaActiva;
   objetivosAprendizaje: ObjetivoAprendizajeInput[];
   temaSugerido?: string;
+  classDurationMinutes?: number;
+  recommendedLessons?: number;
+  studentCount?: number;
+  grouping?: string;
+  availableResources?: string;
 }
 
 function truncate(text: string, max: number): string {
@@ -51,6 +56,10 @@ CONTEXTO DE ESTA UNIDAD:
 - Nivel: ${opciones.nivel}
 - Asignatura: ${opciones.asignatura}
 - Metodología activa: ${opciones.metodologiaActiva}
+- Duración de cada bloque: ${opciones.classDurationMinutes || 90} minutos
+- Curso: ${opciones.studentCount || 35} estudiantes; organización: ${opciones.grouping || 'parejas'}
+- Recursos disponibles: ${opciones.availableResources || 'pizarra, proyector y material impreso'}
+- Recomendación heurística: ${opciones.recommendedLessons || 3} clases
 - Objetivos de Aprendizaje (OA) oficiales MINEDUC a cubrir:
 ${oaLista}
 ${opciones.temaSugerido ? `- Tema/enfoque sugerido por el docente: ${opciones.temaSugerido}` : ''}
@@ -65,7 +74,7 @@ REGLAS OBLIGATORIAS:
    - Aula Invertida: estudio previo fuera de la clase, verificación de comprensión, práctica guiada en clase, aplicación/extensión.
    - Tradicional: secuencia de contenidos (introducción, desarrollo, práctica, cierre/evaluación).
    Entre 2 y 8 fases. Cada fase: nombre (máx 60 caracteres), descripcion (máx 300 caracteres) y orden (entero secuencial empezando en 0). Las fases deben tener nombres concretos y descriptivos que reflejen qué ocurre en ellas — nunca "Fase 1", "Fase 2" genéricas.
-2. Diseña entre 2 y 12 CLASES distribuidas entre esas fases. El campo clases[].faseAsociada debe ser EXACTAMENTE igual al nombre de una de las fases que definiste.
+2. Diseña exactamente ${opciones.recommendedLessons || 3} CLASES distribuidas entre esas fases. El campo clases[].faseAsociada debe ser EXACTAMENTE igual al nombre de una de las fases que definiste. Respeta la duración de ${opciones.classDurationMinutes || 90} minutos por clase y distribuye sus tiempos sin superar ese total.
 3. Cada clase tiene: numero (entero secuencial único, empezando en 1), faseAsociada, tema (concreto, máx 100 caracteres, nunca copiado del OA), objetivoEspecifico (máx 300 caracteres, ligado a los OA reales pero reformulado), y estructuraClase con inicio/desarrollo/cierre — cada uno con tiempoMinutos (entero, entre 5 y 90) y descripcion (máx 500 caracteres) de qué hace el docente y qué hacen los estudiantes.
 
 REGLAS DE CALIDAD POR CAMPO:
@@ -174,17 +183,25 @@ export function buildFallbackUnidad(opciones: UnidadDidacticaOptions): UnidadDid
 
   const fases = fasesDef.map((f, idx) => ({ nombre: f.nombre, descripcion: f.descripcion, orden: idx }));
 
-  const clases = fasesDef.map((f, idx) => ({
+  const lessonCount = Math.min(12, Math.max(2, opciones.recommendedLessons || fasesDef.length));
+  const classDuration = opciones.classDurationMinutes || 90;
+  const clases = Array.from({ length: lessonCount }, (_, idx) => {
+    const f = fasesDef[idx % fasesDef.length];
+    const inicio = Math.max(5, Math.round(classDuration * 0.15));
+    const cierre = Math.max(5, Math.round(classDuration * 0.15));
+    const desarrollo = Math.max(5, classDuration - inicio - cierre);
+    return {
     numero: idx + 1,
     faseAsociada: f.nombre,
     tema: truncate(`${f.nombre}: ${opciones.asignatura}`, CLASE_TEMA_MAX),
     objetivoEspecifico: truncate(`Avanzar en el objetivo de la unidad durante la fase "${f.nombre}".`, OBJETIVO_ESPECIFICO_MAX),
     estructuraClase: {
-      inicio: { tiempoMinutos: 15, descripcion: `Activación de conocimientos previos relacionados con la fase "${f.nombre}".` },
-      desarrollo: { tiempoMinutos: 45, descripcion: f.descripcion },
-      cierre: { tiempoMinutos: 15, descripcion: 'Síntesis y reflexión sobre lo trabajado en la clase.' },
+      inicio: { tiempoMinutos: inicio, descripcion: `Activación concreta sobre ${opciones.asignatura}: recuperar una idea previa y conectarla con la fase "${f.nombre}".` },
+      desarrollo: { tiempoMinutos: desarrollo, descripcion: `${f.descripcion} Modelado docente, práctica guiada y aplicación independiente con los recursos disponibles.` },
+      cierre: { tiempoMinutos: cierre, descripcion: 'Cada estudiante registra una evidencia de lo aprendido y responde qué puede aplicar en la siguiente clase.' },
     },
-  }));
+    };
+  });
 
   return {
     titulo: truncate(`Unidad: ${temaBase} — ${opciones.asignatura}`, TITULO_MAX),

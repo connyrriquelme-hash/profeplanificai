@@ -62,6 +62,7 @@ interface AICopilotSidebarProps {
   product: PedagogicalProduct;
   resourceId?: string;
   onProductEdited: (updated: PedagogicalProduct) => void;
+  reviewInstruction?: string;
   className?: string;
 }
 
@@ -100,6 +101,7 @@ export function AICopilotSidebar({
   product,
   resourceId,
   onProductEdited,
+  reviewInstruction,
   className,
 }: AICopilotSidebarProps) {
   const [activeTab, setActiveTab] = useState<TabId>('chat');
@@ -321,6 +323,16 @@ export function AICopilotSidebar({
               Pidele a la IA que modifique, agregue o elimine contenido del documento.
             </p>
             <div className="flex flex-wrap gap-1.5 justify-center">
+              {reviewInstruction && (
+                <button
+                  type="button"
+                  onClick={() => sendMessage(reviewInstruction)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white transition-all"
+                  style={{ backgroundColor: PALETTE.primary }}
+                >
+                  <Sparkles className="w-3 h-3" /> Corregir observaciones
+                </button>
+              )}
               {QUICK_SUGGESTIONS[activeTab].map(s => (
                 <button
                   key={s}

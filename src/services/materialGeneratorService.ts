@@ -32,6 +32,11 @@ export interface MaterialRequest {
   type?: string;
   criteria?: string[];
   evaluationSubType?: FormativeEvaluationType;
+  classDurationMinutes?: number;
+  grouping?: string;
+  availableResources?: string;
+  recommendedLessons?: number;
+  outputFormat?: 'word_editable';
 }
 
 export interface MaterialResult {
@@ -45,6 +50,11 @@ export interface MaterialResult {
   unidad?: UnidadDidactica;
   prompt?: string;
   context?: unknown;
+  quality?: {
+    status: 'ready' | 'draft' | 'blocked';
+    score: number;
+    issues: Array<{ code: string; severity: 'error' | 'warning'; message: string }>;
+  };
   error?: string;
 }
 
@@ -94,8 +104,14 @@ export interface UnidadDidacticaRequest {
   titulo?: string;
   nivel: string;
   metodologiaActiva: MetodologiaActiva;
-  oas: Array<{ subject: string; objective: string }>;
+  oas: Array<{ code?: string; subject: string; objective: string }>;
   instructions?: string;
+  classDurationMinutes?: number;
+  recommendedLessons?: number;
+  studentCount?: number;
+  grouping?: string;
+  availableResources?: string;
+  outputFormat?: 'word_editable';
 }
 
 // A diferencia de los demás generate*() de este archivo, no usa postJSON:

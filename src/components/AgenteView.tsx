@@ -59,10 +59,31 @@ export function AgenteView() {
     const next = [...messages, { role: 'user' as const, content: message }];
     setMessages(next); setInput(''); setBusy(true); setError('');
     try {
-      const data = await api.post<{ content: string }>('/api/agent', {
+      const data = await api.post<{ content: string; intent?: string; requiresConfirmation?: boolean; actions?: Array<{ tool: string; arguments: Record<string, unknown> }> }>('/api/copilot/chat', {
         message, mode, context: { nivel, asignatura, oa }, history: messages.slice(-8),
       });
-      setMessages([...next, { role: 'assistant', content: data.content }]);
+
+      const intentionText = data.intent ? `\n\nIntención: ${data.intent}${data.requiresConfirmation ? ' (requiere confirmación)' : ''}` : '';
+      const actionsText = data.actions && data.actions.length > 0
+        ? `\n\nAcciones sugeridas:\n- ${data.actions.map((action) => action.tool).join('\n- ')}`
+        : '';
+
+      const actionText = data.actions && data.actions.length > 0
+        ? `\n\n[Ejecutar: ${data.actions[0].tool}]`
+        : '';
+
+      setMessages([...next, { role: 'assistant', content: `${data.content || 'He revisado tu solicitud.'}${intentionText}${actionsText}${actionText}` }]);
+
+      if (data.requiresConfirmation && data.actions && data.actions.length > 0) {
+        const action = data.actions[0];
+        const decision = window.confirm(`¿Quieres ejecutar la acción “${action.tool}” sugerida por el asistente?`);
+        if (decision) {
+          const executed = await api.post<{ ok: boolean; message: string; result?: Record<string, unknown> }>('/api/copilot/execute', { action });
+          setMessages((prev) => [...prev, { role: 'assistant', content: `✅ ${executed.message}${executed.result ? `\n\nDetalle: ${JSON.stringify(executed.result)}` : ''}` }]);
+        } else {
+          setMessages((prev) => [...prev, { role: 'assistant', content: 'He dejado la acción sin ejecutar. Puedes pedirla nuevamente cuando quieras.' }]);
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo contactar al agente');
     } finally { setBusy(false); }

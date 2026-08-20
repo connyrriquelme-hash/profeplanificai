@@ -1,6 +1,7 @@
 import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
 import { generateGuia, type GuiaEngineInput } from '../../core/GuiaEngine';
 import type { AIEngineEnv } from '../../core/types';
+import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 
 interface Env { DB: D1Database; AI?: ImageEnv['AI']; GEMINI_API_KEY?: string; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
@@ -55,7 +56,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       guiaInput,
       body.type === 'guia_estudiante' ? 'estudiante' : 'docente',
     );
-
+    const quality = validatePedagogicalProduct(guide, {
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      productType: body.type,
+    });
     // Generate images for guide sections (en paralelo — antes era secuencial)
     const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
 
@@ -106,7 +111,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Guía generada para ${body.objectiveCode} — ${body.subject}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, guide, context: { objective, indicators: (indicators as any)?.results || [] } });
+    return Response.json({ ok: true, resourceId, guide, quality, context: { objective, indicators: (indicators as any)?.results || [] } });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar guía', details: err.message }, { status: 500 });
   }

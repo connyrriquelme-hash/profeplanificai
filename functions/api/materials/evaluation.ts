@@ -1,4 +1,5 @@
 import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 
 interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
@@ -33,7 +34,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     ).bind(body.objectiveCode).all();
 
     const evaluation = buildEvaluation(body, objective as any, (indicators as any)?.results || []);
-
+    const quality = validatePedagogicalProduct(evaluation, {
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      productType: 'evaluacion',
+    });
     // Generate images for open-ended questions
     const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
     const questionImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
@@ -82,7 +87,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Evaluación generada para ${body.objectiveCode}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, evaluation, context: { objective, indicators: (indicators as any)?.results || [] } });
+    return Response.json({ ok: true, resourceId, evaluation, quality, context: { objective, indicators: (indicators as any)?.results || [] } });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar evaluación', details: err.message }, { status: 500 });
   }

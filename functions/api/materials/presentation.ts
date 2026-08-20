@@ -2,6 +2,7 @@ import { generateDeckContent } from '../../core/PptContentEngine';
 import type { PedagogicalPlan, AIEngineEnv } from '../../core/types';
 import type { PptDeck, Slide as PptDeckSlide } from '../../../schemas/PptDeckSchema';
 import { getAuthenticatedUserId } from '../../_lib/auth';
+import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 
 interface Env { DB: D1Database; AI?: any; GEMINI_API_KEY?: string; JWT_SECRET: string }
 
@@ -167,6 +168,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       contentJsonPayload.pptDeck = pptDeck;
     }
 
+    const quality = validatePedagogicalProduct({ slides }, {
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      productType: 'presentacion',
+    });
     const promptUsed = pptDeck
       ? `Presentación generada con IA para ${body.objectiveCode} — ${body.subject}`
       : `Presentación generada para ${body.objectiveCode} — ${body.subject}`;
@@ -211,6 +217,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         slideCount: slides.length,
       },
       ...(pptDeck ? { pptDeck } : {}),
+      quality,
     });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar presentación', details: err.message }, { status: 500 });

@@ -1,5 +1,6 @@
 import { generateBitacora, type BitacoraEngineInput } from '../../core/BitacoraEngine';
 import type { AIEngineEnv } from '../../core/types';
+import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 
 interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
 
@@ -50,7 +51,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const consignasIA = await generateBitacora({ AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv, bitacoraInput);
 
     const evaluation = { ...baseBitacora, consignasIA };
-
+    const quality = validatePedagogicalProduct(evaluation, {
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      productType: 'bitacora_cientifica',
+    });
     const resourceId = `bitacora_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
       `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
@@ -68,7 +73,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Bitácora Científica IA generada para ${body.objectiveCode}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, evaluation, context: { objective, indicators: (indicators as any)?.results || [] } });
+    return Response.json({ ok: true, resourceId, evaluation, quality, context: { objective, indicators: (indicators as any)?.results || [] } });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar bitácora científica', details: err.message }, { status: 500 });
   }

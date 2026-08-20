@@ -28,6 +28,7 @@ import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DuaGuideGenerator } from './pages/DuaGuideGenerator';
 import { ProjectCopilot } from './components/ProjectCopilot';
+import { CopilotTasksView } from './components/CopilotTasksView';
 import { ActiveLessonProvider } from './contexts/ActiveLessonContext';
 import { ClassbookView } from './pages/ClassbookView';
 import { CoordinatorDashboardView } from './pages/CoordinatorDashboardView';
@@ -147,6 +148,8 @@ function AppContent() {
         return <DuaGuideGenerator />;
       case 'project-copilot':
         return <ProjectCopilot onNavigate={handleViewChange} />;
+      case 'copilot-tasks':
+        return <CopilotTasksView />;
       case 'admin':
         return <AdminView onNavigate={handleViewChange} />;
       case 'admin-panel':

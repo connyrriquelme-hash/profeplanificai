@@ -9,8 +9,14 @@ interface UnidadDidacticaRequestBody {
   titulo?: string;
   nivel: string;
   metodologiaActiva: string;
-  oas: Array<{ subject: string; objective: string }>;
+  oas: Array<{ code?: string; subject: string; objective: string }>;
   instructions?: string;
+  classDurationMinutes?: number;
+  recommendedLessons?: number;
+  studentCount?: number;
+  grouping?: string;
+  availableResources?: string;
+  outputFormat?: string;
 }
 
 // Deriva un código corto de OA a partir del texto libre que hoy escribe
@@ -50,7 +56,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const objetivosAprendizaje: ObjetivoAprendizajeInput[] = body.oas
       .filter((o) => o.objective && o.objective.trim().length > 0)
-      .map((o, i) => ({ code: deriveOaCode(o.objective, i), text: o.objective.trim() }));
+      .map((o, i) => ({ code: o.code?.trim() || deriveOaCode(o.objective, i), text: o.objective.trim() }));
 
     if (objetivosAprendizaje.length === 0) {
       return Response.json({ error: 'Al menos un OA debe tener texto de objetivo' }, { status: 400 });
@@ -64,6 +70,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         metodologiaActiva: body.metodologiaActiva as MetodologiaActiva,
         objetivosAprendizaje,
         temaSugerido: body.titulo || body.instructions,
+        classDurationMinutes: body.classDurationMinutes,
+        recommendedLessons: body.recommendedLessons,
+        studentCount: body.studentCount,
+        grouping: body.grouping,
+        availableResources: body.availableResources,
       },
     );
 

@@ -1,6 +1,7 @@
 import { generatePlanificacion } from '../../core/PlanificacionEngine';
 import { getProfePlanificAIContext, getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from '../../core/ExpertKnowledge';
 import type { AIEngineEnv } from '../../core/types';
+import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 
 interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
 
@@ -18,6 +19,11 @@ interface GenerateRequest {
   designStyle?: string;
   duration?: string;
   studentCount?: number;
+  classDurationMinutes?: number;
+  grouping?: string;
+  availableResources?: string;
+  recommendedLessons?: number;
+  outputFormat?: string;
 }
 
 function getContextFromD1(db: D1Database, req: GenerateRequest): Promise<any> {
@@ -49,6 +55,11 @@ function buildMaterialPrompt(type: string, req: GenerateRequest, context: any): 
     req.additionalContext ? `Contexto adicional del docente: ${req.additionalContext}` : '',
     req.duration ? `Duración disponible: ${req.duration}` : '',
     req.studentCount ? `Estudiantes: ${req.studentCount}` : '',
+    req.classDurationMinutes ? `Duración del bloque escolar: ${req.classDurationMinutes} minutos` : '',
+    req.grouping ? `Organización del curso: ${req.grouping}` : '',
+    req.availableResources ? `Recursos realmente disponibles: ${req.availableResources}` : '',
+    req.recommendedLessons ? `Cantidad heurística recomendada de clases: ${req.recommendedLessons}` : '',
+    req.outputFormat ? `Formato de salida: ${req.outputFormat}` : '',
   ].filter(Boolean).join('\n');
 
   // Contexto experto completo inyectado en TODOS los productos
@@ -451,6 +462,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
           indicators: body.indicators,
         },
       );
+      const quality = validatePedagogicalProduct(planificacion, {
+        objectiveCode: body.objectiveCode,
+        objectiveText: body.objectiveText,
+        methodology: body.methodology,
+        productType: type,
+      });
 
       await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
@@ -472,6 +489,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         ok: true,
         resourceId,
         planificacion,
+        quality,
         usedFallback,
         context: {
           objective: ctx[0],

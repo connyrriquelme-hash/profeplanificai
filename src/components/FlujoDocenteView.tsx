@@ -19,6 +19,7 @@ import type { PedagogicalProduct } from './products/types';
 import { normalizeProduct } from './products/normalizers';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
+import { defaultClassroomConfiguration, groupingLabel, recommendLessonCount, type ClassroomConfiguration } from '../utils/pedagogicalHeuristics';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -124,6 +125,7 @@ export function FlujoDocenteView() {
   const [selectedProducto, setSelectedProducto] = useState('');
   const [topic, setTopic] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
+  const [classroomConfig, setClassroomConfig] = useState<ClassroomConfiguration>(defaultClassroomConfiguration);
   const [referenceUrl, setReferenceUrl] = useState('');
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState('');
@@ -136,6 +138,14 @@ export function FlujoDocenteView() {
   const [renderError, setRenderError] = useState('');
   const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
   const [unidadDidactica, setUnidadDidactica] = useState<UnidadDidactica | null>(null);
+  const [qualityReport, setQualityReport] = useState<MaterialResult['quality']>(undefined);
+
+  const recommendedLessons = useMemo(() => recommendLessonCount({
+    objectiveText: selectedOA?.official_text || '',
+    methodology: selectedMethodology,
+    productType: selectedProducto,
+    classDurationMinutes: classroomConfig.classDurationMinutes,
+  }), [selectedOA?.official_text, selectedMethodology, selectedProducto, classroomConfig.classDurationMinutes]);
 
   // Load courses
   useEffect(() => {
@@ -274,7 +284,16 @@ export function FlujoDocenteView() {
       setRenderError('');
       setPremiumRubric(null);
       setUnidadDidactica(null);
+      setQualityReport(undefined);
       setStep('generando');
+
+    const classroomInstructions = [
+      `Configuración escolar: bloque de ${classroomConfig.classDurationMinutes} minutos; ${classroomConfig.studentCount} estudiantes; ${groupingLabel(classroomConfig.grouping)}.`,
+      `Recursos disponibles: ${classroomConfig.availableResources}.`,
+      `La salida debe quedar preparada para edición posterior en Word.`,
+      `La heurística recomienda ${recommendedLessons} clases para desarrollar este OA; si el producto es de clase única, úsalo como una sesión dentro de esa secuencia.`,
+    ].join('\n');
+    const effectiveContext = [additionalContext.trim(), classroomInstructions].filter(Boolean).join('\n\n');
 
     const req: MaterialRequest = {
       level: selectedOA.course_name,
@@ -284,8 +303,14 @@ export function FlujoDocenteView() {
       indicators,
       skills,
       topic: topic || selectedOA.official_text.substring(0, 60),
-      additionalContext,
+      additionalContext: effectiveContext,
       methodology: selectedMethodology,
+      classDurationMinutes: classroomConfig.classDurationMinutes,
+      studentCount: classroomConfig.studentCount,
+      grouping: groupingLabel(classroomConfig.grouping),
+      availableResources: classroomConfig.availableResources,
+      recommendedLessons,
+      outputFormat: classroomConfig.outputFormat,
     };
 
     try {
@@ -314,9 +339,15 @@ export function FlujoDocenteView() {
         res = await generateUnidadDidactica({
           titulo: topic || 'Serie de lecciones',
           nivel: selectedOA.course_name,
-          metodologiaActiva: 'Tradicional',
-          oas: [{ subject: selectedOA.subject_name, objective: selectedOA.official_text }],
-          instructions: additionalContext || undefined,
+          metodologiaActiva: (selectedMethodology || 'Tradicional') as 'Tradicional' | 'ABP' | 'Gamificacion' | 'Aula Invertida' | 'Design Thinking',
+          oas: [{ code: selectedOA.code, subject: selectedOA.subject_name, objective: selectedOA.official_text }],
+          instructions: effectiveContext || undefined,
+          classDurationMinutes: classroomConfig.classDurationMinutes,
+          recommendedLessons,
+          studentCount: classroomConfig.studentCount,
+          grouping: groupingLabel(classroomConfig.grouping),
+          availableResources: classroomConfig.availableResources,
+          outputFormat: classroomConfig.outputFormat,
         });
       } else {
         switch (selectedProducto) {
@@ -351,6 +382,7 @@ export function FlujoDocenteView() {
           setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         }
         setResourceId(res.resourceId || '');
+        setQualityReport(res.quality);
         if (selectedProducto === 'rubrica' && res.rubric) {
           setPremiumRubric(res.rubric as PremiumRubric);
         }
@@ -371,23 +403,19 @@ export function FlujoDocenteView() {
     } finally {
       setLoading(false);
     }
-  }, [selectedOA, selectedProducto, indicators, skills, topic, additionalContext, selectedMethodology]);
+  }, [selectedOA, selectedProducto, indicators, skills, topic, additionalContext, selectedMethodology, classroomConfig, recommendedLessons]);
 
   const handleSave = useCallback(async () => {
     if (!resourceId) return;
     try {
-      await fetch('/api/resources', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      await api.post('/api/resources', {
           title: `${selectedProducto} — ${selectedOA?.code}`,
           type: selectedProducto,
           content: JSON.stringify(result),
           level: selectedOA?.course_name,
           subject: selectedOA?.subject_name,
           objectiveCode: selectedOA?.code,
-        }),
-      });
+        });
     } catch {}
   }, [resourceId, result, selectedProducto, selectedOA]);
 
@@ -610,6 +638,35 @@ export function FlujoDocenteView() {
               placeholder="Ej: Curso de 32 estudiantes, 5 con NEE..."
               className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
             />
+          </div>
+
+          <div className="rounded-xl border border-[var(--primary)]/20 bg-[var(--primary-tint)] p-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Configuración de tu realidad escolar</p>
+              <p className="text-xs text-gray-500 mt-0.5">Estos datos ajustan tiempos, instrucciones, materiales y formato de salida.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <label className="text-xs font-semibold text-gray-600">Duración del bloque
+                <select value={classroomConfig.classDurationMinutes} onChange={e => setClassroomConfig(prev => ({ ...prev, classDurationMinutes: Number(e.target.value) as 45 | 90 | 135 }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal">
+                  <option value={45}>45 minutos</option><option value={90}>90 minutos</option><option value={135}>135 minutos</option>
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-gray-600">Estudiantes
+                <input type="number" min={1} max={60} value={classroomConfig.studentCount} onChange={e => setClassroomConfig(prev => ({ ...prev, studentCount: Math.min(60, Math.max(1, Number(e.target.value) || 1)) }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-gray-600">Organización
+                <select value={classroomConfig.grouping} onChange={e => setClassroomConfig(prev => ({ ...prev, grouping: e.target.value as ClassroomConfiguration['grouping'] }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal">
+                  <option value="individual">Individual</option><option value="pairs">Parejas</option><option value="small_groups">Grupos pequeños</option><option value="whole_class">Curso completo</option><option value="stations">Estaciones</option>
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-gray-600">Formato de salida
+                <select value={classroomConfig.outputFormat} onChange={() => setClassroomConfig(prev => ({ ...prev, outputFormat: 'word_editable' }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal"><option value="word_editable">Word editable</option></select>
+              </label>
+            </div>
+            <label className="block text-xs font-semibold text-gray-600">Recursos disponibles
+              <input value={classroomConfig.availableResources} onChange={e => setClassroomConfig(prev => ({ ...prev, availableResources: e.target.value }))} placeholder="Ej.: pizarra, textos impresos, material concreto..." className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal" />
+            </label>
+            <div className="flex flex-col gap-1 text-xs text-[var(--primary-ink)] sm:flex-row sm:items-center sm:justify-between"><span><strong>Recomendación para este OA:</strong> {recommendedLessons} clases de {classroomConfig.classDurationMinutes} minutos.</span><span>{groupingLabel(classroomConfig.grouping)} · {classroomConfig.studentCount} estudiantes</span></div>
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
@@ -844,14 +901,27 @@ export function FlujoDocenteView() {
       const isPPT = normalizedProduct.type === 'presentacion' || selectedProducto === 'presentacion';
 
       return (
-        <WorkspaceLayout
-          product={normalizedProduct}
-          resourceId={resourceId}
-          onBack={() => setStep('producto')}
-          onExport={handleSave}
-          onProductChange={(updated) => setResult(updated)}
-          mode={isPPT ? 'ppt' : 'document'}
-        />
+        <div className="w-full h-full flex flex-col">
+          {qualityReport && qualityReport.status !== 'ready' && (
+            <div className={`px-4 py-3 text-sm ${qualityReport.status === 'blocked' ? 'bg-red-50 text-red-800 border-b border-red-200' : 'bg-amber-50 text-amber-900 border-b border-amber-200'}`}>
+              <div className="max-w-7xl mx-auto flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <strong>{qualityReport.status === 'blocked' ? 'Revisión necesaria antes de aplicar' : 'Borrador pedagógico: revisa antes de aplicar'}</strong>
+                  <p className="text-xs mt-1">Puntaje de control: {qualityReport.score}/100. {qualityReport.issues.map((issue) => issue.message).join(' ')}</p>
+                </div>
+                <span className="text-xs font-semibold whitespace-nowrap">{qualityReport.issues.length} observación{qualityReport.issues.length === 1 ? '' : 'es'}</span>
+              </div>
+            </div>
+          )}
+          <WorkspaceLayout
+            product={normalizedProduct}
+            resourceId={resourceId}
+            onBack={() => setStep('producto')}
+            onExport={handleSave}
+            onProductChange={(updated) => setResult(updated)}
+            mode={isPPT ? 'ppt' : 'document'}
+          />
+        </div>
       );
     }
 

@@ -7,6 +7,7 @@ import {
   generateRubricaContent,
   type RubricaContextInput,
 } from '../../core/RubricaEngine';
+import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 
 // Re-exportadas para no romper test/serverRubricCoverage.test.ts, que
 // importa estas funciones puras directamente desde este archivo.
@@ -117,6 +118,11 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       (rubric as any).imageTitles = imageTitles;
     }
 
+    const quality = validatePedagogicalProduct(rubric, {
+      objectiveCode: body.objectiveCode,
+      objectiveText: body.objectiveText,
+      productType: 'rubrica',
+    });
     const resourceId = `rubric_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
       `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, prompt_used, created_at, updated_at)
@@ -133,7 +139,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Rúbrica premium generada para ${body.objectiveCode}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, rubric });
+    return Response.json({ ok: true, resourceId, rubric, quality });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar rúbrica', details: err.message }, { status: 500 });
   }

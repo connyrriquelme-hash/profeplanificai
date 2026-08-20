@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { DocumentEditor } from './DocumentEditor';
 import { AICopilotSidebar } from './AICopilotSidebar';
+import { QualityReviewPanel } from './QualityReviewPanel';
 import { PresentacionRenderer } from '../products/renderers/PresentacionRenderer';
 import type { PedagogicalProduct } from '../products/types';
 
@@ -39,6 +40,11 @@ interface WorkspaceLayoutProps {
   onBack?: () => void;
   onExport?: () => void;
   onProductChange?: (updated: PedagogicalProduct) => void;
+  qualityReport?: {
+    status: 'ready' | 'draft' | 'blocked';
+    score: number;
+    issues: Array<{ severity: 'error' | 'warning'; message: string }>;
+  };
   mode?: 'document' | 'ppt';
   className?: string;
 }
@@ -49,6 +55,7 @@ export function WorkspaceLayout({
   onBack,
   onExport,
   onProductChange,
+  qualityReport,
   mode = 'document',
   className,
 }: WorkspaceLayoutProps) {
@@ -193,9 +200,17 @@ export function WorkspaceLayout({
 
         {/* Right: AI Copilot sidebar (30%) */}
         <div className="flex-[3] min-w-[320px] max-w-[420px] border-l border-gray-200 bg-white flex flex-col overflow-hidden print:hidden">
+          {qualityReport && <QualityReviewPanel
+            status={qualityReport.status}
+            score={qualityReport.score}
+            issues={qualityReport.issues}
+          />}
           <AICopilotSidebar
             product={activeProduct}
             resourceId={resourceId}
+            reviewInstruction={qualityReport && qualityReport.status !== 'ready'
+              ? `Corrige estas observaciones de calidad pedagógica: ${qualityReport.issues.map((issue) => issue.message).join(' ')} Mantén el OA, el nivel, la asignatura y la intención original.`
+              : undefined}
             onProductEdited={handleAIEdit}
           />
         </div>

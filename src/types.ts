@@ -269,6 +269,7 @@ export type ViewType =
   | 'reportes'
   | 'dua-guide'
   | 'project-copilot'
+  | 'copilot-tasks'
   | 'admin'
   | 'admin-panel'
   | 'libro-clases'
