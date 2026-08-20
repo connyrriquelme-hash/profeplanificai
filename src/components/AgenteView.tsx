@@ -30,6 +30,24 @@ interface CopilotChatResponse {
   toolResults?: Array<{ tool: string; ok: boolean; result?: unknown; error?: string }>;
 }
 
+interface GenerateMaterialResult {
+  resourceId: string;
+  type: string;
+  preview: unknown;
+}
+
+interface SaveToBankResult {
+  bankResourceId: string;
+}
+
+interface CopilotConfirmResponse {
+  ok: boolean;
+  conversationId: string;
+  tool: 'generate_material' | 'save_to_bank' | 'edit_material';
+  message: string;
+  result: GenerateMaterialResult | SaveToBankResult | Record<string, unknown>;
+}
+
 interface ActiveContext {
   level?: string;
   subject?: string;
@@ -42,6 +60,7 @@ type Message = {
   role: 'user' | 'assistant';
   content: string;
   intent?: CopilotIntent;
+  toolResult?: { tool: 'generate_material' | 'save_to_bank' | 'edit_material'; result: any };
 };
 
 interface PendingConfirmation {
@@ -50,6 +69,7 @@ interface PendingConfirmation {
 }
 
 const REQUEST_TIMEOUT_MS = 30_000;
+const WRITE_TOOL_NAMES = new Set(['generate_material', 'save_to_bank', 'edit_material']);
 
 const INTENT_BADGES: Record<CopilotIntent, string> = {
   search_curriculum: '🔍 Buscar currículo',
@@ -173,14 +193,48 @@ export function AgenteView({ activeContext: activeContextProp, onNavigate }: Age
     }
   };
 
+  const runConfirmedAction = async (action: CopilotAction) => {
+    if (busy || !conversationIdRef.current) return;
+    setBusy(true); setError('');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const data = await api.post<CopilotConfirmResponse>('/api/copilot/confirm', {
+        conversationId: conversationIdRef.current,
+        confirmedAction: action,
+      }, controller.signal);
+      setMessages((prev) => [...prev, {
+        role: 'assistant' as const,
+        content: data.message,
+        intent: data.tool,
+        toolResult: { tool: data.tool, result: data.result },
+      }]);
+    } catch (e) {
+      const isTimeout = e instanceof DOMException && e.name === 'AbortError';
+      setError(isTimeout
+        ? 'La acción está tardando más de lo esperado. Intenta de nuevo en unos segundos.'
+        : e instanceof Error ? e.message : 'No se pudo confirmar la acción');
+    } finally {
+      clearTimeout(timeoutId);
+      setBusy(false);
+    }
+  };
+
   const confirmPending = () => {
     if (!pendingConfirmation) return;
+    const action = pendingConfirmation.actions.find((a) => WRITE_TOOL_NAMES.has(a.tool));
     setPendingConfirmation(null);
-    send('Sí, procede con esa acción.');
+    if (action) runConfirmedAction(action);
   };
 
   const cancelPending = () => {
     setPendingConfirmation(null);
+  };
+
+  const saveResultToBank = (resourceId: string) => {
+    runConfirmedAction({ tool: 'save_to_bank', arguments: { resourceId } });
   };
 
   return (
@@ -249,6 +303,22 @@ export function AgenteView({ activeContext: activeContextProp, onNavigate }: Age
                   <div className="btnrow" style={{ marginTop: 8 }}>
                     <button className="primary" onClick={confirmPending} disabled={busy}>Confirmar</button>
                     <button className="secondary" onClick={cancelPending} disabled={busy}>Cancelar</button>
+                  </div>
+                )}
+                {m.toolResult?.tool === 'generate_material' && (
+                  <div className="btnrow" style={{ marginTop: 8 }}>
+                    <button
+                      className="secondary"
+                      disabled={busy}
+                      onClick={() => saveResultToBank((m.toolResult!.result as GenerateMaterialResult).resourceId)}
+                    >
+                      Guardar en Banco de Recursos
+                    </button>
+                  </div>
+                )}
+                {m.toolResult?.tool === 'save_to_bank' && onNavigate && (
+                  <div className="btnrow" style={{ marginTop: 8 }}>
+                    <button className="secondary" onClick={() => onNavigate('banco-recursos')}>Ir al Banco de Recursos</button>
                   </div>
                 )}
               </>

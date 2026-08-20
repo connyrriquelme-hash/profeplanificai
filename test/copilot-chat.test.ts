@@ -158,4 +158,26 @@ describe('POST /api/copilot/chat', () => {
     expect(response.status).toBe(405);
     expect(data.error).toContain('POST');
   });
+
+  it('aunque la IA proponga generate_material con requiresConfirmation:false, nunca se auto-ejecuta (Fase 2 — WRITE_TOOLS)', async () => {
+    const ctx = await makeContext({
+      aiResponse: JSON.stringify(validCopilotAiResponse({
+        intent: 'generate_material',
+        requiresConfirmation: false,
+        actions: [{
+          tool: 'generate_material',
+          arguments: { type: 'guia_estudiante', level: '4B', subject: 'Matemática', objectiveCode: 'MA04 OA 03', objectiveText: 'x', topic: 'fracciones' },
+        }],
+      })),
+    });
+    const response = await onRequestPost(ctx);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.requiresConfirmation).toBe(false);
+    expect(data.actions[0].tool).toBe('generate_material');
+    // La herramienta de escritura queda propuesta pero jamás se ejecuta acá:
+    // solo /api/copilot/confirm puede ejecutarla, y solo tras confirmación.
+    expect(data.toolResults).toEqual([]);
+  });
 });
