@@ -1143,8 +1143,28 @@ REGLAS OBLIGATORIAS:
 9. NO copies literalmente el texto oficial del OA en ningún criterio o descriptor: reformúlalo en lenguaje observable.
 10. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones externas, cumpliendo exactamente la estructura solicitada.
 
-ESTRUCTURA JSON OBLIGATORIA:
-{ "learningGoal": "...", "studentFriendlyGoal": "...", "criteria": [{ "id": "c1", "name": "...", "description": "...", "weight": 25, "indicators": [{ "levelId": "avanzado", "descriptor": "...", "evidence": "...", "feedbackSuggestion": "..." }] }], "usageInstructions": ["..."], "inclusiveAdjustments": ["..."], "studentSelfAssessment": { "title": "...", "prompts": ["..."] } }`;
+ESTRUCTURA JSON OBLIGATORIA (ejemplo con 1 criterio completo — genera entre 2 y 10):
+{
+  "learningGoal": "Meta de aprendizaje reformulada para el docente, ligada al OA real, nunca copiada literalmente del texto oficial",
+  "studentFriendlyGoal": "La misma meta reformulada en lenguaje simple dirigido al estudiante",
+  "criteria": [
+    {
+      "id": "c1",
+      "name": "Nombre específico de la dimensión evaluada, ligado al tema y OA (nunca 'Criterio 1' ni 'Comprensión general')",
+      "description": "Qué evalúa este criterio en relación directa al OA y al tema de la clase",
+      "weight": 25,
+      "indicators": [
+        { "levelId": "avanzado", "descriptor": "Desempeño observable y medible en nivel avanzado, específico al tema (mínimo 20 caracteres, nunca frase genérica)", "evidence": "Evidencia concreta y observable por el docente (un producto, registro o respuesta esperada)", "feedbackSuggestion": "Frase breve en segunda persona dirigida al estudiante, coherente con este nivel" },
+        { "levelId": "adecuado", "descriptor": "Desempeño observable en nivel adecuado, distinto al de los otros 3 niveles", "evidence": "Evidencia concreta para este nivel", "feedbackSuggestion": "Frase breve en segunda persona para este nivel" },
+        { "levelId": "en_desarrollo", "descriptor": "Desempeño observable en nivel en desarrollo, distinto al de los otros 3 niveles", "evidence": "Evidencia concreta para este nivel", "feedbackSuggestion": "Frase breve en segunda persona para este nivel" },
+        { "levelId": "inicial", "descriptor": "Desempeño observable en nivel inicial, distinto al de los otros 3 niveles", "evidence": "Evidencia concreta para este nivel", "feedbackSuggestion": "Frase breve en segunda persona para este nivel" }
+      ]
+    }
+  ],
+  "usageInstructions": ["Paso concreto 1 para que el docente use la rúbrica en clase", "Paso concreto 2", "Paso concreto 3"],
+  "inclusiveAdjustments": ["Adecuación de acceso/DUA concreta 1, pertinente al nivel y asignatura (no genérica)", "Adecuación 2", "Adecuación 3"],
+  "studentSelfAssessment": { "title": "Título breve para la autoevaluación", "prompts": ["Pregunta o frase de autoevaluación 1", "Pregunta 2", "Pregunta 3"] }
+}`;
 }
 
 // Mismo diccionario que valida test/premiumRubricModel.test.ts — se duplica
