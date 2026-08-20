@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot, GraduationCap, WandSparkles, ListChecks } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot, GraduationCap, WandSparkles, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../utils/roles';
 
@@ -24,6 +24,7 @@ const menuSections = [
     label: 'HERRAMIENTAS IA',
     items: [
       { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
+      { id: 'agente', label: 'Agente Pedagógico', icon: MessageCircle },
       { id: 'biblioteca-creativa', label: 'Biblioteca Creativa', icon: WandSparkles },
       { id: 'flujo-docente', label: 'Flujo Docente', icon: Route },
       { id: 'mis-clases', label: 'Mis Clases', icon: Sparkles },
@@ -32,7 +33,6 @@ const menuSections = [
       { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
       { id: 'dua-guide', label: 'Guía DUA (Multinivel)', icon: BookOpen },
       { id: 'project-copilot', label: 'Project Copilot', icon: Bot },
-      { id: 'copilot-tasks', label: 'Mis tareas IA', icon: ListChecks },
       { id: 'reportes', label: 'Reportes', icon: BarChart2 },
     ],
   },

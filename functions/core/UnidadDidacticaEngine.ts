@@ -74,8 +74,8 @@ REGLAS OBLIGATORIAS:
    - Aula Invertida: estudio previo fuera de la clase, verificación de comprensión, práctica guiada en clase, aplicación/extensión.
    - Tradicional: secuencia de contenidos (introducción, desarrollo, práctica, cierre/evaluación).
    Entre 2 y 8 fases. Cada fase: nombre (máx 60 caracteres), descripcion (máx 300 caracteres) y orden (entero secuencial empezando en 0). Las fases deben tener nombres concretos y descriptivos que reflejen qué ocurre en ellas — nunca "Fase 1", "Fase 2" genéricas.
-2. Diseña exactamente ${opciones.recommendedLessons || 3} CLASES distribuidas entre esas fases. El campo clases[].faseAsociada debe ser EXACTAMENTE igual al nombre de una de las fases que definiste. Respeta la duración de ${opciones.classDurationMinutes || 90} minutos por clase y distribuye sus tiempos sin superar ese total.
-3. Cada clase tiene: numero (entero secuencial único, empezando en 1), faseAsociada, tema (concreto, máx 100 caracteres, nunca copiado del OA), objetivoEspecifico (máx 300 caracteres, ligado a los OA reales pero reformulado), y estructuraClase con inicio/desarrollo/cierre — cada uno con tiempoMinutos (entero, entre 5 y 90) y descripcion (máx 500 caracteres) de qué hace el docente y qué hacen los estudiantes.
+2. Diseña entre 2 y 12 CLASES distribuidas entre esas fases, apuntando a ${opciones.recommendedLessons || 3} como referencia salvo que el contenido real de los OA exija más o menos. El campo clases[].faseAsociada debe ser EXACTAMENTE igual al nombre de una de las fases que definiste. Respeta la duración de ${opciones.classDurationMinutes || 90} minutos por clase y distribuye sus tiempos sin superar ese total.
+3. Cada clase tiene: numero (entero secuencial único, empezando en 1), faseAsociada, tema (concreto, máx 100 caracteres, nunca copiado del OA), objetivoEspecifico (máx 300 caracteres, ligado a los OA reales pero reformulado), y estructuraClase con inicio/desarrollo/cierre — cada uno con tiempoMinutos (entero, entre 5 y 90) y descripcion (máx 900 caracteres) de qué hace el docente y qué hacen los estudiantes.
 
 REGLAS DE CALIDAD POR CAMPO:
 4. INICIO: El campo "inicio.descripcion" de cada clase debe describir UNA estrategia concreta de activación de conocimientos previos específica al tema — escribe exactamente qué pregunta hacer, qué mostrar o qué situación plantear. NUNCA uses solo "Activación de conocimientos previos" sin describirla. Mínimo 40 caracteres.
@@ -320,7 +320,11 @@ export async function generateUnidadDidactica(
       buildSystemPrompt(opciones),
       JSON.stringify(buildContextoParaIA(opciones), null, 2),
       UnidadDidacticaSchema,
-      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 4000 },
+      // 4000 (valor original) quedaba justo para unidades con varias clases
+      // ahora que ETAPA_DESCRIPCION_MAX subio a 900 (ver comentario en
+      // UnidadDidacticaSchema.ts) — hasta 12 clases x 3 etapas cada una
+      // necesitan presupuesto real para no cortarse a mitad del JSON.
+      { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 6000 },
     );
     return { unidad: enrichUnidad(data, fallback), usedFallback: false };
   } catch (error) {

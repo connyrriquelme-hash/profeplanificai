@@ -1,4 +1,5 @@
 import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 import {
   buildPremiumRubric,
   detectSubjectCategory,
@@ -8,7 +9,6 @@ import {
   type RubricaContextInput,
 } from '../../core/RubricaEngine';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
-import { getAuthenticatedUserId } from '../../_lib/auth';
 
 // Re-exportadas para no romper test/serverRubricCoverage.test.ts, que
 // importa estas funciones puras directamente desde este archivo.

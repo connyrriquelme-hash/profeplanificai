@@ -23,6 +23,7 @@ const SharedPanelView = lazy(() => import('./components/SharedPanelView').then(m
 const SharedDocumentPublicView = lazy(() => import('./components/SharedDocumentPublicView').then(m => ({ default: m.SharedDocumentPublicView })));
 const UnidadesDidacticasView = lazy(() => import('./components/UnidadesDidacticasView').then(m => ({ default: m.UnidadesDidacticasView })));
 const FlujoDocenteView = lazy(() => import('./components/FlujoDocenteView').then(m => ({ default: m.FlujoDocenteView })));
+const AgenteView = lazy(() => import('./components/AgenteView').then(m => ({ default: m.AgenteView })));
 const MisClases = lazy(() => import('./components/MisClases').then(m => ({ default: m.MisClases })));
 const ReportesView = lazy(() => import('./components/ReportesView').then(m => ({ default: m.ReportesView })));
 const AdminView = lazy(() => import('./components/AdminView'));
@@ -30,7 +31,6 @@ const AdminPanelView = lazy(() => import('./components/AdminPanelView'));
 const LoginView = lazy(() => import('./components/LoginView'));
 const DuaGuideGenerator = lazy(() => import('./pages/DuaGuideGenerator').then(m => ({ default: m.DuaGuideGenerator })));
 const ProjectCopilot = lazy(() => import('./components/ProjectCopilot').then(m => ({ default: m.ProjectCopilot })));
-const CopilotTasksView = lazy(() => import('./components/CopilotTasksView').then(m => ({ default: m.CopilotTasksView })));
 const ClassbookView = lazy(() => import('./pages/ClassbookView').then(m => ({ default: m.ClassbookView })));
 const CoordinatorDashboardView = lazy(() => import('./pages/CoordinatorDashboardView').then(m => ({ default: m.CoordinatorDashboardView })));
 const ClassSessionDetailView = lazy(() => import('./components/classbook/ClassSessionDetailView').then(m => ({ default: m.ClassSessionDetailView })));
@@ -142,7 +142,7 @@ function AppContent() {
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':
-        return <BancoRecursosView onNavigate={handleViewChange} />;
+        return <AgenteView onNavigate={handleViewChange} />;
       case 'biblioteca-creativa':
         return <LibraryView onNavigate={handleViewChange} />;
       case 'evaluaciones':
@@ -161,8 +161,6 @@ function AppContent() {
         return <DuaGuideGenerator />;
       case 'project-copilot':
         return <ProjectCopilot onNavigate={handleViewChange} />;
-      case 'copilot-tasks':
-        return <CopilotTasksView />;
       case 'admin':
         return <AdminView onNavigate={handleViewChange} />;
       case 'admin-panel':
