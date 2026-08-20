@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
@@ -9,30 +9,39 @@ import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { AppShell } from './components/ui/AppShell';
 import { MobileBottomNav } from './components/ui/MobileBottomNav';
-import { DashboardView } from './components/DashboardView';
-import { WorkspaceView } from './components/WorkspaceView';
-import { CurriculumCloudView } from './components/CurriculumCloudView';
-import { LibraryView } from './components/LibraryView';
-import { BancoRecursosView } from './components/BancoRecursosView';
-import { EvaluacionesView } from './components/EvaluacionesView';
-import { SharedPanelView } from './components/SharedPanelView';
-import { SharedDocumentPublicView } from './components/SharedDocumentPublicView';
 import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
-import { UnidadesDidacticasView } from './components/UnidadesDidacticasView';
-import { FlujoDocenteView } from './components/FlujoDocenteView';
-import { MisClases } from './components/MisClases';
-import { ReportesView } from './components/ReportesView';
-import AdminView from './components/AdminView';
-import AdminPanelView from './components/AdminPanelView';
-import LoginView from './components/LoginView';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { DuaGuideGenerator } from './pages/DuaGuideGenerator';
-import { ProjectCopilot } from './components/ProjectCopilot';
-import { CopilotTasksView } from './components/CopilotTasksView';
 import { ActiveLessonProvider } from './contexts/ActiveLessonContext';
-import { ClassbookView } from './pages/ClassbookView';
-import { CoordinatorDashboardView } from './pages/CoordinatorDashboardView';
-import { ClassSessionDetailView } from './components/classbook/ClassSessionDetailView';
+
+const DashboardView = lazy(() => import('./components/DashboardView').then(m => ({ default: m.DashboardView })));
+const WorkspaceView = lazy(() => import('./components/WorkspaceView').then(m => ({ default: m.WorkspaceView })));
+const CurriculumCloudView = lazy(() => import('./components/CurriculumCloudView').then(m => ({ default: m.CurriculumCloudView })));
+const LibraryView = lazy(() => import('./components/LibraryView').then(m => ({ default: m.LibraryView })));
+const BancoRecursosView = lazy(() => import('./components/BancoRecursosView').then(m => ({ default: m.BancoRecursosView })));
+const EvaluacionesView = lazy(() => import('./components/EvaluacionesView').then(m => ({ default: m.EvaluacionesView })));
+const SharedPanelView = lazy(() => import('./components/SharedPanelView').then(m => ({ default: m.SharedPanelView })));
+const SharedDocumentPublicView = lazy(() => import('./components/SharedDocumentPublicView').then(m => ({ default: m.SharedDocumentPublicView })));
+const UnidadesDidacticasView = lazy(() => import('./components/UnidadesDidacticasView').then(m => ({ default: m.UnidadesDidacticasView })));
+const FlujoDocenteView = lazy(() => import('./components/FlujoDocenteView').then(m => ({ default: m.FlujoDocenteView })));
+const MisClases = lazy(() => import('./components/MisClases').then(m => ({ default: m.MisClases })));
+const ReportesView = lazy(() => import('./components/ReportesView').then(m => ({ default: m.ReportesView })));
+const AdminView = lazy(() => import('./components/AdminView'));
+const AdminPanelView = lazy(() => import('./components/AdminPanelView'));
+const LoginView = lazy(() => import('./components/LoginView'));
+const DuaGuideGenerator = lazy(() => import('./pages/DuaGuideGenerator').then(m => ({ default: m.DuaGuideGenerator })));
+const ProjectCopilot = lazy(() => import('./components/ProjectCopilot').then(m => ({ default: m.ProjectCopilot })));
+const CopilotTasksView = lazy(() => import('./components/CopilotTasksView').then(m => ({ default: m.CopilotTasksView })));
+const ClassbookView = lazy(() => import('./pages/ClassbookView').then(m => ({ default: m.ClassbookView })));
+const CoordinatorDashboardView = lazy(() => import('./pages/CoordinatorDashboardView').then(m => ({ default: m.CoordinatorDashboardView })));
+const ClassSessionDetailView = lazy(() => import('./components/classbook/ClassSessionDetailView').then(m => ({ default: m.ClassSessionDetailView })));
+
+function ViewFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -66,7 +75,11 @@ function AppContent() {
   const sharedToken = new URLSearchParams(window.location.search).get('shared');
 
   if (sharedToken) {
-    return <SharedDocumentPublicView token={sharedToken} />;
+    return (
+      <Suspense fallback={<ViewFallback />}>
+        <SharedDocumentPublicView token={sharedToken} />
+      </Suspense>
+    );
   }
 
   const handleViewChange = useCallback((view: string, state?: ViewState) => {
@@ -183,7 +196,13 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <ErrorBoundary><LoginView /></ErrorBoundary>;
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<ViewFallback />}>
+          <LoginView />
+        </Suspense>
+      </ErrorBoundary>
+    );
   }
 
   return (
@@ -201,7 +220,9 @@ function AppContent() {
             animate="animate"
             exit="exit"
           >
-            {renderView()}
+            <Suspense fallback={<ViewFallback />}>
+              {renderView()}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </ErrorBoundary>
