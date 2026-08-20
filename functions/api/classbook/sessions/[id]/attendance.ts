@@ -1,10 +1,24 @@
+import { z } from 'zod';
 import { resolveEffectiveInstitutionId, requirePermissionContext } from '../../../../_lib/auth-adapter';
-import { AttendanceService } from '../../../../services/classbook';
+import { AttendanceService, ClassSessionService } from '../../../../services/classbook';
 
 interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
 }
+
+const AttendanceStatusSchema = z.enum(['present', 'absent', 'late', 'justified', 'early_leave', 'external_activity']);
+
+const BatchAttendanceSchema = z.object({
+  records: z.array(z.object({
+    student_id: z.string().trim().min(1),
+    status: AttendanceStatusSchema,
+    arrival_time: z.string().trim().max(20).optional(),
+    departure_time: z.string().trim().max(20).optional(),
+    justification: z.string().trim().max(1000).optional(),
+  })).min(1, 'records no puede estar vacío'),
+  recorded_by: z.string().trim().min(1),
+});
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
@@ -12,19 +26,21 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     const { institutionId } = await resolveEffectiveInstitutionId(context.request, env);
     await requirePermissionContext(context.request, env, 'classbook:read');
 
-    const attendanceService = new AttendanceService(env);
     const { id } = context.params;
 
+    const sessionService = new ClassSessionService(env);
+    const session = await sessionService.getById(id);
+    if (!session) {
+      return Response.json({ ok: false, error: 'Sesión no encontrada' }, { status: 404 });
+    }
+    if (session.institution_id !== institutionId) {
+      return Response.json({ ok: false, error: 'No tienes acceso a esta sesión' }, { status: 403 });
+    }
+
+    const attendanceService = new AttendanceService(env);
     const records = await attendanceService.getBySession(id);
 
-    // Filter by institution
-    const filtered = records.filter(r => {
-      // We need to check the session's institution_id
-      // The service already gets records for the session, so they should all be for this institution
-      return true;
-    });
-
-    return Response.json({ ok: true, data: filtered });
+    return Response.json({ ok: true, data: records });
   } catch (err) {
     if (err instanceof Response) return err;
     return Response.json({ ok: false, error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
@@ -38,26 +54,22 @@ export async function onRequestPut(context: EventContext<Env>): Promise<Response
     await requirePermissionContext(context.request, env, 'classbook:attendance');
 
     const { id } = context.params;
-    const body = await context.request.json() as {
-      records: Array<{
-        student_id: string;
-        status: 'present' | 'absent' | 'late' | 'justified' | 'early_leave' | 'external_activity';
-        arrival_time?: string;
-        departure_time?: string;
-        justification?: string;
-      }>;
-      recorded_by: string;
-    };
+    const parsed = BatchAttendanceSchema.safeParse(await context.request.json());
+    if (!parsed.success) {
+      return Response.json({ ok: false, error: parsed.error.issues[0]?.message || 'Datos inválidos' }, { status: 422 });
+    }
+    const body = parsed.data;
 
-    if (!body.records || !Array.isArray(body.records) || !body.recorded_by) {
-      return Response.json({ ok: false, error: 'Faltan campos requeridos: records, recorded_by' }, { status: 422 });
+    const sessionService = new ClassSessionService(env);
+    const session = await sessionService.getById(id);
+    if (!session) {
+      return Response.json({ ok: false, error: 'Sesión no encontrada' }, { status: 404 });
+    }
+    if (session.institution_id !== institutionId) {
+      return Response.json({ ok: false, error: 'No tienes acceso a esta sesión' }, { status: 403 });
     }
 
     const attendanceService = new AttendanceService(env);
-
-    // Verify session belongs to institution
-    // This would need a session service call - for now we'll trust the session exists
-
     const result = await attendanceService.batchUpsertForSession(id, institutionId, body);
 
     return Response.json({ ok: true, data: result });
