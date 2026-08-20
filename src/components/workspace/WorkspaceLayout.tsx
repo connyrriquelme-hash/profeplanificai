@@ -9,7 +9,7 @@
  * - 'ppt': Slide grid for PPT presentations
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -38,7 +38,7 @@ interface WorkspaceLayoutProps {
   product: PedagogicalProduct;
   resourceId?: string;
   onBack?: () => void;
-  onExport?: () => void;
+  onExport?: () => void | Promise<void>;
   onProductChange?: (updated: PedagogicalProduct) => void;
   qualityReport?: {
     status: 'ready' | 'draft' | 'blocked';
@@ -63,11 +63,25 @@ export function WorkspaceLayout({
   const [undoStack, setUndoStack] = useState<PedagogicalProduct[]>([]);
   const [redoStack, setRedoStack] = useState<PedagogicalProduct[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Avisa antes de cerrar/recargar la pestaña si hay cambios sin guardar
+  // (edicion manual o de la IA que el docente aun no exporto/guardo).
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
 
   const handleProductChange = useCallback((updated: PedagogicalProduct) => {
     setUndoStack(prev => [...prev, activeProduct]);
     setRedoStack([]);
     setActiveProduct(updated);
+    setIsDirty(true);
     onProductChange?.(updated);
   }, [activeProduct, onProductChange]);
 
@@ -77,6 +91,7 @@ export function WorkspaceLayout({
     setRedoStack(r => [...r, activeProduct]);
     setUndoStack(u => u.slice(0, -1));
     setActiveProduct(prev);
+    setIsDirty(true);
     onProductChange?.(prev);
   }, [undoStack, activeProduct, onProductChange]);
 
@@ -86,6 +101,7 @@ export function WorkspaceLayout({
     setUndoStack(u => [...u, activeProduct]);
     setRedoStack(r => r.slice(0, -1));
     setActiveProduct(next);
+    setIsDirty(true);
     onProductChange?.(next);
   }, [redoStack, activeProduct, onProductChange]);
 
@@ -96,17 +112,31 @@ export function WorkspaceLayout({
   const handleExport = useCallback(async () => {
     setExporting(true);
     try {
-      onExport?.();
+      await onExport?.();
+      setIsDirty(false);
     } finally {
       setExporting(false);
     }
   }, [onExport]);
 
+  const handleBack = useCallback(() => {
+    if (isDirty && !window.confirm('Tienes cambios sin guardar. ¿Salir de todos modos?')) {
+      return;
+    }
+    onBack?.();
+  }, [isDirty, onBack]);
+
   const handleAIEdit = useCallback((updated: PedagogicalProduct) => {
+    // La IA modifica los campos estructurados (data.*), no el HTML editado a mano.
+    // Si dejamos editedHtml, DocumentEditor seguiria mostrando la version manual
+    // vieja y el cambio de la IA quedaria invisible aunque se aplico de verdad.
+    const { editedHtml: _discarded, ...restData } = updated.data;
+    const withoutManualOverride: PedagogicalProduct = { ...updated, data: restData };
     setUndoStack(prev => [...prev, activeProduct]);
     setRedoStack([]);
-    setActiveProduct(updated);
-    onProductChange?.(updated);
+    setActiveProduct(withoutManualOverride);
+    setIsDirty(true);
+    onProductChange?.(withoutManualOverride);
   }, [activeProduct, onProductChange]);
 
   return (
@@ -117,7 +147,7 @@ export function WorkspaceLayout({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={onBack}
+            onClick={handleBack}
             className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
             title="Volver"
           >

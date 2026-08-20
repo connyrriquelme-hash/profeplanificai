@@ -5,7 +5,7 @@
  * with a full Tiptap rich text editor for inline editing.
  */
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -49,6 +49,13 @@ const PALETTE = {
 /** Convert product data to HTML for Tiptap */
 function productToHtml(product: PedagogicalProduct): string {
   const { metadata, data, type } = product;
+
+  // Si el docente ya editó el documento a mano, esa version manda:
+  // no la reconstruimos desde los campos estructurados (eso descartaria la edicion).
+  if (typeof data.editedHtml === 'string' && data.editedHtml.trim()) {
+    return data.editedHtml;
+  }
+
   const lines: string[] = [];
 
   // Title block
@@ -329,6 +336,15 @@ function ToolbarBtn({
 export function DocumentEditor({ product, onProductChange, className }: DocumentEditorProps) {
   const initialHtml = useMemo(() => productToHtml(product), [product]);
 
+  // product/onProductChange cambian en cada edicion; los leemos por ref
+  // para que el onUpdate del editor (creado una sola vez) siempre vea lo ultimo
+  // sin tener que recrear el editor completo.
+  const productRef = useRef(product);
+  productRef.current = product;
+  const onProductChangeRef = useRef(onProductChange);
+  onProductChangeRef.current = onProductChange;
+  const updateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -343,9 +359,23 @@ export function DocumentEditor({ product, onProductChange, className }: Document
         style: 'min-height:100%;outline:none;padding:0;font-family:inherit',
       },
     },
+    onUpdate: ({ editor: updatedEditor }) => {
+      if (updateTimer.current) clearTimeout(updateTimer.current);
+      const html = updatedEditor.getHTML();
+      updateTimer.current = setTimeout(() => {
+        onProductChangeRef.current?.({
+          ...productRef.current,
+          data: { ...productRef.current.data, editedHtml: html },
+        });
+      }, 400);
+    },
   });
 
-  // Sync external product changes to editor
+  useEffect(() => () => {
+    if (updateTimer.current) clearTimeout(updateTimer.current);
+  }, []);
+
+  // Sync external product changes to editor (generacion IA, undo/redo, etc.)
   useEffect(() => {
     if (editor) {
       const newHtml = productToHtml(product);
