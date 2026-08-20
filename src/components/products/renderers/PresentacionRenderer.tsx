@@ -5,11 +5,15 @@
  * color-coded layouts, expand-on-click, and full export support.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductHeader } from '../ProductHeader';
 import { ProductActionBar } from '../ProductActionBar';
 import type { PedagogicalProduct } from '../types';
+import type { SlideLesson, SlideType } from '../../../types/slideLesson';
+import type { VisualLessonDeck } from '../../../types/presentation';
+import { SlideLessonPreview } from '../../SlideLessonPreview';
+import { downloadPPTX } from '../../../services/pptxExportService';
 
 interface Slide {
   layout: string;
@@ -214,6 +218,42 @@ export function PresentacionRenderer({ product, className, style }: Presentacion
   };
 
   const slides = deck.slides;
+  const visualLesson = useMemo<SlideLesson>(() => ({
+    title: metadata.title || deck.title || 'Presentación de clase',
+    subtitle: metadata.subtitle || '',
+    course: metadata.level || '',
+    subject: metadata.subject || '',
+    objectiveCode: metadata.oaCode || '',
+    objectiveText: metadata.oaText || metadata.topic || '',
+    theme: metadata.topic,
+    slides: slides.map((slide, index) => {
+      const content = [slide.body, ...(slide.bullets || slide.items || []), slide.activity, slide.question, slide.quote].filter(Boolean).join('. ');
+      const typeMap: Record<string, SlideType> = {
+        title: 'cover', bullets: index === 1 ? 'activation' : 'explanation', image_text: 'explanation',
+        comparison: 'explanation', quote: 'activation', vocabulario: 'explanation', ciclo_proceso: 'guided-practice',
+        quiz_opcion_multiple: 'formative-assessment', verdadero_falso: 'formative-assessment',
+      };
+      return {
+        type: typeMap[slide.layout] || 'explanation',
+        title: slide.title || slide.term || slide.question || `Diapositiva ${index + 1}`,
+        subtitle: slide.subtitle,
+        bullets: slide.bullets || slide.items,
+        activity: typeof slide.activity === 'string' ? slide.activity : undefined,
+        example: typeof slide.example === 'string' ? slide.example : undefined,
+        questions: slide.question ? [slide.question] : undefined,
+        speakerNotes: typeof slide.speakerNotes === 'string' ? slide.speakerNotes : undefined,
+        visualPrompt: typeof slide.imageQuery === 'string' ? slide.imageQuery : content,
+      };
+    }),
+  }), [deck.title, metadata.level, metadata.oaCode, metadata.oaText, metadata.subject, metadata.subtitle, metadata.title, metadata.topic, slides]);
+
+  const exportVisualPptx = async (visualDeck: VisualLessonDeck) => {
+    const images: Record<string, string> = {};
+    visualDeck.slides.forEach((slide, index) => {
+      if (slide.visual.imageUrl) images[String(index)] = slide.visual.imageUrl;
+    });
+    await downloadPPTX(visualLesson, images, `${metadata.title || 'presentacion'}.pptx`);
+  };
 
   return (
     <div
@@ -234,13 +274,9 @@ export function PresentacionRenderer({ product, className, style }: Presentacion
         className="mb-6"
       />
 
-      {/* Slide grid */}
+      {/* Visual lesson preview: generates semantic images from OA + slide content */}
       {slides.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {slides.map((slide, i) => (
-            <MiniSlide key={i} slide={slide} index={i} onClick={() => setModalIndex(i)} />
-          ))}
-        </div>
+        <SlideLessonPreview lesson={visualLesson} onExportPPTX={exportVisualPptx} />
       ) : (
         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white py-12 text-center text-[var(--muted)]">
           <p>No se encontraron diapositivas.</p>

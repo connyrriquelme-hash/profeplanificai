@@ -1,4 +1,5 @@
 import type { VisualLessonDeck } from '../types/presentation';
+import { api } from './apiClient';
 
 interface GenerateImageResponse {
   ok: boolean;
@@ -20,40 +21,22 @@ export class ProviderNotConfiguredError extends Error {
 }
 
 export async function generateSlideImage(prompt: string, signal?: AbortSignal): Promise<string> {
-  let response: Response;
   try {
-    response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-      signal,
-    });
+    const data = await api.post<GenerateImageResponse>(API_URL, { prompt }, signal);
+    if (!data.ok) {
+      if (data.code === 'provider_not_configured') {
+        throw new ProviderNotConfiguredError(data.message || 'No hay proveedor configurado.');
+      }
+      throw new Error(data.message || 'Error del servidor al generar la imagen.');
+    }
+    if (!data.imageUrl) throw new Error('El servidor no devolvió una imagen.');
+    return data.imageUrl;
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
-    console.error('[slideImageGenerationService] Error de red:', err);
-    throw new Error('No se pudo conectar con el servidor de generación de imágenes.');
+    if (err instanceof ProviderNotConfiguredError) throw err;
+    console.error('[slideImageGenerationService] Error generando imagen:', err);
+    throw err instanceof Error ? err : new Error('No se pudo generar la imagen.');
   }
-
-  let data: GenerateImageResponse;
-  try {
-    data = await response.json();
-  } catch (err) {
-    console.error('[slideImageGenerationService] Error parseando JSON:', err);
-    throw new Error('El servidor devolvió una respuesta inesperada.');
-  }
-
-  if (!data.ok) {
-    if (data.code === 'provider_not_configured') {
-      throw new ProviderNotConfiguredError(data.message || 'No hay proveedor configurado.');
-    }
-    throw new Error(data.message || `Error del servidor (${response.status}).`);
-  }
-
-  if (!data.imageUrl) {
-    throw new Error('El servidor no devolvió una imagen.');
-  }
-
-  return data.imageUrl;
 }
 
 export async function generateImagesForDeck(

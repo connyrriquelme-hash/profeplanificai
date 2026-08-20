@@ -360,7 +360,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
       {slideLesson ? (
         <Card variant="elevated" className="p-4 sm:p-6">
           <div ref={slideContainerRef}>
-            <SlideLessonPreview lesson={slideLesson} onExportPDF={handleExportPDF} onSave={handleSave} onShare={handleShare} />
+            <SlideLessonPreview lesson={slideLesson} onDeckChange={setDeck} onExportPDF={handleExportPDF} onSave={handleSave} onShare={handleShare} />
           </div>
         </Card>
       ) : (

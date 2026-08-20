@@ -143,6 +143,7 @@ export function buildSlideImagePrompt(params: SlidePromptParams): string {
     `Estilo: ${styleHint}.`,
     `Tipo de diapositiva: ${params.slideType}.`,
     slideHints[params.slideType],
+    params.slideContent ? `Contenido específico que la imagen debe representar: ${params.slideContent.slice(0, 320)}.` : '',
     `Composicion 16:9, sin texto dentro de la imagen, con elementos visuales relacionados a ${ctx.keywords.slice(0, 3).join(', ')}.`,
     `No incluir texto renderizado, logotipos, marcas registradas ni personajes famosos.`,
     `Imagen educativa segura para aula, apropiada para ninos y adolescentes.`,
