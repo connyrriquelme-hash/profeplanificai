@@ -149,6 +149,14 @@ const VALID_INSTITUTIONAL_ROLES: InstitutionalRole[] = [
   'student',
 ];
 
+// Roles asignables desde un endpoint de institución (excluye super_admin, que no está atado a una institución).
+export const ASSIGNABLE_MEMBER_ROLES: InstitutionalRole[] = [
+  'institution_admin',
+  'coordinator',
+  'teacher',
+  'student',
+];
+
 function validateInstitutionalRole(role: string): InstitutionalRole {
   if (VALID_INSTITUTIONAL_ROLES.includes(role as InstitutionalRole)) {
     return role as InstitutionalRole;

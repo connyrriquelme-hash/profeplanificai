@@ -88,8 +88,19 @@ export async function requireInstitutionMatchContext(
   env: AuthAdapterEnv,
   institutionId: string
 ) {
-  const context = await requireInstitutionContext(request, env);
-  return requireInstitutionMatch(context, institutionId);
+  const context = await requireAuthContext(request, env);
+  const activeContext = await requireActiveUser(context);
+  try {
+    return await requireInstitutionMatch(activeContext, institutionId);
+  } catch (err: unknown) {
+    if (err instanceof AuthorizationError) {
+      throw new Response(JSON.stringify({ ok: false, error: err.message }), {
+        status: err.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw err;
+  }
 }
 
 export async function requirePermissionContext(
@@ -147,8 +158,7 @@ export async function requireInstitutionAdminContext(
   env: AuthAdapterEnv,
   institutionId: string
 ) {
-  const context = await requireInstitutionContext(request, env);
-  return requireInstitutionMatch(context, institutionId);
+  return requireInstitutionMatchContext(request, env, institutionId);
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

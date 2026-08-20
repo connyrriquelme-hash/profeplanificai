@@ -1,10 +1,17 @@
-import { requireAuthContext, requireActiveAuthContext, requirePermissionContext } from '../../../../_lib/auth-adapter';
+import { z } from 'zod';
+import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionMatchContext } from '../../../../_lib/auth-adapter';
 import { logAdminAction } from '../../../../_lib/roles';
+import { ASSIGNABLE_MEMBER_ROLES } from '../../../../core/authorization';
 
 interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
 }
+
+const AddMemberSchema = z.object({
+  email: z.string().trim().min(3).max(320).email('Ingresa un correo válido'),
+  role: z.string().trim().min(1).max(40).optional(),
+});
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
@@ -12,6 +19,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
     await requireAuthContext(context.request, env);
     await requireActiveAuthContext(context.request, env);
     await requirePermissionContext(context.request, env, 'institution:read');
+    await requireInstitutionMatchContext(context.request, env, context.params.id as string);
 
     const { id } = context.params;
     const { results } = await context.env.DB.prepare(
@@ -36,18 +44,23 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const authContext = await requireAuthContext(context.request, env);
     await requireActiveAuthContext(context.request, env);
     await requirePermissionContext(context.request, env, 'user:create');
+    await requireInstitutionMatchContext(context.request, env, context.params.id as string);
 
     const { id } = context.params;
-    const body = await context.request.json() as { email?: string; role?: string };
-    const role = body.role || 'docente';
+    const parsed = AddMemberSchema.safeParse(await context.request.json());
+    if (!parsed.success) {
+      return Response.json({ error: parsed.error.issues[0]?.message || 'Datos inválidos' }, { status: 400 });
+    }
+    const { email } = parsed.data;
+    const role = parsed.data.role || 'teacher';
 
-    if (!body.email) {
-      return Response.json({ error: 'Falta email' }, { status: 400 });
+    if (!ASSIGNABLE_MEMBER_ROLES.includes(role)) {
+      return Response.json({ error: 'Rol no permitido' }, { status: 400 });
     }
 
     const user = await context.env.DB.prepare(
       'SELECT id FROM usuarios WHERE email = ?'
-    ).bind(body.email).first<{ id: string }>();
+    ).bind(email).first<{ id: string }>();
 
     if (!user) {
       return Response.json({ error: 'Usuario no encontrado' }, { status: 404 });
@@ -70,7 +83,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     await logAdminAction(context.env, authContext.userId, 'add_institution_member', 'institution_member', memberId, {
       institution_id: id,
       user_id: user.id,
-      email: body.email,
+      email,
       role,
     });
 
