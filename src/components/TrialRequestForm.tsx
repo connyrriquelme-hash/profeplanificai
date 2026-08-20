@@ -59,26 +59,26 @@ export default function TrialRequestForm({ className = '' }: TrialRequestFormPro
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Tu nombre completo" />
+          <label htmlFor="trial-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <input id="trial-name" name="name" type="text" autoComplete="name" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Tu nombre completo" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Correo *</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="correo@colegio.cl" />
+          <label htmlFor="trial-email" className="block text-sm font-medium text-gray-700 mb-1">Correo *</label>
+          <input id="trial-email" name="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="correo@colegio.cl" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Institución / Colegio</label>
-            <input type="text" value={institution} onChange={e => setInstitution(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Nombre del colegio" />
+            <label htmlFor="trial-institution" className="block text-sm font-medium text-gray-700 mb-1">Institución / Colegio</label>
+            <input id="trial-institution" name="institution" type="text" autoComplete="organization" value={institution} onChange={e => setInstitution(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Nombre del colegio" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
-            <input type="text" value={role} onChange={e => setRole(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Director, Coordinador, etc." />
+            <label htmlFor="trial-role" className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
+            <input id="trial-role" name="role" type="text" autoComplete="organization-title" value={role} onChange={e => setRole(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Director, Coordinador, etc." />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Mensaje (opcional)</label>
-          <textarea value={message} onChange={e => setMessage(e.target.value.slice(0, 1000))} rows={3} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition resize-none" placeholder="Cuéntanos sobre tu institución..." />
+          <label htmlFor="trial-message" className="block text-sm font-medium text-gray-700 mb-1">Mensaje (opcional)</label>
+          <textarea id="trial-message" name="message" value={message} onChange={e => setMessage(e.target.value.slice(0, 1000))} rows={3} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition resize-none" placeholder="Cuéntanos sobre tu institución..." />
           <p className="text-xs text-gray-400 mt-1 text-right">{message.length}/1000</p>
         </div>
 

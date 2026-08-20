@@ -345,23 +345,23 @@ export function ParentReportPanel() {
         <div className="rounded-2xl border p-6 space-y-4 bg-white shadow-sm" style={{ borderColor: 'var(--line)' }}>
           <h3 className="text-base font-bold" style={{ color: 'var(--ink)' }}>Configurar informe para apoderados</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Colegio</label>
-              <input value={school} onChange={e => setSchool(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Docente</label>
-              <input value={teacher} onChange={e => setTeacher(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Curso</label>
-              <input value={course} onChange={e => setCourse(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Asignatura</label>
-              <input value={subject} onChange={e => setSubject(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Evaluación</label>
-              <input value={evaluationName} onChange={e => setEvaluationName(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Fecha</label>
-              <input type="date" value={reportDate} onChange={e => setReportDate(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Cantidad estudiantes</label>
-              <input type="number" min={1} max={200} value={studentCount} onChange={e => setStudentCount(Math.max(1, parseInt(e.target.value) || 1))} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+            <div><label htmlFor="pr-school" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Colegio</label>
+              <input id="pr-school" value={school} onChange={e => setSchool(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-teacher" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Docente</label>
+              <input id="pr-teacher" value={teacher} onChange={e => setTeacher(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-course" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Curso</label>
+              <input id="pr-course" value={course} onChange={e => setCourse(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-subject" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Asignatura</label>
+              <input id="pr-subject" value={subject} onChange={e => setSubject(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-evaluation-name" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Evaluación</label>
+              <input id="pr-evaluation-name" value={evaluationName} onChange={e => setEvaluationName(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-report-date" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Fecha</label>
+              <input id="pr-report-date" type="date" value={reportDate} onChange={e => setReportDate(e.target.value)} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-student-count" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Cantidad estudiantes</label>
+              <input id="pr-student-count" type="number" min={1} max={200} value={studentCount} onChange={e => setStudentCount(Math.max(1, parseInt(e.target.value) || 1))} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
               <p className="text-[10px] mt-1 font-medium" style={{ color: 'var(--muted2)' }}>{Math.ceil(studentCount / 40)} planilla(s) de {Math.min(studentCount, 40)}+</p></div>
-            <div><label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Puntaje ideal</label>
-              <input type="number" min={1} value={maxScore} onChange={e => setMaxScore(Math.max(1, parseInt(e.target.value) || 24))} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
+            <div><label htmlFor="pr-max-score" className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted2)' }}>Puntaje ideal</label>
+              <input id="pr-max-score" type="number" min={1} value={maxScore} onChange={e => setMaxScore(Math.max(1, parseInt(e.target.value) || 24))} className="w-full text-sm p-2.5 rounded-xl border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} /></div>
           </div>
           <Button onClick={() => setStep(1)} disabled={!course || !subject}>Siguiente <ChevronRight size={14} /></Button>
         </div>
@@ -372,13 +372,13 @@ export function ParentReportPanel() {
         <div className="rounded-2xl border p-6 space-y-4 bg-white shadow-sm" style={{ borderColor: 'var(--line)' }}>
           <h3 className="text-base font-bold" style={{ color: 'var(--ink)' }}>Currículum, objetivos e indicadores</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Curso (D1)</label>
-              <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="w-full text-xs p-2 rounded border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
+            <div><label htmlFor="pr-course-id" className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Curso (D1)</label>
+              <select id="pr-course-id" value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="w-full text-xs p-2 rounded border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
                 <option value="">Seleccionar curso</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
               </select></div>
-            <div><label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Asignatura (D1)</label>
-              <select value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="w-full text-xs p-2 rounded border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
+            <div><label htmlFor="pr-subject-id" className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Asignatura (D1)</label>
+              <select id="pr-subject-id" value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="w-full text-xs p-2 rounded border mt-1" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
                 <option value="">Seleccionar asignatura</option>
                 {subjects.filter(s => s.objective_count > 0).map(s => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
               </select></div>
@@ -501,9 +501,9 @@ export function ParentReportPanel() {
           )}
 
           <div>
-            <label className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Agregar objetivo manual</label>
+            <label htmlFor="pr-manual-objective" className="text-[10px] font-semibold uppercase" style={{ color: 'var(--muted2)' }}>Agregar objetivo manual</label>
             <div className="flex gap-2 mt-1">
-              <input value={manualObjective} onChange={e => setManualObjective(e.target.value)} placeholder="Escriba un objetivo manual..." className="flex-1 text-xs p-2 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+              <input id="pr-manual-objective" value={manualObjective} onChange={e => setManualObjective(e.target.value)} placeholder="Escriba un objetivo manual..." className="flex-1 text-xs p-2 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
               <Button onClick={() => { if (manualObjective.trim()) { setSelectedObjectives(prev => [...prev, { id: generateId('obj'), code: 'MANUAL', text: manualObjective.trim(), subject, level: course }]); setManualObjective(''); } }} variant="secondary" className="!text-xs"><Plus size={12} /></Button>
             </div>
           </div>
@@ -528,23 +528,23 @@ export function ParentReportPanel() {
             </div>
           )}
           <div className="flex gap-2 items-end">
-            <input value={newStudentName} onChange={e => setNewStudentName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStudent()} placeholder="Nombre del estudiante" className="flex-1 text-xs p-2 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+            <input aria-label="Nombre del estudiante" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStudent()} placeholder="Nombre del estudiante" className="flex-1 text-xs p-2 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
             <Button onClick={addStudent} disabled={!newStudentName.trim()} variant="secondary" className="!text-xs !px-3"><Plus size={12} /> Agregar</Button>
           </div>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {currentSheetStudents.map((student) => (
               <div key={student.id} className="rounded border p-2 space-y-1" style={{ borderColor: 'var(--line)' }}>
                 <div className="flex items-center gap-2">
-                  <input value={student.studentName} onChange={e => updateStudent(student.id, 'studentName', e.target.value)} className="flex-1 text-xs p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
-                  <select value={student.achievementLevel} onChange={e => updateStudent(student.id, 'achievementLevel', e.target.value)} className="text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
+                  <input aria-label="Nombre del estudiante" value={student.studentName} onChange={e => updateStudent(student.id, 'studentName', e.target.value)} className="flex-1 text-xs p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+                  <select aria-label="Nivel de logro" value={student.achievementLevel} onChange={e => updateStudent(student.id, 'achievementLevel', e.target.value)} className="text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
                     <option>No evaluado</option><option>Adecuado</option><option>Elemental</option><option>Insuficiente</option>
                   </select>
                   <button onClick={() => removeStudent(student.id)} className="text-red-400 hover:text-red-600"><Trash2 size={10} /></button>
                 </div>
                 <div className="flex gap-2">
-                  <input type="number" placeholder="Puntaje" value={student.score || ''} onChange={e => updateStudent(student.id, 'score', Number(e.target.value))} className="w-16 text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
-                  <input type="number" placeholder="%" value={student.achievementPercent || ''} onChange={e => updateStudent(student.id, 'achievementPercent', Number(e.target.value))} className="w-16 text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
-                  <input type="number" placeholder="Nota" value={student.grade || ''} onChange={e => updateStudent(student.id, 'grade', Number(e.target.value))} className="w-16 text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+                  <input aria-label="Puntaje" type="number" placeholder="Puntaje" value={student.score || ''} onChange={e => updateStudent(student.id, 'score', Number(e.target.value))} className="w-16 text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+                  <input aria-label="Porcentaje de logro" type="number" placeholder="%" value={student.achievementPercent || ''} onChange={e => updateStudent(student.id, 'achievementPercent', Number(e.target.value))} className="w-16 text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
+                  <input aria-label="Nota" type="number" placeholder="Nota" value={student.grade || ''} onChange={e => updateStudent(student.id, 'grade', Number(e.target.value))} className="w-16 text-[10px] p-1 rounded border" style={{ borderColor: 'var(--line)', background: 'var(--card)', color: 'var(--ink)' }} />
                 </div>
               </div>
             ))}
