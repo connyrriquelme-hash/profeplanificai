@@ -6,9 +6,20 @@ interface Env {
 import { verifyPassword } from '../../_lib/auth';
 import { createSession, serializeSessionCookie, type SessionEnv } from '../../_lib/session';
 import { requireAuthenticatedUserById } from '../../core/authorization';
+import { checkLoginRateLimit, recordFailedLogin, clearFailedLogins } from '../../_lib/loginRateLimit';
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
+    const ip = context.request.headers.get('CF-Connecting-IP') || 'unknown';
+
+    const limit = checkLoginRateLimit(ip);
+    if (!limit.allowed) {
+      return Response.json(
+        { error: 'Demasiados intentos fallidos. Intenta de nuevo en unos minutos.' },
+        { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+      );
+    }
+
     const body = await context.request.json() as { email?: string; password?: string };
     const { email, password } = body;
 
@@ -21,6 +32,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     ).bind(email).first() as { id: string; email: string; nombre: string; password_hash: string; rol: string; active: number } | null;
 
     if (!user) {
+      recordFailedLogin(ip);
       return Response.json({ error: 'Usuario o contraseña incorrectos.' }, { status: 401 });
     }
 
@@ -29,15 +41,18 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     if (!(await verifyPassword(password, user.password_hash))) {
+      recordFailedLogin(ip);
       return Response.json({ error: 'Usuario o contraseña incorrectos.' }, { status: 401 });
     }
+
+    clearFailedLogins(ip);
 
     const env: SessionEnv = { DB: context.env.DB, JWT_SECRET: context.env.JWT_SECRET };
     const { token, sessionId } = await createSession({ id: user.id, email: user.email }, context.request, env);
     const authContext = await requireAuthenticatedUserById(user.id, env);
 
     const expiresAt = new Date(Date.now() + 86400 * 30 * 1000);
-    const cookie = serializeSessionCookie(sessionId, expiresAt);
+    const cookie = serializeSessionCookie(sessionId, expiresAt, context.request);
 
     return new Response(JSON.stringify({
       user: {

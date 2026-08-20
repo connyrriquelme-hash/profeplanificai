@@ -19,6 +19,13 @@ function textToBase64Url(value: unknown): string {
   return bytesToBase64Url(new TextEncoder().encode(JSON.stringify(value)));
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+
 async function signature(value: string, secret: string): Promise<string> {
   if (!secret || secret.length < 32) throw new Error('JWT_SECRET no configurado de forma segura');
   const key = await crypto.subtle.importKey(
@@ -73,7 +80,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
     const legacy = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)));
     let binary = '';
     for (const byte of legacy) binary += String.fromCharCode(byte);
-    return btoa(binary) === stored;
+    return timingSafeEqual(btoa(binary), stored);
   }
   const [, iterationsRaw, saltRaw, expected] = stored.split('$');
   const decode = (value: string) => Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
@@ -81,5 +88,5 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const bits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', hash: 'SHA-256', salt: decode(saltRaw), iterations: Number(iterationsRaw) }, material, 256,
   );
-  return bytesToBase64Url(new Uint8Array(bits)) === expected;
+  return timingSafeEqual(bytesToBase64Url(new Uint8Array(bits)), expected);
 }

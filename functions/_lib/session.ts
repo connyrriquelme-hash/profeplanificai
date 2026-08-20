@@ -165,7 +165,7 @@ export async function revokeAllUserSessions(userId: string, env: SessionEnv, exc
   }
 }
 
-export function serializeSessionCookie(sessionId: string, expiresAt: Date): string {
+export function serializeSessionCookie(sessionId: string, expiresAt: Date, request?: Request): string {
   const parts = [
     `${SESSION_COOKIE}=${sessionId}`,
     'Path=/',
@@ -173,7 +173,12 @@ export function serializeSessionCookie(sessionId: string, expiresAt: Date): stri
     'SameSite=Lax',
     `Max-Age=${SESSION_MAX_AGE}`,
   ];
-  if (typeof globalThis.process !== 'undefined' && globalThis.process.env?.ENVIRONMENT === 'production') {
+  // Pages Functions no expone process.env (requeriria nodejs_compat), asi que
+  // "produccion" se detecta por el protocolo real de la request: Cloudflare
+  // sirve prod/preview por HTTPS, dev local por HTTP. Sin request, asumimos
+  // HTTPS (mas seguro por defecto que omitir Secure).
+  const isHttps = !request || new URL(request.url).protocol === 'https:';
+  if (isHttps) {
     parts.push('Secure');
   }
   return parts.join('; ');
