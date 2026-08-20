@@ -248,13 +248,34 @@ function formatFieldLabel(key: string): string {
     adaptations: 'Adecuaciones',
     references: 'Referencias',
     summary: 'Resumen',
-    description: 'Descripcion',
+    description: 'Descripción',
     instructions: 'Instrucciones',
     procedure: 'Procedimiento',
     considerations: 'Consideraciones',
+    title: 'Título',
+    subtitle: 'Subtítulo',
+    objective: 'Objetivo',
+    number: 'Número',
+    indicator: 'Indicador',
+    colors: 'Colores',
+    meaning: 'Significado',
+    teacherNotes: 'Notas del docente',
+    studentNameField: 'Nombre del estudiante',
+    dateField: 'Fecha',
+    portfolio: 'Portafolio',
+    autoSave: 'Guardado automático',
+    safetyMeasures: 'Medidas de seguridad',
+    premiumExtras: 'Extras premium',
+    fields: 'Campos',
   };
   if (map[key]) return map[key];
-  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  // camelCase (premiumExtras) y snake_case (student_name) sin traducción
+  // explícita: al menos separarlos en palabras legibles en vez de un solo
+  // token pegado ("PremiumExtras").
+  return key
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function htmlFromValue(value: unknown): string {
@@ -273,7 +294,7 @@ function htmlFromValue(value: unknown): string {
         const entries = Object.entries(item as Record<string, unknown>)
           .filter(([, v]) => v !== null && v !== undefined && v !== '');
         return entries.map(([k, v]) => {
-          const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          const label = formatFieldLabel(k);
           const val = Array.isArray(v) ? v.map(i => escapeHtml(String(i))).join(', ') : escapeHtml(String(v));
           return `<li style="font-size:0.85rem;color:#334155;line-height:1.6"><strong>${label}:</strong> ${val}</li>`;
         }).join('');
@@ -287,7 +308,7 @@ function htmlFromValue(value: unknown): string {
     const entries = Object.entries(value as Record<string, unknown>)
       .filter(([, v]) => v !== null && v !== undefined && v !== '');
     return entries.map(([k, v]) => {
-      const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const label = formatFieldLabel(k);
       return `<div style="margin-bottom:8px"><span style="font-size:0.7rem;font-weight:600;color:#64748B;text-transform:uppercase">${label}:</span><div style="margin-top:2px">${htmlFromValue(v)}</div></div>`;
     }).join('');
   }
