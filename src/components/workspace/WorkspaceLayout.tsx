@@ -17,12 +17,16 @@ import {
   Redo2,
   Printer,
   Download,
+  FileText,
+  Presentation,
+  Save,
   Loader2,
 } from 'lucide-react';
 import { DocumentEditor } from './DocumentEditor';
 import { AICopilotSidebar } from './AICopilotSidebar';
 import { PresentacionRenderer } from '../products/renderers/PresentacionRenderer';
 import type { PedagogicalProduct } from '../products/types';
+import { exportProductToWord, exportProductToPptx } from '../../services/productExportService';
 
 const PALETTE = {
   primary: '#B5471F',
@@ -38,6 +42,7 @@ interface WorkspaceLayoutProps {
   resourceId?: string;
   onBack?: () => void;
   onExport?: () => void;
+  onSave?: () => void;
   onProductChange?: (updated: PedagogicalProduct) => void;
   mode?: 'document' | 'ppt';
   className?: string;
@@ -48,6 +53,7 @@ export function WorkspaceLayout({
   resourceId,
   onBack,
   onExport,
+  onSave,
   onProductChange,
   mode = 'document',
   className,
@@ -56,6 +62,8 @@ export function WorkspaceLayout({
   const [undoStack, setUndoStack] = useState<PedagogicalProduct[]>([]);
   const [redoStack, setRedoStack] = useState<PedagogicalProduct[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [exportingWord, setExportingWord] = useState(false);
+  const [exportingPptx, setExportingPptx] = useState(false);
 
   const handleProductChange = useCallback((updated: PedagogicalProduct) => {
     setUndoStack(prev => [...prev, activeProduct]);
@@ -85,6 +93,32 @@ export function WorkspaceLayout({
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
+
+  const handleWordExport = useCallback(async () => {
+    setExportingWord(true);
+    try {
+      await exportProductToWord(activeProduct);
+    } catch (err) {
+      console.error('Error exporting Word:', err);
+    } finally {
+      setExportingWord(false);
+    }
+  }, [activeProduct]);
+
+  const handlePptxExport = useCallback(async () => {
+    setExportingPptx(true);
+    try {
+      await exportProductToPptx(activeProduct);
+    } catch (err) {
+      console.error('Error exporting PPTX:', err);
+    } finally {
+      setExportingPptx(false);
+    }
+  }, [activeProduct]);
+
+  const handleSave = useCallback(async () => {
+    onSave?.();
+  }, [onSave]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -144,33 +178,54 @@ export function WorkspaceLayout({
           </button>
         </div>
 
-        {/* Right: Print + Export */}
-        <div className="flex items-center gap-2">
+        {/* Right: Print + Export Word/PPTX + Save */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
             title="Imprimir"
           >
             <Printer className="w-4 h-4" />
-            <span className="hidden md:inline">Imprimir</span>
+            <span className="hidden lg:inline">Imprimir</span>
           </button>
+          <button
+            type="button"
+            onClick={handleWordExport}
+            disabled={exportingWord}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            title="Exportar Word"
+          >
+            {exportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+            <span className="hidden lg:inline">Word</span>
+          </button>
+          <button
+            type="button"
+            onClick={handlePptxExport}
+            disabled={exportingPptx}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            title="Exportar PowerPoint"
+          >
+            {exportingPptx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Presentation className="w-3.5 h-3.5" />}
+            <span className="hidden lg:inline">PPTX</span>
+          </button>
+          <div className="h-5 w-px bg-gray-200 mx-1" />
           <motion.button
             type="button"
-            onClick={handleExport}
+            onClick={handleSave}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             disabled={exporting}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-60"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-60"
             style={{ backgroundColor: PALETTE.primary }}
-            title="Exportar"
+            title="Guardar en biblioteca"
           >
             {exporting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Download className="w-4 h-4" />
+              <Save className="w-4 h-4" />
             )}
-            <span className="hidden md:inline">Exportar</span>
+            <span className="hidden md:inline">Guardar</span>
           </motion.button>
         </div>
       </header>

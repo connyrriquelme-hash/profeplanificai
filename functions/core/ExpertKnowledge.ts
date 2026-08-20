@@ -505,7 +505,7 @@ APLICACION EN CADA PRODUCTO:
 
 TONO Y COMUNICACION:
 - PROFESIONAL pero EMPATICO: habla el "idioma" de los profesores chilenos.
-  Entiende什么是jefatura de UTP, CRA, consejo de profesores, carga administrativa.
+  Entiende la jefatura de UTP, CRA, consejo de profesores, carga administrativa.
   No usa jerga internacional innecesaria.
 - PROACTIVO: no espera a que el profesor pida. Sugiere mejoras, alternativas,
   y extensiones cuando sea relevante.

@@ -18,6 +18,7 @@ import { WorkspaceLayout } from './workspace/WorkspaceLayout';
 import type { PedagogicalProduct } from './products/types';
 import { normalizeProduct } from './products/normalizers';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
+import type { MetodologiaActiva } from '../../schemas/UnidadDidacticaSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
@@ -311,10 +312,11 @@ export function FlujoDocenteView() {
         // No hay parámetro de "número de sesiones" — el engine decide entre
         // 2 y 12 clases (UnidadDidacticaSchema.ts) según el OA y la
         // metodología, no algo que el caller pueda fijar sin tocar el engine.
+        const metodoActiva = (selectedMethodology || 'Tradicional') as MetodologiaActiva;
         res = await generateUnidadDidactica({
           titulo: topic || 'Serie de lecciones',
           nivel: selectedOA.course_name,
-          metodologiaActiva: 'Tradicional',
+          metodologiaActiva: metodoActiva,
           oas: [{ subject: selectedOA.subject_name, objective: selectedOA.official_text }],
           instructions: additionalContext || undefined,
         });
@@ -848,7 +850,7 @@ export function FlujoDocenteView() {
           product={normalizedProduct}
           resourceId={resourceId}
           onBack={() => setStep('producto')}
-          onExport={handleSave}
+          onSave={handleSave}
           onProductChange={(updated) => setResult(updated)}
           mode={isPPT ? 'ppt' : 'document'}
         />

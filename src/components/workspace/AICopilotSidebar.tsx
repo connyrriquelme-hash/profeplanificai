@@ -83,7 +83,7 @@ const QUICK_SUGGESTIONS: Record<TabId, string[]> = {
   diferenciacion: [
     'Adapta para estudiantes visuales',
     'Agrega apoyos para EDA',
-    'Genera versión en珠l',
+    'Genera versión en español',
     'Incluye lectura fácil',
   ],
   diseno: [

@@ -50,12 +50,8 @@ export interface MaterialResult {
 
 async function postJSON(url: string, body: MaterialRequest): Promise<MaterialResult> {
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    return res.json();
+    const res = await api.post<MaterialResult>(url, body);
+    return res;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return { ok: false, error: message };
