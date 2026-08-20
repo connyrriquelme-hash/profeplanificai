@@ -8,6 +8,7 @@ import {
   type RubricaContextInput,
 } from '../../core/RubricaEngine';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
 // Re-exportadas para no romper test/serverRubricCoverage.test.ts, que
 // importa estas funciones puras directamente desde este archivo.
@@ -15,6 +16,7 @@ export { buildPremiumRubric, detectSubjectCategory };
 
 interface Env {
   DB: D1Database;
+  JWT_SECRET?: string;
   AI?: ImageEnv['AI'];
   GEMINI_API_KEY?: string;
   ENABLE_IMAGE_AI?: string;
@@ -38,6 +40,7 @@ interface RubricRequest {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const body = await context.request.json() as RubricRequest;
+    const userId = context.env.JWT_SECRET ? await getAuthenticatedUserId(context.request, context.env.JWT_SECRET) : null;
 
     if (!body.level || !body.subject || !body.objectiveCode) {
       return Response.json({ error: 'level, subject y objectiveCode son requeridos' }, { status: 400 });
@@ -125,8 +128,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     });
     const resourceId = `rubric_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
-      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, prompt_used, created_at, updated_at)
-       VALUES (?, ?, 'rubrica', ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, prompt_used, created_at, updated_at)
+       VALUES (?, ?, 'rubrica', ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       resourceId,
       rubric.title,
@@ -135,6 +138,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       nivel,
       asignatura,
       body.objectiveCode,
+      userId,
       JSON.stringify(body.indicators || []),
       `Rúbrica premium generada para ${body.objectiveCode}`
     ).run();

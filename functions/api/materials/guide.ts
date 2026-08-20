@@ -2,8 +2,9 @@ import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
 import { generateGuia, type GuiaEngineInput } from '../../core/GuiaEngine';
 import type { AIEngineEnv } from '../../core/types';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; AI?: ImageEnv['AI']; GEMINI_API_KEY?: string; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
+interface Env { DB: D1Database; JWT_SECRET?: string; AI?: ImageEnv['AI']; GEMINI_API_KEY?: string; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
 interface GuideRequest {
   type: 'guia_estudiante' | 'guia_docente';
@@ -22,6 +23,7 @@ interface GuideRequest {
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
     const body = await context.request.json() as GuideRequest;
+    const userId = context.env.JWT_SECRET ? await getAuthenticatedUserId(context.request, context.env.JWT_SECRET) : null;
 
     if (!body.level || !body.subject || !body.objectiveCode) {
       return Response.json({ error: 'level, subject y objectiveCode son requeridos' }, { status: 400 });
@@ -95,8 +97,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     // Save to D1
     const resourceId = `guide_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
-      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       resourceId,
       `${body.type === 'guia_estudiante' ? 'Guía Estudiante' : 'Guía Docente'}: ${body.objectiveCode}`,
@@ -106,6 +108,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       body.level,
       body.subject,
       body.objectiveCode,
+      userId,
       JSON.stringify(body.indicators || []),
       JSON.stringify(body.skills || []),
       `Guía generada para ${body.objectiveCode} — ${body.subject}`

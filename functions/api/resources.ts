@@ -1,3 +1,5 @@
+import { getAuthenticatedUserId } from '../_lib/auth';
+
 interface Env {
   DB: D1Database;
   JWT_SECRET: string;
@@ -6,7 +8,7 @@ interface Env {
 const TABLE = 'resource_bank';
 
 export async function onRequest(context: EventContext<Env>): Promise<Response> {
-  const auth = getUserId(context);
+  const auth = await getAuthenticatedUserId(context.request, context.env.JWT_SECRET);
   if (!auth) return Response.json({ error: 'Sesion invalida o expirada' }, { status: 401 });
   const { request } = context;
   const url = new URL(request.url);
@@ -89,15 +91,6 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
   }
-}
-
-function getUserId(context: EventContext<Env>): string | null {
-  const auth = context.request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  try {
-    const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-      return payload.sub || null;
-  } catch { return null; }
 }
 
 async function ensureTable(db: D1Database): Promise<void> {

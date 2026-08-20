@@ -2,8 +2,9 @@ import { generatePlanificacion } from '../../core/PlanificacionEngine';
 import { getProfePlanificAIContext, getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from '../../core/ExpertKnowledge';
 import type { AIEngineEnv } from '../../core/types';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; AI?: Ai; GEMINI_API_KEY?: string }
+interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string }
 
 interface GenerateRequest {
   level: string;
@@ -439,6 +440,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const url = new URL(context.request.url);
     const type = url.searchParams.get('type') || 'guia_estudiante';
     const body = await context.request.json() as GenerateRequest;
+    const userId = context.env.JWT_SECRET ? await getAuthenticatedUserId(context.request, context.env.JWT_SECRET) : null;
 
     if (!body.level || !body.subject || !body.objectiveCode) {
       return Response.json({ error: 'level, subject y objectiveCode son requeridos' }, { status: 400 });
@@ -469,8 +471,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         productType: type,
       });
 
-      await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
+      await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
         .bind(
           resourceId,
           `${type} — ${body.objectiveCode}`,
@@ -480,6 +482,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
           body.level,
           body.subject,
           body.objectiveCode,
+          userId,
           JSON.stringify(body.indicators || []),
           JSON.stringify(body.skills || []),
           prompt.substring(0, 2000)
@@ -500,8 +503,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     // Save to generated_resources
-    await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
+    await db.prepare(`INSERT OR IGNORE INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`)
       .bind(
         resourceId,
         `${type} — ${body.objectiveCode}`,
@@ -511,6 +514,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         body.level,
         body.subject,
         body.objectiveCode,
+        userId,
         JSON.stringify(body.indicators || []),
         JSON.stringify(body.skills || []),
         prompt.substring(0, 2000)
