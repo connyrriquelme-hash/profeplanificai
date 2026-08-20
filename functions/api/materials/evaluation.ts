@@ -1,6 +1,7 @@
 import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
+interface Env { DB: D1Database; AI?: ImageEnv['AI']; JWT_SECRET: string; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
 
 interface EvaluationRequest {
   level: string;
@@ -65,10 +66,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       (evaluation as any).imageTitles = imageTitles;
     }
 
+    const userId = await getAuthenticatedUserId(context.request, context.env.JWT_SECRET);
+
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     await db.prepare(
-      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
-       VALUES (?, ?, 'evaluacion', ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
+       VALUES (?, ?, 'evaluacion', ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       resourceId,
       `Evaluación: ${body.objectiveCode}`,
@@ -77,6 +80,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       body.level,
       body.subject,
       body.objectiveCode,
+      userId || null,
       JSON.stringify(body.indicators || []),
       JSON.stringify(body.skills || []),
       `Evaluación generada para ${body.objectiveCode}`
