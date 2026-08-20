@@ -1,11 +1,13 @@
 interface Env {
   DB: D1Database;
+  JWT_SECRET: string;
 }
 
 const TABLE = 'resource_bank';
 
 export async function onRequest(context: EventContext<Env>): Promise<Response> {
   const auth = getUserId(context);
+  if (!auth) return Response.json({ error: 'Sesion invalida o expirada' }, { status: 401 });
   const { request } = context;
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
@@ -18,13 +20,13 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
       case 'GET': {
         if (id) {
           const resource = await context.env.DB.prepare(
-            `SELECT * FROM ${TABLE} WHERE id = ?`
-          ).bind(id).first();
+            `SELECT * FROM ${TABLE} WHERE id = ? AND user_id = ?`
+          ).bind(id, auth).first();
           return Response.json({ data: resource ?? null });
         }
         const { results } = await context.env.DB.prepare(
-          `SELECT * FROM ${TABLE} ORDER BY created_at DESC`
-        ).all();
+          `SELECT * FROM ${TABLE} WHERE user_id = ? ORDER BY created_at DESC`
+        ).bind(auth).all();
         return Response.json({ data: results });
       }
 
@@ -37,7 +39,7 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
 
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
-        const userId = auth || body.user_id || 'anonymous';
+        const userId = auth;
 
         const title = (body.title as string || 'Planificación sin título').trim();
         const resourceType = (body.type as string || body.tipoRecurso as string || 'planificacion').trim();
@@ -77,7 +79,7 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
 
       case 'DELETE': {
         if (!id) return Response.json({ error: 'Se requiere id' }, { status: 400 });
-        await context.env.DB.prepare(`DELETE FROM ${TABLE} WHERE id = ?`).bind(id).run();
+        await context.env.DB.prepare(`DELETE FROM ${TABLE} WHERE id = ? AND user_id = ?`).bind(id, auth).run();
         return Response.json({ success: true });
       }
 
@@ -94,7 +96,7 @@ function getUserId(context: EventContext<Env>): string | null {
   if (!auth?.startsWith('Bearer ')) return null;
   try {
     const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-    return payload.sub || null;
+      return payload.sub || null;
   } catch { return null; }
 }
 

@@ -58,8 +58,8 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
 
     const db = context.env.DB;
     const resource = await db.prepare(
-      `SELECT id, level, subject FROM generated_resources WHERE id = ?`,
-    ).bind(resourceId).first<GeneratedResourceRow>();
+      `SELECT id, level, subject FROM generated_resources WHERE id = ? AND user_id = ?`,
+    ).bind(resourceId, userId).first<GeneratedResourceRow>();
 
     if (!resource) {
       return jsonResponse({ error: 'Recurso no encontrado' }, 400);
@@ -89,8 +89,8 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
     // como metadata) — ver guide.ts:90-106, el mismo INSERT que crea esta
     // fila.
     await db.prepare(
-      `UPDATE generated_resources SET content = ?, updated_at = ? WHERE id = ?`,
-    ).bind(JSON.stringify(result.guia), new Date().toISOString(), resourceId).run();
+      `UPDATE generated_resources SET content = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
+    ).bind(JSON.stringify(result.guia), new Date().toISOString(), resourceId, userId).run();
 
     return jsonResponse({
       ok: true,

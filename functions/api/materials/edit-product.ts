@@ -7,6 +7,8 @@ interface Env extends AIEngineEnv {
   JWT_SECRET: string;
 }
 
+interface ResourceOwnerRow { id: string }
+
 interface EditProductRequest {
   instruccion?: string;
   producto?: Record<string, unknown>;
@@ -56,9 +58,13 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     if (body.resourceId) {
       try {
         const db = context.env.DB;
+        const owned = await db.prepare(
+          'SELECT id FROM generated_resources WHERE id = ? AND user_id = ?',
+        ).bind(String(body.resourceId), userId).first<ResourceOwnerRow>();
+        if (!owned) return jsonResponse({ error: 'Recurso no encontrado' }, 404);
         await db.prepare(
-          `UPDATE generated_resources SET content = ?, updated_at = ? WHERE id = ?`,
-        ).bind(JSON.stringify(result.producto), new Date().toISOString(), String(body.resourceId)).run();
+          `UPDATE generated_resources SET content = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
+        ).bind(JSON.stringify(result.producto), new Date().toISOString(), String(body.resourceId), userId).run();
       } catch (d1Err) {
         console.error('[edit-product] D1 save error:', d1Err);
       }
