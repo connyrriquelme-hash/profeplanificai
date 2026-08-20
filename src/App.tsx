@@ -20,6 +20,7 @@ import { SharedDocumentPublicView } from './components/SharedDocumentPublicView'
 import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
 import { UnidadesDidacticasView } from './components/UnidadesDidacticasView';
 import { FlujoDocenteView } from './components/FlujoDocenteView';
+import { AgenteView } from './components/AgenteView';
 import { MisClases } from './components/MisClases';
 import { ReportesView } from './components/ReportesView';
 import AdminView from './components/AdminView';
@@ -128,7 +129,7 @@ function AppContent() {
       case 'banco':
         return <CurriculumCloudView />;
       case 'agente':
-        return <BancoRecursosView onNavigate={handleViewChange} />;
+        return <AgenteView onNavigate={handleViewChange} />;
       case 'biblioteca-creativa':
         return <LibraryView onNavigate={handleViewChange} />;
       case 'evaluaciones':
