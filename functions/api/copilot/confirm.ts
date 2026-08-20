@@ -98,7 +98,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     if (tool === 'generate_material') {
       const args = GenerateMaterialArgsSchema.parse(toolArguments);
-      const data = await generateMaterial(context.env, args);
+      const data = await generateMaterial(context.env, userId, args);
       message = `Listo: generé ${MATERIAL_LABELS[data.type] || 'el material'}. Puedes revisarlo o pedirme que lo guarde en tu Banco de Recursos.`;
       result = data;
       contextPatch = { lastResourceId: data.resourceId, lastResourceType: data.type };
