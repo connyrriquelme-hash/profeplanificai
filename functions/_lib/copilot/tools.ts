@@ -312,37 +312,43 @@ function buildGenerateMaterialPayload(args: GenerateMaterialArgs) {
 
 // Despacha al mismo endpoint que usa el wizard para cada tipo de producto
 // (ver src/components/FlujoDocenteView.tsx y src/services/materialGeneratorService.ts)
-// y normaliza la respuesta a { resourceId, type, preview }.
+// y normaliza la respuesta a { resourceId, type, preview }. Pasa un token
+// interno firmado para userId — guide.ts/generate.ts/rubric.ts/evaluation.ts
+// leen el userId del header Authorization para guardarlo en user_id, y sin
+// esto los recursos quedan huérfanos: loadOwnedResource jamás los
+// encontraría después para save_to_bank/edit_material.
 export async function generateMaterial(
   env: CopilotWriteToolEnv,
+  userId: string,
   args: GenerateMaterialArgs,
 ): Promise<GenerateMaterialResult> {
   const base = buildGenerateMaterialPayload(args);
+  const internalAuth = `Bearer ${await createToken(userId, '', env.JWT_SECRET)}`;
 
   switch (args.type) {
     case 'guia_estudiante':
     case 'guia_docente': {
       const data = await callInternalEndpoint<{ resourceId: string; guide: unknown }>(
-        generateGuideEndpoint, env, '/api/materials/guide', { ...base, type: args.type },
+        generateGuideEndpoint, env, '/api/materials/guide', { ...base, type: args.type }, internalAuth,
       );
       return { resourceId: data.resourceId, type: args.type, preview: data.guide };
     }
     case 'evaluacion': {
       const data = await callInternalEndpoint<{ resourceId: string; evaluation: unknown }>(
-        generateEvaluationEndpoint, env, '/api/materials/evaluation', base,
+        generateEvaluationEndpoint, env, '/api/materials/evaluation', base, internalAuth,
       );
       return { resourceId: data.resourceId, type: args.type, preview: data.evaluation };
     }
     case 'rubrica': {
       const data = await callInternalEndpoint<{ resourceId: string; rubric: unknown }>(
-        generateRubricEndpoint, env, '/api/materials/rubric', { ...base, criteria: args.criteria },
+        generateRubricEndpoint, env, '/api/materials/rubric', { ...base, criteria: args.criteria }, internalAuth,
       );
       return { resourceId: data.resourceId, type: args.type, preview: data.rubric };
     }
     case 'presentacion': {
       const data = await callInternalEndpoint<{ resourceId: string; slides?: unknown; pptDeck?: unknown }>(
         generatePresentationEndpoint, env, '/api/materials/presentation',
-        { ...base, title: args.title || args.topic, audiencia: args.audiencia },
+        { ...base, title: args.title || args.topic, audiencia: args.audiencia }, internalAuth,
       );
       return { resourceId: data.resourceId, type: args.type, preview: data.pptDeck ?? data.slides };
     }
@@ -350,7 +356,7 @@ export async function generateMaterial(
     case 'ticket_salida':
     case 'actividad_dua': {
       const data = await callInternalEndpoint<{ resourceId: string; planificacion?: unknown; prompt?: string }>(
-        generateMaterialEndpoint, env, `/api/materials/generate?type=${args.type}`, base,
+        generateMaterialEndpoint, env, `/api/materials/generate?type=${args.type}`, base, internalAuth,
       );
       return { resourceId: data.resourceId, type: args.type, preview: data.planificacion ?? data.prompt };
     }

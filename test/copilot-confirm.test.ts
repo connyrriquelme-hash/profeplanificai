@@ -167,4 +167,53 @@ describe('POST /api/copilot/confirm', () => {
     expect(response.status).toBe(405);
     expect(data.error).toContain('POST');
   });
+
+  it('REGRESIÓN: generate_material persiste user_id (vía token interno) para que save_to_bank encuentre el recurso recién creado', async () => {
+    const mockDB = seededDB();
+    const genCtx = await makeContext({
+      mockDB,
+      body: {
+        conversationId: 'conv-1',
+        confirmedAction: {
+          tool: 'generate_material',
+          arguments: {
+            type: 'ticket_salida',
+            level: '4° básico',
+            subject: 'Matemática',
+            objectiveCode: 'MA04 OA 03',
+            objectiveText: 'comprender fracciones de uso común',
+            topic: 'fracciones',
+          },
+        },
+      },
+    });
+    const genResponse = await onRequestPost(genCtx);
+    const genData = await genResponse.json();
+
+    expect(genResponse.status).toBe(200);
+    expect(genData.ok).toBe(true);
+    const resourceId = genData.result.resourceId;
+    expect(resourceId).toBeTruthy();
+
+    // El endpoint interno (generate.ts) debe haber visto un Authorization
+    // real y guardado user_id — si generateMaterial deja de mandar el token
+    // interno, esta fila queda con user_id NULL y lo de abajo vuelve a fallar.
+    const resourceRow = await mockDB.prepare('SELECT user_id FROM generated_resources WHERE id = ?')
+      .bind(resourceId).first<{ user_id: string }>();
+    expect(resourceRow?.user_id).toBe('user-1');
+
+    const saveCtx = await makeContext({
+      mockDB,
+      body: {
+        conversationId: 'conv-1',
+        confirmedAction: { tool: 'save_to_bank', arguments: { resourceId } },
+      },
+    });
+    const saveResponse = await onRequestPost(saveCtx);
+    const saveData = await saveResponse.json();
+
+    expect(saveResponse.status).toBe(200);
+    expect(saveData.ok).toBe(true);
+    expect(saveData.result.bankResourceId).toBeTruthy();
+  });
 });
