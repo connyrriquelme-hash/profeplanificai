@@ -46,6 +46,17 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const nivel = typeof metadata.level === 'string' ? metadata.level : '';
     const asignatura = typeof metadata.subject === 'string' ? metadata.subject : '';
 
+    // Verificar ownership ANTES de llamar a la IA: si el recurso no es del
+    // usuario, no tiene sentido gastar una llamada de IA que de todas formas
+    // no se va a poder persistir.
+    const db = context.env.DB;
+    if (body.resourceId) {
+      const owned = await db.prepare(
+        'SELECT id FROM generated_resources WHERE id = ? AND user_id = ?',
+      ).bind(String(body.resourceId), userId).first<ResourceOwnerRow>();
+      if (!owned) return jsonResponse({ error: 'Recurso no encontrado' }, 404);
+    }
+
     const result = await editProduct(context.env, {
       producto,
       instruccion,
@@ -57,11 +68,6 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     // If resourceId provided, save updated content to D1
     if (body.resourceId) {
       try {
-        const db = context.env.DB;
-        const owned = await db.prepare(
-          'SELECT id FROM generated_resources WHERE id = ? AND user_id = ?',
-        ).bind(String(body.resourceId), userId).first<ResourceOwnerRow>();
-        if (!owned) return jsonResponse({ error: 'Recurso no encontrado' }, 404);
         await db.prepare(
           `UPDATE generated_resources SET content = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
         ).bind(JSON.stringify(result.producto), new Date().toISOString(), String(body.resourceId), userId).run();
