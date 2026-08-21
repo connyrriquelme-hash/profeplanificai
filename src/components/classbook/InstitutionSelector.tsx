@@ -72,15 +72,15 @@ export function InstitutionSelector() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <label htmlFor="institution-selector" className="text-xs font-medium text-slate-500">
+    <div>
+      <label htmlFor="institution-selector" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
         Institución activa
       </label>
       <select
         id="institution-selector"
         value={activeInstitutionId || ''}
         onChange={(e) => setActiveInstitution(e.target.value)}
-        className="w-auto min-w-[200px] max-w-[300px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-colors"
+        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-colors"
         aria-label="Seleccionar institución activa"
       >
         <option value="">Seleccionar institución</option>
