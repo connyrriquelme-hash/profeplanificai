@@ -17,7 +17,7 @@
  * Requiere: wrangler CLI autenticado, DB name = planificaia-db
  */
 
-import { writeFileSync, unlinkSync, readFileSync } from 'fs';
+import { writeFileSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -25,36 +25,33 @@ import { execSync } from 'child_process';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, '..');
 const DB_NAME = 'planificaia-db';
-const DB_ID = '19c4fea3-444e-4094-8c66-610704c674be';
-const ACCOUNT_ID = '101de09c721aefae66ad7997e9bb9383';
 
 let tempCounter = 0;
 
 // ─── D1 Helpers ──────────────────────────────────────────
 
-function getOAuthToken() {
-  try {
-    const configPath = join(process.env.USERPROFILE || process.env.HOME, '.wrangler', 'config', 'default.toml');
-    const config = readFileSync(configPath, 'utf-8');
-    const match = config.match(/oauth_token\s*=\s*"([^"]+)"/);
-    return match ? match[1] : null;
-  } catch {
-    return null;
-  }
-}
-
+// queryD1() antes leia un oauth_token a mano desde
+// ~/.wrangler/config/default.toml y pegaba contra la API de Cloudflare
+// directo -- wrangler 4.x ya no guarda credenciales en ese formato, asi que
+// esto devolvia [] silenciosamente (catch vacio) en vez de fallar visible.
+//
+// `wrangler d1 execute --file` (el mecanismo que ya usaba execWrangler() de
+// mas abajo para los UPDATEs) NO es un query runner: trata el .sql como una
+// IMPORTACION masiva y devuelve estadisticas de la importacion ("Rows read",
+// "Database size (MB)", etc.), no las filas del SELECT -- confirmado contra
+// el servidor real. Sirve para los UPDATEs (no les importa el valor de
+// retorno) pero rompia silenciosamente cualquier lectura. `--command` si
+// devuelve las filas reales de un SELECT, que es lo que necesita queryD1().
 async function queryD1(sql) {
-  const token = getOAuthToken();
-  if (!token) return [];
   try {
-    const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/d1/database/${DB_ID}/query`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sql }),
-    });
-    const data = await resp.json();
-    if (data?.success && data?.result?.[0]?.results) {
-      return data.result[0].results;
+    const cmd = `npx wrangler d1 execute ${DB_NAME} --remote --command "${sql.replace(/"/g, '\\"')}"`;
+    const output = execSync(cmd, { encoding: 'utf-8', cwd: PROJECT_ROOT, timeout: 60000, maxBuffer: 100 * 1024 * 1024 });
+    const match = output.match(/\[[\s\S]*\]/);
+    if (match) {
+      const parsed = JSON.parse(match[0]);
+      if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0].results)) {
+        return parsed[0].results;
+      }
     }
     return [];
   } catch {
@@ -67,7 +64,12 @@ async function execWrangler(sql) {
   try {
     writeFileSync(tmpFile, sql, 'utf-8');
     const cmd = `npx wrangler d1 execute ${DB_NAME} --remote --file "${tmpFile}"`;
-    const output = execSync(cmd, { encoding: 'utf-8', cwd: PROJECT_ROOT, timeout: 60000 });
+    // maxBuffer default de Node (1MB) se quedaba corto para el SELECT de
+    // curriculum_indicators completo (8720 filas) -- confirmado contra el
+    // servidor real: sin esto, execSync truncaba la salida a mitad de JSON
+    // y el regex de abajo terminaba parseando un fragmento invalido en vez
+    // de fallar visible (devolvia 1 fila con todos los campos undefined).
+    const output = execSync(cmd, { encoding: 'utf-8', cwd: PROJECT_ROOT, timeout: 60000, maxBuffer: 100 * 1024 * 1024 });
     const match = output.match(/\[[\s\S]*\]/);
     if (match) {
       const parsed = JSON.parse(match[0]);
