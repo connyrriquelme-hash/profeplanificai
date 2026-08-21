@@ -71,29 +71,39 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     } catch (externalErr) {
       if (!context.env.AI) throw externalErr;
 
-      const safePrompt = buildSafeImagePrompt(prompt);
-      const result = await context.env.AI.run(CLOUDFLARE_FALLBACK_MODEL, { prompt: safePrompt });
-      let imageBase64: string;
-      if (result && typeof result === 'object' && 'image' in result && typeof (result as { image: unknown }).image === 'string') {
-        imageBase64 = `data:image/jpeg;base64,${(result as { image: string }).image}`;
-      } else {
-        let imageBytes: Uint8Array;
-        if (result instanceof ReadableStream) {
-          imageBytes = await streamToBytes(result);
-        } else if (result instanceof ArrayBuffer) {
-          imageBytes = new Uint8Array(result);
+      try {
+        const safePrompt = buildSafeImagePrompt(prompt);
+        const result = await context.env.AI.run(CLOUDFLARE_FALLBACK_MODEL, { prompt: safePrompt });
+        let imageBase64: string;
+        if (result && typeof result === 'object' && 'image' in result && typeof (result as { image: unknown }).image === 'string') {
+          imageBase64 = `data:image/jpeg;base64,${(result as { image: string }).image}`;
         } else {
-          imageBytes = result as Uint8Array;
+          let imageBytes: Uint8Array;
+          if (result instanceof ReadableStream) {
+            imageBytes = await streamToBytes(result);
+          } else if (result instanceof ArrayBuffer) {
+            imageBytes = new Uint8Array(result);
+          } else {
+            imageBytes = result as Uint8Array;
+          }
+          imageBase64 = bytesToDataUrl(imageBytes);
         }
-        imageBase64 = bytesToDataUrl(imageBytes);
-      }
 
-      return Response.json({
-        ok: true,
-        imageUrl: imageBase64,
-        provider: 'cloudflare-ai',
-        model: CLOUDFLARE_FALLBACK_MODEL,
-      });
+        return Response.json({
+          ok: true,
+          imageUrl: imageBase64,
+          provider: 'cloudflare-ai',
+          model: CLOUDFLARE_FALLBACK_MODEL,
+        });
+      } catch (fallbackErr) {
+        // Sin esto, cuando el fallback de Cloudflare AI tambien falla (p.ej.
+        // cuota de neurons agotada), el mensaje real de por que fallaron
+        // Gemini/OpenAI/etc. (capturado en externalErr) se perdia por
+        // completo y el usuario solo veia el error del fallback.
+        const externalMsg = externalErr instanceof Error ? externalErr.message : 'error desconocido';
+        const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : 'error desconocido';
+        throw new Error(`${externalMsg} | Fallback Cloudflare AI también falló: ${fallbackMsg}`);
+      }
     }
   } catch (err) {
     if (err instanceof ProviderNotConfiguredError) {
