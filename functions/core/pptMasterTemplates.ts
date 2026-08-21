@@ -323,11 +323,19 @@ export function renderTemplateStructure(template: MasterTemplate): string {
   const lines = template.steps.map((step, i) =>
     `${i + 1}. [${step.layout}] ${step.role}: ${step.instruction}`
   );
+  // Recordatorio puntual solo cuando la plantilla de verdad usa alguno de
+  // estos dos layouts -- confirmado contra el servidor real que el modelo
+  // escribe "title" (el nombre que usan casi todos los demas layouts) en
+  // vez de "titulo" para estos dos, fallando la validacion del schema.
+  const layoutsEnStepos = new Set(template.steps.map((s) => s.layout));
+  const recordatorioTitulo = (layoutsEnStepos.has('vocabulario') || layoutsEnStepos.has('ciclo_proceso'))
+    ? '\n\nEsta plantilla incluye un slide de tipo "vocabulario" y/o "ciclo_proceso" — recuerda que esos dos usan el campo "titulo" (español), no "title".'
+    : '';
   return `PLANTILLA MAESTRA SELECCIONADA: "${template.name}" (${template.uso})
 
 Debes generar EXACTAMENTE ${template.steps.length} diapositivas, en este orden exacto, cada una con el layout de schema indicado entre corchetes y cumpliendo el contenido descrito:
 
 ${lines.join('\n')}
 
-No agregues diapositivas fuera de esta secuencia, no cambies el orden, y no omitas ninguna. El layout indicado entre corchetes es el que debes usar en el campo "layout" del JSON para esa diapositiva.`;
+No agregues diapositivas fuera de esta secuencia, no cambies el orden, y no omitas ninguna. El layout indicado entre corchetes es el que debes usar en el campo "layout" del JSON para esa diapositiva.${recordatorioTitulo}`;
 }

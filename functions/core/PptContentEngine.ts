@@ -109,7 +109,9 @@ ESTRUCTURA JSON OBLIGATORIA (usa el layout que corresponda a cada slide de la se
     { "layout": "quiz_opcion_multiple", "pregunta": "¿...?", "opciones": ["A", "B", "C"], "respuestaCorrectaIndex": 0, "explicacion": "por qué es correcta" },
     { "layout": "verdadero_falso", "afirmacion": "...", "esVerdadero": true, "explicacion": "por qué" }
   ]
-}`;
+}
+
+ATENCIÓN AL NOMBRE DEL CAMPO DE TÍTULO: la mayoría de los layouts usan "title" (en inglés) para el título del slide — PERO "vocabulario" y "ciclo_proceso" usan "titulo" (en español, sin tilde en el nombre del campo). Es un error muy común escribir "title" por costumbre en esos dos layouts — revisa cada slide de tipo "vocabulario" o "ciclo_proceso" y confirma que el campo se llama exactamente "titulo", no "title", antes de responder.`;
 }
 
 function truncate(text: string, max: number): string {
