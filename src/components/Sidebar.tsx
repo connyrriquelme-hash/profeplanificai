@@ -238,7 +238,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       {isCollapsed && (
         <button
           onClick={toggleCollapse}
-          className="hidden lg:flex fixed top-[100px] z-20 items-center justify-center w-5 h-14 rounded-l-lg bg-[var(--primary)] text-white shadow-md hover:bg-[var(--primary-hover)] transition-all duration-200 no-print"
+          className="hidden lg:flex fixed top-5 z-20 items-center justify-center w-5 h-10 rounded-l-lg bg-[var(--primary)] text-white shadow-md hover:bg-[var(--primary-hover)] transition-all duration-200 no-print"
           style={{ left: COLLAPSED_WIDTH }}
           aria-label="Expandir menu"
           title="Expandir menu"
