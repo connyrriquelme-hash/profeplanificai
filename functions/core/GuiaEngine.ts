@@ -55,6 +55,11 @@ export interface GuiaResult {
   // nunca lo setean.
   textoLectura?: GuiaTextoLectura;
   sections: GuiaSection[];
+  // true solo cuando la llamada a la IA falló por completo (mismo criterio
+  // que PlanificacionResult.usedFallback / UnidadDidacticaResult.usedFallback)
+  // — no cuando enrichEstudiante/enrichDocente sustituyó algún campo débil
+  // puntual, eso sigue siendo "la IA funcionó".
+  usedFallback: boolean;
 }
 
 // ─── Capa 2: fallback determinista ───
@@ -81,6 +86,7 @@ function buildFallbackEstudiante(input: GuiaEngineInput): GuiaResult {
   return {
     title: input.topic || `Guía: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    usedFallback: true,
     textoLectura: buildFallbackTextoLectura(input),
     sections: [
       { title: 'Introducción', content: `En esta guía vamos a trabajar: ${input.objectiveText}` },
@@ -121,6 +127,7 @@ function buildFallbackDocente(input: GuiaEngineInput): GuiaResult {
   return {
     title: `Guía Docente: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    usedFallback: true,
     sections: [
       {
         title: 'Inicio (15 min)',
@@ -211,6 +218,7 @@ DOMINIOS EN LA GUIA DEL ESTUDIANTE:
 
 4. REALIDAD CHILENA: los ejemplos deben ser del contexto del estudiante:
    - Calendario escolar chileno, geografia local, cultura chilena
+   - Usa nombres chilenos (Sofia, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) cuando la actividad necesite un personaje o escenario de ejemplo
    - No uses ejemplos de otros paises sin adaptar
 
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
@@ -366,6 +374,7 @@ function enrichEstudiante(ai: GuiaEstudianteAI, fallback: GuiaResult, input: Gui
   return {
     title: ai.title || fallback.title,
     objective: ai.objective || fallback.objective,
+    usedFallback: false,
     textoLectura,
     sections: ai.sections?.length >= 4 ? ai.sections : fallback.sections,
   };
@@ -379,6 +388,7 @@ function enrichDocente(ai: GuiaDocenteAI, fallback: GuiaResult): GuiaResult {
   return {
     title: ai.title || fallback.title,
     objective: ai.objective || fallback.objective,
+    usedFallback: false,
     sections: ai.sections?.length === 5 ? ai.sections : fallback.sections,
   };
 }

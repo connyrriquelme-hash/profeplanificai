@@ -1,6 +1,7 @@
 import { PlanificacionSchema, type Planificacion, type PlanificacionClase } from '../../schemas/PlanificacionSchema';
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
+import { inferRangoEtario } from './pedagogicalUtils';
 
 export interface PlanificacionOptions {
   level: string;
@@ -93,10 +94,20 @@ export function buildFallbackPlanificacion(opciones: PlanificacionOptions): Plan
 // DUA_ITEM_MAX=1500, CLASS_MATERIAL_MAX=500) y este prompt ahora pide
 // explícitamente ese volumen de contenido por campo — nunca más de lo que
 // el campo puede contener.
-function buildSystemPromptPlanificacion(): string {
+function buildSystemPromptPlanificacion(level: string): string {
+  const rangoEtario = inferRangoEtario(level);
+
   return `Eres un experto en pedagogia chilena (curriculo MINEDUC) y ciencia del aprendizaje. Disenas planificaciones clase a clase concretas, listas para usar en aula real — nunca genericas.
 
+NUNCA COPIES EL OA LITERAL: el objetivo de aprendizaje es tu punto de partida para DERIVAR contenido pedagogico, no un texto para repetir. Si el OA dice "Identificar caracteristicas de los seres vivos", no escribas "en esta clase identificaremos caracteristicas de los seres vivos" — escribe QUE caracteristicas especificas, CON QUE actividad concreta las identificaran los estudiantes.
+
 CONTENIDO REAL, NO GENERICO: todo lo que escribas debe nombrar el contenido especifico del OA (personajes, fechas, procesos, lugares, conceptos). Si el OA menciona hechos historicos, geograficos o cientificos concretos, citalos por su nombre exacto. Nunca escribas "el tema" o "el contenido" en lugar del contenido real.
+
+CONTEXTO CHILENO REAL: cuando uses ejemplos o situaciones para ilustrar el contenido, ancla en el contexto cotidiano chileno — nombres chilenos (Sofia, Mateo, Javiera), lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio), situaciones reales de una sala de clases chilena. Nunca uses ejemplos genericos internacionales cuando hay un equivalente chileno igual de valido.
+
+VOCABULARIO POR EDAD: ${rangoEtario}
+
+ACTIVIDADES CONCRETAS Y EJECUTABLES: cada actividad que describas debe ser algo que el estudiante HACE fisicamente — escribe, dibuja, marca, ordena, compara, mide, construye. Nunca uses frases abstractas como "reflexiona sobre", "analiza el concepto de" o "comprende la importancia de" como la instruccion completa de una actividad; si aparecen, deben ir seguidas de la accion concreta que las hace verificables.
 
 VARIEDAD Y PROGRESION:
 - Cada clase tiene una estructura distinta — no repitas la misma secuencia inicio-desarrollo-cierre.
@@ -205,7 +216,7 @@ export async function generatePlanificacion(
   try {
     const { data } = await callAIConValidacion(
       env,
-      buildSystemPromptPlanificacion(),
+      buildSystemPromptPlanificacion(opciones.level),
       prompt,
       PlanificacionSchema,
       { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 5000 },

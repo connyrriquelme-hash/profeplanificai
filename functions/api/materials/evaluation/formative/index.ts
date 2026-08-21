@@ -125,6 +125,7 @@ async function buildExitTicketAI(
     teacherNotes: ticket.teacherNotes,
     studentNameField: true,
     dateField: true,
+    usedFallback: ticket.usedFallback,
   };
 }
 

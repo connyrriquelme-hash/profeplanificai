@@ -35,6 +35,9 @@ export interface TicketSalidaResult {
   instructions: string;
   questions: TicketSalidaQuestion[];
   teacherNotes: string;
+  // true solo cuando la llamada a la IA falló por completo (mismo criterio
+  // que PlanificacionResult.usedFallback / GuiaResult.usedFallback).
+  usedFallback: boolean;
 }
 
 // La pregunta de autoevaluación (semáforo) es un mecanismo de UI fijo, igual
@@ -66,6 +69,7 @@ function buildFallback(input: TicketSalidaEngineInput): TicketSalidaResult {
   return {
     title: `Ticket de Salida: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    usedFallback: true,
     instructions: 'Completa antes de salir de clase. Responde con honestidad.',
     questions: composeQuestions([
       `¿Cuál fue lo más importante que aprendiste hoy sobre ${tema}?`,
@@ -108,6 +112,8 @@ REGLAS DE VARIEDAD PARA TICKET DE SALIDA:
 4. METACOGNICION: incluye siempre:
    - "Como te sentiste aprendiendo esto?" (con iconos de caritas)
    - "Que necesitas para aprender mejor?"
+
+5. CONTEXTO CHILENO: cuando una pregunta necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofia, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genericos internacionales.
 
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
@@ -175,6 +181,7 @@ function enrich(ai: TicketSalidaAI, fallback: TicketSalidaResult, topic: string)
   return {
     title: ai.title && ai.title.trim().length > 5 ? ai.title : fallback.title,
     objective: fallback.objective,
+    usedFallback: false,
     instructions: fallback.instructions,
     questions: validQuestions,
     teacherNotes: fallback.teacherNotes,
