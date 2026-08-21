@@ -210,17 +210,6 @@ export interface CallAIConValidacionOptions {
 // 200 contra el servidor real, con cupo gratuito y contexto largo (1M tokens).
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
-// env.AI.run() (binding nativo de Workers AI) lanza un Error cuando el cupo
-// diario gratuito de neurons se agota — confirmado contra el servidor real:
-// "AiError: ... you have used up your daily free allocation of 10,000
-// neurons ..." con code 4006. No hay un tipo/código estable documentado
-// para el binding nativo (a diferencia del REST directo, que sí devuelve
-// {code: 4006} en el body), así que se detecta por patrón en el mensaje.
-function esErrorDeCupoAgotado(error: unknown): boolean {
-  const mensaje = error instanceof Error ? error.message : String(error);
-  return /neuron|4006|allocation|quota/i.test(mensaje);
-}
-
 // Llama a la API REST de Gemini (Google AI Studio) directamente por fetch,
 // sin SDK — mismo criterio que env.AI.run(): un solo intento, sin retry
 // propio (el retry vive en callAIConValidacion(), a nivel de proveedor).
@@ -300,9 +289,10 @@ export async function callAIConValidacion<T>(
 
   let currentUserPrompt = userPrompt;
   let ultimoError = 'Sin detalle.';
-  // Una vez que Workers AI falla por cupo agotado, se asume agotado para el
-  // resto de los intentos de esta misma llamada — evita gastar 429s de más
-  // en cada reintento cuando ya sabemos que va a seguir fallando igual.
+  // Una vez que Workers AI falla (cupo agotado u otro error), se lo da por
+  // no disponible para el resto de los intentos de esta misma llamada —
+  // evita reintentar contra un proveedor que ya sabemos que va a seguir
+  // fallando igual.
   let workersAIAgotado = false;
 
   for (let intento = 1; intento <= maxIntentos; intento++) {
@@ -318,12 +308,24 @@ export async function callAIConValidacion<T>(
       try {
         response = await env.AI.run(model, { messages, temperature, max_tokens: maxTokens });
       } catch (error) {
-        if (hayGemini && esErrorDeCupoAgotado(error)) {
+        // Cualquier fallo de Workers AI (no solo cupo agotado -- confirmado
+        // que un error de cupo real, con "4006"/"neurons" en el mensaje, no
+        // siempre coincidia con lo esperado aqui) cae a Gemini si esta
+        // disponible, en vez de abortar toda la generacion. Gemini ya es un
+        // proveedor confirmado funcional, asi que es estrictamente mejor
+        // intentarlo que devolver el fallback generico sin ni probarlo.
+        if (hayGemini) {
           workersAIAgotado = true;
-          response = await callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, {
-            temperature,
-            maxOutputTokens: maxTokens,
-          });
+          try {
+            response = await callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, {
+              temperature,
+              maxOutputTokens: maxTokens,
+            });
+          } catch (geminiError) {
+            const workersMsg = error instanceof Error ? error.message : String(error);
+            const geminiMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+            throw new Error(`Workers AI: ${workersMsg} | Gemini: ${geminiMsg}`);
+          }
         } else {
           throw error;
         }
