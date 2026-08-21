@@ -1,14 +1,14 @@
 const variantStyles: Record<string, string> = {
   default:
-    'bg-white border border-gray-200 shadow-sm',
+    'bg-[var(--surface)] border border-[var(--border)] shadow-[var(--shadow-card)]',
   glass:
-    'bg-white/80 backdrop-blur-md border border-white/60 shadow-sm',
+    'bg-[var(--surface)]/80 backdrop-blur-md border border-white/60 shadow-[var(--shadow-card)]',
   elevated:
-    'bg-white border border-gray-100 shadow-md',
+    'bg-[var(--surface)] border border-[var(--border-strong)] shadow-[var(--shadow-card-hover)]',
   interactive:
-    'bg-white border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-[var(--primary)]/30 hover:-translate-y-0.5 transition-all duration-200',
+    'bg-[var(--surface)] border border-[var(--border)] shadow-[var(--shadow-card)] cursor-pointer hover:shadow-[var(--shadow-card-hover)] hover:border-[var(--primary)]/30 hover:-translate-y-0.5 transition-all duration-200',
   gradient:
-    'bg-white border border-transparent shadow-sm',
+    'bg-gradient-to-br from-[var(--surface)] to-[var(--primary-tint)] border border-transparent shadow-[var(--shadow-card)]',
 };
 
 interface CardProps {
@@ -22,7 +22,7 @@ export function Card({ variant = 'default', className = '', children, onClick }:
   const Component = onClick ? 'button' : 'div';
   return (
     <Component
-      className={`rounded-xl p-5 transition-all duration-200 ${variantStyles[variant]} ${className}`}
+      className={`rounded-[var(--radius-card)] p-5 transition-all duration-200 ${variantStyles[variant]} ${className}`}
       onClick={onClick}
       {...(onClick ? { type: 'button' as const } : {})}
     >
