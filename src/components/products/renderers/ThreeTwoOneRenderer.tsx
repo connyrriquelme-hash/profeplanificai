@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface ThreeTwoOneRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function ThreeTwoOneRenderer({ product, className, style }: ThreeTwoOneRendererProps) {
+export function ThreeTwoOneRenderer({ product, className, style, onProductChange }: ThreeTwoOneRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const cards = (data.cards as ThreeTwoOneCard[]) || [];
   const title = data.title as string | undefined;
@@ -46,6 +49,10 @@ export function ThreeTwoOneRenderer({ product, className, style }: ThreeTwoOneRe
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {instructions && (

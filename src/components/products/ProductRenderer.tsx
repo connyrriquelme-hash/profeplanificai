@@ -41,7 +41,12 @@ import type { ClassroomScientificNotebook } from '../../types/scientificNotebook
 import { ScientificNotebookRenderer } from './renderers/ScientificNotebookRenderer';
 
 /** Renderer component type */
-type RendererComponent = React.ComponentType<{ product: PedagogicalProduct; className?: string; style?: React.CSSProperties }>;
+type RendererComponent = React.ComponentType<{
+  product: PedagogicalProduct;
+  className?: string;
+  style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
+}>;
 
 /**
  * Registry of renderers keyed by product type.
@@ -182,6 +187,10 @@ export default function ProductRenderer({
     return normalizeProduct(product as Record<string, unknown>, selectedProducto);
   })();
 
+  const handleInlineEdit = useCallback((updated: PedagogicalProduct) => {
+    setActiveProduct(updated);
+  }, []);
+
   const renderVisualMode = () => {
     if (isClassroomScientificNotebook(product)) {
       return <ScientificNotebookRenderer notebook={product} className={className} style={style} />;
@@ -192,14 +201,10 @@ export default function ProductRenderer({
 
     const Renderer = rendererRegistry[prod.type];
     if (Renderer) {
-      return <Renderer product={prod} className={className} style={style} />;
+      return <Renderer product={prod} className={className} style={style} onProductChange={handleInlineEdit} />;
     }
-    return <GenericProductRenderer product={prod} className={className} style={style} />;
+    return <GenericProductRenderer product={prod} className={className} style={style} onProductChange={handleInlineEdit} />;
   };
-
-  const handleInlineEdit = useCallback((updated: PedagogicalProduct) => {
-    setActiveProduct(updated);
-  }, []);
 
   const renderDocumentMode = () => {
     if (!workingProduct) {

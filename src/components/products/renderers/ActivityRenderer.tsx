@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface ActivityRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function ActivityRenderer({ product, className, style }: ActivityRendererProps) {
+export function ActivityRenderer({ product, className, style, onProductChange }: ActivityRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const phases = (data.phases as ActivityPhase[]) || [];
   const objective = data.objective as string | undefined;
@@ -50,6 +53,10 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
         teacherName={metadata.teacherName}
         estimatedTime={metadata.estimatedTime}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {objective && (

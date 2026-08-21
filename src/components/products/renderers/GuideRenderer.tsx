@@ -5,16 +5,19 @@ import { ProductHeader } from '../ProductHeader';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
+import { useCoverImage } from '../useCoverImage';
 import type { PedagogicalProduct, GuideSection, GuideTextoLectura } from '../types';
 
 interface GuideRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function GuideRenderer({ product, className, style }: GuideRendererProps) {
+export function GuideRenderer({ product, className, style, onProductChange }: GuideRendererProps) {
   const { metadata, data } = product;
+  const cover = useCoverImage(product, onProductChange);
   const sections = (data.sections as GuideSection[]) || [];
   const textoLectura = data.textoLectura as GuideTextoLectura | undefined;
   const objective = data.objective as string | undefined;
@@ -41,6 +44,10 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
         teacherName={metadata.teacherName}
         estimatedTime={metadata.estimatedTime}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {objective && (

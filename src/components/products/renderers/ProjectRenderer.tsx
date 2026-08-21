@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface ProjectRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function ProjectRenderer({ product, className, style }: ProjectRendererProps) {
+export function ProjectRenderer({ product, className, style, onProductChange }: ProjectRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const tasks = (data.tasks as ProjectTask[]) || [];
   const roles = (data.roles as Array<{ name: string; description: string }>) || [];
@@ -38,6 +41,10 @@ export function ProjectRenderer({ product, className, style }: ProjectRendererPr
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {objective && (

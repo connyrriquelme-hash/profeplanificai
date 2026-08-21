@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface DUAGuideRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function DUAGuideRenderer({ product, className, style }: DUAGuideRendererProps) {
+export function DUAGuideRenderer({ product, className, style, onProductChange }: DUAGuideRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const sections = (data.sections as DUASection[]) || [];
   const principles = (data.principles as string[]) || [];
@@ -44,6 +47,10 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {learningBarriers.length > 0 && (

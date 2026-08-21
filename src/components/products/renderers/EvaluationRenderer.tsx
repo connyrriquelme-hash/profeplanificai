@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface EvaluationRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function EvaluationRenderer({ product, className, style }: EvaluationRendererProps) {
+export function EvaluationRenderer({ product, className, style, onProductChange }: EvaluationRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const questions = (data.questions as EvaluationQuestion[]) || [];
   const totalPoints = data.totalPoints as number | undefined;
@@ -37,6 +40,10 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       <div className="flex flex-wrap gap-3">

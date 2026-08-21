@@ -6,6 +6,7 @@
  */
 
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductActionBar } from '../ProductActionBar';
 import type { PedagogicalProduct } from '../types';
 
@@ -51,9 +52,11 @@ interface SemaforoRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function SemaforoRenderer({ product, className, style }: SemaforoRendererProps) {
+export function SemaforoRenderer({ product, className, style, onProductChange }: SemaforoRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const sem = data as SemaforoData;
 
@@ -79,6 +82,10 @@ export function SemaforoRenderer({ product, className, style }: SemaforoRenderer
         teacherName={metadata.teacherName}
         estimatedTime={metadata.estimatedTime}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {/* Flat mode */}

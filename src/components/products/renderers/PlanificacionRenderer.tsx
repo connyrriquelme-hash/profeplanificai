@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { Clock, Users, BookOpen, Target, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { ProductActionBar } from '../ProductActionBar';
 import type { PedagogicalProduct } from '../types';
@@ -17,6 +18,7 @@ interface PlanificacionRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
 interface PlanClass {
@@ -57,7 +59,8 @@ function PhaseBlock({ label, content, phase }: { label: string; content?: string
   );
 }
 
-export function PlanificacionRenderer({ product, className, style }: PlanificacionRendererProps) {
+export function PlanificacionRenderer({ product, className, style, onProductChange }: PlanificacionRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const [expandedClass, setExpandedClass] = useState<number | null>(0);
 
@@ -93,6 +96,10 @@ export function PlanificacionRenderer({ product, className, style }: Planificaci
         teacherName={metadata.teacherName}
         estimatedTime={metadata.estimatedTime}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {/* Stats row */}

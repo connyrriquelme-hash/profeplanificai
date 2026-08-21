@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { BookOpen, Clock, ChevronDown, Layers, Target } from 'lucide-react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { ProductActionBar } from '../ProductActionBar';
 import type { PedagogicalProduct } from '../types';
@@ -80,9 +81,11 @@ interface UnidadDidacticaRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function UnidadDidacticaRenderer({ product, className, style }: UnidadDidacticaRendererProps) {
+export function UnidadDidacticaRenderer({ product, className, style, onProductChange }: UnidadDidacticaRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const [expandedClass, setExpandedClass] = useState<number | null>(0);
 
@@ -109,6 +112,10 @@ export function UnidadDidacticaRenderer({ product, className, style }: UnidadDid
         teacherName={metadata.teacherName}
         estimatedTime={metadata.estimatedTime}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {/* Stats */}

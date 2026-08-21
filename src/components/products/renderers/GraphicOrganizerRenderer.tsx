@@ -7,6 +7,7 @@
 
 import { useMemo } from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductActionBar } from '../ProductActionBar';
 import type { PedagogicalProduct, GraphicOrganizerNode } from '../types';
 
@@ -14,6 +15,7 @@ interface GraphicOrganizerRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -226,7 +228,8 @@ function ConceptMapSVG({ central, nodes }: { central?: string; nodes: GraphicOrg
 
 /* ─── Main Renderer ─── */
 
-export function GraphicOrganizerRenderer({ product, className, style }: GraphicOrganizerRendererProps) {
+export function GraphicOrganizerRenderer({ product, className, style, onProductChange }: GraphicOrganizerRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const nodes = (data.nodes as GraphicOrganizerNode[]) || [];
   const organizerType = (data.organizerType as string) || 'concept_map';
@@ -266,6 +269,10 @@ export function GraphicOrganizerRenderer({ product, className, style }: GraphicO
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {instructions && (

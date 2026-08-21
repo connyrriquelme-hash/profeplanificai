@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface ChecklistRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function ChecklistRenderer({ product, className, style }: ChecklistRendererProps) {
+export function ChecklistRenderer({ product, className, style, onProductChange }: ChecklistRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const items = (data.items as ChecklistItem[]) || (data.checklist as string[]) || [];
   const observations = data.observations as string | undefined;
@@ -33,6 +36,10 @@ export function ChecklistRenderer({ product, className, style }: ChecklistRender
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       <ProductSection title="Lista de Cotejo" icon="☑️">

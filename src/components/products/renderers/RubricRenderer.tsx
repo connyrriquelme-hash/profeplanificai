@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import { ProductPremiumExtras, ProductImage } from '../ProductPremiumBlocks';
@@ -11,9 +12,11 @@ interface RubricRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
-export function RubricRenderer({ product, className, style }: RubricRendererProps) {
+export function RubricRenderer({ product, className, style, onProductChange }: RubricRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
   const criteria = (data.criteria as RubricCriterion[]) || [];
   const levels = data.levels as string[] || [];
@@ -36,6 +39,10 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
         date={metadata.date}
         teacherName={metadata.teacherName}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       {description && (

@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { ProductHeader } from '../ProductHeader';
+import { useCoverImage } from '../useCoverImage';
 import { ProductSection } from '../ProductSection';
 import { PrintToolbar } from '../PrintToolbar';
 import {
@@ -21,6 +22,7 @@ interface GenericProductRendererProps {
   product: PedagogicalProduct;
   className?: string;
   style?: React.CSSProperties;
+  onProductChange?: (updated: PedagogicalProduct) => void;
 }
 
 const EXTRA_KEYS = new Set(['tablas', 'tables', 'callouts', 'graficos', 'charts', 'checklist']);
@@ -43,7 +45,8 @@ function hasRenderableValue(value: unknown): boolean {
   return true;
 }
 
-export function GenericProductRenderer({ product, className, style }: GenericProductRendererProps) {
+export function GenericProductRenderer({ product, className, style, onProductChange }: GenericProductRendererProps) {
+  const cover = useCoverImage(product, onProductChange);
   const { metadata, data } = product;
 
   const renderValue = (key: string, value: unknown): React.ReactNode => {
@@ -136,6 +139,10 @@ export function GenericProductRenderer({ product, className, style }: GenericPro
         teacherName={metadata.teacherName}
         estimatedTime={metadata.estimatedTime}
         className="mb-6"
+        coverImageUrl={cover.coverImageUrl}
+        onGenerateCoverImage={cover.canGenerate ? cover.generate : undefined}
+        isGeneratingCoverImage={cover.isGenerating}
+        coverImageError={cover.error}
       />
 
       <ProductPremiumExtras data={data} />
