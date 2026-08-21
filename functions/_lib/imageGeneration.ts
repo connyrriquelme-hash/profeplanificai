@@ -79,7 +79,10 @@ async function generateWithOpenAI(env: ImageEnv, prompt: string): Promise<ImageG
 // que ya usa el resto del codigo para Gemini (functions/_lib/ai/providers.ts),
 // no el SDK, para no sumar su peso al bundle de un Worker.
 async function generateWithGemini(env: ImageEnv, prompt: string): Promise<ImageGenResult | null> {
-  if (!env.GEMINI_API_KEY) return null;
+  if (!env.GEMINI_API_KEY) {
+    console.warn('[imageGeneration] gemini: GEMINI_API_KEY no llego al binding (typeof=' + typeof env.GEMINI_API_KEY + ')');
+    return null;
+  }
   const model = 'imagen-4.0-generate-001';
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(env.GEMINI_API_KEY)}`,
