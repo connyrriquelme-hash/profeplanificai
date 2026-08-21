@@ -59,6 +59,11 @@ export interface MaterialResult {
     score: number;
     issues: Array<{ code: string; severity: 'error' | 'warning'; message: string }>;
   };
+  // Top-level para planificacion/serie_lecciones (wrappers PlanificacionResult/
+  // UnidadDidacticaResult); guia y ticket de salida lo llevan anidado en
+  // .guide/.evaluation en cambio (GuiaResult/TicketSalidaResult no tienen
+  // wrapper) -- ver funcion homonima en FlujoDocenteView.tsx.
+  usedFallback?: boolean;
   error?: string;
 }
 

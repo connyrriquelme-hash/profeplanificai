@@ -144,6 +144,7 @@ export function FlujoDocenteView() {
   const [premiumRubric, setPremiumRubric] = useState<PremiumRubric | null>(null);
   const [unidadDidactica, setUnidadDidactica] = useState<UnidadDidactica | null>(null);
   const [qualityReport, setQualityReport] = useState<MaterialResult['quality']>(undefined);
+  const [usedFallback, setUsedFallback] = useState(false);
 
   const recommendedLessons = useMemo(() => recommendLessonCount({
     objectiveText: selectedOA?.official_text || '',
@@ -290,6 +291,7 @@ export function FlujoDocenteView() {
       setLoading(true);
       setError('');
       setResult(null);
+      setUsedFallback(false);
       setPptxLoading(false);
       setPptDeck(null);
       setRenderError('');
@@ -403,6 +405,14 @@ export function FlujoDocenteView() {
         }
         setResourceId(res.resourceId || '');
         setQualityReport(res.quality);
+        // usedFallback vive en distintos lugares segun el tipo de producto:
+        // top-level para planificacion/serie_lecciones (PlanificacionResult/
+        // UnidadDidacticaResult son wrappers), anidado en .guide/.evaluation
+        // para guia/ticket de salida (GuiaResult/TicketSalidaResult lo llevan
+        // ellos mismos, sin wrapper) -- ver GuiaEngine.ts/TicketSalidaEngine.ts.
+        const nestedUsedFallback = (obj: unknown): boolean | undefined =>
+          obj && typeof obj === 'object' && 'usedFallback' in obj ? Boolean((obj as { usedFallback?: boolean }).usedFallback) : undefined;
+        setUsedFallback(Boolean(res.usedFallback ?? nestedUsedFallback(res.guide) ?? nestedUsedFallback(res.evaluation) ?? false));
         if (selectedProducto === 'rubrica' && res.rubric) {
           setPremiumRubric(res.rubric as PremiumRubric);
         }
@@ -961,6 +971,15 @@ export function FlujoDocenteView() {
 
       return (
         <div className="w-full h-full flex flex-col">
+          {usedFallback && (
+            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-200/70 px-4 py-2.5">
+              <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+              <span>
+                Este recurso se generó con una plantilla de respaldo porque la IA no pudo completar la generación esta vez.
+                El contenido es genérico — revísalo o presiona "Generar recurso" de nuevo para intentar con la IA real.
+              </span>
+            </div>
+          )}
           {qualityReport && qualityReport.status !== 'ready' && (
             <div className={`px-4 py-3 text-sm ${qualityReport.status === 'blocked' ? 'bg-red-50 text-red-800 border-b border-red-200' : 'bg-amber-50 text-amber-900 border-b border-amber-200'}`}>
               <div className="max-w-7xl mx-auto flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
@@ -989,6 +1008,15 @@ export function FlujoDocenteView() {
     // Fallback for non-normalizable products (e.g., raw rubrica)
     return (
       <div className="w-full max-w-7xl mx-auto px-4">
+        {usedFallback && (
+          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200/70 rounded-xl px-3 py-2.5 mb-4">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+            <span>
+              Este recurso se generó con una plantilla de respaldo porque la IA no pudo completar la generación esta vez.
+              El contenido es genérico — revísalo o presiona "Generar recurso" de nuevo para intentar con la IA real.
+            </span>
+          </div>
+        )}
         <Card variant="elevated" className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
