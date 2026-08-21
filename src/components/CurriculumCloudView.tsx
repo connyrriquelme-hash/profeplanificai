@@ -114,10 +114,10 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
           <IconBadge icon={LibraryBig} size="xl" color="#B5471F" variant="gradient" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Base Curricular Oficial</h1>
+              <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Base Curricular Oficial</h1>
               <Badge color="indigo" size="md">Currículum Nacional</Badge>
             </div>
-            <p className="text-sm text-gray-500 mt-1.5 max-w-2xl leading-relaxed">
+            <p className="text-sm text-[var(--ink-soft)] mt-1.5 max-w-2xl leading-relaxed">
               Explora, filtra y revisa Objetivos de Aprendizaje del Currículum Nacional — Ministerio de Educación de Chile.
             </p>
           </div>
@@ -127,14 +127,14 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
       <Card className="mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
               <GraduationCap size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
               Curso
             </label>
             <select
               value={course}
               onChange={e => { setCourse(e.target.value); setSubject(''); setSelected(null); }}
-              className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
+              className="w-full h-10 px-3 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
             >
               <option value="">Todos los cursos</option>
               {courses.map(c => (
@@ -143,14 +143,14 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
             </select>
           </div>
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
               <BookOpenCheck size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
               Asignatura
             </label>
             <select
               value={subject}
               onChange={e => { setSubject(e.target.value); setSelected(null); }}
-              className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
+              className="w-full h-10 px-3 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
             >
               <option value="">Todas las asignaturas</option>
               {subjects.map(s => (
@@ -159,7 +159,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
             </select>
           </div>
           <div className="lg:col-span-2">
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
               <Search size={13} strokeWidth={2.25} />
               Buscar OA
             </label>
@@ -188,7 +188,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
               className={`w-full text-left rounded-2xl p-4 border transition-all duration-200 ${
                 selected?.code === oa.code
                   ? 'border-[var(--primary)] bg-[var(--primary-tint)]/50 shadow-sm shadow-black/5'
-                  : 'border-gray-200/80 bg-white hover:border-gray-300/80 hover:shadow-sm'
+                  : 'border-[var(--border)]/80 bg-white hover:border-gray-300/80 hover:shadow-sm'
               }`}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
@@ -206,7 +206,7 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
                 <span>{oa.subject_name}</span>
                 {oa.axis_name && <><span className="text-gray-300">·</span><span>{oa.axis_name}</span></>}
               </div>
-              <p className="text-sm text-gray-700 leading-relaxed line-clamp-2">
+              <p className="text-sm text-[var(--ink)] leading-relaxed line-clamp-2">
                 {oa.official_text}
               </p>
             </button>
@@ -250,14 +250,14 @@ export function CurriculumCloudView({ onNavigate }: CurriculumCloudViewProps) {
                 )}
               </div>
 
-              <h3 className="text-base font-semibold text-gray-900 mb-1">
+              <h3 className="text-base font-semibold text-[var(--ink)] mb-1">
                 {selected.subject_name}
                 <span className="text-gray-400 font-normal mx-1.5">·</span>
-                <span className="font-normal text-gray-600">{selected.course_name}</span>
+                <span className="font-normal text-[var(--ink-mid)]">{selected.course_name}</span>
               </h3>
 
               {selected.axis_name && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+                <div className="flex items-center gap-1.5 text-xs text-[var(--ink-soft)] mb-4">
                   <GraduationCap size={12} strokeWidth={2.25} className="text-[var(--primary)]" />
                   <span>Eje: {selected.axis_name}</span>
                 </div>

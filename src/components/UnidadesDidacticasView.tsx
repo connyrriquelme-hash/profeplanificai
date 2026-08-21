@@ -138,7 +138,7 @@ export function UnidadesDidacticasView() {
     if (fase.toLowerCase().includes('inicio')) return 'text-emerald-600 border-emerald-400';
     if (fase.toLowerCase().includes('desarrollo')) return 'text-[var(--primary)] border-[var(--primary)]';
     if (fase.toLowerCase().includes('cierre')) return 'text-rose-600 border-rose-400';
-    return 'text-gray-600 border-gray-400';
+    return 'text-[var(--ink-mid)] border-gray-400';
   };
 
   return (
@@ -166,7 +166,7 @@ export function UnidadesDidacticasView() {
                 value={unitName}
                 onChange={e => setUnitName(e.target.value)}
                 placeholder="Ej: Unidad 1: Mision Salvar el Ecosistema"
-                className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
               />
             </div>
 
@@ -175,7 +175,7 @@ export function UnidadesDidacticasView() {
               <select
                 value={metodologia}
                 onChange={e => setMetodologia(e.target.value as MetodologiaActiva)}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
               >
                 {METODOLOGIAS.map(m => (
                   <option key={m.v} value={m.v}>{m.l}</option>
@@ -188,7 +188,7 @@ export function UnidadesDidacticasView() {
               <select
                 value={nivel}
                 onChange={e => setNivel(e.target.value as NivelEducativo)}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
               >
                 {NIVELES.map(n => (
                   <option key={n} value={n}>{n}</option>
@@ -199,24 +199,24 @@ export function UnidadesDidacticasView() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-[var(--ink-soft)]">OAs por Asignatura</label>
-                <button onClick={addOa} className="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded-lg transition-colors font-medium">
+                <button onClick={addOa} className="text-[10px] bg-gray-100 hover:bg-gray-200 text-[var(--ink-mid)] px-2 py-1 rounded-lg transition-colors font-medium">
                   + Agregar OA
                 </button>
               </div>
 
               {oas.map((oa, index) => (
-                <div key={index} className="bg-gray-50 border border-gray-200/80 p-3 rounded-xl space-y-2 relative group">
+                <div key={index} className="bg-gray-50 border border-[var(--border)]/80 p-3 rounded-xl space-y-2 relative group">
                   {oas.length > 1 && (
                     <button onClick={() => removeOa(index)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Trash size={14} />
                     </button>
                   )}
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-0.5">Asignatura</label>
+                    <label className="block text-[10px] uppercase font-bold text-[var(--ink-soft)] mb-0.5">Asignatura</label>
                     <select
                       value={oa.subject}
                       onChange={e => updateOa(index, 'subject', e.target.value)}
-                      className="w-full p-1.5 bg-white border border-gray-200/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20"
+                      className="w-full p-1.5 bg-white border border-[var(--border)]/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20"
                     >
                       {availableSubjects.map(a => (
                         <option key={a} value={a}>{a}</option>
@@ -226,13 +226,13 @@ export function UnidadesDidacticasView() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-0.5">Objetivo Curricular (OA)</label>
+                    <label className="block text-[10px] uppercase font-bold text-[var(--ink-soft)] mb-0.5">Objetivo Curricular (OA)</label>
                     <textarea
                       value={oa.objective}
                       onChange={e => updateOa(index, 'objective', e.target.value)}
                       rows={2}
                       placeholder="Ej: OA 08: Mostrar que comprenden las proporciones..."
-                      className="w-full p-1.5 bg-white border border-gray-200/80 rounded-lg text-xs text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20 resize-none"
+                      className="w-full p-1.5 bg-white border border-[var(--border)]/80 rounded-lg text-xs text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20 resize-none"
                     />
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export function UnidadesDidacticasView() {
                 onChange={e => setInstructions(e.target.value)}
                 rows={3}
                 placeholder="Ej: Enfatizar problemas diarios con analogias sencillas..."
-                className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 resize-none transition-all"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 resize-none transition-all"
               />
             </div>
 
@@ -258,7 +258,7 @@ export function UnidadesDidacticasView() {
               <select
                 value={includeDua ? 'si' : 'no'}
                 onChange={e => setIncludeDua(e.target.value === 'si')}
-                className="flex-1 p-1.5 bg-white border border-gray-200/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20"
+                className="flex-1 p-1.5 bg-white border border-[var(--border)]/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20"
               >
                 <option value="no">Normal</option>
                 <option value="si">Lectura Facil (Visual)</option>
@@ -282,12 +282,12 @@ export function UnidadesDidacticasView() {
         <section className="flex-1 min-w-0">
           <Card className="h-full flex flex-col overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/60 shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]/60 shrink-0">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setVistaActiva('generador')}
                   className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                    vistaActiva === 'generador' ? 'bg-gray-100 text-theme-text' : 'text-gray-400 hover:text-gray-600'
+                    vistaActiva === 'generador' ? 'bg-gray-100 text-theme-text' : 'text-gray-400 hover:text-[var(--ink-mid)]'
                   }`}
                 >
                   Generador
@@ -295,7 +295,7 @@ export function UnidadesDidacticasView() {
                 <button
                   onClick={() => setVistaActiva('organizador')}
                   className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                    vistaActiva === 'organizador' ? 'bg-gray-100 text-theme-text' : 'text-gray-400 hover:text-gray-600'
+                    vistaActiva === 'organizador' ? 'bg-gray-100 text-theme-text' : 'text-gray-400 hover:text-[var(--ink-mid)]'
                   }`}
                 >
                   Organizador Visual
@@ -317,14 +317,14 @@ export function UnidadesDidacticasView() {
             <div className="flex-1 overflow-y-auto p-5">
               {vistaActiva === 'organizador' ? (
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center bg-gray-50 border border-gray-200/80 p-4 rounded-xl">
+                  <div className="flex justify-between items-center bg-gray-50 border border-[var(--border)]/80 p-4 rounded-xl">
                     <h2 className="text-base font-bold text-theme-text">Organizador Anual</h2>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500">Asignatura:</span>
+                      <span className="text-xs font-medium text-[var(--ink-soft)]">Asignatura:</span>
                       <select
                         value={filtroAsignatura}
                         onChange={e => setFiltroAsignatura(e.target.value)}
-                        className="p-1.5 bg-white border border-gray-200/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20"
+                        className="p-1.5 bg-white border border-[var(--border)]/80 rounded-lg text-xs text-theme-text focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20"
                       >
                         {availableSubjects.map(a => (
                           <option key={a} value={a}>{a}</option>
@@ -335,7 +335,7 @@ export function UnidadesDidacticasView() {
                   </div>
 
                   {loadingGuardadas && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500 px-1">
+                    <div className="flex items-center gap-2 text-xs text-[var(--ink-soft)] px-1">
                       <Loader2 size={14} className="animate-spin" /> Cargando unidades guardadas...
                     </div>
                   )}
@@ -363,15 +363,15 @@ export function UnidadesDidacticasView() {
                                 <h3 className="font-bold text-theme-text text-sm mt-0.5 truncate">{item.unidad.titulo}</h3>
                               </div>
                               <div className="p-3 space-y-2 flex-1 text-xs">
-                                <p className="text-gray-600">
-                                  <strong className="text-gray-800 block mb-0.5">Nivel:</strong>
+                                <p className="text-[var(--ink-mid)]">
+                                  <strong className="text-[var(--ink)] block mb-0.5">Nivel:</strong>
                                   {item.unidad.nivel}
                                 </p>
-                                <p className="text-gray-600 line-clamp-2">
-                                  <strong className="text-gray-800 block mb-0.5">Metodologia:</strong>
+                                <p className="text-[var(--ink-mid)] line-clamp-2">
+                                  <strong className="text-[var(--ink)] block mb-0.5">Metodologia:</strong>
                                   {item.unidad.metodologiaActiva}
                                 </p>
-                                <span className="inline-block px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-600">
+                                <span className="inline-block px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-[var(--ink-mid)]">
                                   {item.unidad.clases.length} Clases
                                 </span>
                               </div>
@@ -400,7 +400,7 @@ export function UnidadesDidacticasView() {
                 <div className="h-full flex flex-col items-center justify-center text-center py-20 px-6">
                   <AlertTriangle size={40} className="mb-3 text-rose-400" />
                   <p className="text-sm font-semibold text-rose-600 mb-1">No se pudo generar la unidad</p>
-                  <p className="text-xs text-gray-500 max-w-md">{generateError}</p>
+                  <p className="text-xs text-[var(--ink-soft)] max-w-md">{generateError}</p>
                   <Button variant="ghost" size="sm" className="mt-4" onClick={handleGenerate}>Reintentar</Button>
                 </div>
               ) : unidad ? (
@@ -415,7 +415,7 @@ export function UnidadesDidacticasView() {
                     </div>
                   )}
 
-                  <div className="border-b border-gray-200/60 pb-4">
+                  <div className="border-b border-[var(--border)]/60 pb-4">
                     <h1 className="text-xl font-bold text-theme-text">{unidad.titulo}</h1>
                     <p className="text-[var(--primary)] font-medium text-sm mt-1">
                       Asignatura: {unidad.asignatura} · Nivel: {unidad.nivel}
@@ -430,9 +430,9 @@ export function UnidadesDidacticasView() {
                     <h2 className="text-base font-bold text-theme-text">Fases de la Unidad</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[...unidad.fases].sort((a, b) => a.orden - b.orden).map((fase) => (
-                        <div key={fase.nombre} className="bg-gray-50 border border-gray-200/80 rounded-lg p-3">
+                        <div key={fase.nombre} className="bg-gray-50 border border-[var(--border)]/80 rounded-lg p-3">
                           <p className="font-bold text-xs text-theme-text mb-0.5">{fase.nombre}</p>
-                          <p className="text-gray-600 text-xs leading-relaxed">{fase.descripcion}</p>
+                          <p className="text-[var(--ink-mid)] text-xs leading-relaxed">{fase.descripcion}</p>
                         </div>
                       ))}
                     </div>
@@ -441,14 +441,14 @@ export function UnidadesDidacticasView() {
                   <div className="space-y-4">
                     <h2 className="text-base font-bold text-theme-text">Secuencia de Clases</h2>
                     {[...unidad.clases].sort((a, b) => a.numero - b.numero).map((clase) => (
-                      <div key={clase.numero} className="border border-gray-200/80 rounded-xl overflow-hidden">
+                      <div key={clase.numero} className="border border-[var(--border)]/80 rounded-xl overflow-hidden">
                         <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                           <h3 className="font-bold text-sm text-theme-text">Clase {clase.numero}: {clase.tema}</h3>
-                          <p className="text-gray-500 text-xs mt-0.5">
-                            <strong className="text-gray-700">Fase:</strong> {clase.faseAsociada}
+                          <p className="text-[var(--ink-soft)] text-xs mt-0.5">
+                            <strong className="text-[var(--ink)]">Fase:</strong> {clase.faseAsociada}
                           </p>
-                          <p className="text-gray-500 text-xs mt-0.5">
-                            <strong className="text-gray-700">Objetivo:</strong> {clase.objetivoEspecifico}
+                          <p className="text-[var(--ink-soft)] text-xs mt-0.5">
+                            <strong className="text-[var(--ink)]">Objetivo:</strong> {clase.objetivoEspecifico}
                           </p>
                         </div>
 
@@ -462,7 +462,7 @@ export function UnidadesDidacticasView() {
                               <h4 className={`font-bold text-xs ${getFaseColor(label)} flex items-center gap-1.5`}>
                                 {label} ({data.tiempoMinutos} min)
                               </h4>
-                              <p className="text-gray-600 text-xs leading-relaxed">{data.descripcion}</p>
+                              <p className="text-[var(--ink-mid)] text-xs leading-relaxed">{data.descripcion}</p>
                             </section>
                           ))}
                         </div>

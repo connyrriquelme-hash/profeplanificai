@@ -194,10 +194,10 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
             <IconBadge icon={Archive} size="xl" color="#B5471F" variant="gradient" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Banco de Recursos</h1>
+                <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Banco de Recursos</h1>
                 <Badge color="teal" size="md">Recursos docentes</Badge>
               </div>
-              <p className="text-sm text-gray-500 mt-1.5 max-w-2xl leading-relaxed">
+              <p className="text-sm text-[var(--ink-soft)] mt-1.5 max-w-2xl leading-relaxed">
                 Explora, organiza y reutiliza materiales pedagógicos para tus clases.
               </p>
             </div>
@@ -208,7 +208,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
       <Card className="mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className={activeTab === 'recursos' ? 'lg:col-span-1' : 'lg:col-span-2'}>
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
               <Search size={13} strokeWidth={2.25} />
               {activeTab === 'planificaciones' ? 'Buscar planificaciones' : activeTab === 'recursos' ? 'Buscar recursos' : 'Buscar evaluaciones'}
             </label>
@@ -221,28 +221,28 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
           {activeTab === 'recursos' && (
             <>
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                   <BookOpen size={13} strokeWidth={2.25} />
                   Asignatura
                 </label>
                 <select
                   value={filterSubject}
                   onChange={e => setFilterSubject(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
+                  className="w-full h-10 px-3 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
                 >
                   <option value="">Todas las asignaturas</option>
                   {uniqueSubjects.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                   <GraduationCap size={13} strokeWidth={2.25} />
                   Nivel
                 </label>
                 <select
                   value={filterLevel}
                   onChange={e => setFilterLevel(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
+                  className="w-full h-10 px-3 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer"
                 >
                   <option value="">Todos los niveles</option>
                   {uniqueLevels.map(l => <option key={l} value={l}>{l}</option>)}
@@ -271,7 +271,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
         {QUICK_CATEGORIES.map(cat => (
           <Card key={cat.label} variant="interactive" className="p-3.5 flex items-center gap-3">
             <IconBadge icon={cat.icon} size="md" color={cat.color} variant="soft" />
-            <span className="text-sm font-medium text-gray-700">{cat.label}</span>
+            <span className="text-sm font-medium text-[var(--ink)]">{cat.label}</span>
           </Card>
         ))}
       </div>
@@ -286,7 +286,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
             className={`flex-1 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 ${
               activeTab === id
                 ? 'bg-[var(--primary)] text-white shadow-sm shadow-[var(--primary-tint)]'
-                : 'bg-white text-gray-600 border border-gray-200/80 hover:bg-gray-50 hover:border-gray-300'
+                : 'bg-white text-[var(--ink-mid)] border border-[var(--border)]/80 hover:bg-gray-50 hover:border-gray-300'
             }`}
           >
             {icon} {label}
@@ -319,7 +319,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{item.titulo}</h3>
+                          <h3 className="text-sm font-semibold text-[var(--ink)] leading-snug line-clamp-2">{item.titulo}</h3>
                           <Badge color="teal" size="sm">Planificación</Badge>
                           {isCloud && <Badge color="indigo" size="sm">Nube</Badge>}
                         </div>
@@ -348,7 +348,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       {(() => { try { const m = JSON.parse((item as any).metadata_json || '{}'); return m.sourceTab ? <Badge color="green" size="sm">{m.sourceTab === 'actividades' ? 'Actividades' : m.sourceTab === 'recursos_ia' ? 'Mis Clases' : m.sourceTab}</Badge> : null; } catch { return null; } })()}
                       {(() => { try { const m = JSON.parse((item as any).metadata_json || '{}'); return m.classTitle ? <Badge color="slate" size="sm">{m.classTitle}</Badge> : null; } catch { return null; } })()}
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 flex-1">
+                    <p className="text-xs text-[var(--ink-soft)] leading-relaxed line-clamp-3 flex-1">
                       {hasContent ? item.objetivos || item.inicio || 'Sin contenido' : 'Sin contenido'}
                     </p>
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
@@ -408,8 +408,8 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   <div className="flex items-center gap-2 mb-1">
                     <Badge color="teal" size="sm">Recomendado</Badge>
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900">{recommendedResource.title || 'Sin título'}</h3>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{recommendedResource.content}</p>
+                  <h3 className="text-base font-semibold text-[var(--ink)]">{recommendedResource.title || 'Sin título'}</h3>
+                  <p className="text-xs text-[var(--ink-soft)] mt-1 line-clamp-2">{recommendedResource.content}</p>
                   <div className="flex items-center gap-2 mt-3">
                     <Button variant="secondary" size="sm" iconLeft={Eye} onClick={() => setDetail(recommendedResource)}>
                       Ver recurso
@@ -432,7 +432,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                   className="p-5"
                   onClick={() => setDetail(r)}
                 >
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
+                  <h3 className="text-sm font-semibold text-[var(--ink)] mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
                   <div className="flex gap-1.5 flex-wrap mb-3">
                     {r.type === 'presentacion_clase_visual' && <Badge color="orange" size="sm">Presentación</Badge>}
                     {r.type === 'planificacion' && <Badge color="teal" size="sm">Planificación</Badge>}
@@ -444,7 +444,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     {r.level && <Badge color="indigo" size="sm">{r.level}</Badge>}
                     {r.objective_code && <Badge color="amber" size="sm">{r.objective_code}</Badge>}
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content || (() => { try { const m = JSON.parse(r.metadata_json || '{}'); return m.course ? `${m.subject} — ${m.course} • ${m.studentCount || 0} estudiantes` : ''; } catch { return ''; } })()}</p>
+                  <p className="text-xs text-[var(--ink-soft)] leading-relaxed line-clamp-3 mb-3">{r.content || (() => { try { const m = JSON.parse(r.metadata_json || '{}'); return m.course ? `${m.subject} — ${m.course} • ${m.studentCount || 0} estudiantes` : ''; } catch { return ''; } })()}</p>
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
                     <div className="flex items-center text-xs text-gray-400">
                       <Clock size={11} strokeWidth={2.25} className="mr-1" />
@@ -482,7 +482,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 try { meta = JSON.parse(r.metadata_json || '{}'); } catch {}
                 return (
                   <Card key={r.id} variant="interactive" className="p-5" onClick={() => setDetail(r)}>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
+                    <h3 className="text-sm font-semibold text-[var(--ink)] mb-2 leading-snug line-clamp-2">{r.title || 'Sin título'}</h3>
                     <div className="flex gap-1.5 flex-wrap mb-3">
                       <Badge color="violet" size="sm">{r.type}</Badge>
                       {r.subject && <Badge color="teal" size="sm">{r.subject}</Badge>}
@@ -490,7 +490,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       {r.objective_code && <Badge color="amber" size="sm">{r.objective_code}</Badge>}
                       {meta.sourceTab && <Badge color="slate" size="sm">{meta.sourceTab === 'evaluacion' ? 'Evaluación' : meta.sourceTab}</Badge>}
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{r.content}</p>
+                    <p className="text-xs text-[var(--ink-soft)] leading-relaxed line-clamp-3 mb-3">{r.content}</p>
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
                       <div className="flex items-center text-xs text-gray-400">
                         <Clock size={11} strokeWidth={2.25} className="mr-1" />
@@ -520,7 +520,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
           >
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-start justify-between gap-4 z-10">
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-bold text-gray-900 leading-snug">{detail.title}</h2>
+                <h2 className="text-lg font-bold text-[var(--ink)] leading-snug">{detail.title}</h2>
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   {detail.type === 'presentacion_clase_visual' && <Badge color="orange" size="sm">Presentación</Badge>}
                   {detail.subject && <Badge color="teal" size="sm">{detail.subject}</Badge>}
@@ -552,7 +552,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                 </Button>
                 <button
                   onClick={() => setDetail(null)}
-                  className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                  className="p-2 rounded-xl text-gray-400 hover:text-[var(--ink-mid)] hover:bg-gray-100 transition-all"
                   aria-label="Cerrar"
                 >
                   <X size={16} strokeWidth={2.25} />
@@ -563,7 +563,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
               {detail.type === 'presentacion_clase_visual' ? (() => {
                 const slides = deserializeSlidesFromSave(detail.content);
                 if (!slides) {
-                  return <p className="text-sm text-gray-500">No se pudieron cargar las diapositivas.</p>;
+                  return <p className="text-sm text-[var(--ink-soft)]">No se pudieron cargar las diapositivas.</p>;
                 }
                 return (
                   <SlideLessonPreview
