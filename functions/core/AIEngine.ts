@@ -314,8 +314,10 @@ async function callNvidia(
     // ~125s sin responder) deja la llamada colgada hasta que Cloudflare corta
     // la conexion del lado del edge (524), bloqueando toda la cadena de
     // proveedores en vez de fallar rapido y dejar que el request complete
-    // con el deck de fallback dentro de un tiempo razonable.
-    signal: AbortSignal.timeout(20000),
+    // con el deck de fallback dentro de un tiempo razonable. 35s por el
+    // cold-start de los modelos gratuitos de NIM (ver conTimeout() en el
+    // caller, que envuelve esta llamada completa con el mismo limite).
+    signal: AbortSignal.timeout(35000),
   });
 
   const data = await res.json() as any;
@@ -371,7 +373,10 @@ export async function callAIConValidacion<T>(
     providers.push({ name: 'Gemini', call: () => conTimeout(callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 20000, 'Gemini') });
   }
   if (env.NVIDIA_API_KEY) {
-    providers.push({ name: 'NVIDIA', call: () => conTimeout(callNvidia(systemPrompt, currentUserPrompt, env.NVIDIA_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 20000, 'NVIDIA') });
+    // 35s, no 20s: los modelos gratuitos de NVIDIA NIM pueden tener cold-start
+    // -- confirmado contra el servidor real, un timeout de 20s abortaba antes
+    // de que el modelo llegara a responder.
+    providers.push({ name: 'NVIDIA', call: () => conTimeout(callNvidia(systemPrompt, currentUserPrompt, env.NVIDIA_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 35000, 'NVIDIA') });
   }
 
   if (providers.length === 0) {
