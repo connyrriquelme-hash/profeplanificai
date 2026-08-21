@@ -177,13 +177,12 @@ export async function generateImage(env: ImageEnv, prompt: string): Promise<Imag
   const finalPrompt = buildSafeImagePrompt(prompt);
 
   const providers: { name: string; fn: () => Promise<ImageGenResult | null> }[] = [
-    { name: 'openai', fn: () => generateWithOpenAI(env, finalPrompt) },
-    // Segundo, no ultimo: GEMINI_API_KEY ya esta configurado y funcionando
-    // (a diferencia de OPENAI_API_KEY, bloqueado por la cuenta OpenAI sin
-    // acceso a dall-e-3/dall-e-2 al momento de escribir esto), e Imagen 4
-    // es un modelo de calidad comparable a DALL-E 3 -- no tiene sentido
-    // dejarlo detras de Fal/Replicate/Stability, que no estan configurados.
+    // Gemini primero a pedido explicito: OPENAI_API_KEY esta bloqueado a
+    // nivel de cuenta ("model dall-e-3 does not exist") y GEMINI_API_KEY ya
+    // esta configurado y funcionando, con calidad comparable (Imagen 4).
+    // OpenAI queda como respaldo por si se resuelve el acceso mas adelante.
     { name: 'gemini', fn: () => generateWithGemini(env, finalPrompt) },
+    { name: 'openai', fn: () => generateWithOpenAI(env, finalPrompt) },
     { name: 'fal', fn: () => generateWithFal(env, finalPrompt) },
     { name: 'replicate', fn: () => generateWithReplicate(env, finalPrompt) },
     { name: 'stability', fn: () => generateWithStability(env, finalPrompt) },
