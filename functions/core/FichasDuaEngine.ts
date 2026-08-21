@@ -111,7 +111,8 @@ REGLAS OBLIGATORIAS:
 4. "actividades" debe reformular las actividades de nivel_apoyo/nivel_estandar/nivel_desafio del contexto en instrucciones breves, accionables, en segunda persona ("Observa...", "Escribe...", "Dibuja...", "Compara..."), marcando "espacioRespuesta" en true cuando el estudiante debe escribir o dibujar una respuesta, y false cuando la actividad es solo oral, de observación o de movimiento.
 5. "autoevaluacion" debe tener entre 2 y 3 preguntas en primera persona del estudiante ("Puedo...", "Me costó...", "Todavía necesito..."), adaptadas al nivel de la ficha. Nunca en segunda ni tercera persona.
 6. NUNCA repitas el mismo vocabulario, las mismas actividades ni la misma autoevaluación en las 3 fichas — cada nivel debe ser distinto y coherente con su propósito (apoyo = muy guiado, estándar = actividad central, desafío = profundización sin adelantar curso).
-7. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones externas.
+7. Cuando una actividad necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofía, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genéricos internacionales.
+8. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones externas.
 
 ESTRUCTURA JSON OBLIGATORIA:
 {
@@ -169,7 +170,7 @@ export async function generateFichasDua(
   env: AIEngineEnv,
   duaGuide: DuaGuide,
   opciones: FichasDuaEngineOptions,
-): Promise<FichasDua> {
+): Promise<FichasDua & { usedFallback: boolean }> {
   const fallback = buildFallbackFichas(duaGuide, opciones);
 
   try {
@@ -180,9 +181,9 @@ export async function generateFichasDua(
       FichasDuaSchema,
       { model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', maxTokens: 3000 },
     );
-    return enrichFichas(data, fallback);
+    return { ...enrichFichas(data, fallback), usedFallback: false };
   } catch (error) {
     console.error('[FichasDuaEngine] generateFichasDua error:', error);
-    return fallback;
+    return { ...fallback, usedFallback: true };
   }
 }

@@ -13,6 +13,7 @@ import {
 import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv } from './types';
 import { getExpertContext, getExpertEvaluationContext, getExpertDUAContext } from './ExpertKnowledge';
+import { inferRangoEtario } from './pedagogicalUtils';
 
 export interface ObjetivoAprendizajeInput {
   code: string;
@@ -45,6 +46,7 @@ function buildSystemPrompt(opciones: UnidadDidacticaOptions): string {
   const oaLista = opciones.objetivosAprendizaje
     .map((o) => `- ${o.code}: ${o.text}`)
     .join('\n');
+  const rangoEtario = inferRangoEtario(opciones.nivel);
 
   return `Eres EXPERTO en pedagogía, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC. Diseñas unidades didácticas completas de múltiples clases integrando varios Objetivos de Aprendizaje (OA).
 
@@ -63,6 +65,10 @@ CONTEXTO DE ESTA UNIDAD:
 - Objetivos de Aprendizaje (OA) oficiales MINEDUC a cubrir:
 ${oaLista}
 ${opciones.temaSugerido ? `- Tema/enfoque sugerido por el docente: ${opciones.temaSugerido}` : ''}
+
+VOCABULARIO POR EDAD: ${rangoEtario}
+
+CONTEXTO CHILENO: cuando una clase necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofía, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genéricos internacionales.
 
 REGLA MÁS IMPORTANTE: los OA de arriba son el texto curricular formal — NUNCA los copies literalmente en el título, tema de una clase u objetivoEspecifico. Reformúlalos siempre con tus propias palabras, en lenguaje simple y concreto, apropiado para estudiantes de ${opciones.nivel}.
 

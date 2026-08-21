@@ -163,6 +163,7 @@ async function build321FormatAI(
     teacherNotes: formato.teacherNotes,
     studentNameField: true,
     dateField: true,
+    usedFallback: formato.usedFallback,
   };
 }
 
@@ -203,6 +204,7 @@ async function buildChecklistAI(
     studentNameField: true,
     dateField: true,
     summaryRow: true,
+    usedFallback: lista.usedFallback,
   };
 }
 
@@ -294,6 +296,7 @@ async function buildTrafficLightAI(
     teacherNotes: semaforo.teacherNotes,
     studentNameField: true,
     dateField: true,
+    usedFallback: semaforo.usedFallback,
   };
 }
 

@@ -407,12 +407,22 @@ export function FlujoDocenteView() {
         setQualityReport(res.quality);
         // usedFallback vive en distintos lugares segun el tipo de producto:
         // top-level para planificacion/serie_lecciones (PlanificacionResult/
-        // UnidadDidacticaResult son wrappers), anidado en .guide/.evaluation
-        // para guia/ticket de salida (GuiaResult/TicketSalidaResult lo llevan
-        // ellos mismos, sin wrapper) -- ver GuiaEngine.ts/TicketSalidaEngine.ts.
-        const nestedUsedFallback = (obj: unknown): boolean | undefined =>
-          obj && typeof obj === 'object' && 'usedFallback' in obj ? Boolean((obj as { usedFallback?: boolean }).usedFallback) : undefined;
-        setUsedFallback(Boolean(res.usedFallback ?? nestedUsedFallback(res.guide) ?? nestedUsedFallback(res.evaluation) ?? false));
+        // UnidadDidacticaResult son wrappers), anidado en .guide/.evaluation/
+        // .rubric para guia/ticket-o-formativa/rubrica (esos engines lo
+        // llevan ellos mismos, sin wrapper), y un nivel mas anidado en
+        // .evaluation.consignasIA para bitacora_cientifica (BitacoraEngine
+        // se anida dentro de {...baseBitacora, consignasIA} en el endpoint)
+        // -- ver bitacora-cientifica.ts.
+        const nestedUsedFallback = (obj: unknown): boolean | undefined => {
+          if (!obj || typeof obj !== 'object') return undefined;
+          const rec = obj as Record<string, unknown>;
+          if ('usedFallback' in rec) return Boolean(rec.usedFallback);
+          if (rec.consignasIA && typeof rec.consignasIA === 'object' && 'usedFallback' in (rec.consignasIA as object)) {
+            return Boolean((rec.consignasIA as { usedFallback?: boolean }).usedFallback);
+          }
+          return undefined;
+        };
+        setUsedFallback(Boolean(res.usedFallback ?? nestedUsedFallback(res.guide) ?? nestedUsedFallback(res.evaluation) ?? nestedUsedFallback(res.rubric) ?? false));
         if (selectedProducto === 'rubrica' && res.rubric) {
           setPremiumRubric(res.rubric as PremiumRubric);
         }

@@ -32,6 +32,9 @@ export interface ListaCotejoResult {
   instructions: string;
   criteria: ListaCotejoCriterion[];
   teacherNotes: string;
+  // true solo cuando la llamada a la IA falló por completo (mismo criterio
+  // que GuiaResult.usedFallback / TicketSalidaResult.usedFallback).
+  usedFallback: boolean;
 }
 
 function composeCriteria(descriptions: string[]): ListaCotejoCriterion[] {
@@ -48,6 +51,7 @@ function buildFallback(input: ListaCotejoEngineInput): ListaCotejoResult {
   return {
     title: `Lista de Cotejo / Autoevaluación: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    usedFallback: true,
     instructions: 'Marca cada criterio según tu desempeño: Sí / No / En proceso',
     criteria: composeCriteria([
       `Comprendo el concepto principal de ${tema}.`,
@@ -93,6 +97,8 @@ REGLAS DE VARIEDAD PARA LISTA DE COTEJO:
    - Logrado (cumple el criterio)
    - En proceso (cumple parcialmente, necesita apoyo)
    - Inicio (no cumple aun, necesita intervencion)
+
+5. CONTEXTO CHILENO: cuando un criterio necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofia, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genericos internacionales.
 
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
@@ -154,6 +160,7 @@ function enrich(ai: ListaCotejoAI, fallback: ListaCotejoResult): ListaCotejoResu
   return {
     title: ai.title && ai.title.trim().length > 5 ? ai.title : fallback.title,
     objective: fallback.objective,
+    usedFallback: false,
     instructions: fallback.instructions,
     criteria: validCriteria,
     teacherNotes: fallback.teacherNotes,

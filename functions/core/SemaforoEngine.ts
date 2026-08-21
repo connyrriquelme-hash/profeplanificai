@@ -41,6 +41,9 @@ export interface SemaforoResult {
   aspects: SemaforoAspect[];
   colors: SemaforoColor[];
   teacherNotes: string;
+  // true solo cuando la llamada a la IA falló por completo (mismo criterio
+  // que GuiaResult.usedFallback / TicketSalidaResult.usedFallback).
+  usedFallback: boolean;
 }
 
 // El selector 🟢🟡🔴 (ícono + significado + acción) es UI fija, compartida
@@ -66,6 +69,7 @@ function buildFallback(input: SemaforoEngineInput): SemaforoResult {
   return {
     title: `Semáforo de Comprensión: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    usedFallback: true,
     instructions: 'Marca el color que representa tu nivel de comprensión para cada aspecto.',
     aspects: composeAspects([
       {
@@ -126,6 +130,8 @@ REGLAS DE VARIEDAD PARA SEMAFORO DE COMPRENSION:
    - "Que parte fue la mas dificil para ti?"
    - "Que estrategia usaste para entender?"
    - "Que necesitas repasar manana?"
+
+5. CONTEXTO CHILENO: cuando un indicador necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofia, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genericos internacionales.
 
 ADAPTACION POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
@@ -188,6 +194,7 @@ function enrich(ai: SemaforoAI, fallback: SemaforoResult): SemaforoResult {
   return {
     title: ai.title && ai.title.trim().length > 10 ? ai.title : fallback.title,
     objective: fallback.objective,
+    usedFallback: false,
     instructions: fallback.instructions,
     aspects: validAspects.length >= 3 ? validAspects : fallback.aspects,
     colors: fallback.colors,

@@ -21,6 +21,9 @@ export interface BitacoraResult {
   observaciones: string;
   resultados: string;
   conclusion: string;
+  // true solo cuando la llamada a la IA falló por completo (mismo criterio
+  // que GuiaResult.usedFallback / TicketSalidaResult.usedFallback).
+  usedFallback: boolean;
 }
 
 // ─── Capa 2: fallback determinista ───
@@ -32,6 +35,7 @@ function buildFallback(input: BitacoraEngineInput): BitacoraResult {
     observaciones: `Durante la actividad, registra lo que observas sobre ${tema}: qué ves, qué cambia, qué mides.`,
     resultados: `Organiza lo que observaste sobre ${tema} en una tabla, dibujo o lista de datos.`,
     conclusion: `Responde: ¿qué aprendiste sobre ${tema}? ¿Se cumplió tu hipótesis? ¿Por qué?`,
+    usedFallback: true,
   };
 }
 
@@ -63,6 +67,8 @@ REGLAS DE VARIEDAD PARA BITACORA DE INDAGACION:
    - TDAH: secciones cortas, max 2 preguntas por seccion
    - Discalculia: evita pedir calculos, enfocate en observacion
    - Disgrafia: permite dibujar o dictar hallazgos
+
+4. CONTEXTO CHILENO: cuando una consigna necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofia, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genericos internacionales.
 
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
@@ -118,6 +124,7 @@ function enrich(ai: BitacoraAI, fallback: BitacoraResult, topic: string): Bitaco
     observaciones: isWeakConsigna(ai.observaciones, topic) ? fallback.observaciones : ai.observaciones,
     resultados: isWeakConsigna(ai.resultados, topic) ? fallback.resultados : ai.resultados,
     conclusion: isWeakConsigna(ai.conclusion, topic) ? fallback.conclusion : ai.conclusion,
+    usedFallback: false,
   };
 }
 

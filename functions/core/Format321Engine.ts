@@ -34,6 +34,9 @@ export interface Format321Result {
   instructions: string;
   sections: Format321Section[];
   teacherNotes: string;
+  // true solo cuando la llamada a la IA falló por completo (mismo criterio
+  // que GuiaResult.usedFallback / TicketSalidaResult.usedFallback).
+  usedFallback: boolean;
 }
 
 // Los títulos y el conteo de líneas son estructura fija del formato 3-2-1
@@ -57,6 +60,7 @@ function buildFallback(input: Format321EngineInput): Format321Result {
   return {
     title: `Formato 3-2-1: ${input.objectiveCode}`,
     objective: input.objectiveText,
+    usedFallback: true,
     instructions: 'Completa cada sección con tus propias palabras.',
     sections: composeSections(
       `Escribe tres cosas que aprendiste hoy sobre ${tema}.`,
@@ -96,6 +100,8 @@ REGLAS DE VARIEDAD PARA FORMATO 3-2-1:
    - Si el estudiante tiene discalculia: los 3 conceptos pueden ser no-numericos
    - Si tiene disgrafia: puede completar con dibujos, no solo texto
    - Si tiene TDAH: puede completar en formato de lista, no parrafo
+
+5. CONTEXTO CHILENO: cuando una consigna necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofia, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genericos internacionales.
 
 ADAPTACIÓN POR EDAD (usa exactamente este rango, no otro):
 ${rangoEtario}
@@ -162,6 +168,7 @@ function enrich(ai: Format321AI, fallback: Format321Result): Format321Result {
   return {
     title: ai.title && ai.title.trim().length > 5 ? ai.title : fallback.title,
     objective: fallback.objective,
+    usedFallback: false,
     instructions: fallback.instructions,
     sections: composeSections(learned, interesting, question),
     teacherNotes: fallback.teacherNotes,

@@ -23,6 +23,10 @@ export type PremiumRubric = {
   usageInstructions: string[]; inclusiveAdjustments: string[];
   formativeFeedbackQuestions: string[];
   studentSelfAssessment: { title: string; prompts: string[] };
+  // true cuando se usó la plantilla determinista (buildPremiumRubric),
+  // sea porque la IA no está configurada o porque generateRubricaContent
+  // falló tras los reintentos — mismo criterio que GuiaResult.usedFallback.
+  usedFallback: boolean;
 };
 
 export function truncate(text: string, max: number): string {
@@ -1017,6 +1021,7 @@ export function buildPremiumRubric(input: {
       '¿Cómo puedes adaptar la próxima actividad?',
     ],
     studentSelfAssessment: buildSelfAssessment(lower),
+    usedFallback: true,
   };
 }
 
@@ -1141,7 +1146,8 @@ REGLAS OBLIGATORIAS:
 7. "feedbackSuggestion" debe ser una frase breve dirigida al estudiante en segunda persona, coherente con el nivel de desempeño.
 8. Adapta lenguaje y exigencia al nivel educativo: "${level}" — si es educación inicial/1°-4° básico, prioriza evidencias orales, visuales o manipulativas; si es media, permite mayor abstracción y argumentación.
 9. NO copies literalmente el texto oficial del OA en ningún criterio o descriptor: reformúlalo en lenguaje observable.
-10. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones externas, cumpliendo exactamente la estructura solicitada.
+10. Cuando un descriptor o evidencia necesite un ejemplo, persona o lugar, usa nombres chilenos (Sofía, Mateo, Javiera) y lugares reconocibles (el Mercado Central, la Cordillera de los Andes, una feria del barrio) en vez de ejemplos genéricos internacionales.
+11. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones externas, cumpliendo exactamente la estructura solicitada.
 
 ESTRUCTURA JSON OBLIGATORIA (ejemplo con 1 criterio completo — genera entre 2 y 10):
 {
@@ -1214,6 +1220,7 @@ function enrichRubrica(ai: RubricaAnaliticaAI, fallback: PremiumRubric, isLower:
 
   return {
     ...fallback,
+    usedFallback: false,
     learningGoal: ai.learningGoal && ai.learningGoal.trim().length > 15 ? ai.learningGoal : fallback.learningGoal,
     studentFriendlyGoal: ai.studentFriendlyGoal && ai.studentFriendlyGoal.trim().length > 10 ? ai.studentFriendlyGoal : fallback.studentFriendlyGoal,
     criteria: finalCriteria,
