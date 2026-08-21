@@ -5,7 +5,7 @@ import { getAuthenticatedUserId } from '../../_lib/auth';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 import { getMasterTemplate, suggestMasterTemplate } from '../../core/pptMasterTemplates';
 
-interface Env { DB: D1Database; AI?: any; GEMINI_API_KEY?: string; JWT_SECRET: string }
+interface Env { DB: D1Database; AI?: any; GEMINI_API_KEY?: string; NVIDIA_API_KEY?: string; JWT_SECRET: string }
 
 interface PresentationRequest {
   title: string;
@@ -159,7 +159,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         || suggestMasterTemplate(plan.asignatura, plan.curso);
       usedTemplateId = masterTemplate.id;
       const deck = await generateDeckContent(
-        { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
+        { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY, NVIDIA_API_KEY: context.env.NVIDIA_API_KEY } as AIEngineEnv,
         plan,
         { masterTemplate },
       );

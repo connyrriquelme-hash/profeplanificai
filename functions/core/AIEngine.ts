@@ -260,6 +260,51 @@ async function callGemini(
   return { response: text };
 }
 
+const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
+
+// Tercer respaldo cuando Workers AI Y Gemini fallan (ej. cuota agotada en
+// ambos, o billing bloqueado en el proyecto de Google Cloud). API OpenAI-
+// compatible de NVIDIA NIM (build.nvidia.com) — mismo criterio que
+// callGemini(): un solo intento, sin retry propio, devuelve { response }
+// para que resolveAIResponseText() no necesite saber qué proveedor respondió.
+async function callNvidia(
+  systemPrompt: string,
+  userPrompt: string,
+  apiKey: string,
+  opciones: { temperature: number; maxOutputTokens: number },
+): Promise<{ response: string }> {
+  const messages = systemPrompt
+    ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }]
+    : [{ role: 'user', content: userPrompt }];
+
+  const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: NVIDIA_MODEL,
+      messages,
+      temperature: opciones.temperature,
+      max_tokens: opciones.maxOutputTokens,
+    }),
+  });
+
+  const data = await res.json() as any;
+
+  if (!res.ok) {
+    throw new Error(`NVIDIA error ${res.status}: ${data?.error?.message ?? JSON.stringify(data)}`);
+  }
+
+  const text = data?.choices?.[0]?.message?.content ?? '';
+  if (!text) {
+    throw new Error(`NVIDIA no devolvió texto (finish_reason: ${data?.choices?.[0]?.finish_reason ?? 'desconocido'}).`);
+  }
+
+  return { response: text };
+}
+
 // Llama a env.AI.run(), valida la respuesta contra `schema` y, si falla
 // (JSON inválido o schema.safeParse() rechaza), reintenta hasta
 // maxReintentos veces (default 2, o sea 3 intentos en total) agregando al
@@ -276,13 +321,6 @@ export async function callAIConValidacion<T>(
   schema: z.ZodType<T>,
   opciones?: CallAIConValidacionOptions,
 ): Promise<{ data: T; usedFallback: false; intentos: number }> {
-  const hayWorkersAI = !!env.AI;
-  const hayGemini = !!env.GEMINI_API_KEY;
-
-  if (!hayWorkersAI && !hayGemini) {
-    throw new Error('AI no está configurado en el entorno.');
-  }
-
   const maxReintentos = opciones?.maxReintentos ?? 2;
   const maxTokens = opciones?.maxTokens ?? 3000;
   const temperature = opciones?.temperature ?? 0.2;
@@ -291,54 +329,55 @@ export async function callAIConValidacion<T>(
 
   let currentUserPrompt = userPrompt;
   let ultimoError = 'Sin detalle.';
-  // Una vez que Workers AI falla (cupo agotado u otro error), se lo da por
-  // no disponible para el resto de los intentos de esta misma llamada —
-  // evita reintentar contra un proveedor que ya sabemos que va a seguir
-  // fallando igual.
-  let workersAIAgotado = false;
+
+  // Cadena de proveedores en orden de preferencia: Workers AI (gratis,
+  // rapido, pero con cupo diario limitado) -> Gemini -> NVIDIA NIM. Cada
+  // uno es opcional segun que secrets esten configurados. Una vez que un
+  // proveedor falla para esta llamada se descarta para el resto de los
+  // reintentos (providerDesdeIndice avanza) -- evita reintentar contra uno
+  // que ya sabemos que va a seguir fallando igual.
+  const providers: { name: string; call: (messages: { role: 'system' | 'user'; content: string }[]) => Promise<unknown> }[] = [];
+  if (env.AI) {
+    providers.push({ name: 'Workers AI', call: (messages) => env.AI.run(model, { messages, temperature, max_tokens: maxTokens }) });
+  }
+  if (env.GEMINI_API_KEY) {
+    providers.push({ name: 'Gemini', call: () => callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, { temperature, maxOutputTokens: maxTokens }) });
+  }
+  if (env.NVIDIA_API_KEY) {
+    providers.push({ name: 'NVIDIA', call: () => callNvidia(systemPrompt, currentUserPrompt, env.NVIDIA_API_KEY!, { temperature, maxOutputTokens: maxTokens }) });
+  }
+
+  if (providers.length === 0) {
+    throw new Error('AI no está configurado en el entorno.');
+  }
+
+  let providerDesdeIndice = 0;
 
   for (let intento = 1; intento <= maxIntentos; intento++) {
-    const messages = systemPrompt
+    const messages: { role: 'system' | 'user'; content: string }[] = systemPrompt
       ? [
-          { role: 'system' as const, content: systemPrompt },
-          { role: 'user' as const, content: currentUserPrompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: currentUserPrompt },
         ]
-      : [{ role: 'user' as const, content: currentUserPrompt }];
+      : [{ role: 'user', content: currentUserPrompt }];
 
     let response: unknown;
-    if (hayWorkersAI && !workersAIAgotado) {
+    const erroresProveedores: string[] = [];
+    let respondio = false;
+
+    for (let i = providerDesdeIndice; i < providers.length; i++) {
       try {
-        response = await env.AI.run(model, { messages, temperature, max_tokens: maxTokens });
+        response = await providers[i].call(messages);
+        respondio = true;
+        break;
       } catch (error) {
-        // Cualquier fallo de Workers AI (no solo cupo agotado -- confirmado
-        // que un error de cupo real, con "4006"/"neurons" en el mensaje, no
-        // siempre coincidia con lo esperado aqui) cae a Gemini si esta
-        // disponible, en vez de abortar toda la generacion. Gemini ya es un
-        // proveedor confirmado funcional, asi que es estrictamente mejor
-        // intentarlo que devolver el fallback generico sin ni probarlo.
-        if (hayGemini) {
-          workersAIAgotado = true;
-          try {
-            response = await callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, {
-              temperature,
-              maxOutputTokens: maxTokens,
-            });
-          } catch (geminiError) {
-            const workersMsg = error instanceof Error ? error.message : String(error);
-            const geminiMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
-            throw new Error(`Workers AI: ${workersMsg} | Gemini: ${geminiMsg}`);
-          }
-        } else {
-          throw error;
-        }
+        erroresProveedores.push(`${providers[i].name}: ${error instanceof Error ? error.message : String(error)}`);
+        providerDesdeIndice = i + 1;
       }
-    } else if (hayGemini) {
-      response = await callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, {
-        temperature,
-        maxOutputTokens: maxTokens,
-      });
-    } else {
-      throw new Error('AI no está configurado en el entorno.');
+    }
+
+    if (!respondio) {
+      throw new Error(erroresProveedores.join(' | '));
     }
 
     const raw = resolveAIResponseText(response);
