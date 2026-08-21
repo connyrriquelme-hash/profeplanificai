@@ -6,6 +6,7 @@ interface Env {
   FAL_KEY?: string;
   REPLICATE_API_TOKEN?: string;
   STABILITY_API_KEY?: string;
+  GEMINI_API_KEY?: string;
 }
 
 // Cloudflare Workers AI de mayor calidad disponible (reemplaza SDXL base 1.0,

@@ -3,6 +3,7 @@ interface ImageEnv {
   FAL_KEY?: string;
   REPLICATE_API_TOKEN?: string;
   STABILITY_API_KEY?: string;
+  GEMINI_API_KEY?: string;
 }
 
 interface ImageGenResult {
@@ -69,6 +70,35 @@ async function generateWithOpenAI(env: ImageEnv, prompt: string): Promise<ImageG
     }
   }
   throw new Error(`OpenAI: ${errors.join('; ')}`);
+}
+
+// Endpoint/shape verificado contra el SDK oficial instalado (@google/genai
+// 2.9.0, generateImagesParametersToMldev): models/{model}:predict con
+// { instances: [{ prompt }], parameters: { sampleCount } }, respuesta
+// { predictions: [{ bytesBase64Encoded, mimeType }] } — mismo patron REST
+// que ya usa el resto del codigo para Gemini (functions/_lib/ai/providers.ts),
+// no el SDK, para no sumar su peso al bundle de un Worker.
+async function generateWithGemini(env: ImageEnv, prompt: string): Promise<ImageGenResult | null> {
+  if (!env.GEMINI_API_KEY) return null;
+  const model = 'imagen-4.0-generate-001';
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(env.GEMINI_API_KEY)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        instances: [{ prompt }],
+        parameters: { sampleCount: 1, aspectRatio: '16:9' },
+      }),
+    },
+  );
+  const data = await response.json() as any;
+  if (!response.ok) throw new Error(data?.error?.message || `Gemini (Imagen) respondió ${response.status}`);
+  const prediction = data.predictions?.[0];
+  const base64 = prediction?.bytesBase64Encoded;
+  if (!base64) throw new Error('Gemini (Imagen): no se recibió imagen');
+  const mimeType = prediction.mimeType || 'image/png';
+  return { imageUrl: `data:${mimeType};base64,${base64}`, provider: 'gemini', model };
 }
 
 async function generateWithFal(env: ImageEnv, prompt: string): Promise<ImageGenResult | null> {
@@ -139,7 +169,7 @@ async function generateWithPollinations(prompt: string): Promise<ImageGenResult>
 export class ProviderNotConfiguredError extends Error {
   code = 'provider_not_configured' as const;
   constructor() {
-    super('No hay proveedor de imágenes configurado. Configura OPENAI_API_KEY, FAL_KEY, REPLICATE_API_TOKEN o STABILITY_API_KEY como secret en Cloudflare, o usa el servicio gratuito predeterminado.');
+    super('No hay proveedor de imágenes configurado. Configura OPENAI_API_KEY, GEMINI_API_KEY, FAL_KEY, REPLICATE_API_TOKEN o STABILITY_API_KEY como secret en Cloudflare, o usa el servicio gratuito predeterminado.');
   }
 }
 
@@ -148,6 +178,12 @@ export async function generateImage(env: ImageEnv, prompt: string): Promise<Imag
 
   const providers: { name: string; fn: () => Promise<ImageGenResult | null> }[] = [
     { name: 'openai', fn: () => generateWithOpenAI(env, finalPrompt) },
+    // Segundo, no ultimo: GEMINI_API_KEY ya esta configurado y funcionando
+    // (a diferencia de OPENAI_API_KEY, bloqueado por la cuenta OpenAI sin
+    // acceso a dall-e-3/dall-e-2 al momento de escribir esto), e Imagen 4
+    // es un modelo de calidad comparable a DALL-E 3 -- no tiene sentido
+    // dejarlo detras de Fal/Replicate/Stability, que no estan configurados.
+    { name: 'gemini', fn: () => generateWithGemini(env, finalPrompt) },
     { name: 'fal', fn: () => generateWithFal(env, finalPrompt) },
     { name: 'replicate', fn: () => generateWithReplicate(env, finalPrompt) },
     { name: 'stability', fn: () => generateWithStability(env, finalPrompt) },
