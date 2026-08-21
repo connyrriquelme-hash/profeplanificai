@@ -243,6 +243,7 @@ async function callGemini(
         thinkingConfig: { thinkingBudget: 0 },
       },
     }),
+    signal: AbortSignal.timeout(20000),
   });
 
   const data = await res.json() as any;
@@ -289,6 +290,12 @@ async function callNvidia(
       temperature: opciones.temperature,
       max_tokens: opciones.maxOutputTokens,
     }),
+    // Sin timeout, un cuelgue de NVIDIA (confirmado contra el servidor real:
+    // ~125s sin responder) deja la llamada colgada hasta que Cloudflare corta
+    // la conexion del lado del edge (524), bloqueando toda la cadena de
+    // proveedores en vez de fallar rapido y dejar que el request complete
+    // con el deck de fallback dentro de un tiempo razonable.
+    signal: AbortSignal.timeout(20000),
   });
 
   const data = await res.json() as any;
