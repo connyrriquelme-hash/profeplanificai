@@ -281,19 +281,21 @@ async function conTimeout<T>(promesa: Promise<T>, ms: number, etiqueta: string):
   }
 }
 
-// 8B, no 70B: confirmado contra el servidor real que el modelo 70B sigue sin
-// responder incluso con 35s de margen (probable cola/carga del tier gratuito
-// para modelos grandes). Como este es el TERCER respaldo (solo se usa cuando
-// Workers AI y Gemini ya fallaron), priorizar velocidad/disponibilidad sobre
-// calidad maxima tiene mas sentido que insistir con el modelo mas grande.
-const NVIDIA_MODEL = 'meta/llama-3.1-8b-instruct';
+// NVIDIA NIM (build.nvidia.com) se probó primero para este puesto y se
+// descartó: incluso el modelo 8B colgaba ~125s sin responder (probable cola
+// del tier gratuito), ver historial. Groq es conocido justamente por
+// inferencia muy rapida, lo que importa mas en esta posicion de la cadena
+// (tercer respaldo) que el tamaño del modelo — gpt-oss-120b es el modelo de
+// proposito general de Groq (los Llama clasicos ya no estan en su catalogo
+// de produccion, confirmado contra la documentacion real).
+const GROQ_MODEL = 'openai/gpt-oss-120b';
 
 // Tercer respaldo cuando Workers AI Y Gemini fallan (ej. cuota agotada en
 // ambos, o billing bloqueado en el proyecto de Google Cloud). API OpenAI-
-// compatible de NVIDIA NIM (build.nvidia.com) — mismo criterio que
-// callGemini(): un solo intento, sin retry propio, devuelve { response }
-// para que resolveAIResponseText() no necesite saber qué proveedor respondió.
-async function callNvidia(
+// compatible de Groq (console.groq.com) — mismo criterio que callGemini():
+// un solo intento, sin retry propio, devuelve { response } para que
+// resolveAIResponseText() no necesite saber qué proveedor respondió.
+async function callGroq(
   systemPrompt: string,
   userPrompt: string,
   apiKey: string,
@@ -303,37 +305,33 @@ async function callNvidia(
     ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }]
     : [{ role: 'user', content: userPrompt }];
 
-  const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: NVIDIA_MODEL,
+      model: GROQ_MODEL,
       messages,
       temperature: opciones.temperature,
       max_tokens: opciones.maxOutputTokens,
     }),
-    // Sin timeout, un cuelgue de NVIDIA (confirmado contra el servidor real:
-    // ~125s sin responder) deja la llamada colgada hasta que Cloudflare corta
-    // la conexion del lado del edge (524), bloqueando toda la cadena de
-    // proveedores en vez de fallar rapido y dejar que el request complete
-    // con el deck de fallback dentro de un tiempo razonable. 35s por el
-    // cold-start de los modelos gratuitos de NIM (ver conTimeout() en el
-    // caller, que envuelve esta llamada completa con el mismo limite).
+    // Mismo motivo que el resto de la cadena (ver conTimeout() en el
+    // caller, que envuelve esta llamada completa con el mismo limite):
+    // un proveedor colgado no puede bloquear el request completo.
     signal: AbortSignal.timeout(35000),
   });
 
   const data = await res.json() as any;
 
   if (!res.ok) {
-    throw new Error(`NVIDIA error ${res.status}: ${data?.error?.message ?? JSON.stringify(data)}`);
+    throw new Error(`Groq error ${res.status}: ${data?.error?.message ?? JSON.stringify(data)}`);
   }
 
   const text = data?.choices?.[0]?.message?.content ?? '';
   if (!text) {
-    throw new Error(`NVIDIA no devolvió texto (finish_reason: ${data?.choices?.[0]?.finish_reason ?? 'desconocido'}).`);
+    throw new Error(`Groq no devolvió texto (finish_reason: ${data?.choices?.[0]?.finish_reason ?? 'desconocido'}).`);
   }
 
   return { response: text };
@@ -365,11 +363,11 @@ export async function callAIConValidacion<T>(
   let ultimoError = 'Sin detalle.';
 
   // Cadena de proveedores en orden de preferencia: Workers AI (gratis,
-  // rapido, pero con cupo diario limitado) -> Gemini -> NVIDIA NIM. Cada
-  // uno es opcional segun que secrets esten configurados. Una vez que un
-  // proveedor falla para esta llamada se descarta para el resto de los
-  // reintentos (providerDesdeIndice avanza) -- evita reintentar contra uno
-  // que ya sabemos que va a seguir fallando igual.
+  // rapido, pero con cupo diario limitado) -> Gemini -> Groq. Cada uno es
+  // opcional segun que secrets esten configurados. Una vez que un proveedor
+  // falla para esta llamada se descarta para el resto de los reintentos
+  // (providerDesdeIndice avanza) -- evita reintentar contra uno que ya
+  // sabemos que va a seguir fallando igual.
   const providers: { name: string; call: (messages: { role: 'system' | 'user'; content: string }[]) => Promise<unknown> }[] = [];
   if (env.AI) {
     providers.push({ name: 'Workers AI', call: (messages) => env.AI.run(model, { messages, temperature, max_tokens: maxTokens }) });
@@ -377,11 +375,8 @@ export async function callAIConValidacion<T>(
   if (env.GEMINI_API_KEY) {
     providers.push({ name: 'Gemini', call: () => conTimeout(callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 20000, 'Gemini') });
   }
-  if (env.NVIDIA_API_KEY) {
-    // 35s, no 20s: los modelos gratuitos de NVIDIA NIM pueden tener cold-start
-    // -- confirmado contra el servidor real, un timeout de 20s abortaba antes
-    // de que el modelo llegara a responder.
-    providers.push({ name: 'NVIDIA', call: () => conTimeout(callNvidia(systemPrompt, currentUserPrompt, env.NVIDIA_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 35000, 'NVIDIA') });
+  if (env.GROQ_API_KEY) {
+    providers.push({ name: 'Groq', call: () => conTimeout(callGroq(systemPrompt, currentUserPrompt, env.GROQ_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 35000, 'Groq') });
   }
 
   if (providers.length === 0) {

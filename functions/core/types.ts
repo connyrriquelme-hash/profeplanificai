@@ -31,10 +31,10 @@ export interface AIEngineEnv {
   // en AIEngine.ts. Opcional: si no está seteada, el comportamiento es
   // idéntico al de antes (solo Workers AI).
   GEMINI_API_KEY?: string;
-  // Tercer respaldo (NVIDIA NIM, build.nvidia.com) cuando Workers AI Y Gemini
-  // fallan ambos — ver callNvidia()/callAIConValidacion() en AIEngine.ts.
+  // Tercer respaldo (Groq, console.groq.com) cuando Workers AI Y Gemini
+  // fallan ambos — ver callGroq()/callAIConValidacion() en AIEngine.ts.
   // Opcional, mismo criterio que GEMINI_API_KEY.
-  NVIDIA_API_KEY?: string;
+  GROQ_API_KEY?: string;
 }
 
 export interface LessonContent {
