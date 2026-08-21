@@ -1,6 +1,8 @@
 name = "planificaia-chile"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-06-23"
+# nodejs_compat: requerido por @sentry/cloudflare (usa AsyncLocalStorage).
+compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "DB"
@@ -22,5 +24,5 @@ binding = "REPO_PEDAGOGICO"
 index_name = "repo-pedagogico"
 
 [[r2_buckets]]
-binding = "ASSETS"
+binding = "ASSETS_BUCKET"
 bucket_name = "planificaia-assets"

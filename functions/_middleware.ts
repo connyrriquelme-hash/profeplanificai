@@ -1,6 +1,7 @@
+import * as Sentry from '@sentry/cloudflare';
 import { verifyToken } from './_lib/auth';
 
-interface Env { JWT_SECRET: string }
+interface Env { JWT_SECRET: string; SENTRY_DSN?: string }
 
 const ALLOWED_ORIGINS = new Set([
   'https://profeplanificai.cl',
@@ -32,7 +33,7 @@ function corsHeaders(origin: string): Record<string, string> {
   };
 }
 
-export async function onRequest(context: EventContext<Env>): Promise<Response> {
+async function handleRequest(context: EventContext<Env>): Promise<Response> {
   const { request, next } = context;
   const origin = resolveOrigin(request);
 
@@ -67,6 +68,11 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
     response = await next();
   } catch (err) {
     console.error(`[middleware] Worker error on ${request.method} ${path}:`, err);
+    // sentryPagesPlugin captura excepciones que escapan toda la cadena de
+    // middleware, pero esta seguimos atrapandolas nosotros para devolver un
+    // 500 JSON limpio en vez de dejarlas escapar -- sin este captureException
+    // explicito, Sentry nunca las veria.
+    Sentry.captureException(err);
     const isApi = path.startsWith('/api/');
     if (isApi) {
       return Response.json({ error: 'Error interno del servidor.' }, {
@@ -117,3 +123,15 @@ export async function onRequest(context: EventContext<Env>): Promise<Response> {
     headers: newHeaders,
   });
 }
+
+export const onRequest = [
+  // Sentry primero: envuelve toda la cadena para capturar tambien lo que
+  // pase antes/despues de handleRequest (y cualquier excepcion que de
+  // verdad escape sin ser atrapada). <Env> explicito (no anotar el
+  // parametro) porque EventPluginContext no es EventContext -- anotar mal
+  // el parametro rompe la inferencia de "context.env.SENTRY_DSN".
+  Sentry.sentryPagesPlugin<Env>((context) => ({
+    dsn: context.env.SENTRY_DSN,
+  })),
+  handleRequest,
+];

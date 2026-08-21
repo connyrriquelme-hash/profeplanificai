@@ -4,7 +4,7 @@ import { requireAuthContext, requireActiveAuthContext } from '../../_lib/auth-ad
 interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
-  ASSETS: R2Bucket;
+  ASSETS_BUCKET: R2Bucket;
 }
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB
@@ -57,7 +57,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const ext = extensionForContentType(contentType);
     const key = `${authContext.userId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
-    await context.env.ASSETS.put(key, bytes, {
+    await context.env.ASSETS_BUCKET.put(key, bytes, {
       httpMetadata: { contentType },
     });
 
