@@ -397,7 +397,7 @@ export async function generateDeckContent(
   env: AIEngineEnv,
   plan: PedagogicalPlan,
   opciones?: { maxSlides?: number; masterTemplate?: MasterTemplate },
-): Promise<PptDeck> {
+): Promise<PptDeck & { _fallbackReason?: string }> {
   const masterTemplate = opciones?.masterTemplate;
   const expectedMin = masterTemplate ? masterTemplate.steps.length : 10;
   const maxSlides = opciones?.maxSlides ?? (masterTemplate ? masterTemplate.steps.length : 20);
@@ -426,7 +426,12 @@ export async function generateDeckContent(
     deck.slides = deck.slides.slice(0, maxSlides);
     return deck;
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[PptContentEngine] error:', error);
-    return validateDeck(fallback);
+    // Sin esto, cuando la generacion con IA falla y cae al deck generico,
+    // el motivo real (cuota, validacion de esquema, etc.) quedaba solo en
+    // logs de Cloudflare -- invisible tanto para el docente como para
+    // diagnosticar el problema sin una sesion de wrangler tail.
+    return { ...validateDeck(fallback), _fallbackReason: message };
   }
 }

@@ -147,6 +147,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     let slides: OldSlide[];
     let pptDeck: PptDeck | undefined;
     let usedTemplateId: string | undefined;
+    let deckGenerationWarning: string | undefined;
 
     if (body.slides) {
       // Legacy path: use provided slides directly
@@ -162,6 +163,9 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         plan,
         { masterTemplate },
       );
+      if (deck._fallbackReason) {
+        deckGenerationWarning = `La IA no pudo generar el contenido según la plantilla y se usó un esquema genérico. Motivo: ${deck._fallbackReason}`;
+      }
       pptDeck = deck;
       slides = pptDeckToLegacySlides(deck);
     }
@@ -236,6 +240,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       },
       ...(pptDeck ? { pptDeck } : {}),
       ...(usedTemplateId ? { masterTemplateId: usedTemplateId } : {}),
+      ...(deckGenerationWarning ? { deckGenerationWarning } : {}),
       quality,
     });
   } catch (err: any) {
