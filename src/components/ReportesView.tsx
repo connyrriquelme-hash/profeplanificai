@@ -45,7 +45,7 @@ function getNivelColor(nivel: NivelLogro) {
     case 'Adecuado': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
     case 'Elemental': return 'bg-amber-100 text-amber-700 border-amber-200';
     case 'Insuficiente': return 'bg-red-100 text-red-700 border-red-200';
-    case 'No evaluado': return 'bg-gray-100 text-gray-500 border-gray-200';
+    case 'No evaluado': return 'bg-gray-100 text-[var(--ink-soft)] border-[var(--border)]';
   }
 }
 
@@ -251,11 +251,11 @@ export function ReportesView() {
       {/* Subject / Course Selector */}
       <div className="flex flex-col sm:flex-row gap-3 mt-5">
         <div className="flex-1">
-          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Asignatura</label>
+          <label className="block text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Asignatura</label>
           <select
             value={subject}
             onChange={e => { setSubject(e.target.value); setSelectedD1Subject(''); }}
-            className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
           >
             {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
             {d1Subjects.length > 0 && <option disabled>─── Asignaturas D1 ───</option>}
@@ -265,11 +265,11 @@ export function ReportesView() {
           </select>
         </div>
         <div className="flex-1">
-          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Curso</label>
+          <label className="block text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Curso</label>
           <select
             value={course}
             onChange={e => { setCourse(e.target.value); setSelectedD1Course(''); }}
-            className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
           >
             {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
             {d1Courses.length > 0 && <option disabled>─── Cursos D1 ───</option>}
@@ -287,7 +287,7 @@ export function ReportesView() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200/60 overflow-x-auto gap-1 mt-5 -mb-px">
+      <div className="flex border-b border-[var(--border)]/60 overflow-x-auto gap-1 mt-5 -mb-px">
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
@@ -297,7 +297,7 @@ export function ReportesView() {
               className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 ${
                 activeTab === tab.id
                   ? 'border-[var(--primary)] text-[var(--primary)]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-t-lg'
+                  : 'border-transparent text-[var(--ink-soft)] hover:text-[var(--ink)] hover:bg-gray-50 rounded-t-lg'
               }`}
             >
               <Icon size={14} />
@@ -317,24 +317,24 @@ export function ReportesView() {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Nombre del Colegio</label>
-                <input type="text" value={config.schoolName} onChange={e => setConfig(prev => ({ ...prev, schoolName: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Nombre del Colegio</label>
+                <input type="text" value={config.schoolName} onChange={e => setConfig(prev => ({ ...prev, schoolName: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Profesor(a)</label>
-                <input type="text" value={config.teacher} onChange={e => setConfig(prev => ({ ...prev, teacher: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Profesor(a)</label>
+                <input type="text" value={config.teacher} onChange={e => setConfig(prev => ({ ...prev, teacher: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Fecha de Reporte</label>
-                <input type="date" value={config.reportDate} onChange={e => setConfig(prev => ({ ...prev, reportDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Fecha de Reporte</label>
+                <input type="date" value={config.reportDate} onChange={e => setConfig(prev => ({ ...prev, reportDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Nota Minima</label>
-                <input type="number" step="0.1" value={config.minGrade} onChange={e => setConfig(prev => ({ ...prev, minGrade: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Nota Minima</label>
+                <input type="number" step="0.1" value={config.minGrade} onChange={e => setConfig(prev => ({ ...prev, minGrade: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">% Exigencia</label>
-                <input type="number" value={config.requiredPercentage} onChange={e => setConfig(prev => ({ ...prev, requiredPercentage: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] uppercase tracking-wider mb-1">% Exigencia</label>
+                <input type="number" value={config.requiredPercentage} onChange={e => setConfig(prev => ({ ...prev, requiredPercentage: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
               </div>
             </div>
           </Card>
@@ -347,13 +347,13 @@ export function ReportesView() {
             </h3>
             <div className="space-y-2">
               {indicators.map((ind, idx) => (
-                <div key={ind.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200/60">
+                <div key={ind.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-[var(--border)]/60">
                   <span className="text-xs font-bold text-[var(--primary)] bg-[var(--primary-tint)] px-2 py-1 rounded-lg shrink-0">{idx + 1}</span>
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] font-bold text-[var(--primary)]">{ind.oaCode}</span>
-                    <p className="text-xs text-gray-700 leading-relaxed mt-0.5">{ind.description}</p>
+                    <p className="text-xs text-[var(--ink)] leading-relaxed mt-0.5">{ind.description}</p>
                   </div>
-                  <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200 px-2 py-1 rounded-lg shrink-0">{ind.maxPoints} pts</span>
+                  <span className="text-xs font-bold text-[var(--ink-soft)] bg-white border border-[var(--border)] px-2 py-1 rounded-lg shrink-0">{ind.maxPoints} pts</span>
                 </div>
               ))}
               {indicators.length === 0 && (
@@ -369,7 +369,7 @@ export function ReportesView() {
               Estudiantes ({students.length})
             </h3>
             <div className="flex gap-2 mb-4">
-              <input type="text" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStudent()} placeholder="Nombre completo del estudiante..." className="flex-1 px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all" />
+              <input type="text" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStudent()} placeholder="Nombre completo del estudiante..." className="flex-1 px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all" />
               <Button variant="primary" size="sm" iconLeft={Plus} onClick={addStudent}>Agregar</Button>
             </div>
             <div className="max-h-60 overflow-y-auto space-y-1">
@@ -389,10 +389,10 @@ export function ReportesView() {
       {activeTab === 'grades' && (
         <div className="mt-5">
           <Card className="overflow-hidden !p-0">
-            <div className="p-4 border-b border-gray-200/60 bg-gray-50/50 flex justify-between items-center flex-wrap gap-3">
+            <div className="p-4 border-b border-[var(--border)]/60 bg-gray-50/50 flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="text-sm font-bold text-theme-text">{config.schoolName}</h3>
-                <p className="text-xs text-gray-500">{subject} · {course} · {config.teacher}</p>
+                <p className="text-xs text-[var(--ink-soft)]">{subject} · {course} · {config.teacher}</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" iconLeft={Printer} onClick={handlePrint}>Imprimir</Button>
@@ -403,19 +403,19 @@ export function ReportesView() {
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[800px]">
                 <thead>
-                  <tr className="border-b border-gray-200/60 bg-gray-50/80">
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50/80 z-10 min-w-[40px]">#</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky left-10 bg-gray-50/80 z-10 min-w-[180px]">Nombre</th>
+                  <tr className="border-b border-[var(--border)]/60 bg-gray-50/80">
+                    <th className="p-3 text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider sticky left-0 bg-gray-50/80 z-10 min-w-[40px]">#</th>
+                    <th className="p-3 text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider sticky left-10 bg-gray-50/80 z-10 min-w-[180px]">Nombre</th>
                     {indicators.map((ind) => (
-                      <th key={ind.id} className="p-2 text-[9px] font-bold text-gray-500 uppercase tracking-wider text-center min-w-[70px]">
+                      <th key={ind.id} className="p-2 text-[9px] font-bold text-[var(--ink-soft)] uppercase tracking-wider text-center min-w-[70px]">
                         <div className="text-[var(--primary)]">{ind.oaCode}</div>
                         <div className="text-[8px] font-normal normal-case tracking-normal text-gray-400 max-w-[80px] truncate" title={ind.description}>{ind.description.slice(0, 25)}...</div>
                       </th>
                     ))}
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[50px]">Total</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[45px]">%</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[40px]">Nota</th>
-                    <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[80px]">Nivel</th>
+                    <th className="p-3 text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[50px]">Total</th>
+                    <th className="p-3 text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[45px]">%</th>
+                    <th className="p-3 text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[40px]">Nota</th>
+                    <th className="p-3 text-[10px] font-bold text-[var(--ink-soft)] uppercase tracking-wider text-center bg-[var(--primary-tint)]/80 min-w-[80px]">Nivel</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -427,11 +427,11 @@ export function ReportesView() {
                         <td className="p-2 text-xs font-medium text-theme-text sticky left-10 bg-white z-10 truncate max-w-[180px]">{student.name}</td>
                         {indicators.map(ind => (
                           <td key={ind.id} className="p-1 text-center">
-                            <input type="number" min={0} max={ind.maxPoints} value={getScore(student.id, ind.id)} onChange={e => updateScore(student.id, ind.id, Math.min(ind.maxPoints, Math.max(0, Number(e.target.value))))} className="w-11 h-7 text-center text-xs font-semibold rounded-lg border border-gray-200/80 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
+                            <input type="number" min={0} max={ind.maxPoints} value={getScore(student.id, ind.id)} onChange={e => updateScore(student.id, ind.id, Math.min(ind.maxPoints, Math.max(0, Number(e.target.value))))} className="w-11 h-7 text-center text-xs font-semibold rounded-lg border border-[var(--border)]/80 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all" />
                           </td>
                         ))}
                         <td className="p-2 text-center text-xs font-bold text-theme-text bg-[var(--primary-tint)]/30">{result?.totalScore ?? 0}</td>
-                        <td className="p-2 text-center text-xs font-semibold text-gray-600 bg-[var(--primary-tint)]/30">{result?.percentage ?? 0}%</td>
+                        <td className="p-2 text-center text-xs font-semibold text-[var(--ink-mid)] bg-[var(--primary-tint)]/30">{result?.percentage ?? 0}%</td>
                         <td className="p-2 text-center text-sm font-bold text-theme-text bg-[var(--primary-tint)]/30">{result?.grade.toFixed(1) ?? '-'}</td>
                         <td className="p-2 text-center bg-[var(--primary-tint)]/30">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${getNivelColor(result?.nivelLogro || 'No evaluado')}`}>
@@ -446,12 +446,12 @@ export function ReportesView() {
               </table>
             </div>
 
-            <div className="p-3 border-t border-gray-200/60 bg-gray-50/50 flex items-center gap-4 text-xs flex-wrap">
-              <span className="font-semibold text-gray-500">Puntaje Maximo: <span className="font-bold text-theme-text">{fullConfig.maxScore}</span></span>
+            <div className="p-3 border-t border-[var(--border)]/60 bg-gray-50/50 flex items-center gap-4 text-xs flex-wrap">
+              <span className="font-semibold text-[var(--ink-soft)]">Puntaje Maximo: <span className="font-bold text-theme-text">{fullConfig.maxScore}</span></span>
               <span className="text-gray-300">|</span>
-              <span className="font-semibold text-gray-500">% Exigencia: <span className="font-bold text-theme-text">{config.requiredPercentage}%</span></span>
+              <span className="font-semibold text-[var(--ink-soft)]">% Exigencia: <span className="font-bold text-theme-text">{config.requiredPercentage}%</span></span>
               <span className="text-gray-300">|</span>
-              <span className="font-semibold text-gray-500">Nota Minima: <span className="font-bold text-theme-text">{config.minGrade}</span></span>
+              <span className="font-semibold text-[var(--ink-soft)]">Nota Minima: <span className="font-bold text-theme-text">{config.minGrade}</span></span>
             </div>
           </Card>
         </div>
@@ -462,11 +462,11 @@ export function ReportesView() {
         <div className="mt-5 space-y-5">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: 'Total', value: summaryStats.total, color: 'text-gray-700 bg-gray-50 border-gray-200' },
+              { label: 'Total', value: summaryStats.total, color: 'text-[var(--ink)] bg-gray-50 border-[var(--border)]' },
               { label: 'Adecuado', value: summaryStats.adecuados, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
               { label: 'Elemental', value: summaryStats.elementales, color: 'text-amber-700 bg-amber-50 border-amber-200' },
               { label: 'Insuficiente', value: summaryStats.insuficientes, color: 'text-red-700 bg-red-50 border-red-200' },
-              { label: 'No evaluado', value: summaryStats.noEvaluados, color: 'text-gray-500 bg-gray-50 border-gray-200' },
+              { label: 'No evaluado', value: summaryStats.noEvaluados, color: 'text-[var(--ink-soft)] bg-gray-50 border-[var(--border)]' },
             ].map(stat => (
               <Card key={stat.label} className={`text-center border ${stat.color}`}>
                 <p className="text-2xl font-bold">{stat.value}</p>
@@ -482,13 +482,13 @@ export function ReportesView() {
                 { label: 'Adecuado', count: summaryStats.adecuados, color: 'bg-emerald-500', textColor: 'text-emerald-600' },
                 { label: 'Elemental', count: summaryStats.elementales, color: 'bg-amber-500', textColor: 'text-amber-600' },
                 { label: 'Insuficiente', count: summaryStats.insuficientes, color: 'bg-red-500', textColor: 'text-red-600' },
-                { label: 'No evaluado', count: summaryStats.noEvaluados, color: 'bg-gray-400', textColor: 'text-gray-500' },
+                { label: 'No evaluado', count: summaryStats.noEvaluados, color: 'bg-gray-400', textColor: 'text-[var(--ink-soft)]' },
               ].map(item => {
                 const pct = summaryStats.total > 0 ? Math.round((item.count / summaryStats.total) * 100) : 0;
                 return (
                   <div key={item.label}>
                     <div className="flex justify-between text-xs mb-1.5">
-                      <span className="font-medium text-gray-600">{item.label}</span>
+                      <span className="font-medium text-[var(--ink-mid)]">{item.label}</span>
                       <span className={`font-bold ${item.textColor}`}>{item.count} ({pct}%)</span>
                     </div>
                     <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
@@ -508,7 +508,7 @@ export function ReportesView() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-gray-200/60 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                  <tr className="border-b border-[var(--border)]/60 text-[11px] font-bold text-[var(--ink-soft)] uppercase tracking-wider">
                     <th className="p-3">#</th><th className="p-3">Nombre</th><th className="p-3 text-center">Puntaje</th><th className="p-3 text-center">% Logro</th><th className="p-3 text-center">Nota</th><th className="p-3 text-center">Nivel</th>
                   </tr>
                 </thead>
@@ -520,7 +520,7 @@ export function ReportesView() {
                         <td className="p-3 text-xs text-gray-400">{idx + 1}</td>
                         <td className="p-3 text-xs font-medium text-theme-text">{student.name}</td>
                         <td className="p-3 text-center text-xs font-bold text-theme-text">{result?.totalScore ?? 0}</td>
-                        <td className="p-3 text-center text-xs font-semibold text-gray-600">{result?.percentage ?? 0}%</td>
+                        <td className="p-3 text-center text-xs font-semibold text-[var(--ink-mid)]">{result?.percentage ?? 0}%</td>
                         <td className="p-3 text-center text-sm font-bold text-theme-text">{result?.grade.toFixed(1) ?? '-'}</td>
                         <td className="p-3 text-center">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${getNivelColor(result?.nivelLogro || 'No evaluado')}`}>
@@ -550,7 +550,7 @@ export function ReportesView() {
                     <span className="text-xs font-bold text-gray-400 w-6">{idx + 1}</span>
                     <div>
                       <p className="text-sm font-semibold text-theme-text">{student.name}</p>
-                      <p className="text-[10px] text-gray-500">Puntaje: {result?.totalScore ?? 0} | {result?.percentage ?? 0}% | Nota: {result?.grade.toFixed(1) ?? '-'} | {result?.nivelLogro ?? '-'}</p>
+                      <p className="text-[10px] text-[var(--ink-soft)]">Puntaje: {result?.totalScore ?? 0} | {result?.percentage ?? 0}% | Nota: {result?.grade.toFixed(1) ?? '-'} | {result?.nivelLogro ?? '-'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -562,19 +562,19 @@ export function ReportesView() {
                 </button>
 
                 {isExpanded && (
-                  <div className="p-4 border-t border-gray-200/60 bg-gray-50/30 space-y-4">
+                  <div className="p-4 border-t border-[var(--border)]/60 bg-gray-50/30 space-y-4">
                     {/* Individual scores */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {indicators.map(ind => {
                         const score = getScore(student.id, ind.id);
                         const pct = ind.maxPoints > 0 ? Math.round((score / ind.maxPoints) * 100) : 0;
                         return (
-                          <div key={ind.id} className="p-3 bg-white rounded-xl border border-gray-200/60">
+                          <div key={ind.id} className="p-3 bg-white rounded-xl border border-[var(--border)]/60">
                             <div className="flex justify-between items-start mb-1">
                               <span className="text-[10px] font-bold text-[var(--primary)]">{ind.oaCode}</span>
                               <span className="text-xs font-bold text-theme-text">{score}/{ind.maxPoints}</span>
                             </div>
-                            <p className="text-[10px] text-gray-600 leading-relaxed line-clamp-2">{ind.description}</p>
+                            <p className="text-[10px] text-[var(--ink-mid)] leading-relaxed line-clamp-2">{ind.description}</p>
                             <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                               <div className={`h-full rounded-full ${pct >= 90 ? 'bg-emerald-500' : pct >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${pct}%` }} />
                             </div>
@@ -585,8 +585,8 @@ export function ReportesView() {
 
                     {/* Observations */}
                     <div>
-                      <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Observaciones</label>
-                      <textarea value={student.observations} onChange={e => setStudents(prev => prev.map(s => s.id === student.id ? { ...s, observations: e.target.value } : s))} rows={4} placeholder="Escribe las observaciones del estudiante..." className="w-full px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 resize-none transition-all" />
+                      <label className="block text-[11px] font-semibold text-[var(--ink-soft)] uppercase tracking-wider mb-1">Observaciones</label>
+                      <textarea value={student.observations} onChange={e => setStudents(prev => prev.map(s => s.id === student.id ? { ...s, observations: e.target.value } : s))} rows={4} placeholder="Escribe las observaciones del estudiante..." className="w-full px-3 py-2 rounded-xl border border-[var(--border)]/80 bg-white text-sm text-theme-text placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 resize-none transition-all" />
                     </div>
 
                     {/* Export PDF button per student */}
@@ -600,24 +600,24 @@ export function ReportesView() {
                     </div>
 
                     {/* Individual report preview */}
-                    <div className="p-4 bg-white rounded-xl border border-gray-200/60">
+                    <div className="p-4 bg-white rounded-xl border border-[var(--border)]/60">
                       <div className="text-center mb-3">
-                        <p className="text-xs font-bold text-gray-800">{config.schoolName}</p>
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Informe Final Formativo</p>
-                        <p className="text-[10px] text-gray-500 mt-1">{subject} · {course}</p>
+                        <p className="text-xs font-bold text-[var(--ink)]">{config.schoolName}</p>
+                        <p className="text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">Informe Final Formativo</p>
+                        <p className="text-[10px] text-[var(--ink-soft)] mt-1">{subject} · {course}</p>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                        <div><strong className="text-gray-600">Nombre:</strong> <span className="text-theme-text">{student.name}</span></div>
-                        <div><strong className="text-gray-600">Profesor(a):</strong> <span className="text-theme-text">{config.teacher}</span></div>
-                        <div><strong className="text-gray-600">Puntaje:</strong> <span className="text-theme-text font-bold">{result?.totalScore ?? 0}/{fullConfig.maxScore}</span></div>
-                        <div><strong className="text-gray-600">% Logro:</strong> <span className="text-theme-text font-bold">{result?.percentage ?? 0}%</span></div>
-                        <div><strong className="text-gray-600">Nota:</strong> <span className="text-theme-text font-bold">{result?.grade.toFixed(1) ?? '-'}</span></div>
-                        <div><strong className="text-gray-600">Nivel:</strong> <span className={`ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold border ${getNivelColor(result?.nivelLogro || 'No evaluado')}`}>{result?.nivelLogro || '-'}</span></div>
+                        <div><strong className="text-[var(--ink-mid)]">Nombre:</strong> <span className="text-theme-text">{student.name}</span></div>
+                        <div><strong className="text-[var(--ink-mid)]">Profesor(a):</strong> <span className="text-theme-text">{config.teacher}</span></div>
+                        <div><strong className="text-[var(--ink-mid)]">Puntaje:</strong> <span className="text-theme-text font-bold">{result?.totalScore ?? 0}/{fullConfig.maxScore}</span></div>
+                        <div><strong className="text-[var(--ink-mid)]">% Logro:</strong> <span className="text-theme-text font-bold">{result?.percentage ?? 0}%</span></div>
+                        <div><strong className="text-[var(--ink-mid)]">Nota:</strong> <span className="text-theme-text font-bold">{result?.grade.toFixed(1) ?? '-'}</span></div>
+                        <div><strong className="text-[var(--ink-mid)]">Nivel:</strong> <span className={`ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold border ${getNivelColor(result?.nivelLogro || 'No evaluado')}`}>{result?.nivelLogro || '-'}</span></div>
                       </div>
                       {student.observations && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200/60">
-                          <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">Observaciones:</p>
-                          <p className="text-xs text-gray-700 leading-relaxed">{student.observations}</p>
+                        <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-[var(--border)]/60">
+                          <p className="text-[10px] font-bold text-[var(--ink-mid)] uppercase tracking-wider mb-1">Observaciones:</p>
+                          <p className="text-xs text-[var(--ink)] leading-relaxed">{student.observations}</p>
                         </div>
                       )}
                     </div>

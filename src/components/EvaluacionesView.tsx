@@ -32,7 +32,7 @@ interface EvaluacionesViewProps {
 const STEPS = ['Configuración', 'Contenido', 'Personalización'];
 
 const selectClass =
-  'w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer';
+  'w-full h-10 px-3 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm appearance-none cursor-pointer';
 
 export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
   const { getOptions } = useConfigOptions();
@@ -605,10 +605,10 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             <IconBadge icon={ClipboardCheck} size="xl" color="#B5471F" variant="gradient" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Evaluaciones</h1>
+                <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Evaluaciones</h1>
                 <Badge color="violet" size="md">Evaluación inteligente</Badge>
               </div>
-              <p className="text-sm text-gray-500 mt-1.5 max-w-2xl leading-relaxed">
+              <p className="text-sm text-[var(--ink-soft)] mt-1.5 max-w-2xl leading-relaxed">
                 Crea, organiza y adapta instrumentos evaluativos alineados al currículum chileno.
               </p>
             </div>
@@ -645,7 +645,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           <SectionHeader icon={FileText} iconColor="#B5471F" title="Paso 1: Configuración" description="Define el tipo, nivel y asignatura de la evaluación." className="mb-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                 <FileCheck2 size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Tipo de evaluación
               </label>
@@ -654,7 +654,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </select>
             </div>
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                 <GraduationCap size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Nivel educativo
               </label>
@@ -668,7 +668,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </select>
             </div>
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                 <GraduationCap size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Curso
               </label>
@@ -693,7 +693,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </select>
             </div>
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                 <BookOpen size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Asignatura
               </label>
@@ -710,7 +710,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </select>
             </div>
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                 <ClipboardCheck size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Habilidad principal
               </label>
@@ -789,12 +789,12 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
             )}
             {oaError && !loadingOAs && <div className="text-xs mt-1" style={{ color: 'var(--muted2)' }}>{oaError}</div>}
             {selectedOA && (
-              <div className="mt-3 px-3 py-2 rounded-xl bg-[var(--primary-tint)] border border-[var(--border)] text-xs text-gray-600">
+              <div className="mt-3 px-3 py-2 rounded-xl bg-[var(--primary-tint)] border border-[var(--border)] text-xs text-[var(--ink-mid)]">
                 <code className="font-bold text-[var(--primary-ink)]">{extractShortObjectiveCode(selectedOA.oa_id)}</code>
                 {resolveObjectiveRealCode(selectedOA) !== extractShortObjectiveCode(selectedOA.oa_id) && (
                   <span className="ml-2 text-gray-400">({resolveObjectiveRealCode(selectedOA)})</span>
                 )}
-                <p className="mt-1 text-gray-500">{selectedOA.oa_texto}</p>
+                <p className="mt-1 text-[var(--ink-soft)]">{selectedOA.oa_texto}</p>
               </div>
             )}
             <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
@@ -806,11 +806,11 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           <Card>
             <SectionHeader icon={ClipboardList} iconColor="#B5471F" title="Indicadores de evaluación" className="mb-3" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-500">{selectedInds.size} de {indicadores.length} seleccionados</span>
+              <span className="text-xs text-[var(--ink-soft)]">{selectedInds.size} de {indicadores.length} seleccionados</span>
               {indicadores.length > 0 && (
                 <div className="flex items-center gap-1.5">
                   <button onClick={selectAllInds} className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors px-2 py-1 rounded-lg hover:bg-[var(--primary-tint)]">Todo</button>
-                  <button onClick={deselectAllInds} className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100">Ninguno</button>
+                  <button onClick={deselectAllInds} className="text-xs font-medium text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors px-2 py-1 rounded-lg hover:bg-gray-100">Ninguno</button>
                 </div>
               )}
             </div>
@@ -846,7 +846,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                       onChange={() => toggleIndicador(i)}
                       className="mt-0.5 accent-[var(--primary)]"
                     />
-                    <span className={`text-xs leading-relaxed ${selectedInds.has(i) ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
+                    <span className={`text-xs leading-relaxed ${selectedInds.has(i) ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'}`}>
                       {ind}
                     </span>
                     {curricularContext?.indicators?.[i]?.sourceType === 'derived' && (
@@ -865,7 +865,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           <SectionHeader icon={Sparkles} iconColor="#B5471F" title="Paso 3: Personalización y DUA" description="Configura dificultad, preguntas SIMCE (si aplica) y genera la evaluación." className="mb-5" />
           <div className="space-y-4">
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-mid)] mb-1.5">
                 <FileText size={13} className="text-[var(--primary)]" strokeWidth={2.25} />
                 Dificultad
               </label>
@@ -879,23 +879,23 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                   <Badge color="amber" size="sm" className="mb-2">Evaluación tipo SIMCE</Badge>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Número de preguntas</label>
+                      <label className="text-xs font-semibold text-[var(--ink-mid)] mb-1.5 block">Número de preguntas</label>
                       <input
                         type="number"
                         min={3}
                         max={20}
                         value={nPreguntas}
                         onChange={(e) => setNPreguntas(parseInt(e.target.value) || 5)}
-                        className="w-full h-10 px-3 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all shadow-sm"
+                        className="w-full h-10 px-3 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all shadow-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Texto base o tema</label>
+                      <label className="text-xs font-semibold text-[var(--ink-mid)] mb-1.5 block">Texto base o tema</label>
                       <textarea
                         value={texto}
                         onChange={(e) => setTexto(e.target.value)}
                         placeholder="Texto breve, situación o tema..."
-                        className="w-full min-h-[60px] px-3 py-2 rounded-xl bg-white border border-gray-200/80 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all shadow-sm resize-y"
+                        className="w-full min-h-[60px] px-3 py-2 rounded-xl bg-white border border-[var(--border)]/80 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all shadow-sm resize-y"
                       />
                     </div>
                   </div>
@@ -903,7 +903,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
               </>
             )}
             {selectedOA && selectedInds.size > 0 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-[var(--ink-soft)]">
                 <span className="font-semibold">Resumen:</span> {EVAL_TIPOS.find(t => t.v === tipo)?.l || tipo} · {selectedCurso?.name || selectedNivel} · {selectedAsignatura} · {extractShortObjectiveCode(selectedOA.oa_id)} · {selectedInds.size} indicador(es)
               </div>
             )}
@@ -919,7 +919,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
       <Card className="mb-6">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <h2 className="text-base font-semibold text-gray-900">Resultado</h2>
+          <h2 className="text-base font-semibold text-[var(--ink)]">Resultado</h2>
           {output && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <Button variant="secondary" size="sm" iconLeft={Sparkles} onClick={handleGuardar}>Guardar</Button>
@@ -943,7 +943,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
           <textarea
             value={output}
             onChange={(e) => setOutput(e.target.value)}
-            className="w-full min-h-[400px] font-mono text-sm p-3 rounded-xl bg-white border border-gray-200/80 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm resize-y mt-3"
+            className="w-full min-h-[400px] font-mono text-sm p-3 rounded-xl bg-white border border-[var(--border)]/80 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all shadow-sm resize-y mt-3"
           />
         ) : (
           <div className="mt-3 bg-gray-50 rounded-xl p-4 max-h-[500px] overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap font-sans" style={{color:'#000000'}}>
@@ -961,7 +961,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                   <Share2 size={18} className="text-[var(--primary)]" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Evaluacion compartida</h3>
+                  <h3 className="text-base font-bold text-[var(--ink)]">Evaluacion compartida</h3>
                   <p className="text-xs text-gray-400">Copia el enlace para compartir</p>
                 </div>
               </div>
@@ -975,7 +975,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 type="text"
                 value={shareResult.shareUrl}
                 readOnly
-                className="flex-1 bg-transparent text-xs text-gray-600 outline-none border-none p-0"
+                className="flex-1 bg-transparent text-xs text-[var(--ink-mid)] outline-none border-none p-0"
               />
               <button
                 onClick={handleCopyShareUrl}
@@ -984,7 +984,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                 {shareResult.copied ? <><Check size={12} className="inline mr-1" />Copiado</> : 'Copiar'}
               </button>
             </div>
-            <button onClick={() => setShareResult(null)} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all">
+            <button onClick={() => setShareResult(null)} className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--ink-mid)] text-sm font-semibold hover:bg-gray-50 transition-all">
               Cerrar
             </button>
           </div>
@@ -1040,7 +1040,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
                   {extLinks.filter(l => l.access_type === 'open').length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-[var(--ink-mid)] mb-2 flex items-center gap-1.5">
                         <Badge color="violet" size="sm">Oficiales / Publicos</Badge>
                       </p>
                       <div className="space-y-2">
@@ -1048,11 +1048,11 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                           <div key={link.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                                <span className="text-xs font-semibold text-gray-800">{link.title}</span>
+                                <span className="text-xs font-semibold text-[var(--ink)]">{link.title}</span>
                                 {link.source_source_type === 'official' && <Badge color="violet" size="sm">Oficial</Badge>}
                                 {link.validation_status === 'validated' && <Badge color="green" size="sm">Validado</Badge>}
                               </div>
-                              {link.description && <p className="text-xs text-gray-500 mb-1">{link.description}</p>}
+                              {link.description && <p className="text-xs text-[var(--ink-soft)] mb-1">{link.description}</p>}
                               <div className="flex items-center gap-2 flex-wrap">
                                 {link.url && (
                                   <a href={link.url} target="_blank" rel="noopener noreferrer"
@@ -1071,7 +1071,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
                   {extLinks.filter(l => l.access_type === 'login_required').length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-[var(--ink-mid)] mb-2 flex items-center gap-1.5">
                         <Badge color="amber" size="sm">Requiere inicio de sesion</Badge>
                       </p>
                       <div className="space-y-2">
@@ -1079,10 +1079,10 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                           <div key={link.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-amber-50 border border-amber-100">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                                <span className="text-xs font-semibold text-gray-800">{link.title}</span>
+                                <span className="text-xs font-semibold text-[var(--ink)]">{link.title}</span>
                                 <Badge color="amber" size="sm">Cuenta privada</Badge>
                               </div>
-                              {link.description && <p className="text-xs text-gray-500 mb-1">{link.description}</p>}
+                              {link.description && <p className="text-xs text-[var(--ink-soft)] mb-1">{link.description}</p>}
                               {link.url && (
                                 <a href={link.url} target="_blank" rel="noopener noreferrer"
                                    className="text-xs font-medium text-amber-600 hover:text-amber-700 hover:underline">
@@ -1098,7 +1098,7 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
                   {extLinks.filter(l => l.access_type === 'paid' || l.access_type === 'manual_upload').length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-[var(--ink-mid)] mb-2 flex items-center gap-1.5">
                         <Badge color="slate" size="sm">Pago / Carga manual</Badge>
                       </p>
                       <div className="space-y-2">
@@ -1106,10 +1106,10 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                           <div key={link.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                                <span className="text-xs font-semibold text-gray-800">{link.title}</span>
+                                <span className="text-xs font-semibold text-[var(--ink)]">{link.title}</span>
                                 <Badge color="slate" size="sm">{link.access_type === 'paid' ? 'Pago' : 'Manual'}</Badge>
                               </div>
-                              {link.description && <p className="text-xs text-gray-500 mb-1">{link.description}</p>}
+                              {link.description && <p className="text-xs text-[var(--ink-soft)] mb-1">{link.description}</p>}
                               <p className="text-[10px] text-gray-400">{link.license_note}</p>
                             </div>
                           </div>
@@ -1125,9 +1125,9 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
 
                     {showAddLink && (
                       <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2.5">
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Guardar enlace de recurso externo</p>
+                        <p className="text-xs font-semibold text-[var(--ink)] mb-1">Guardar enlace de recurso externo</p>
                         <select value={newLink.sourceId} onChange={e => setNewLink(p => ({ ...p, sourceId: e.target.value }))}
-                                className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700">
+                                className="w-full h-9 px-2.5 rounded-lg bg-white border border-[var(--border)] text-xs text-[var(--ink)]">
                           <option value="">Seleccionar fuente</option>
                           {extSources.filter(s => s.source_type === 'user_saved' || s.source_type === 'private_account').map(s => (
                             <option key={s.id} value={s.id}>{s.name}</option>
@@ -1135,16 +1135,16 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
                         </select>
                         <input type="text" placeholder="Titulo del recurso" value={newLink.title}
                                onChange={e => setNewLink(p => ({ ...p, title: e.target.value }))}
-                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700" />
+                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-[var(--border)] text-xs text-[var(--ink)]" />
                         <input type="url" placeholder="URL (opcional)" value={newLink.url}
                                onChange={e => setNewLink(p => ({ ...p, url: e.target.value }))}
-                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700" />
+                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-[var(--border)] text-xs text-[var(--ink)]" />
                         <textarea placeholder="Descripcion o nota personal" value={newLink.description}
                                   onChange={e => setNewLink(p => ({ ...p, description: e.target.value }))}
-                                  className="w-full min-h-[50px] px-2.5 py-2 rounded-lg bg-white border border-gray-200 text-xs text-gray-700 resize-y" />
+                                  className="w-full min-h-[50px] px-2.5 py-2 rounded-lg bg-white border border-[var(--border)] text-xs text-[var(--ink)] resize-y" />
                         <input type="text" placeholder="Tags separados por coma (inspiracion, OA, material)" value={newLink.tags}
                                onChange={e => setNewLink(p => ({ ...p, tags: e.target.value }))}
-                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700" />
+                               className="w-full h-9 px-2.5 rounded-lg bg-white border border-[var(--border)] text-xs text-[var(--ink)]" />
                         <div className="flex items-center gap-2 pt-1">
                           <Button variant="secondary" size="sm" onClick={handleAddLink} disabled={!newLink.sourceId || !newLink.title}>Guardar enlace</Button>
                           <span className="text-[10px] text-gray-400">No se descarga contenido automaticamente</span>
