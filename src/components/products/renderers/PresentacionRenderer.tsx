@@ -48,7 +48,7 @@ const LAYOUT_COLORS: Record<string, { bg: string; accent: string; badge: string 
   quote:              { bg: 'from-amber-500 to-orange-500', accent: '#F59E0B', badge: 'bg-amber-100 text-amber-700' },
   vocabulario:        { bg: 'from-rose-400 to-pink-500',   accent: '#F43F5E', badge: 'bg-rose-100 text-rose-700' },
   ciclo_proceso:      { bg: 'from-cyan-500 to-blue-500',   accent: '#06B6D4', badge: 'bg-cyan-100 text-cyan-700' },
-  quiz_opcion_multiple:{ bg: 'from-indigo-500 to-blue-600', accent: '#6366F1', badge: 'bg-indigo-100 text-indigo-700' },
+  quiz_opcion_multiple:{ bg: 'from-[var(--primary)] to-blue-600', accent: '#6366F1', badge: 'bg-[var(--primary-tint)] text-[var(--primary-ink)]' },
   verdadero_falso:    { bg: 'from-teal-500 to-emerald-600', accent: '#14B8A6', badge: 'bg-teal-100 text-teal-700' },
 };
 

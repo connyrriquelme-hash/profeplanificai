@@ -50,7 +50,7 @@ export function ResponseArea({
           rows={lines}
           placeholder={placeholder}
           disabled={!editable}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 resize-y min-h-[80px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 resize-y min-h-[80px] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] disabled:bg-gray-50 disabled:text-gray-500"
           aria-label={label || 'Espacio de respuesta'}
         />
       )}

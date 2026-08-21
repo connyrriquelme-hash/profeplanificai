@@ -65,7 +65,7 @@ export function ChecklistRenderer({ product, className, style }: ChecklistRender
                         <input
                           type="checkbox"
                           defaultChecked={achieved}
-                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                          className="w-4 h-4 text-[var(--primary)] border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)]"
                           aria-label={`Logrado: ${criterion}`}
                         />
                       </td>

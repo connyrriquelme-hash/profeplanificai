@@ -44,9 +44,9 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
       />
 
       {objective && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-indigo-800 mb-1">Objetivo de Aprendizaje</h3>
-          <p className="text-indigo-700 text-sm">{objective}</p>
+        <div className="bg-[var(--primary-tint)] border border-[var(--primary-tint)] rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-[var(--primary-ink)] mb-1">Objetivo de Aprendizaje</h3>
+          <p className="text-[var(--primary-ink)] text-sm">{objective}</p>
         </div>
       )}
 
@@ -101,7 +101,7 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
               <ul className="space-y-1">
                 {section.activities.map((activity, ai) => (
                   <li key={ai} className="flex items-start gap-2 text-sm text-gray-600">
-                    <span className="text-indigo-500 mt-0.5">▸</span>
+                    <span className="text-[var(--primary)] mt-0.5">▸</span>
                     {activity}
                   </li>
                 ))}

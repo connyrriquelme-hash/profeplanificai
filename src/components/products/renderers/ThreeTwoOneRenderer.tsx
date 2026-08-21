@@ -49,8 +49,8 @@ export function ThreeTwoOneRenderer({ product, className, style }: ThreeTwoOneRe
       />
 
       {instructions && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-          <p className="text-indigo-700 text-sm">{instructions}</p>
+        <div className="bg-[var(--primary-tint)] border border-[var(--primary-tint)] rounded-xl p-4">
+          <p className="text-[var(--primary-ink)] text-sm">{instructions}</p>
         </div>
       )}
 

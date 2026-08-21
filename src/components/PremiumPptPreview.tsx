@@ -616,7 +616,7 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           key={i}
           onClick={() => setCurrentSlide(i)}
           className={`text-left px-3 py-2 rounded-lg text-xs transition-all ${
-            i === currentSlide ? 'bg-indigo-100 text-indigo-700 font-bold' : 'bg-white/50 text-gray-600 hover:bg-white/80'
+            i === currentSlide ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)] font-bold' : 'bg-white/50 text-gray-600 hover:bg-white/80'
           }`}
         >
           <span className="font-mono mr-1">{i + 1}.</span>

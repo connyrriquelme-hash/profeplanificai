@@ -41,9 +41,9 @@ export function ProjectRenderer({ product, className, style }: ProjectRendererPr
       />
 
       {objective && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-indigo-800 mb-1">Objetivo del Proyecto</h3>
-          <p className="text-indigo-700 text-sm">{objective}</p>
+        <div className="bg-[var(--primary-tint)] border border-[var(--primary-tint)] rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-[var(--primary-ink)] mb-1">Objetivo del Proyecto</h3>
+          <p className="text-[var(--primary-ink)] text-sm">{objective}</p>
         </div>
       )}
 
@@ -65,11 +65,11 @@ export function ProjectRenderer({ product, className, style }: ProjectRendererPr
           <div className="space-y-4">
             {phases.map((phase, index) => (
               <div key={index} className="relative pl-8">
-                <div className="absolute left-0 top-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
+                <div className="absolute left-0 top-0 w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center">
                   {index + 1}
                 </div>
                 {index < phases.length - 1 && (
-                  <div className="absolute left-2.5 top-6 bottom-0 w-0.5 bg-indigo-200" />
+                  <div className="absolute left-2.5 top-6 bottom-0 w-0.5 bg-[var(--primary)]/25" />
                 )}
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
@@ -79,7 +79,7 @@ export function ProjectRenderer({ product, className, style }: ProjectRendererPr
                   <ul className="space-y-1">
                     {phase.tasks.map((task, ti) => (
                       <li key={ti} className="text-xs text-gray-600 flex items-start gap-1">
-                        <span className="text-indigo-400 mt-0.5">▸</span>
+                        <span className="text-[var(--primary)]/60 mt-0.5">▸</span>
                         {task}
                       </li>
                     ))}
@@ -127,7 +127,7 @@ export function ProjectRenderer({ product, className, style }: ProjectRendererPr
           <ul className="space-y-2">
             {products.map((product, index) => (
               <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                <span className="text-indigo-500 mt-0.5">◆</span>
+                <span className="text-[var(--primary)] mt-0.5">◆</span>
                 {product}
               </li>
             ))}

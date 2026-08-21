@@ -108,14 +108,14 @@ export function EditableTable({
                         onBlur={() => handleBlur(rowIndex, colIndex)}
                         onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
                         autoFocus
-                        className="w-full px-2 py-1 text-sm border border-indigo-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                        className="w-full px-2 py-1 text-sm border border-[var(--primary)]/40 rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
                         aria-label={`Editar celda ${colIndex + 1}, fila ${rowIndex + 1}`}
                       />
                     ) : (
                       <div
                         onDoubleClick={() => handleDoubleClick(rowIndex, colIndex, localRows[rowIndex][colIndex])}
                         onKeyDown={(e) => e.key === 'Enter' && handleDoubleClick(rowIndex, colIndex, localRows[rowIndex][colIndex])}
-                        className={`min-h-[1.5rem] whitespace-pre-wrap break-words ${editable && studentFillable ? 'cursor-pointer hover:bg-indigo-50' : ''}`}
+                        className={`min-h-[1.5rem] whitespace-pre-wrap break-words ${editable && studentFillable ? 'cursor-pointer hover:bg-[var(--primary-tint)]' : ''}`}
                         tabIndex={editable && studentFillable ? 0 : -1}
                         role={editable && studentFillable ? 'button' : undefined}
                         aria-label={editable && studentFillable ? `Editar celda ${colIndex + 1}, fila ${rowIndex + 1}` : undefined}

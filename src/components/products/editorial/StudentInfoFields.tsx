@@ -41,7 +41,7 @@ export function StudentInfoFields({
               type="text"
               defaultValue={studentName || ''}
               placeholder="Nombre completo"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Nombre del estudiante"
             />
           ) : (
@@ -60,7 +60,7 @@ export function StudentInfoFields({
               type="text"
               defaultValue={course || ''}
               placeholder="Ej: 4° Básico"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Curso"
             />
           ) : (
@@ -78,7 +78,7 @@ export function StudentInfoFields({
             <input
               type="date"
               defaultValue={date || ''}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] bg-white"
               aria-label="Fecha"
             />
           ) : (

@@ -131,7 +131,7 @@ function FormativeEvaluationPreview({
           {evaluation.sections?.map((s: any) => (
             <div key={s.number} className="space-y-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">{s.number}</span>
+                <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] flex items-center justify-center text-sm font-bold">{s.number}</span>
                 <h4 className="font-semibold text-gray-800">{s.title}</h4>
               </div>
               <p className="text-xs text-gray-500 ml-8 mb-1">{s.description}</p>
@@ -195,8 +195,8 @@ function FormativeEvaluationPreview({
             </table>
           </div>
           {evaluation.summaryRow && (
-            <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
-              <p className="text-sm font-medium text-indigo-800">Resumen: Cuenta tus respuestas para ver tu progreso</p>
+            <div className="p-3 rounded-lg bg-[var(--primary-tint)] border border-[var(--primary)]/25">
+              <p className="text-sm font-medium text-[var(--primary-ink)]">Resumen: Cuenta tus respuestas para ver tu progreso</p>
             </div>
           )}
         </div>
@@ -225,14 +225,14 @@ function FormativeEvaluationPreview({
           {evaluation.criteria?.map((c: any) => (
             <div key={c.number} className="border border-gray-200 rounded-xl p-4 bg-white">
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">{c.number}</span>
+                <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] flex items-center justify-center text-sm font-bold">{c.number}</span>
                 <h4 className="font-semibold text-gray-800">{c.name}</h4>
               </div>
               <p className="text-xs text-gray-500 mb-3">{c.indicator} — {c.skill}</p>
               <div className="space-y-2">
                 {c.levels?.map((l: any) => (
                   <label key={l.level} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                    <input type="radio" name={`c${c.number}`} className="text-indigo-600 focus:ring-indigo-500" />
+                    <input type="radio" name={`c${c.number}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-gray-800">{l.level}</span>
@@ -256,8 +256,8 @@ function FormativeEvaluationPreview({
             </div>
           ))}
         </div>
-        <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
-          <p className="text-sm font-medium text-indigo-800">Total máximo: {evaluation.totalScore || 9} puntos</p>
+        <div className="p-3 rounded-lg bg-[var(--primary-tint)] border border-[var(--primary)]/25">
+          <p className="text-sm font-medium text-[var(--primary-ink)]">Total máximo: {evaluation.totalScore || 9} puntos</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -285,14 +285,14 @@ function FormativeEvaluationPreview({
           {evaluation.aspects?.map((a: any) => (
             <div key={a.number} className="border border-gray-200 rounded-xl p-4 bg-white">
               <div className="flex items-center gap-3 mb-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">{a.number}</span>
+                <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] flex items-center justify-center text-sm font-bold">{a.number}</span>
                 <p className="font-medium text-gray-800">{a.description}</p>
               </div>
               <p className="text-xs text-gray-500 mb-3">{a.indicator}</p>
               <div className="grid grid-cols-3 gap-2">
                 {evaluation.colors?.map((col: any) => (
                   <label key={col.color} className="flex items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-[var(--primary)] cursor-pointer transition-colors">
-                    <input type="radio" name={`a${a.number}`} className="text-indigo-600 focus:ring-indigo-500" />
+                    <input type="radio" name={`a${a.number}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                     <span className="text-sm font-medium">{col.color}</span>
                   </label>
                 ))}

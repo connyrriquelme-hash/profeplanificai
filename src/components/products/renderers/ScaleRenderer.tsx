@@ -44,8 +44,8 @@ export function ScaleRenderer({ product, className, style }: ScaleRendererProps)
       />
 
       {description && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
-          <p className="text-indigo-800 text-sm">{description}</p>
+        <div className="bg-[var(--primary-tint)] border border-[var(--primary-tint)] rounded-lg p-4">
+          <p className="text-[var(--primary-ink)] text-sm">{description}</p>
         </div>
       )}
 
@@ -68,7 +68,7 @@ export function ScaleRenderer({ product, className, style }: ScaleRendererProps)
           <div className="space-y-3">
             {criteria.map((criterion, index) => (
               <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold flex items-center justify-center">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-semibold flex items-center justify-center">
                   {index + 1}
                 </span>
                 <span className="text-sm text-gray-700">{criterion}</span>

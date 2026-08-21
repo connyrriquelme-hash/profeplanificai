@@ -19,7 +19,7 @@ interface PedagogicalBlockProps {
 
 const variantClasses: Record<string, string> = {
   default: 'bg-white border-gray-200',
-  highlighted: 'bg-indigo-50 border-indigo-200',
+  highlighted: 'bg-[var(--primary-tint)] border-[var(--primary)]/25',
   muted: 'bg-gray-50 border-gray-200',
 };
 
@@ -40,7 +40,7 @@ export function PedagogicalBlock({
       {(title || icon || number !== undefined) && (
         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
           {number !== undefined && (
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center">
               {number}
             </span>
           )}

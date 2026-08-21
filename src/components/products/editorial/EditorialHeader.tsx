@@ -50,16 +50,16 @@ export function EditorialHeader({
       style={style}
     >
       {/* Brand bar */}
-      <div className="bg-indigo-600 px-4 md:px-6 py-2 flex items-center justify-between print:bg-indigo-600">
+      <div className="bg-[var(--primary)] px-4 md:px-6 py-2 flex items-center justify-between print:bg-[var(--primary)]">
         <span className="text-white text-xs font-semibold tracking-wide uppercase">
           {platformName}
         </span>
         <div className="flex items-center gap-3">
           {version && (
-            <span className="text-indigo-200 text-xs">v{version}</span>
+            <span className="text-[var(--primary)]/25 text-xs">v{version}</span>
           )}
           {pageNumber !== undefined && (
-            <span className="text-indigo-200 text-xs">Página {pageNumber}</span>
+            <span className="text-[var(--primary)]/25 text-xs">Página {pageNumber}</span>
           )}
         </div>
       </div>
@@ -131,7 +131,7 @@ export function EditorialHeader({
           <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
             {oaCode && (
               <div className="flex items-start gap-2">
-                <span className="px-2 py-0.5 text-xs font-mono font-bold bg-indigo-50 text-indigo-700 rounded border border-indigo-100 flex-shrink-0">
+                <span className="px-2 py-0.5 text-xs font-mono font-bold bg-[var(--primary-tint)] text-[var(--primary-ink)] rounded border border-[var(--primary-tint)] flex-shrink-0">
                   {oaCode}
                 </span>
                 {oaText && (

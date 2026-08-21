@@ -284,7 +284,7 @@ export function ProductImage({ image, className, compact = false, loading = fals
       {onRegenerate && (
         <button
           onClick={onRegenerate}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm border border-slate-200 print:hidden"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-600 hover:text-[var(--primary)] rounded-lg px-2 py-1 text-[10px] font-medium shadow-sm border border-slate-200 print:hidden"
           title="Regenerar imagen"
         >
           ↻ Regenerar

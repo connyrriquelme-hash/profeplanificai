@@ -31,7 +31,7 @@ export function TeacherFeedbackBox({ feedback = '', className, style, onChange }
         value={localFeedback}
         onChange={handleChange}
         rows={4}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900 placeholder-gray-400 resize-y min-h-[80px]"
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-sm text-gray-900 placeholder-gray-400 resize-y min-h-[80px]"
         placeholder="Escribe tu retroalimentación para el estudiante..."
         aria-describedby="teacher-feedback-help"
       />
