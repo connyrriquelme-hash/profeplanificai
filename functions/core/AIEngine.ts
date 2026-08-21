@@ -281,7 +281,12 @@ async function conTimeout<T>(promesa: Promise<T>, ms: number, etiqueta: string):
   }
 }
 
-const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
+// 8B, no 70B: confirmado contra el servidor real que el modelo 70B sigue sin
+// responder incluso con 35s de margen (probable cola/carga del tier gratuito
+// para modelos grandes). Como este es el TERCER respaldo (solo se usa cuando
+// Workers AI y Gemini ya fallaron), priorizar velocidad/disponibilidad sobre
+// calidad maxima tiene mas sentido que insistir con el modelo mas grande.
+const NVIDIA_MODEL = 'meta/llama-3.1-8b-instruct';
 
 // Tercer respaldo cuando Workers AI Y Gemini fallan (ej. cuota agotada en
 // ambos, o billing bloqueado en el proyecto de Google Cloud). API OpenAI-
