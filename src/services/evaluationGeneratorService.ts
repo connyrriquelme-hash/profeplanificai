@@ -1,5 +1,85 @@
 import { generarConIA } from './aiService';
 import { generateEvalAvanzado } from './localGenerator';
+import { generateFormativeEvaluation, generateRubric, type MaterialRequest } from './materialGeneratorService';
+
+// Formas minimas (duck-typed) de lo que devuelven los engines reales de
+// functions/core/{TicketSalidaEngine,ListaCotejoEngine,RubricaEngine}.ts a
+// traves de /api/materials/evaluation/formative y /api/materials/rubric --
+// solo los campos que usamos para serializar a texto plano, sin acoplar
+// este archivo de frontend a los tipos internos del backend.
+interface EngineTicketSalida {
+  title: string;
+  instructions: string;
+  questions: { number: number; question: string; type: string; options?: string[] }[];
+  teacherNotes: string;
+  usedFallback: boolean;
+}
+
+interface EngineListaCotejo {
+  title: string;
+  instructions: string;
+  criteria: { number: number; description: string }[];
+  teacherNotes: string;
+  usedFallback: boolean;
+}
+
+interface EnginePremiumRubric {
+  title: string;
+  subtitle: string;
+  learningGoal: string;
+  studentFriendlyGoal: string;
+  levels: { label: string; score: number; description: string }[];
+  criteria: {
+    name: string;
+    description: string;
+    weight: number;
+    indicators: { levelId: string; descriptor: string; evidence: string }[];
+  }[];
+  totalScore: number;
+  scoringFormula: string;
+  usageInstructions: string[];
+  inclusiveAdjustments: string[];
+  formativeFeedbackQuestions: string[];
+  studentSelfAssessment: { title: string; prompts: string[] };
+  usedFallback: boolean;
+}
+
+function serializeTicketSalida(r: EngineTicketSalida): string {
+  const parts = [r.title, '', r.instructions, ''];
+  r.questions.forEach((q) => {
+    parts.push(`${q.number}. ${q.question}`);
+    if (q.options?.length) parts.push(`   Opciones: ${q.options.join(' / ')}`);
+  });
+  parts.push('', 'Notas para el docente:', r.teacherNotes);
+  return parts.join('\n');
+}
+
+function serializeListaCotejo(r: EngineListaCotejo): string {
+  const parts = [r.title, '', r.instructions, ''];
+  r.criteria.forEach((c) => parts.push(`${c.number}. [ ] Si   [ ] No   [ ] En proceso   —   ${c.description}`));
+  parts.push('', 'Notas para el docente:', r.teacherNotes);
+  return parts.join('\n');
+}
+
+function serializePremiumRubric(r: EnginePremiumRubric): string {
+  const parts = [r.title, r.subtitle, '', `Meta de aprendizaje: ${r.learningGoal}`, `Meta en lenguaje del estudiante: ${r.studentFriendlyGoal}`, '', 'Niveles de logro:'];
+  r.levels.forEach((l) => parts.push(`- ${l.label} (${l.score} pts): ${l.description}`));
+  parts.push('', 'Criterios:');
+  r.criteria.forEach((c) => {
+    parts.push('', `${c.name} (ponderación ${c.weight}%)`, c.description);
+    c.indicators.forEach((ind) => parts.push(`  - ${ind.levelId}: ${ind.descriptor} — Evidencia: ${ind.evidence}`));
+  });
+  parts.push('', `Puntaje total: ${r.totalScore} (${r.scoringFormula})`);
+  parts.push('', 'Instrucciones de uso:');
+  r.usageInstructions.forEach((i) => parts.push(`- ${i}`));
+  parts.push('', 'Adecuaciones inclusivas:');
+  r.inclusiveAdjustments.forEach((i) => parts.push(`- ${i}`));
+  parts.push('', 'Preguntas de retroalimentación formativa:');
+  r.formativeFeedbackQuestions.forEach((q) => parts.push(`- ${q}`));
+  parts.push('', r.studentSelfAssessment.title);
+  r.studentSelfAssessment.prompts.forEach((p) => parts.push(`- ${p}`));
+  return parts.join('\n');
+}
 
 const TYPE_PROMPT_KEY: Record<string, string> = {
   formativa: 'formativa',
@@ -180,6 +260,52 @@ export async function generateEvaluation(params: {
   onStatus?: (msg: string, type?: string) => void;
 }): Promise<string> {
   const onStatus = params.onStatus || (() => {});
+  const typeKey = TYPE_PROMPT_KEY[params.evaluationType] || 'formativa';
+
+  // Ticket de salida, lista de cotejo y rubrica ya tienen un engine real con
+  // IA endurecida (mismo usado por Flujo Docente vía /api/materials/*) --
+  // misma logica solicitada para la pestaña Evaluaciones. El resto (prueba
+  // escrita, SIMCE, etc.) todavia no tiene un engine equivalente, asi que
+  // sigue por el camino legacy (generarConIA + fallback local) mas abajo.
+  if (typeKey === 'ticket' || typeKey === 'cotejo' || typeKey === 'rubrica') {
+    try {
+      const req: MaterialRequest = {
+        level: params.course,
+        subject: params.subject,
+        objectiveCode: params.objectiveCode,
+        objectiveText: params.objectiveText,
+        indicators: params.selectedIndicators,
+        skills: [params.skill].filter(Boolean),
+        topic: params.objectiveText,
+      };
+
+      if (typeKey === 'ticket') {
+        const res = await generateFormativeEvaluation(req, 'evaluation_exit_ticket');
+        const ticket = res.evaluation as EngineTicketSalida | undefined;
+        if (res.ok && ticket) {
+          onStatus(ticket.usedFallback ? 'La IA no respondió a tiempo: modo de respaldo.' : 'Generado con IA.', ticket.usedFallback ? 'warn' : 'ok');
+          return cleanEvaluationText(serializeTicketSalida(ticket));
+        }
+      } else if (typeKey === 'cotejo') {
+        const res = await generateFormativeEvaluation(req, 'evaluation_checklist');
+        const lista = res.evaluation as EngineListaCotejo | undefined;
+        if (res.ok && lista) {
+          onStatus(lista.usedFallback ? 'La IA no respondió a tiempo: modo de respaldo.' : 'Generado con IA.', lista.usedFallback ? 'warn' : 'ok');
+          return cleanEvaluationText(serializeListaCotejo(lista));
+        }
+      } else {
+        const res = await generateRubric(req);
+        const rubrica = res.rubric as EnginePremiumRubric | undefined;
+        if (res.ok && rubrica) {
+          onStatus(rubrica.usedFallback ? 'La IA no respondió a tiempo: modo de respaldo.' : 'Generado con IA.', rubrica.usedFallback ? 'warn' : 'ok');
+          return cleanEvaluationText(serializePremiumRubric(rubrica));
+        }
+      }
+    } catch {
+      // Si el engine real falla por completo (red, etc.), cae al camino
+      // legacy de abajo en vez de dejar al docente sin resultado.
+    }
+  }
 
   const prompt = buildEvaluationPrompt(params);
 
