@@ -158,9 +158,20 @@ export async function generateImage(env: ImageEnv, prompt: string): Promise<Imag
   for (const provider of providers) {
     try {
       const result = await provider.fn();
-      if (result) return result;
+      if (result) {
+        // Si un proveedor de mejor calidad fallo antes de llegar a este (no
+        // que simplemente no estuviera configurado), lo dejamos visible en
+        // el resultado: sin esto, un fallo real de DALL-E/Flux queda
+        // silenciosamente enmascarado por el fallback gratuito.
+        if (errors.length > 0) {
+          result.warning = [result.warning, `Proveedores previos fallaron: ${errors.join('; ')}`].filter(Boolean).join(' ');
+        }
+        return result;
+      }
     } catch (e) {
-      errors.push(`${provider.name}: ${e instanceof Error ? e.message : 'error desconocido'}`);
+      const detail = `${provider.name}: ${e instanceof Error ? e.message : 'error desconocido'}`;
+      errors.push(detail);
+      console.error('[imageGeneration]', detail);
     }
   }
 
