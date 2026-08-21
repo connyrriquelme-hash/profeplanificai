@@ -8,6 +8,7 @@ import {
   getAdminAuditLog,
   type Institution, type InstitutionMember, type CalendarTemplate, type AuditLogEntry,
 } from '../services/adminService';
+import { uploadAssetDataUrl } from '../services/assetUploadService';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const BLOCK_TYPES = ['lectivo', 'no_lectivo', 'reemplazo', 'reunión', 'planificación'];
@@ -46,6 +47,7 @@ export default function AdminPanelView() {
   const [brandColor, setBrandColor] = useState('#B5471F');
   const [brandLogoPreview, setBrandLogoPreview] = useState<string | null>(null);
   const [savingBrand, setSavingBrand] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const loadInstitutions = useCallback(async () => {
     try {
@@ -100,12 +102,23 @@ export default function AdminPanelView() {
 
   const handleLogoFileChange = (file: File | null) => {
     if (!file) { setBrandLogoPreview(null); return; }
-    if (file.size > 300_000) {
-      setError('El logo pesa demasiado (máx. ~300KB). Usa una imagen más liviana.');
+    if (file.size > 2_000_000) {
+      setError('El logo pesa demasiado (máx. 2MB).');
       return;
     }
+    setUploadingLogo(true);
     const reader = new FileReader();
-    reader.onload = () => setBrandLogoPreview(typeof reader.result === 'string' ? reader.result : null);
+    reader.onload = async () => {
+      if (typeof reader.result !== 'string') { setUploadingLogo(false); return; }
+      try {
+        const url = await uploadAssetDataUrl(reader.result, file.name);
+        setBrandLogoPreview(url);
+      } catch (e) {
+        setError('Error al subir el logo: ' + (e instanceof Error ? e.message : 'desconocido'));
+      } finally {
+        setUploadingLogo(false);
+      }
+    };
     reader.readAsDataURL(file);
   };
 
@@ -354,9 +367,11 @@ export default function AdminPanelView() {
                     type="file"
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
                     onChange={e => handleLogoFileChange(e.target.files?.[0] || null)}
+                    disabled={uploadingLogo}
                     style={{ fontSize: 12 }}
                   />
-                  {brandLogoPreview && (
+                  {uploadingLogo && <span className="muted" style={{ fontSize: 11 }}>Subiendo…</span>}
+                  {brandLogoPreview && !uploadingLogo && (
                     <button className="secondary" onClick={() => setBrandLogoPreview(null)} style={{ fontSize: 11, alignSelf: 'flex-start' }}>Quitar logo</button>
                   )}
                 </div>
@@ -375,7 +390,7 @@ export default function AdminPanelView() {
               </div>
             </div>
           </div>
-          <button className="primary" onClick={handleSaveBrand} disabled={savingBrand} style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <button className="primary" onClick={handleSaveBrand} disabled={savingBrand || uploadingLogo} style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Check size={14} /> {savingBrand ? 'Guardando…' : 'Guardar marca'}
           </button>
         </div>

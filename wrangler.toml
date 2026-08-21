@@ -20,3 +20,7 @@ binding = "AI"
 [[vectorize]]
 binding = "REPO_PEDAGOGICO"
 index_name = "repo-pedagogico"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "planificaia-assets"

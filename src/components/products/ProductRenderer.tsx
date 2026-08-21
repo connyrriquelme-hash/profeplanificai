@@ -10,9 +10,14 @@
  *  - "document": Word-like DocumentPreview with AI editing
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Layout, Sparkles } from 'lucide-react';
+import { FileText, Layout, Sparkles, Palette, Loader2 } from 'lucide-react';
+
+// Konva/react-konva son pesados (~300KB) y solo los necesita quien entra a
+// modo "Diseño"; cargarlos eager infla el chunk de cada vista que use
+// ProductRenderer aunque nunca se abra el editor visual.
+const ProductCanvasEditor = lazy(() => import('./canvas/ProductCanvasEditor').then(m => ({ default: m.ProductCanvasEditor })));
 import { ChecklistRenderer } from './renderers/ChecklistRenderer';
 import { RubricRenderer } from './renderers/RubricRenderer';
 import { ScaleRenderer } from './renderers/ScaleRenderer';
@@ -145,12 +150,12 @@ interface ProductRendererProps {
   resourceId?: string;
   showActionBar?: boolean;
   enableAIEdit?: boolean;
-  defaultMode?: 'visual' | 'document';
+  defaultMode?: 'visual' | 'document' | 'diseno';
   className?: string;
   style?: React.CSSProperties;
 }
 
-type ViewMode = 'visual' | 'document';
+type ViewMode = 'visual' | 'document' | 'diseno';
 
 const PALETTE = {
   turquoise: '#06BFAD',
@@ -224,6 +229,25 @@ export default function ProductRenderer({
     );
   };
 
+  const renderDesignMode = () => {
+    if (!workingProduct) {
+      return (
+        <div className="py-12 text-center text-gray-400">
+          <p className="text-sm">No hay producto para diseñar</p>
+        </div>
+      );
+    }
+    return (
+      <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--ink-mute)]"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando editor de diseño…</div>}>
+        <ProductCanvasEditor
+          product={workingProduct}
+          onProductChange={handleInlineEdit}
+          className={className}
+        />
+      </Suspense>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Mode toggle + AI edit toggle */}
@@ -253,6 +277,18 @@ export default function ProductRenderer({
             <FileText className="w-3.5 h-3.5" />
             Documento
           </button>
+          <button
+            type="button"
+            onClick={() => setMode('diseno')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              mode === 'diseno'
+                ? 'bg-white text-[var(--ink)] shadow-sm'
+                : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
+            }`}
+          >
+            <Palette className="w-3.5 h-3.5" />
+            Diseño
+          </button>
         </div>
 
         {enableAIEdit && mode === 'document' && workingProduct && (
@@ -267,7 +303,9 @@ export default function ProductRenderer({
       <div className={`flex gap-4 ${mode === 'document' && enableAIEdit ? 'lg:flex-row' : ''}`}>
         {/* Product content */}
         <div className="flex-1 min-w-0">
-          {mode === 'visual' ? renderVisualMode() : renderDocumentMode()}
+          {mode === 'visual' && renderVisualMode()}
+          {mode === 'document' && renderDocumentMode()}
+          {mode === 'diseno' && renderDesignMode()}
         </div>
 
         {/* AI Editor sidebar — only in document mode */}

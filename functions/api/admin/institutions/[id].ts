@@ -17,7 +17,7 @@ const UpdateInstitutionSchema = z.object({
   contact_name: z.string().trim().max(150).optional(),
   contact_email: z.string().trim().email('Correo de contacto inválido').max(320).optional().or(z.literal('')),
   contact_phone: z.string().trim().max(30).optional(),
-  logo_url: z.string().trim().max(300_000, 'El logo es demasiado pesado (máx. ~300KB)').refine(
+  logo_url: z.string().trim().max(2000, 'URL de logo inválida').refine(
     (v) => v === '' || v.startsWith('data:image/') || v.startsWith('https://') || v.startsWith('http://'),
     'El logo debe ser una imagen (data URL) o una URL http(s)',
   ).optional(),

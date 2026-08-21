@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { generateSlideImage } from '../../services/slideImageGenerationService';
+import { uploadAssetDataUrl } from '../../services/assetUploadService';
 import type { PedagogicalProduct } from './types';
 
 /**
@@ -28,7 +29,10 @@ export function useCoverImage(
       const { title, subject, level, topic } = product.metadata;
       const descriptors = [subject, level, topic].filter(Boolean).join(', ');
       const prompt = `Ilustracion educativa que represente: ${title}${descriptors ? ` (${descriptors})` : ''}.`;
-      const imageUrl = await generateSlideImage(prompt);
+      const generatedDataUrl = await generateSlideImage(prompt);
+      // El proveedor de imagenes devuelve un data: URL; lo subimos a R2 para
+      // no seguir inflando la fila en D1 con base64 inline.
+      const imageUrl = await uploadAssetDataUrl(generatedDataUrl, 'cover.png');
       onProductChange({ ...product, data: { ...product.data, coverImageUrl: imageUrl } });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo generar la imagen.');
