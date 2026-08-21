@@ -19,7 +19,7 @@ REGLAS DE VARIEDAD PARA DIAPOSITIVAS:
 1. DIVERSIDAD DE CONTENIDO: no todas las diapositivas deben ser texto+imagen. Varia:
    - Diapositiva de concepto: definicion + imagen + ejemplo
    - Diapositiva de pregunta: pregunta de retension + opciones
-   - Diapositiva de ejemplo real: caso chileno + analisis
+   - Diapositiva de ejemplo real: caso chileno + analisis (usa nombres chilenos como Sofia, Mateo, Javiera y lugares reconocibles como el Mercado Central o la Cordillera de los Andes en vez de ejemplos genericos internacionales)
    - Diapositiva de actividad: instrucciones de actividad en clase
    - Diapositiva de resumen: mapa conceptual o esquema visual
    - Diapositiva de evaluacion: pregunta tipo SIMCE o reflexion
