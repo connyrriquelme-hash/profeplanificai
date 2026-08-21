@@ -104,8 +104,8 @@ ESTRUCTURA JSON OBLIGATORIA (usa el layout que corresponda a cada slide de la se
     { "layout": "image_text", "title": "Título", "body": "Texto descriptivo", "imageQuery": "descripción de imagen", "teacherNotes": "..." },
     { "layout": "comparison", "title": "Comparación", "left": { "label": "Izquierda", "points": ["punto"] }, "right": { "label": "Derecha", "points": ["punto"] }, "teacherNotes": "..." },
     { "layout": "quote", "text": "Cita educativa", "author": "Autor opcional", "teacherNotes": "..." },
-    { "layout": "vocabulario", "titulo": "Título", "terminos": [{ "palabra": "término", "definicion": "definición simple", "imageQuery": "opcional" }] },
-    { "layout": "ciclo_proceso", "titulo": "Título", "pasos": [{ "nombre": "Paso 1", "descripcion": "qué pasa en este paso", "imageQuery": "opcional" }] },
+    { "layout": "vocabulario", "titulo": "Título", "terminos": [{ "palabra": "término", "definicion": "definición simple", "imageQuery": "opcional" }, { "palabra": "otro término", "definicion": "definición simple" }] },
+    { "layout": "ciclo_proceso", "titulo": "Título", "pasos": [{ "nombre": "Paso 1", "descripcion": "qué pasa en este paso", "imageQuery": "opcional" }, { "nombre": "Paso 2", "descripcion": "qué pasa en este paso" }, { "nombre": "Paso 3", "descripcion": "qué pasa en este paso" }] },
     { "layout": "quiz_opcion_multiple", "pregunta": "¿...?", "opciones": ["A", "B", "C"], "respuestaCorrectaIndex": 0, "explicacion": "por qué es correcta" },
     { "layout": "verdadero_falso", "afirmacion": "...", "esVerdadero": true, "explicacion": "por qué" }
   ]
