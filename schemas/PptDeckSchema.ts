@@ -21,17 +21,25 @@ const PASO_DESCRIPCION_MAX = 200;
 const PREGUNTA_MAX = 200;
 const EXPLICACION_MAX = 300;
 const AFIRMACION_MAX = 300;
+export const TEACHER_NOTES_MAX = 300;
+
+// Instruccion breve para el docente sobre como usar esta diapositiva en
+// clase (no visible para los estudiantes) — opcional en las 9 variantes
+// de slide, mismo campo compartido en todas.
+const teacherNotes = z.string().max(TEACHER_NOTES_MAX).optional();
 
 const TitleSlideSchema = z.object({
   layout: z.literal('title'),
   title: z.string().min(1).max(TITLE_MAX),
   subtitle: z.string().max(SUBTITLE_MAX).optional(),
+  teacherNotes,
 });
 
 const BulletsSlideSchema = z.object({
   layout: z.literal('bullets'),
   title: z.string().min(1).max(TITLE_MAX),
   bullets: z.array(z.string().min(1).max(BULLET_MAX)).min(MIN_BULLETS).max(MAX_BULLETS),
+  teacherNotes,
 });
 
 const ImageTextSlideSchema = z.object({
@@ -39,6 +47,7 @@ const ImageTextSlideSchema = z.object({
   title: z.string().min(1).max(TITLE_MAX),
   body: z.string().min(1).max(BODY_MAX),
   imageQuery: z.string().min(1).max(IMAGE_QUERY_MAX),
+  teacherNotes,
 });
 
 const ComparisonSideSchema = z.object({
@@ -51,12 +60,14 @@ const ComparisonSlideSchema = z.object({
   title: z.string().min(1).max(TITLE_MAX),
   left: ComparisonSideSchema,
   right: ComparisonSideSchema,
+  teacherNotes,
 });
 
 const QuoteSlideSchema = z.object({
   layout: z.literal('quote'),
   text: z.string().min(1).max(QUOTE_MAX),
   author: z.string().max(AUTHOR_MAX).optional(),
+  teacherNotes,
 });
 
 const VocabularioTerminoSchema = z.object({
@@ -69,6 +80,7 @@ const VocabularioSlideSchema = z.object({
   layout: z.literal('vocabulario'),
   titulo: z.string().min(1).max(TITLE_MAX),
   terminos: z.array(VocabularioTerminoSchema).min(2).max(4),
+  teacherNotes,
 });
 
 const CicloProcesoSchema = z.object({
@@ -81,6 +93,7 @@ const CicloProcesoSlideSchema = z.object({
   layout: z.literal('ciclo_proceso'),
   titulo: z.string().min(1).max(TITLE_MAX),
   pasos: z.array(CicloProcesoSchema).min(3).max(6),
+  teacherNotes,
 });
 
 const QuizOpcionMultipleSlideSchema = z.object({
@@ -89,6 +102,7 @@ const QuizOpcionMultipleSlideSchema = z.object({
   opciones: z.array(z.string().min(1).max(BULLET_MAX)).min(3).max(5),
   respuestaCorrectaIndex: z.number().int().nonnegative(),
   explicacion: z.string().max(EXPLICACION_MAX).optional(),
+  teacherNotes,
 }).refine(
   (data) => data.respuestaCorrectaIndex < data.opciones.length,
   { message: 'respuestaCorrectaIndex debe ser menor que la cantidad de opciones' },
@@ -99,6 +113,7 @@ const VerdaderoFalsoSlideSchema = z.object({
   afirmacion: z.string().min(1).max(AFIRMACION_MAX),
   esVerdadero: z.boolean(),
   explicacion: z.string().max(EXPLICACION_MAX).optional(),
+  teacherNotes,
 });
 
 export const SlideSchema = z.discriminatedUnion('layout', [

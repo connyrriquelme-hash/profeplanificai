@@ -19,6 +19,7 @@ import { WorkspaceLayout } from './workspace/WorkspaceLayout';
 import type { PedagogicalProduct } from './products/types';
 import { normalizeProduct } from './products/normalizers';
 import type { PptDeck } from '../../schemas/PptDeckSchema';
+import { PPT_MASTER_TEMPLATES_META } from '../../schemas/pptMasterTemplatesMeta';
 import type { MetodologiaActiva } from '../../schemas/UnidadDidacticaSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 import { defaultClassroomConfiguration, groupingLabel, recommendLessonCount, type ClassroomConfiguration } from '../utils/pedagogicalHeuristics';
@@ -125,6 +126,7 @@ export function FlujoDocenteView() {
   const [selectedSubject, setSelectedSubject] = useState<D1Subject | null>(null);
   const [selectedOA, setSelectedOA] = useState<D1Objective | null>(null);
   const [selectedMethodology, setSelectedMethodology] = useState('');
+  const [selectedMasterTemplateId, setSelectedMasterTemplateId] = useState('');
   const [selectedProducto, setSelectedProducto] = useState('');
   const [topic, setTopic] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
@@ -325,6 +327,7 @@ export function FlujoDocenteView() {
       availableResources: classroomConfig.availableResources,
       recommendedLessons,
       outputFormat: classroomConfig.outputFormat,
+      masterTemplateId: selectedProducto === 'presentacion' && selectedMasterTemplateId ? selectedMasterTemplateId : undefined,
     };
 
     try {
@@ -877,6 +880,25 @@ export function FlujoDocenteView() {
                   {PRODUCTOS.find(p => p.id === selectedProducto)?.label}
                 </Badge>
               </div>
+
+              {selectedProducto === 'presentacion' && (
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-[var(--primary-ink)] mb-1.5">
+                    Plantilla maestra (estructura de diapositivas)
+                  </label>
+                  <select
+                    value={selectedMasterTemplateId}
+                    onChange={e => setSelectedMasterTemplateId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-white text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20"
+                  >
+                    <option value="">Automática (según asignatura y nivel)</option>
+                    {PPT_MASTER_TEMPLATES_META.map(t => (
+                      <option key={t.id} value={t.id}>{t.name} — {t.uso}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <Button
                 variant="premium"
                 size="lg"

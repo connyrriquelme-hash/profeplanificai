@@ -3,10 +3,11 @@ import { callAIConValidacion } from './AIEngine';
 import type { AIEngineEnv, PedagogicalPlan } from './types';
 import { inferRangoEtario } from './pedagogicalUtils';
 import { getExpertContext, getProfePlanificAIContext } from './ExpertKnowledge';
+import { type MasterTemplate, renderTemplateStructure } from './pptMasterTemplates';
 
 export { inferRangoEtario };
 
-export function buildSystemPrompt(plan: PedagogicalPlan): string {
+export function buildSystemPrompt(plan: PedagogicalPlan, masterTemplate?: MasterTemplate): string {
   const rangoEtario = inferRangoEtario(plan.curso);
 
   return `Eres EXPERTO en pedagogía multimedia, psicología cognitiva, neurociencias del aprendizaje y currículo chileno MINEDUC. Generas contenido para presentaciones PPT que serán usadas en clase.
@@ -66,17 +67,18 @@ REGLAS OBLIGATORIAS:
 3. Los slides de tipo "image_text" deben tener un imageQuery descriptivo (máximo 100 caracteres) para buscar una imagen relacionada. El imageQuery debe ser una búsqueda específica y concreta que encontraría una imagen real en Wikimedia Commons — por ejemplo "mapuche ruka vivienda tradicional" en vez de "pueblo indígena feliz". Nunca uses términos abstractos o emocionales como imageQuery.
 4. Los slides de tipo "comparison" deben tener left y right con label y al menos 1 point cada uno.
 5. Los slides de tipo "quote" deben tener text (máximo 200 caracteres) y author opcional.
-6. Genera SIEMPRE entre 10 y 14 slides para una clase completa. Nunca menos de 10 — una presentación con menos slides no cubre el OA de forma suficiente para una clase real.
+6. ${masterTemplate ? `Genera EXACTAMENTE ${masterTemplate.steps.length} slides — ni uno más, ni uno menos (ver PLANTILLA MAESTRA más abajo).` : 'Genera SIEMPRE entre 10 y 14 slides para una clase completa. Nunca menos de 10 — una presentación con menos slides no cubre el OA de forma suficiente para una clase real.'}
 7. NO incluyas explicaciones ni texto adicional fuera del JSON.
 8. Responde ÚNICAMENTE con JSON válido que cumpla el esquema PptDeckSchema.
+9. Cada slide puede incluir "teacherNotes" (máximo 300 caracteres): una instrucción breve y concreta para el docente sobre cómo usar esa diapositiva en clase (no la ve el estudiante). Inclúyela siempre que aporte valor real, especialmente en slides de actividad o pregunta.
 
-PROGRESIÓN PEDAGÓGICA OBLIGATORIA:
+${masterTemplate ? renderTemplateStructure(masterTemplate) : `PROGRESIÓN PEDAGÓGICA OBLIGATORIA:
 Los slides deben seguir esta progresión:
 - 1 slide de título (portada con el tema real)
 - 1-2 slides de activación (pregunta o situación del contexto cotidiano del estudiante que conecte con el tema)
 - 3-5 slides de desarrollo del contenido (conceptos clave, ejemplos concretos, datos reales — nunca frases vacías)
 - 1-2 slides de actividad o práctica (algo que el estudiante hace: responde, compara, opina, relaciona)
-- 1 slide de síntesis o cierre con pregunta reflexiva concreta
+- 1 slide de síntesis o cierre con pregunta reflexiva concreta`}
 
 REGLA CRÍTICA — PRECISIÓN FACTUAL:
 Si no tienes certeza sobre un dato específico (nombre científico, cifra, fecha, proceso biológico, característica anatómica), usa una descripción funcional general en vez de un dato concreto que pueda ser inexacto. NUNCA inventes datos, nombres, fechas, características, términos, palabras o conceptos que no existan. NUNCA uses metáforas, analogías o frases que suenen educativas pero no digan nada concreto ni produzcan información incorrecta.
@@ -94,14 +96,18 @@ Cuida la ortografía española: usa tildes correctamente (imagen, no imagén), e
 
 NUNCA incluyas un slide cuyo único propósito sea listar el OA oficial textualmente — el objetivo debe aparecer reformulado en lenguaje simple integrado en el contenido, no como slide separado de "Objetivo de Aprendizaje" que solo repite el texto curricular.
 
-ESTRUCTURA JSON OBLIGATORIA:
+ESTRUCTURA JSON OBLIGATORIA (usa el layout que corresponda a cada slide de la secuencia; "teacherNotes" es opcional en todos):
 {
   "slides": [
-    { "layout": "title", "title": "Título de la presentación", "subtitle": "Subtítulo opcional" },
-    { "layout": "bullets", "title": "Título del slide", "bullets": ["punto 1", "punto 2"] },
-    { "layout": "image_text", "title": "Título", "body": "Texto descriptivo", "imageQuery": "descripción de imagen" },
-    { "layout": "comparison", "title": "Comparación", "left": { "label": "Izquierda", "points": ["punto"] }, "right": { "label": "Derecha", "points": ["punto"] } },
-    { "layout": "quote", "text": "Cita educativa", "author": "Autor" }
+    { "layout": "title", "title": "Título de la presentación", "subtitle": "Subtítulo opcional", "teacherNotes": "..." },
+    { "layout": "bullets", "title": "Título del slide", "bullets": ["punto 1", "punto 2"], "teacherNotes": "..." },
+    { "layout": "image_text", "title": "Título", "body": "Texto descriptivo", "imageQuery": "descripción de imagen", "teacherNotes": "..." },
+    { "layout": "comparison", "title": "Comparación", "left": { "label": "Izquierda", "points": ["punto"] }, "right": { "label": "Derecha", "points": ["punto"] }, "teacherNotes": "..." },
+    { "layout": "quote", "text": "Cita educativa", "author": "Autor opcional", "teacherNotes": "..." },
+    { "layout": "vocabulario", "titulo": "Título", "terminos": [{ "palabra": "término", "definicion": "definición simple", "imageQuery": "opcional" }] },
+    { "layout": "ciclo_proceso", "titulo": "Título", "pasos": [{ "nombre": "Paso 1", "descripcion": "qué pasa en este paso", "imageQuery": "opcional" }] },
+    { "layout": "quiz_opcion_multiple", "pregunta": "¿...?", "opciones": ["A", "B", "C"], "respuestaCorrectaIndex": 0, "explicacion": "por qué es correcta" },
+    { "layout": "verdadero_falso", "afirmacion": "...", "esVerdadero": true, "explicacion": "por qué" }
   ]
 }`;
 }
@@ -390,15 +396,17 @@ export function validateDeck(deck: PptDeck): PptDeck {
 export async function generateDeckContent(
   env: AIEngineEnv,
   plan: PedagogicalPlan,
-  opciones?: { maxSlides?: number },
+  opciones?: { maxSlides?: number; masterTemplate?: MasterTemplate },
 ): Promise<PptDeck> {
-  const maxSlides = opciones?.maxSlides ?? 20;
+  const masterTemplate = opciones?.masterTemplate;
+  const expectedMin = masterTemplate ? masterTemplate.steps.length : 10;
+  const maxSlides = opciones?.maxSlides ?? (masterTemplate ? masterTemplate.steps.length : 20);
   const fallback = buildFallbackDeck(plan);
 
   try {
     const { data } = await callAIConValidacion(
       env,
-      buildSystemPrompt(plan),
+      buildSystemPrompt(plan, masterTemplate),
       JSON.stringify(plan, null, 2),
       PptDeckSchema,
       // 4000, no 3000: un deck de 10-14 slides con bullets/body completos
@@ -408,8 +416,8 @@ export async function generateDeckContent(
     );
 
     let deck = data;
-    if (deck.slides.length < 10) {
-      console.warn(`[PptContentEngine] la IA devolvió ${deck.slides.length} slides, bajo el mínimo pedido de 10`);
+    if (deck.slides.length < expectedMin) {
+      console.warn(`[PptContentEngine] la IA devolvió ${deck.slides.length} slides, bajo lo esperado (${expectedMin}${masterTemplate ? `, plantilla "${masterTemplate.name}"` : ''})`);
     }
     deck = enrichDeck(deck, fallback);
     deck = safeguardBulletsFromPlan(deck, plan);

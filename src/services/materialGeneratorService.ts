@@ -32,6 +32,10 @@ export interface MaterialRequest {
   type?: string;
   criteria?: string[];
   evaluationSubType?: FormativeEvaluationType;
+  /** Solo para presentaciones: id de una de las 12 plantillas maestras
+   * (ver functions/core/pptMasterTemplates.ts). Si se omite, el backend
+   * auto-sugiere una según asignatura/nivel. */
+  masterTemplateId?: string;
   classDurationMinutes?: number;
   grouping?: string;
   availableResources?: string;

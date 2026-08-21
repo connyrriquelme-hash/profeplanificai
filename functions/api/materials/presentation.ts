@@ -3,6 +3,7 @@ import type { PedagogicalPlan, AIEngineEnv } from '../../core/types';
 import type { PptDeck, Slide as PptDeckSlide } from '../../../schemas/PptDeckSchema';
 import { getAuthenticatedUserId } from '../../_lib/auth';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
+import { getMasterTemplate, suggestMasterTemplate } from '../../core/pptMasterTemplates';
 
 interface Env { DB: D1Database; AI?: any; GEMINI_API_KEY?: string; JWT_SECRET: string }
 
@@ -17,6 +18,9 @@ interface PresentationRequest {
   topic: string;
   designStyle?: string;
   audiencia?: 'docente' | 'estudiante';
+  /** Id de una de las 12 plantillas maestras (pptMasterTemplates.ts). Si se
+   * omite, se auto-sugiere según asignatura/nivel. */
+  masterTemplateId?: string;
   slides?: Array<{
     type: string;
     title: string;
@@ -42,13 +46,17 @@ interface OldSlide {
 
 function pptDeckToLegacySlides(deck: PptDeck): OldSlide[] {
   return deck.slides.flatMap((slide: PptDeckSlide): OldSlide[] => {
+    // teacherNotes solo existe en las 7 variantes que lo definen en el
+    // schema (todas menos comparison/quiz/verdadero_falso, que lo cargan
+    // aparte abajo) — TS ya lo sabe por el discriminated union.
+    const notes = 'teacherNotes' in slide ? slide.teacherNotes : undefined;
     switch (slide.layout) {
       case 'title':
-        return [{ type: 'cover', title: slide.title, subtitle: slide.subtitle }];
+        return [{ type: 'cover', title: slide.title, subtitle: slide.subtitle, speakerNotes: notes }];
       case 'bullets':
-        return [{ type: 'content', title: slide.title, bullets: slide.bullets }];
+        return [{ type: 'content', title: slide.title, bullets: slide.bullets, speakerNotes: notes }];
       case 'image_text':
-        return [{ type: 'content', title: slide.title, subtitle: slide.body }];
+        return [{ type: 'content', title: slide.title, subtitle: slide.body, speakerNotes: notes }];
       case 'comparison':
         return [{
           type: 'content',
@@ -57,29 +65,32 @@ function pptDeckToLegacySlides(deck: PptDeck): OldSlide[] {
             `${slide.left.label}: ${slide.left.points[0] || ''}`,
             `${slide.right.label}: ${slide.right.points[0] || ''}`,
           ],
+          speakerNotes: slide.teacherNotes,
         }];
       case 'quote':
-        return [{ type: 'content', title: slide.text, subtitle: slide.author }];
+        return [{ type: 'content', title: slide.text, subtitle: slide.author, speakerNotes: notes }];
       case 'vocabulario':
         return [{
           type: 'content',
           title: slide.titulo,
           bullets: slide.terminos.map(t => `${t.palabra}: ${t.definicion}`),
+          speakerNotes: notes,
         }];
       case 'ciclo_proceso':
         return [{
           type: 'content',
           title: slide.titulo,
           bullets: slide.pasos.map(p => `${p.nombre}: ${p.descripcion}`),
+          speakerNotes: notes,
         }];
       case 'quiz_opcion_multiple':
         return [
-          { type: 'content', title: slide.pregunta, bullets: slide.opciones },
-          { type: 'content', title: slide.pregunta, bullets: slide.opciones.map((o, i) => `${i === slide.respuestaCorrectaIndex ? '✓ ' : ''}${o}`) },
+          { type: 'content', title: slide.pregunta, bullets: slide.opciones, speakerNotes: slide.teacherNotes },
+          { type: 'content', title: slide.pregunta, bullets: slide.opciones.map((o, i) => `${i === slide.respuestaCorrectaIndex ? '✓ ' : ''}${o}`), speakerNotes: slide.explicacion },
         ];
       case 'verdadero_falso':
         return [
-          { type: 'content', title: slide.afirmacion, bullets: ['¿Verdadero o falso?'] },
+          { type: 'content', title: slide.afirmacion, bullets: ['¿Verdadero o falso?'], speakerNotes: slide.teacherNotes },
           { type: 'content', title: slide.afirmacion, bullets: [slide.esVerdadero ? 'Verdadero' : 'Falso', slide.explicacion || ''].filter(Boolean) },
         ];
       default:
@@ -135,6 +146,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     let slides: OldSlide[];
     let pptDeck: PptDeck | undefined;
+    let usedTemplateId: string | undefined;
 
     if (body.slides) {
       // Legacy path: use provided slides directly
@@ -142,10 +154,13 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     } else {
       // AI path: build PedagogicalPlan and call generateDeckContent
       const plan = buildPlanFromRequest(body, objective as any, indicatorResults);
+      const masterTemplate = getMasterTemplate(body.masterTemplateId)
+        || suggestMasterTemplate(plan.asignatura, plan.curso);
+      usedTemplateId = masterTemplate.id;
       const deck = await generateDeckContent(
         { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
         plan,
-        { modo: body.audiencia || 'docente' },
+        { masterTemplate },
       );
       pptDeck = deck;
       slides = pptDeckToLegacySlides(deck);
@@ -166,6 +181,9 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     };
     if (pptDeck) {
       contentJsonPayload.pptDeck = pptDeck;
+    }
+    if (usedTemplateId) {
+      contentJsonPayload.masterTemplateId = usedTemplateId;
     }
 
     const quality = validatePedagogicalProduct({ slides }, {
@@ -217,6 +235,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         slideCount: slides.length,
       },
       ...(pptDeck ? { pptDeck } : {}),
+      ...(usedTemplateId ? { masterTemplateId: usedTemplateId } : {}),
       quality,
     });
   } catch (err: any) {
