@@ -40,7 +40,6 @@ const PRODUCTOS = [
   { id: 'evaluation_formative_rubric', label: 'Rúbrica Analítica', icon: ClipboardList, color: '#2E4630' }, // --success-ink
   { id: 'evaluation_traffic_light', label: 'Semáforo', icon: ClipboardCheck, color: '#6B5B4E' }, // --ink-soft
   { id: 'bitacora_cientifica', label: 'Bitácora Científica IA', icon: Microscope, color: '#5A483A' }, // --ink-mid
-  { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#B5471F' }, // --primary
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#E9A13B' }, // --accent-honey
   { id: 'serie_lecciones', label: 'Serie de Lecciones', icon: BookOpen, color: '#33261C' }, // --ink
 ];
