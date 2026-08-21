@@ -261,6 +261,26 @@ async function callGemini(
   return { response: text };
 }
 
+// AbortSignal pasado a fetch() no siempre cubre la lectura del body (si el
+// servidor responde headers rapido pero el body se cuelga a mitad de
+// stream, fetch() ya resolvio y el abort ya no aplica a res.json()) —
+// confirmado contra el servidor real: NVIDIA colgo ~125s con
+// AbortSignal.timeout(20000) puesto en el fetch. Envolver toda la llamada
+// (fetch + lectura del body) en una carrera manual contra un timeout es la
+// unica forma de garantizar que esto no bloquee toda la cadena de
+// proveedores.
+async function conTimeout<T>(promesa: Promise<T>, ms: number, etiqueta: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${etiqueta}: tiempo de espera agotado (${ms}ms)`)), ms);
+  });
+  try {
+    return await Promise.race([promesa, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
 
 // Tercer respaldo cuando Workers AI Y Gemini fallan (ej. cuota agotada en
@@ -348,10 +368,10 @@ export async function callAIConValidacion<T>(
     providers.push({ name: 'Workers AI', call: (messages) => env.AI.run(model, { messages, temperature, max_tokens: maxTokens }) });
   }
   if (env.GEMINI_API_KEY) {
-    providers.push({ name: 'Gemini', call: () => callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, { temperature, maxOutputTokens: maxTokens }) });
+    providers.push({ name: 'Gemini', call: () => conTimeout(callGemini(systemPrompt, currentUserPrompt, env.GEMINI_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 20000, 'Gemini') });
   }
   if (env.NVIDIA_API_KEY) {
-    providers.push({ name: 'NVIDIA', call: () => callNvidia(systemPrompt, currentUserPrompt, env.NVIDIA_API_KEY!, { temperature, maxOutputTokens: maxTokens }) });
+    providers.push({ name: 'NVIDIA', call: () => conTimeout(callNvidia(systemPrompt, currentUserPrompt, env.NVIDIA_API_KEY!, { temperature, maxOutputTokens: maxTokens }), 20000, 'NVIDIA') });
   }
 
   if (providers.length === 0) {
