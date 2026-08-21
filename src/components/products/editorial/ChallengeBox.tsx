@@ -71,7 +71,7 @@ export function ChallengeBox({
         <h4 className={`text-sm font-bold ${config.accent}`}>{displayTitle}</h4>
       </div>
 
-      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-3">
+      <p className="text-sm text-[var(--ink)] leading-relaxed whitespace-pre-wrap mb-3">
         {challenge}
       </p>
 
@@ -85,7 +85,7 @@ export function ChallengeBox({
           </summary>
           <ul className="mt-2 space-y-1 pl-4">
             {hints.map((hint, index) => (
-              <li key={index} className="text-sm text-gray-600 flex items-start gap-1.5">
+              <li key={index} className="text-sm text-[var(--ink-mid)] flex items-start gap-1.5">
                 <span className="text-gray-400 mt-1 flex-shrink-0">💡</span>
                 {hint}
               </li>

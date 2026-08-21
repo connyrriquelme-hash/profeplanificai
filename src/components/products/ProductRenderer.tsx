@@ -229,8 +229,8 @@ export default function ProductRenderer({
             onClick={() => setMode('visual')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               mode === 'visual'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-[var(--ink)] shadow-sm'
+                : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
             }`}
           >
             <Layout className="w-3.5 h-3.5" />
@@ -241,8 +241,8 @@ export default function ProductRenderer({
             onClick={() => setMode('document')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               mode === 'document'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-[var(--ink)] shadow-sm'
+                : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />

@@ -169,7 +169,7 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader size={32} className="animate-spin text-[var(--primary)] mx-auto mb-4" />
-          <p className="text-sm text-gray-500">Cargando planificación compartida…</p>
+          <p className="text-sm text-[var(--ink-soft)]">Cargando planificación compartida…</p>
         </div>
       </div>
     );
@@ -182,8 +182,8 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={28} className="text-red-500" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Enlace no válido</h2>
-          <p className="text-sm text-gray-500 mb-6">{error}</p>
+          <h2 className="text-lg font-bold text-[var(--ink)] mb-2">Enlace no válido</h2>
+          <p className="text-sm text-[var(--ink-soft)] mb-6">{error}</p>
           <Button onClick={() => { window.location.href = window.location.origin; }}>
             Volver al inicio
           </Button>
@@ -198,16 +198,16 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/60">
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-[var(--border)]/60">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => { window.location.href = window.location.origin; }}
-            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition-all"
+            className="p-2 rounded-xl hover:bg-gray-100 text-[var(--ink-soft)] transition-all"
           >
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-semibold text-gray-900 truncate">{doc.title || 'Planificación'}</h1>
+            <h1 className="text-sm font-semibold text-[var(--ink)] truncate">{doc.title || 'Planificación'}</h1>
           </div>
           <div className="flex items-center gap-2">
             <Badge color={perm.color} size="sm">{perm.label}</Badge>
@@ -230,7 +230,7 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
         )}
 
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">{doc.title || 'Planificación'}</h2>
+          <h2 className="text-2xl font-bold text-[var(--ink)] mb-3">{doc.title || 'Planificación'}</h2>
           <div className="flex flex-wrap gap-2">
             {doc.sourceType && (
               <Badge color="teal" size="sm">{doc.sourceType.replace(/_/g, ' ')}</Badge>
@@ -246,7 +246,7 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
 
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-[var(--ink-soft)]">
               <Clock size={14} />
               {doc.updatedAt && `Actualizado ${formatDate(doc.updatedAt)}`}
             </div>
@@ -285,7 +285,7 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
             <div className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <MessageSquare size={16} className="text-gray-400" />
-                <h3 className="text-sm font-semibold text-gray-900">Comentarios</h3>
+                <h3 className="text-sm font-semibold text-[var(--ink)]">Comentarios</h3>
               </div>
               <div className="space-y-3 mb-4">
                 {(!doc.comments || doc.comments.length === 0) && (
@@ -294,17 +294,17 @@ export function SharedDocumentPublicView({ token }: SharedDocumentPublicViewProp
                 {(doc.comments || []).map((c) => (
                   <div key={c.id} className="p-3 rounded-xl bg-gray-50 border border-gray-100">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-700">{c.authorName || 'Usuario'}</span>
+                      <span className="text-xs font-semibold text-[var(--ink)]">{c.authorName || 'Usuario'}</span>
                       <span className="text-xs text-gray-400">{formatDate(c.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-600">{c.comment}</p>
+                    <p className="text-sm text-[var(--ink-mid)]">{c.comment}</p>
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
                 <input
                   type="text"
-                  className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
+                  className="flex-1 px-3 py-2 rounded-xl border border-[var(--border)] text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                   placeholder="Escribe un comentario…"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}

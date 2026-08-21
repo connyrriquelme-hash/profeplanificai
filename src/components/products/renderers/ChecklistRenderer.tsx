@@ -37,17 +37,17 @@ export function ChecklistRenderer({ product, className, style }: ChecklistRender
 
       <ProductSection title="Lista de Cotejo" icon="☑️">
         {items.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">Sin criterios definidos.</p>
+          <p className="text-[var(--ink-soft)] text-sm italic">Sin criterios definidos.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse" role="grid" aria-label="Lista de cotejo">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-8">#</th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Criterio</th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-24">Logrado</th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-24">Observado</th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Observaciones</th>
+                <tr className="bg-gray-50 border-b border-[var(--border)]">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[var(--ink-mid)] uppercase w-8">#</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[var(--ink-mid)] uppercase">Criterio</th>
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-[var(--ink-mid)] uppercase w-24">Logrado</th>
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-[var(--ink-mid)] uppercase w-24">Observado</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[var(--ink-mid)] uppercase">Observaciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -59,8 +59,8 @@ export function ChecklistRenderer({ product, className, style }: ChecklistRender
 
                   return (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-500 text-center">{index + 1}</td>
-                      <td className="px-4 py-3 text-sm text-gray-800">{criterion}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--ink-soft)] text-center">{index + 1}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--ink)]">{criterion}</td>
                       <td className="px-4 py-3 text-center">
                         <input
                           type="checkbox"
@@ -78,7 +78,7 @@ export function ChecklistRenderer({ product, className, style }: ChecklistRender
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="min-h-[1.5rem] text-sm text-gray-500 italic">
+                        <div className="min-h-[1.5rem] text-sm text-[var(--ink-soft)] italic">
                           {notes || '—'}
                         </div>
                       </td>
@@ -93,7 +93,7 @@ export function ChecklistRenderer({ product, className, style }: ChecklistRender
 
       {observations && (
         <ProductSection title="Observaciones" icon="📝">
-          <p className="text-gray-700 text-sm whitespace-pre-wrap">{observations}</p>
+          <p className="text-[var(--ink)] text-sm whitespace-pre-wrap">{observations}</p>
         </ProductSection>
       )}
 

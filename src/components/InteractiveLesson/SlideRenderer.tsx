@@ -76,7 +76,7 @@ function TitleSlideView({ slide }: { slide: Extract<Slide, { type: 'title' }> })
         {slide.title}
       </h1>
       {slide.subtitle && (
-        <p className="text-lg text-gray-500 max-w-md">{slide.subtitle}</p>
+        <p className="text-lg text-[var(--ink-soft)] max-w-md">{slide.subtitle}</p>
       )}
     </div>
   );
@@ -103,7 +103,7 @@ function BulletsSlideView({ slide }: { slide: Extract<Slide, { type: 'bullets' }
             >
               {i + 1}
             </span>
-            <span className="text-gray-700 text-base">{item}</span>
+            <span className="text-[var(--ink)] text-base">{item}</span>
           </motion.li>
         ))}
       </ul>
@@ -130,7 +130,7 @@ function ComparisonSlideView({ slide }: { slide: Extract<Slide, { type: 'compari
           </h3>
           <ul className="space-y-2">
             {slide.element1.characteristics.map((item, i) => (
-              <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+              <li key={i} className="text-sm text-[var(--ink)] flex items-start gap-2">
                 <span style={{ color: PALETTE.turquoise }}>●</span> {item}
               </li>
             ))}
@@ -149,7 +149,7 @@ function ComparisonSlideView({ slide }: { slide: Extract<Slide, { type: 'compari
           </h3>
           <ul className="space-y-2">
             {slide.element2.characteristics.map((item, i) => (
-              <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+              <li key={i} className="text-sm text-[var(--ink)] flex items-start gap-2">
                 <span style={{ color: PALETTE.fuchsia }}>●</span> {item}
               </li>
             ))}
@@ -224,7 +224,7 @@ function ImageTextSlideView({ slide }: { slide: Extract<Slide, { type: 'imageTex
         <p className="text-xs mb-3" style={{ color: PALETTE.fuchsia }}>{genError}</p>
       )}
 
-      <p className="text-gray-600 max-w-md leading-relaxed">{slide.content}</p>
+      <p className="text-[var(--ink-mid)] max-w-md leading-relaxed">{slide.content}</p>
       <p className="text-xs text-gray-400 mt-2 italic max-w-sm">
         Prompt: {slide.imagePrompt}
       </p>
@@ -284,7 +284,7 @@ function QuizSlideView({ slide, selectedIndex, onSelect }: QuizSlideViewProps) {
               >
                 {String.fromCharCode(65 + i)}
               </span>
-              <span className="text-gray-700">{option}</span>
+              <span className="text-[var(--ink)]">{option}</span>
               {answered && isCorrectOption && <CheckCircle className="ml-auto w-5 h-5" style={{ color: PALETTE.turquoise }} />}
               {answered && isSelected && !isCorrectOption && <XCircle className="ml-auto w-5 h-5" style={{ color: PALETTE.fuchsia }} />}
             </motion.button>
@@ -304,7 +304,7 @@ function QuizSlideView({ slide, selectedIndex, onSelect }: QuizSlideViewProps) {
           <p className="font-semibold mb-1" style={{ color: isCorrect ? PALETTE.turquoise : PALETTE.fuchsia }}>
             {isCorrect ? '¡Correcto! 🎉' : 'No es la respuesta correcta 😅'}
           </p>
-          <p className="text-gray-600">{slide.feedback}</p>
+          <p className="text-[var(--ink-mid)]">{slide.feedback}</p>
         </motion.div>
       )}
     </div>
@@ -325,7 +325,7 @@ function ClosingSlideView({ slide }: { slide: Extract<Slide, { type: 'closing' }
       <h1 className="text-3xl font-extrabold mb-4" style={{ color: PALETTE.purple }}>
         {slide.title}
       </h1>
-      <p className="text-gray-500 max-w-md leading-relaxed">{slide.reflectionPrompt}</p>
+      <p className="text-[var(--ink-soft)] max-w-md leading-relaxed">{slide.reflectionPrompt}</p>
     </div>
   );
 }

@@ -22,7 +22,7 @@ interface MaterialsGridProps {
 export function MaterialsGrid({ materials, className, style }: MaterialsGridProps) {
   if (!materials || materials.length === 0) {
     return (
-      <p className="text-gray-500 text-sm italic">No hay materiales definidos para esta actividad.</p>
+      <p className="text-[var(--ink-soft)] text-sm italic">No hay materiales definidos para esta actividad.</p>
     );
   }
 
@@ -31,7 +31,7 @@ export function MaterialsGrid({ materials, className, style }: MaterialsGridProp
       {materials.map((material, index) => (
         <article
           key={index}
-          className="material-card bg-white border border-gray-200 rounded-lg p-4 hover:border-[var(--primary)]/40 hover:shadow-sm transition-all"
+          className="material-card bg-white border border-[var(--border)] rounded-lg p-4 hover:border-[var(--primary)]/40 hover:shadow-sm transition-all"
         >
           <div className="flex items-start gap-3">
             <div
@@ -41,8 +41,8 @@ export function MaterialsGrid({ materials, className, style }: MaterialsGridProp
               {material.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 truncate">{material.name}</h4>
-              <p className="text-gray-600 text-sm mt-0.5">
+              <h4 className="font-semibold text-[var(--ink)] truncate">{material.name}</h4>
+              <p className="text-[var(--ink-mid)] text-sm mt-0.5">
                 <span className="font-medium">Cantidad:</span> {material.quantity}
               </p>
               {material.safetyNote && (
@@ -54,7 +54,7 @@ export function MaterialsGrid({ materials, className, style }: MaterialsGridProp
                 </p>
               )}
               {material.optional && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 mt-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-[var(--ink-mid)] mt-2">
                   Opcional
                 </span>
               )}

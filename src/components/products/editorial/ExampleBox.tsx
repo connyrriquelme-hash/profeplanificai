@@ -54,12 +54,12 @@ export function ExampleBox({
       </div>
 
       {description && (
-        <p className="text-sm text-gray-700 mb-3 leading-relaxed whitespace-pre-wrap">{description}</p>
+        <p className="text-sm text-[var(--ink)] mb-3 leading-relaxed whitespace-pre-wrap">{description}</p>
       )}
 
       {exampleText && (
         <div className="bg-white rounded-lg p-3 border border-gray-100 mb-3">
-          <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{exampleText}</p>
+          <p className="text-sm text-[var(--ink)] leading-relaxed whitespace-pre-wrap">{exampleText}</p>
         </div>
       )}
 
@@ -76,7 +76,7 @@ export function ExampleBox({
                     {step.label}
                   </span>
                 )}
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{step.content}</p>
+                <p className="text-sm text-[var(--ink)] leading-relaxed whitespace-pre-wrap">{step.content}</p>
               </div>
             </li>
           ))}

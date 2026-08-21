@@ -616,7 +616,7 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           key={i}
           onClick={() => setCurrentSlide(i)}
           className={`text-left px-3 py-2 rounded-lg text-xs transition-all ${
-            i === currentSlide ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)] font-bold' : 'bg-white/50 text-gray-600 hover:bg-white/80'
+            i === currentSlide ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)] font-bold' : 'bg-white/50 text-[var(--ink-mid)] hover:bg-white/80'
           }`}
         >
           <span className="font-mono mr-1">{i + 1}.</span>
@@ -664,12 +664,12 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
     <div className="flex flex-col gap-4 overflow-x-hidden lg:flex-row">
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-gray-700">
+          <h3 className="text-sm font-bold text-[var(--ink)]">
             Vista previa: {LAYOUT_LABELS[slide.layout] || slide.layout}
           </h3>
           <div className="flex items-center gap-2">
             {isGeneratingImages && imageProgress && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-[var(--ink-soft)]">
                 Imágenes: {imageProgress.current}/{imageProgress.total}
               </span>
             )}
@@ -683,14 +683,14 @@ export default function PremiumPptPreview({ presentation, isGeneratingImages, im
           <button onClick={prev} disabled={currentSlide === 0} className="p-1 rounded hover:bg-gray-100 disabled:opacity-30">
             <ChevronLeft size={18} />
           </button>
-          <span className="text-xs text-gray-500">{currentSlide + 1} / {total}</span>
+          <span className="text-xs text-[var(--ink-soft)]">{currentSlide + 1} / {total}</span>
           <button onClick={next} disabled={currentSlide === total - 1} className="p-1 rounded hover:bg-gray-100 disabled:opacity-30">
             <ChevronRight size={18} />
           </button>
         </div>
       </div>
       <div className="w-full flex-shrink-0 lg:w-56">
-        <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Diapositivas</div>
+        <div className="text-xs font-bold text-[var(--ink-soft)] mb-2 uppercase tracking-wide">Diapositivas</div>
         {slideList}
       </div>
     </div>

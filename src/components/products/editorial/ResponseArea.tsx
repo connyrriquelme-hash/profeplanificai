@@ -35,12 +35,12 @@ export function ResponseArea({
       {(label || instruction) && (
         <div className="mb-2">
           {label && (
-            <label className="block text-sm font-semibold text-gray-700 mb-0.5">
+            <label className="block text-sm font-semibold text-[var(--ink)] mb-0.5">
               {label}
             </label>
           )}
           {instruction && (
-            <p className="text-xs text-gray-500">{instruction}</p>
+            <p className="text-xs text-[var(--ink-soft)]">{instruction}</p>
           )}
         </div>
       )}
@@ -50,7 +50,7 @@ export function ResponseArea({
           rows={lines}
           placeholder={placeholder}
           disabled={!editable}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 resize-y min-h-[80px] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-[var(--ink)] placeholder-gray-400 resize-y min-h-[80px] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] disabled:bg-gray-50 disabled:text-[var(--ink-soft)]"
           aria-label={label || 'Espacio de respuesta'}
         />
       )}
@@ -64,7 +64,7 @@ export function ResponseArea({
           {Array.from({ length: lines }, (_, i) => (
             <div
               key={i}
-              className="border-b border-gray-200 h-7 last:border-b-0"
+              className="border-b border-[var(--border)] h-7 last:border-b-0"
               aria-hidden="true"
             />
           ))}

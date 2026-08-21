@@ -26,21 +26,21 @@ function MarkdownContent({ text }: { text: string }) {
     if (trimmed.startsWith('### ')) {
       flushList();
       elements.push(
-        <h4 key={`h4-${elements.length}`} className="text-sm font-semibold mt-4 mb-2 text-gray-800">
+        <h4 key={`h4-${elements.length}`} className="text-sm font-semibold mt-4 mb-2 text-[var(--ink)]">
           {trimmed.slice(4)}
         </h4>
       );
     } else if (trimmed.startsWith('## ')) {
       flushList();
       elements.push(
-        <h3 key={`h3-${elements.length}`} className="text-base font-bold mt-5 mb-2 text-gray-900 border-b border-gray-200 pb-1">
+        <h3 key={`h3-${elements.length}`} className="text-base font-bold mt-5 mb-2 text-[var(--ink)] border-b border-[var(--border)] pb-1">
           {trimmed.slice(3)}
         </h3>
       );
     } else if (trimmed.startsWith('# ')) {
       flushList();
       elements.push(
-        <h2 key={`h2-${elements.length}`} className="text-lg font-bold mt-5 mb-3 text-gray-900">
+        <h2 key={`h2-${elements.length}`} className="text-lg font-bold mt-5 mb-3 text-[var(--ink)]">
           {trimmed.slice(2)}
         </h2>
       );
@@ -72,7 +72,7 @@ function SectionCard({ section }: { section: ProductSection }) {
   return (
     <div className="mb-4">
       {section.title && (
-        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-[var(--ink)] mb-2 flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
           {section.title}
         </h4>
@@ -85,9 +85,9 @@ function SectionCard({ section }: { section: ProductSection }) {
 function TableCard({ table }: { table: ProductTable }) {
   if (!table.columns.length || !table.rows.length) return null;
   return (
-    <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
+    <div className="mb-4 rounded-xl border border-[var(--border)] overflow-hidden">
       {table.title && (
-        <div className="bg-[var(--primary-tint)] px-4 py-2 border-b border-gray-200">
+        <div className="bg-[var(--primary-tint)] px-4 py-2 border-b border-[var(--border)]">
           <h4 className="text-sm font-semibold text-[var(--primary-ink)]">{table.title}</h4>
         </div>
       )}
@@ -96,7 +96,7 @@ function TableCard({ table }: { table: ProductTable }) {
           <thead>
             <tr className="bg-gray-50">
               {table.columns.map((col, i) => (
-                <th key={i} className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide border-b border-gray-200">
+                <th key={i} className="px-3 py-2 text-left text-xs font-semibold text-[var(--ink-mid)] uppercase tracking-wide border-b border-[var(--border)]">
                   {col}
                 </th>
               ))}
@@ -106,7 +106,7 @@ function TableCard({ table }: { table: ProductTable }) {
             {table.rows.map((row, ri) => (
               <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 {row.map((cell, ci) => (
-                  <td key={ci} className="px-3 py-2 border-b border-gray-100 text-gray-700">
+                  <td key={ci} className="px-3 py-2 border-b border-gray-100 text-[var(--ink)]">
                     {cell}
                   </td>
                 ))}
@@ -134,7 +134,7 @@ function CalloutCard({ callout }: { callout: ProductCallout }) {
         <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold text-white ${s.border.replace('border-', 'bg-')}`}>
           {s.icon}
         </span>
-        <p className="text-sm text-gray-700 leading-relaxed">{callout.text}</p>
+        <p className="text-sm text-[var(--ink)] leading-relaxed">{callout.text}</p>
       </div>
     </div>
   );
@@ -144,21 +144,21 @@ function ChartCard({ chart }: { chart: ProductChart }) {
   if (!chart.data?.length) return null;
   const maxVal = Math.max(...chart.data.map((d) => d.value || 0), 1);
   return (
-    <div className="mb-4 rounded-xl border border-gray-200 p-4">
+    <div className="mb-4 rounded-xl border border-[var(--border)] p-4">
       {chart.title && (
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">{chart.title}</h4>
+        <h4 className="text-sm font-semibold text-[var(--ink)] mb-3">{chart.title}</h4>
       )}
       <div className="space-y-2">
         {chart.data.map((d, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="text-xs text-gray-600 w-24 text-right truncate">{d.label}</span>
+            <span className="text-xs text-[var(--ink-mid)] w-24 text-right truncate">{d.label}</span>
             <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
               <div
                 className="h-full bg-[var(--primary)] rounded-full transition-all"
                 style={{ width: `${Math.max((d.value / maxVal) * 100, 4)}%` }}
               />
             </div>
-            <span className="text-xs font-medium text-gray-700 w-8">{d.value}%</span>
+            <span className="text-xs font-medium text-[var(--ink)] w-8">{d.value}%</span>
           </div>
         ))}
       </div>
@@ -169,11 +169,11 @@ function ChartCard({ chart }: { chart: ProductChart }) {
 function ChecklistCard({ items }: { items: string[] }) {
   if (!items.length) return null;
   return (
-    <div className="mb-4 rounded-xl border border-gray-200 p-4">
-      <h4 className="text-sm font-semibold text-gray-700 mb-2">Lista de verificación</h4>
+    <div className="mb-4 rounded-xl border border-[var(--border)] p-4">
+      <h4 className="text-sm font-semibold text-[var(--ink)] mb-2">Lista de verificación</h4>
       <div className="space-y-1">
         {items.map((item, i) => (
-          <label key={i} className="flex items-center gap-2 text-sm text-gray-700">
+          <label key={i} className="flex items-center gap-2 text-sm text-[var(--ink)]">
             <input type="checkbox" className="rounded border-gray-300" readOnly />
             {item}
           </label>
@@ -200,16 +200,16 @@ export default function ProductPreview({ product, onExportPDF, onCopy, onPrint }
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
       <div className="bg-[var(--primary)] px-6 py-4">
         <h2 className="text-lg font-bold text-white leading-tight">{product.title}</h2>
         <p className="text-[#FFF6ED]/80 text-xs mt-1">{resourceTypeLabel(product.type)}</p>
       </div>
 
       {metaChips.length > 0 && (
-        <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-2">
+        <div className="px-6 py-3 bg-gray-50 border-b border-[var(--border)] flex flex-wrap gap-2">
           {metaChips.map((c, i) => (
-            <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-700">
+            <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-[var(--border)] text-[var(--ink)]">
               <span className="text-gray-400 mr-1">{c.label}:</span>
               {c.value}
             </span>
@@ -243,20 +243,20 @@ export default function ProductPreview({ product, onExportPDF, onCopy, onPrint }
         )}
 
         {product.footerNotes.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="mt-6 pt-4 border-t border-[var(--border)]">
             {product.footerNotes.map((n, i) => (
-              <p key={i} className="text-xs text-gray-500 italic">{n}</p>
+              <p key={i} className="text-xs text-[var(--ink-soft)] italic">{n}</p>
             ))}
           </div>
         )}
       </div>
 
       {(onExportPDF || onCopy || onPrint) && (
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex gap-2">
+        <div className="px-6 py-3 bg-gray-50 border-t border-[var(--border)] flex gap-2">
           {onCopy && (
             <button
               onClick={onCopy}
-              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-[var(--ink-mid)] bg-white border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
             >
               Copiar
             </button>
@@ -264,7 +264,7 @@ export default function ProductPreview({ product, onExportPDF, onCopy, onPrint }
           {onPrint && (
             <button
               onClick={onPrint}
-              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-[var(--ink-mid)] bg-white border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
             >
               Imprimir
             </button>

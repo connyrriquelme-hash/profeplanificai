@@ -54,7 +54,7 @@ export function PageHeader({ icon, iconColor: iconColorProp, title, description,
       <div className={`flex items-center justify-between gap-3 mb-6 ${className}`}>
         <div className="flex items-center gap-2.5">
           {icon && <IconBadge icon={icon} size="sm" color={iconColor} variant="soft" />}
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-base font-semibold text-[var(--ink)]">{title}</h2>
           {badge && <Badge color={badgeColor} size="sm">{badge}</Badge>}
         </div>
         {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
@@ -68,10 +68,10 @@ export function PageHeader({ icon, iconColor: iconColorProp, title, description,
         {icon && <IconBadge icon={icon} size="lg" color={iconColor} variant="gradient" />}
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h1>
+            <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">{title}</h1>
             {badge && <Badge color={badgeColor} size="md">{badge}</Badge>}
           </div>
-          {description && <p className="text-sm text-gray-500 mt-0.5 max-w-2xl">{description}</p>}
+          {description && <p className="text-sm text-[var(--ink-soft)] mt-0.5 max-w-2xl">{description}</p>}
         </div>
       </div>
       {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}

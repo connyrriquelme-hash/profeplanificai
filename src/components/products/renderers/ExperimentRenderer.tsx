@@ -76,7 +76,7 @@ export function ExperimentRenderer({ product, className, style }: ExperimentRend
         <ProductSection title="Materiales" icon="🧰">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {materials.map((material, index) => (
-              <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded text-sm text-gray-700">
+              <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded text-sm text-[var(--ink)]">
                 <span className="text-teal-500">🧪</span>
                 {material}
               </div>
@@ -113,10 +113,10 @@ export function ExperimentRenderer({ product, className, style }: ExperimentRend
                   <div className="absolute left-3.5 top-8 bottom-0 w-0.5 bg-gray-200" />
                 )}
               </div>
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4">
-                <p className="text-sm text-gray-800">{step.instruction}</p>
+              <div className="flex-1 bg-white border border-[var(--border)] rounded-lg p-4">
+                <p className="text-sm text-[var(--ink)]">{step.instruction}</p>
                 {step.observation && (
-                  <p className="text-xs text-gray-500 mt-2 italic">Observar: {step.observation}</p>
+                  <p className="text-xs text-[var(--ink-soft)] mt-2 italic">Observar: {step.observation}</p>
                 )}
                 {step.safetyNote && (
                   <p className="text-xs text-red-600 mt-1 font-medium">⚠ {step.safetyNote}</p>
@@ -129,7 +129,7 @@ export function ExperimentRenderer({ product, className, style }: ExperimentRend
 
       {conclusion && (
         <ProductSection title="Conclusión" icon="🎯">
-          <p className="text-gray-700 text-sm whitespace-pre-wrap">{conclusion}</p>
+          <p className="text-[var(--ink)] text-sm whitespace-pre-wrap">{conclusion}</p>
         </ProductSection>
       )}
 

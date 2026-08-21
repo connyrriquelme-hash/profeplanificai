@@ -41,17 +41,17 @@ export function TicketRenderer({ product, className, style }: TicketRendererProp
 
       <ProductSection title={title} icon={icon}>
         {questions.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">Sin preguntas definidas.</p>
+          <p className="text-[var(--ink-soft)] text-sm italic">Sin preguntas definidas.</p>
         ) : (
           <div className="space-y-6">
             {questions.map((q, index) => (
-              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div key={index} className="bg-gray-50 border border-[var(--border)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-sm font-bold flex items-center justify-center">
                     {index + 1}
                   </span>
                   <div className="flex-1">
-                    <p className="text-gray-800 font-medium text-sm">{q.question}</p>
+                    <p className="text-[var(--ink)] font-medium text-sm">{q.question}</p>
                     <div className="mt-3 min-h-[3rem] border-b border-dashed border-gray-300 pb-2">
                       <p className="text-gray-400 text-xs italic">
                         {q.response || responseArea || 'Escribe tu respuesta aquí...'}

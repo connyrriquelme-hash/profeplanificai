@@ -60,7 +60,7 @@ export function VocabularyBox({
           >
             <dt className="text-sm font-bold text-teal-800">{item.term}</dt>
             {item.definition && (
-              <dd className="text-sm text-gray-700 mt-1 leading-relaxed">
+              <dd className="text-sm text-[var(--ink)] mt-1 leading-relaxed">
                 {item.definition}
               </dd>
             )}

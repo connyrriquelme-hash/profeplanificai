@@ -262,11 +262,11 @@ function ResourceTypeStep({ state, dispatch }: { state: WizardState; dispatch: R
       className="space-y-6"
     >
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-[var(--ink)] mb-1 flex items-center gap-2">
           <Layers size={20} className="text-[var(--primary)]" />
           Tipo de recurso
         </h3>
-        <p className="text-sm text-gray-500">Elige que tipo de documento educativo generar.</p>
+        <p className="text-sm text-[var(--ink-soft)]">Elige que tipo de documento educativo generar.</p>
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
@@ -280,16 +280,16 @@ function ResourceTypeStep({ state, dispatch }: { state: WizardState; dispatch: R
               className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 isSelected
                   ? 'border-[var(--primary)] bg-[var(--primary-tint)] shadow-md shadow-black/5'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                  : 'border-[var(--border)] bg-white hover:border-gray-300 hover:shadow-sm'
               }`}
             >
               <div className="flex items-start gap-4">
                 <div className={`p-3 rounded-xl ${isSelected ? 'bg-[var(--primary-tint)]' : 'bg-gray-100'}`}>
-                  <Icon size={24} className={isSelected ? 'text-[var(--primary)]' : 'text-gray-500'} />
+                  <Icon size={24} className={isSelected ? 'text-[var(--primary)]' : 'text-[var(--ink-soft)]'} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold ${isSelected ? 'text-[var(--primary-ink)]' : 'text-gray-900'}`}>{rt.label}</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{rt.description}</p>
+                  <p className={`font-semibold ${isSelected ? 'text-[var(--primary-ink)]' : 'text-[var(--ink)]'}`}>{rt.label}</p>
+                  <p className="text-xs text-[var(--ink-soft)] mt-1 leading-relaxed">{rt.description}</p>
                 </div>
                 {isSelected && (
                   <CheckCircle2 size={20} className="text-[var(--primary)] flex-shrink-0" />
@@ -312,28 +312,28 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
       className="space-y-6"
     >
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-[var(--ink)] mb-1 flex items-center gap-2">
           <MessageSquare size={20} className="text-[var(--primary)]" />
           Contexto y personalizacion
         </h3>
-        <p className="text-sm text-gray-500">Define el tema especifico y las opciones de inclusion.</p>
+        <p className="text-sm text-[var(--ink-soft)]">Define el tema especifico y las opciones de inclusion.</p>
       </div>
 
       {/* Topic */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Tema especifico</label>
+        <label className="block text-sm font-semibold text-[var(--ink)] mb-2">Tema especifico</label>
         <textarea
           value={state.topic}
           onChange={(e) => dispatch({ type: 'SET_TOPIC', topic: e.target.value })}
           placeholder="Ej: Fotosintesis en plantas, Fracciones equivalentes, La Guerra del Pacifico..."
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-white text-sm text-[var(--ink)] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-none"
         />
       </div>
 
       {/* DUA Options */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-3">Principios de inclusion</label>
+        <label className="block text-sm font-semibold text-[var(--ink)] mb-3">Principios de inclusion</label>
         <div className="space-y-3">
           <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-transparent bg-[var(--success-bg)] hover:brightness-95 cursor-pointer transition-all">
             <input
@@ -348,7 +348,7 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
               <p className="text-xs" style={{ color: 'var(--success-ink)' }}>Adecuaciones para Diversidad, Universalidad y Accesibilidad</p>
             </div>
           </label>
-          <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+          <label className="flex items-start gap-3 p-3 rounded-xl border border-[var(--border)] bg-white hover:bg-gray-50 cursor-pointer transition-colors">
             <input
               type="checkbox"
               checked={state.differentiation}
@@ -356,11 +356,11 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
               className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
             />
             <div>
-              <p className="text-sm font-medium text-gray-700">Diferenciacion de actividades</p>
-              <p className="text-xs text-gray-500">Niveles de dificultad adaptados para distintos ritmos</p>
+              <p className="text-sm font-medium text-[var(--ink)]">Diferenciacion de actividades</p>
+              <p className="text-xs text-[var(--ink-soft)]">Niveles de dificultad adaptados para distintos ritmos</p>
             </div>
           </label>
-          <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
+          <label className="flex items-start gap-3 p-3 rounded-xl border border-[var(--border)] bg-white hover:bg-gray-50 cursor-pointer transition-colors">
             <input
               type="checkbox"
               checked={state.rubric}
@@ -368,8 +368,8 @@ function ContextStep({ state, dispatch }: { state: WizardState; dispatch: React.
               className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
             />
             <div>
-              <p className="text-sm font-medium text-gray-700">Incluir rubrica de evaluacion</p>
-              <p className="text-xs text-gray-500">Tabla de criterios con niveles de logro</p>
+              <p className="text-sm font-medium text-[var(--ink)]">Incluir rubrica de evaluacion</p>
+              <p className="text-xs text-[var(--ink-soft)]">Tabla de criterios con niveles de logro</p>
             </div>
           </label>
         </div>
@@ -392,8 +392,8 @@ function LoadingStep({ state }: { state: WizardState }) {
         </div>
         <Sparkles size={20} className="absolute -top-1 -right-1 text-amber-500 animate-pulse" />
       </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-2">Generando tu recurso</h3>
-      <p className="text-sm text-gray-500 text-center max-w-md">{state.loadingMessage}</p>
+      <h3 className="text-xl font-bold text-[var(--ink)] mb-2">Generando tu recurso</h3>
+      <p className="text-sm text-[var(--ink-soft)] text-center max-w-md">{state.loadingMessage}</p>
       <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
         <AlertCircle size={14} />
         <span>Esto puede tomar 15-30 segundos</span>
@@ -415,11 +415,11 @@ function WorkspaceStep({ state, onReset }: { state: WizardState; onReset: () => 
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[var(--ink)] flex items-center gap-2">
                 <CheckCircle2 size={20} className="text-green-600" />
                 Recurso generado
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-[var(--ink-soft)] mt-1">
                 {state.resourceType === 'presentacion' ? 'Presentacion visual' : 'Documento'} — {state.nivel} / {state.asignatura}
               </p>
             </div>
@@ -487,13 +487,13 @@ function WorkspaceStep({ state, onReset }: { state: WizardState; onReset: () => 
       </div>
 
       {/* Assistant sidebar - 30% */}
-      <div className="flex-[3] border-l border-gray-200 bg-gray-50/50 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+      <div className="flex-[3] border-l border-[var(--border)] bg-gray-50/50 flex flex-col">
+        <div className="p-4 border-b border-[var(--border)]">
+          <h3 className="text-sm font-bold text-[var(--ink)] flex items-center gap-2">
             <MessageSquare size={16} className="text-[var(--primary)]" />
             Asistente IA
           </h3>
-          <p className="text-xs text-gray-500 mt-1">Pide ajustes o mejoras al documento generado.</p>
+          <p className="text-xs text-[var(--ink-soft)] mt-1">Pide ajustes o mejoras al documento generado.</p>
         </div>
         <div className="flex-1 p-4 flex items-center justify-center">
           <div className="text-center text-gray-400">
@@ -637,7 +637,7 @@ export function DocumentGeneratorFlow() {
 
       {/* Navigation footer */}
       {isNavigable && (
-        <div className="bg-white border-t border-gray-200 px-6 py-4">
+        <div className="bg-white border-t border-[var(--border)] px-6 py-4">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <Button
               variant="ghost"

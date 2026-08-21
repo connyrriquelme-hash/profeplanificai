@@ -80,10 +80,10 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
       {sections.map((section, index) => (
         <ProductSection key={index} title={section.principle} icon="📋">
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-800">Estrategias:</h4>
+            <h4 className="text-sm font-semibold text-[var(--ink)]">Estrategias:</h4>
             <ul className="space-y-2">
               {section.strategies.map((strategy, si) => (
-                <li key={si} className="flex items-start gap-2 text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                <li key={si} className="flex items-start gap-2 text-sm text-[var(--ink)] bg-gray-50 p-2 rounded">
                   <span className="text-[var(--primary)] mt-0.5">✦</span>
                   {strategy}
                 </li>
@@ -91,7 +91,7 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
             </ul>
             {section.accommodations && section.accommodations.length > 0 && (
               <div className="mt-3">
-                <h4 className="text-sm font-semibold text-gray-800 mb-1">Adecuaciones:</h4>
+                <h4 className="text-sm font-semibold text-[var(--ink)] mb-1">Adecuaciones:</h4>
                 <ul className="space-y-1">
                   {section.accommodations.map((acc, ai) => (
                     <li key={ai} className="flex items-start gap-2 text-sm text-teal-700">
@@ -108,7 +108,7 @@ export function DUAGuideRenderer({ product, className, style }: DUAGuideRenderer
 
       {inclusiveAssessment && (
         <ProductSection title="Evaluación Inclusiva" icon="✓">
-          <p className="text-gray-700 text-sm whitespace-pre-wrap">{inclusiveAssessment}</p>
+          <p className="text-[var(--ink)] text-sm whitespace-pre-wrap">{inclusiveAssessment}</p>
         </ProductSection>
       )}
 

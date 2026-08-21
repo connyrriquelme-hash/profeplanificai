@@ -28,12 +28,12 @@ export function StudentInfoFields({
 }: StudentInfoFieldsProps) {
   return (
     <div
-      className={`student-info-fields bg-gray-50 border border-gray-200 rounded-lg p-3 md:p-4 ${className || ''}`}
+      className={`student-info-fields bg-gray-50 border border-[var(--border)] rounded-lg p-3 md:p-4 ${className || ''}`}
       style={style}
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Estudiante
           </label>
           {editable ? (
@@ -45,14 +45,14 @@ export function StudentInfoFields({
               aria-label="Nombre del estudiante"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {studentName || <span className="text-gray-400 italic">—</span>}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Curso
           </label>
           {editable ? (
@@ -64,14 +64,14 @@ export function StudentInfoFields({
               aria-label="Curso"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {course || <span className="text-gray-400 italic">—</span>}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Fecha
           </label>
           {editable ? (
@@ -82,7 +82,7 @@ export function StudentInfoFields({
               aria-label="Fecha"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {date || <span className="text-gray-400 italic">—</span>}
             </p>
           )}
@@ -90,16 +90,16 @@ export function StudentInfoFields({
       </div>
 
       {showSignature && (
-        <div className="mt-4 pt-3 border-t border-gray-200">
+        <div className="mt-4 pt-3 border-t border-[var(--border)]">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
                 Firma del estudiante
               </label>
               <div className="border-b border-gray-300 h-8" aria-label="Espacio para firma del estudiante" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
                 Firma del docente
               </label>
               <div className="border-b border-gray-300 h-8" aria-label="Espacio para firma del docente" />

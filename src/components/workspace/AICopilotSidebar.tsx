@@ -222,7 +222,7 @@ export function AICopilotSidebar({
   return (
     <div className={`flex flex-col h-full ${className || ''}`}>
       {/* ── Tab bar ──────────────────────────────────────────────── */}
-      <div className="flex border-b border-gray-200 flex-shrink-0">
+      <div className="flex border-b border-[var(--border)] flex-shrink-0">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -234,7 +234,7 @@ export function AICopilotSidebar({
               className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-all border-b-2 ${
                 isActive
                   ? 'text-slate-800 border-slate-800 bg-slate-50'
-                  : 'text-gray-400 border-transparent hover:text-gray-600 hover:bg-gray-50'
+                  : 'text-gray-400 border-transparent hover:text-[var(--ink-mid)] hover:bg-gray-50'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -286,7 +286,7 @@ export function AICopilotSidebar({
                       className="overflow-hidden"
                     >
                       <div className="px-3 pb-2 space-y-1">
-                        <p className="text-[11px] text-gray-600">{n.explanation}</p>
+                        <p className="text-[11px] text-[var(--ink-mid)]">{n.explanation}</p>
                         {n.camposModificados.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {n.camposModificados.map(campo => (
@@ -318,7 +318,7 @@ export function AICopilotSidebar({
             >
               <Sparkles className="w-6 h-6" style={{ color: PALETTE.purple }} />
             </div>
-            <h3 className="text-sm font-bold text-gray-800 mb-1">Copiloto IA</h3>
+            <h3 className="text-sm font-bold text-[var(--ink)] mb-1">Copiloto IA</h3>
             <p className="text-xs text-gray-400 mb-4 max-w-[200px]">
               Pidele a la IA que modifique, agregue o elimine contenido del documento.
             </p>
@@ -338,7 +338,7 @@ export function AICopilotSidebar({
                   key={s}
                   type="button"
                   onClick={() => sendMessage(s)}
-                  className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-all"
+                  className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-[var(--border)] text-[var(--ink-soft)] hover:border-gray-300 hover:text-[var(--ink)] hover:bg-gray-50 transition-all"
                 >
                   {s}
                 </button>
@@ -357,7 +357,7 @@ export function AICopilotSidebar({
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.role === 'ai' ? (
-                <div className="max-w-[90%] bg-gray-50 rounded-xl rounded-tl-sm px-3 py-2 text-[13px] text-gray-700 leading-relaxed">
+                <div className="max-w-[90%] bg-gray-50 rounded-xl rounded-tl-sm px-3 py-2 text-[13px] text-[var(--ink)] leading-relaxed">
                   {msg.content}
                 </div>
               ) : (
@@ -383,7 +383,7 @@ export function AICopilotSidebar({
       </div>
 
       {/* ── Sticky input ─────────────────────────────────────────── */}
-      <div className="border-t border-gray-200 p-3 flex-shrink-0 bg-white">
+      <div className="border-t border-[var(--border)] p-3 flex-shrink-0 bg-white">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -393,7 +393,7 @@ export function AICopilotSidebar({
             onKeyDown={handleKeyDown}
             placeholder="Chatea con la IA..."
             disabled={loading}
-            className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-gray-100 disabled:bg-gray-50 placeholder:text-gray-300"
+            className="flex-1 rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-gray-100 disabled:bg-gray-50 placeholder:text-gray-300"
           />
           <motion.button
             type="submit"

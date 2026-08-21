@@ -55,7 +55,7 @@ export function ScaleRenderer({ product, className, style }: ScaleRendererProps)
             {scales.map((scale, index) => (
               <div
                 key={index}
-                className={`px-4 py-2 rounded-lg border text-sm font-medium ${colorMap[scale.color] || 'bg-gray-100 border-gray-300 text-gray-800'}`}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium ${colorMap[scale.color] || 'bg-gray-100 border-gray-300 text-[var(--ink)]'}`}
               >
                 <span className="font-semibold">{scale.name}</span>
                 <span className="block text-xs mt-0.5 opacity-75">{scale.description}</span>
@@ -71,7 +71,7 @@ export function ScaleRenderer({ product, className, style }: ScaleRendererProps)
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-semibold flex items-center justify-center">
                   {index + 1}
                 </span>
-                <span className="text-sm text-gray-700">{criterion}</span>
+                <span className="text-sm text-[var(--ink)]">{criterion}</span>
               </div>
             ))}
           </div>

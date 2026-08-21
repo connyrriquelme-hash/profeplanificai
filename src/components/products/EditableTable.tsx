@@ -66,7 +66,7 @@ export function EditableTable({
 
   if (!headers || headers.length === 0) {
     return (
-      <div className="text-gray-500 text-sm italic py-4">
+      <div className="text-[var(--ink-soft)] text-sm italic py-4">
         No hay tabla de datos definida.
       </div>
     );
@@ -75,17 +75,17 @@ export function EditableTable({
   return (
     <div className={`editable-table-container ${className || ''}`} style={style}>
       {title && (
-        <h4 className="font-semibold text-gray-900 mb-3">{title}</h4>
+        <h4 className="font-semibold text-[var(--ink)] mb-3">{title}</h4>
       )}
       <div className="overflow-x-auto">
         <table className="w-full min-w-max" role="grid" aria-label={title || 'Tabla de datos'}>
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 border-b border-[var(--border)]">
             <tr>
               {headers.map((header, colIndex) => (
                 <th
                   key={colIndex}
                   scope="col"
-                  className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-100"
+                  className="px-3 py-2 text-left text-xs font-semibold text-[var(--ink-mid)] uppercase tracking-wider border-r border-gray-100"
                 >
                   {header}
                 </th>
@@ -98,7 +98,7 @@ export function EditableTable({
                 {row.map((cell, colIndex) => (
                   <td
                     key={colIndex}
-                    className="px-3 py-2 text-sm text-gray-700 border-r border-gray-100 align-top"
+                    className="px-3 py-2 text-sm text-[var(--ink)] border-r border-gray-100 align-top"
                   >
                     {editCell?.row === rowIndex && editCell?.col === colIndex ? (
                       <input
@@ -131,11 +131,11 @@ export function EditableTable({
         </table>
       </div>
       {(editable || studentFillable) && (
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-[var(--ink-soft)]">
           <svg className="inline w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 100 2h.01a1 1 0 100-2H7zM14 7a1 1 0 100-2h.01a1 1 0 100 2H13z" clipRule="evenodd" />
           </svg>
-          <span className="text-gray-600">
+          <span className="text-[var(--ink-mid)]">
             {editable 
               ? 'Haz doble clic o presiona Enter en una celda para editar'
               : 'Tabla en modo solo lectura'}

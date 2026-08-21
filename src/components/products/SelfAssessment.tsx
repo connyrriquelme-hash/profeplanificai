@@ -14,7 +14,7 @@ interface SelfAssessmentProps {
 export function SelfAssessment({ checklist, className, style }: SelfAssessmentProps) {
   if (!checklist || checklist.length === 0) {
     return (
-      <p className="text-gray-500 text-sm italic">Sin lista de autoevaluación definida.</p>
+      <p className="text-[var(--ink-soft)] text-sm italic">Sin lista de autoevaluación definida.</p>
     );
   }
 
@@ -28,7 +28,7 @@ export function SelfAssessment({ checklist, className, style }: SelfAssessmentPr
               className="w-4 h-4 text-[var(--primary)] border-gray-300 rounded focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
               aria-label={`${item}`}
             />
-            <span className="text-gray-700 text-sm">{item}</span>
+            <span className="text-[var(--ink)] text-sm">{item}</span>
           </label>
         </li>
       ))}

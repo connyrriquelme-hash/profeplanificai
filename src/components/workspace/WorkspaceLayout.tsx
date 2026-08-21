@@ -170,19 +170,19 @@ export function WorkspaceLayout({
   return (
     <div className={`flex flex-col h-screen bg-slate-100 ${className || ''}`}>
       {/* ── Top Bar ──────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between h-14 px-4 bg-white border-b border-gray-200 flex-shrink-0 z-20 print:hidden">
+      <header className="flex items-center justify-between h-14 px-4 bg-white border-b border-[var(--border)] flex-shrink-0 z-20 print:hidden">
         {/* Left: Back button */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors"
             title="Volver"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="hidden sm:block h-5 w-px bg-gray-200" />
-          <h1 className="text-sm font-semibold text-gray-800 truncate max-w-[200px] sm:max-w-[400px]">
+          <h1 className="text-sm font-semibold text-[var(--ink)] truncate max-w-[200px] sm:max-w-[400px]">
             {activeProduct.metadata.title || 'Sin titulo'}
           </h1>
         </div>
@@ -193,7 +193,7 @@ export function WorkspaceLayout({
             type="button"
             onClick={handleUndo}
             disabled={undoStack.length === 0}
-            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Deshacer (Ctrl+Z)"
           >
             <Undo2 className="w-4 h-4" />
@@ -202,7 +202,7 @@ export function WorkspaceLayout({
             type="button"
             onClick={handleRedo}
             disabled={redoStack.length === 0}
-            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Rehacer (Ctrl+Y)"
           >
             <Redo2 className="w-4 h-4" />
@@ -214,7 +214,7 @@ export function WorkspaceLayout({
           <button
             type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--ink-mid)] hover:bg-gray-100 transition-colors"
             title="Imprimir"
           >
             <Printer className="w-4 h-4" />
@@ -224,7 +224,7 @@ export function WorkspaceLayout({
             type="button"
             onClick={handleWordExport}
             disabled={exportingWord}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--ink-mid)] hover:bg-gray-100 transition-colors disabled:opacity-50"
             title="Exportar Word"
           >
             {exportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
@@ -234,7 +234,7 @@ export function WorkspaceLayout({
             type="button"
             onClick={handlePptxExport}
             disabled={exportingPptx}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--ink-mid)] hover:bg-gray-100 transition-colors disabled:opacity-50"
             title="Exportar PowerPoint"
           >
             {exportingPptx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Presentation className="w-3.5 h-3.5" />}
@@ -278,7 +278,7 @@ export function WorkspaceLayout({
         </div>
 
         {/* Right: AI Copilot sidebar (30%) */}
-        <div className="flex-[3] min-w-[320px] max-w-[420px] border-l border-gray-200 bg-white flex flex-col overflow-hidden print:hidden">
+        <div className="flex-[3] min-w-[320px] max-w-[420px] border-l border-[var(--border)] bg-white flex flex-col overflow-hidden print:hidden">
           {qualityReport && <QualityReviewPanel
             status={qualityReport.status}
             score={qualityReport.score}

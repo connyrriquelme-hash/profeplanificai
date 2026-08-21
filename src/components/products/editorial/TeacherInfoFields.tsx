@@ -28,12 +28,12 @@ export function TeacherInfoFields({
 }: TeacherInfoFieldsProps) {
   return (
     <div
-      className={`teacher-info-fields bg-gray-50 border border-gray-200 rounded-lg p-3 md:p-4 ${className || ''}`}
+      className={`teacher-info-fields bg-gray-50 border border-[var(--border)] rounded-lg p-3 md:p-4 ${className || ''}`}
       style={style}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Docente
           </label>
           {editable ? (
@@ -45,14 +45,14 @@ export function TeacherInfoFields({
               aria-label="Nombre del docente"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {teacherName || <span className="text-gray-400 italic">—</span>}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Establecimiento
           </label>
           {editable ? (
@@ -64,14 +64,14 @@ export function TeacherInfoFields({
               aria-label="Nombre del establecimiento"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {establishmentName || <span className="text-gray-400 italic">—</span>}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Asignatura
           </label>
           {editable ? (
@@ -83,14 +83,14 @@ export function TeacherInfoFields({
               aria-label="Asignatura"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {subject || <span className="text-gray-400 italic">—</span>}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1">
             Grado / Nivel
           </label>
           {editable ? (
@@ -102,7 +102,7 @@ export function TeacherInfoFields({
               aria-label="Grado o nivel"
             />
           ) : (
-            <p className="text-sm text-gray-800 min-h-[1.5rem]">
+            <p className="text-sm text-[var(--ink)] min-h-[1.5rem]">
               {grade || <span className="text-gray-400 italic">—</span>}
             </p>
           )}

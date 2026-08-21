@@ -61,11 +61,11 @@ export function ThreeTwoOneRenderer({ product, className, style }: ThreeTwoOneRe
             <div key={index} className={`${cardStyle.bg} border ${cardStyle.border} rounded-xl p-4`}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xl">{cardStyle.icon}</span>
-                <h3 className="font-semibold text-gray-800">{card.prompt}</h3>
+                <h3 className="font-semibold text-[var(--ink)]">{card.prompt}</h3>
               </div>
               <div className="space-y-3">
                 {(card.items || []).map((item, ii) => (
-                  <div key={ii} className="bg-white rounded-lg border border-gray-200 p-3">
+                  <div key={ii} className="bg-white rounded-lg border border-[var(--border)] p-3">
                     <div className="min-h-[2rem] text-sm text-gray-400 italic">
                       {item || 'Escribe aquí...'}
                     </div>

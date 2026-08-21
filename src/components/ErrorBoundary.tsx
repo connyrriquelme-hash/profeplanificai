@@ -19,12 +19,12 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!this.state.hasError) return this.props.children;
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6">
-        <div className="w-full max-w-md text-center bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+        <div className="w-full max-w-md text-center bg-white border border-[var(--border)] rounded-2xl shadow-sm p-8">
           <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center text-2xl">
             ⚠️
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Algo salió mal</h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">Algo salió mal</h2>
+          <p className="text-sm text-[var(--ink-mid)] mb-6">
             Esta sección tuvo un problema inesperado. Puedes intentar recargar la página; si el
             error persiste, contacta al soporte.
           </p>

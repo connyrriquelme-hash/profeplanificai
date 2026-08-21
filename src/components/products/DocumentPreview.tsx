@@ -115,7 +115,7 @@ function EditableListItem({ value, onChange, onRemove, index }: EditableListItem
         ref={ref}
         contentEditable
         suppressContentEditableWarning
-        className={`flex-1 text-[13px] text-gray-700 leading-relaxed outline-none rounded px-1 -mx-1 transition-all ${
+        className={`flex-1 text-[13px] text-[var(--ink)] leading-relaxed outline-none rounded px-1 -mx-1 transition-all ${
           isFocused ? 'bg-blue-50 ring-2 ring-blue-200' : 'hover:bg-gray-50'
         }`}
         onFocus={() => setIsFocused(true)}
@@ -201,11 +201,11 @@ export function DocumentPreview({ product, onProductChange, className, style }: 
       className={`document-preview ${className || ''}`}
       style={style}
     >
-      <div className="bg-white rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.08)] border border-gray-200 max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.08)] border border-[var(--border)] max-w-4xl mx-auto">
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="px-8 pt-8 pb-6 border-b border-gray-200">
+        <div className="px-8 pt-8 pb-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2 mb-4">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-gray-100 text-gray-500">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-gray-100 text-[var(--ink-soft)]">
               {formatProductLabel(type)}
             </span>
             {metadata.level && (
@@ -224,7 +224,7 @@ export function DocumentPreview({ product, onProductChange, className, style }: 
             value={metadata.title}
             onChange={(v) => updateMetadata('title', v)}
             tag="h1"
-            className="text-2xl font-bold text-gray-900 leading-tight tracking-tight"
+            className="text-2xl font-bold text-[var(--ink)] leading-tight tracking-tight"
             placeholder="Titulo del producto..."
           />
 
@@ -232,21 +232,21 @@ export function DocumentPreview({ product, onProductChange, className, style }: 
             value={metadata.subtitle || ''}
             onChange={(v) => updateMetadata('subtitle', v)}
             tag="p"
-            className="mt-2 text-base text-gray-500 leading-relaxed"
+            className="mt-2 text-base text-[var(--ink-soft)] leading-relaxed"
             placeholder="Subtitulo (opcional)..."
           />
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-400">
             {metadata.oaCode && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-50 font-mono font-semibold text-gray-500">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-50 font-mono font-semibold text-[var(--ink-soft)]">
                 {metadata.oaCode}
               </span>
             )}
             {metadata.oaText && (
-              <span className="text-gray-500">{metadata.oaText}</span>
+              <span className="text-[var(--ink-soft)]">{metadata.oaText}</span>
             )}
             {metadata.topic && !metadata.oaCode && (
-              <span>Tema: <strong className="text-gray-600">{metadata.topic}</strong></span>
+              <span>Tema: <strong className="text-[var(--ink-mid)]">{metadata.topic}</strong></span>
             )}
             {metadata.date && (
               <span className="flex items-center gap-1">
@@ -270,7 +270,7 @@ export function DocumentPreview({ product, onProductChange, className, style }: 
         {/* ── Content body ───────────────────────────────────────── */}
         <div className="px-8 py-6">
           {sections.length === 0 ? (
-            <div className="py-12 text-center text-gray-400 border border-dashed border-gray-200 rounded-lg">
+            <div className="py-12 text-center text-gray-400 border border-dashed border-[var(--border)] rounded-lg">
               <p className="text-sm">Sin contenido disponible</p>
             </div>
           ) : (
@@ -290,7 +290,7 @@ export function DocumentPreview({ product, onProductChange, className, style }: 
                     {/* Section heading */}
                     <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-gray-100">
                       <span className="text-sm" aria-hidden="true">{icon}</span>
-                      <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                      <h2 className="text-sm font-bold text-[var(--ink)] uppercase tracking-wide">
                         {label}
                       </h2>
                     </div>
@@ -354,20 +354,20 @@ function EditableSectionContent({
           value={value}
           onChange={onChange}
           tag="p"
-          className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap"
+          className="text-[13px] text-[var(--ink)] leading-relaxed whitespace-pre-wrap"
           placeholder="Escribir contenido..."
         />
       );
     }
     return (
-      <p className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap">{value}</p>
+      <p className="text-[13px] text-[var(--ink)] leading-relaxed whitespace-pre-wrap">{value}</p>
     );
   }
 
   /* ── Number / Boolean ── */
   if (typeof value === 'number' || typeof value === 'boolean') {
     return (
-      <p className="text-[13px] text-gray-700 leading-relaxed">{String(value)}</p>
+      <p className="text-[13px] text-[var(--ink)] leading-relaxed">{String(value)}</p>
     );
   }
 
@@ -398,7 +398,7 @@ function EditableSectionContent({
                 );
               }
               return (
-                <li key={i} className="flex items-start gap-2 text-[13px] text-gray-700 leading-relaxed">
+                <li key={i} className="flex items-start gap-2 text-[13px] text-[var(--ink)] leading-relaxed">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                   <span>{String(item)}</span>
                 </li>
@@ -407,10 +407,10 @@ function EditableSectionContent({
             if (isRecord(item)) {
               const entries = Object.entries(item).filter(([, v]) => v !== null && v !== undefined && v !== '');
               return (
-                <li key={i} className="pl-4 border-l-2 border-gray-200 py-1">
+                <li key={i} className="pl-4 border-l-2 border-[var(--border)] py-1">
                   {entries.map(([k, v]) => (
-                    <p key={k} className="text-[13px] text-gray-700 leading-relaxed">
-                      <span className="font-semibold text-gray-900">{formatProductLabel(k)}: </span>
+                    <p key={k} className="text-[13px] text-[var(--ink)] leading-relaxed">
+                      <span className="font-semibold text-[var(--ink)]">{formatProductLabel(k)}: </span>
                       {Array.isArray(v) ? (
                         <EditableSectionContent
                           sectionKey={`${sectionKey}.${i}.${k}`}

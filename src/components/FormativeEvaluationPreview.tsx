@@ -73,16 +73,16 @@ function FormativeEvaluationPreview({
 
   const renderExitTicket = () => (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+      <div className="p-4 rounded-xl bg-gray-50 border border-[var(--border)]">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">🎫</span>
-          <h3 className="text-lg font-bold text-gray-900">Ticket de Salida</h3>
+          <h3 className="text-lg font-bold text-[var(--ink)]">Ticket de Salida</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-4">{evaluation.instructions || 'Completa antes de salir de clase. Responde con honestidad.'}</p>
+        <p className="text-sm text-[var(--ink-mid)] mb-4">{evaluation.instructions || 'Completa antes de salir de clase. Responde con honestidad.'}</p>
         <div className="space-y-4">
           {evaluation.questions?.map((q: any, i: number) => (
             <div key={i} className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--ink)] mb-1">
                 Pregunta {q.number || i + 1}: {q.question}
               </label>
               {q.type === 'traffic_light' && (
@@ -106,12 +106,12 @@ function FormativeEvaluationPreview({
           ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Nombre</label>
             <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Fecha</label>
             <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
@@ -121,20 +121,20 @@ function FormativeEvaluationPreview({
 
   const render321Format = () => (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+      <div className="p-4 rounded-xl bg-gray-50 border border-[var(--border)]">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">3️⃣</span>
-          <h3 className="text-lg font-bold text-gray-900">Formato 3-2-1</h3>
+          <h3 className="text-lg font-bold text-[var(--ink)]">Formato 3-2-1</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-4">{evaluation.instructions || 'Completa cada sección con tus propias palabras.'}</p>
+        <p className="text-sm text-[var(--ink-mid)] mb-4">{evaluation.instructions || 'Completa cada sección con tus propias palabras.'}</p>
         <div className="space-y-4">
           {evaluation.sections?.map((s: any) => (
             <div key={s.number} className="space-y-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] flex items-center justify-center text-sm font-bold">{s.number}</span>
-                <h4 className="font-semibold text-gray-800">{s.title}</h4>
+                <h4 className="font-semibold text-[var(--ink)]">{s.title}</h4>
               </div>
-              <p className="text-xs text-gray-500 ml-8 mb-1">{s.description}</p>
+              <p className="text-xs text-[var(--ink-soft)] ml-8 mb-1">{s.description}</p>
               <div className="space-y-1 ml-8">
                 {Array.from({ length: s.lines || 3 }, (_, i) => (
                   <input
@@ -149,12 +149,12 @@ function FormativeEvaluationPreview({
           ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Nombre</label>
             <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Fecha</label>
             <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
@@ -164,28 +164,28 @@ function FormativeEvaluationPreview({
 
   const renderChecklist = () => (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+      <div className="p-4 rounded-xl bg-gray-50 border border-[var(--border)]">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">✅</span>
-          <h3 className="text-lg font-bold text-gray-900">Lista de Cotejo / Autoevaluación</h3>
+          <h3 className="text-lg font-bold text-[var(--ink)]">Lista de Cotejo / Autoevaluación</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-4">{evaluation.instructions || 'Marca cada criterio según tu desempeño: Sí / No / En proceso'}</p>
+        <p className="text-sm text-[var(--ink-mid)] mb-4">{evaluation.instructions || 'Marca cada criterio según tu desempeño: Sí / No / En proceso'}</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-3 py-2 text-left font-semibold text-gray-700 w-8">#</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Criterio</th>
-                <th className="px-3 py-2 text-center font-semibold text-gray-700 w-20">✅ Sí</th>
-                <th className="px-3 py-2 text-center font-semibold text-gray-700 w-28">⚠️ En proceso</th>
-                <th className="px-3 py-2 text-center font-semibold text-gray-700 w-20">❌ No</th>
+                <th className="px-3 py-2 text-left font-semibold text-[var(--ink)] w-8">#</th>
+                <th className="px-3 py-2 text-left font-semibold text-[var(--ink)]">Criterio</th>
+                <th className="px-3 py-2 text-center font-semibold text-[var(--ink)] w-20">✅ Sí</th>
+                <th className="px-3 py-2 text-center font-semibold text-[var(--ink)] w-28">⚠️ En proceso</th>
+                <th className="px-3 py-2 text-center font-semibold text-[var(--ink)] w-20">❌ No</th>
               </tr>
               </thead>
               <tbody>
                 {evaluation.criteria?.map((c: any) => (
                   <tr key={c.number} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-500 font-medium">{c.number}</td>
-                    <td className="px-3 py-2 text-gray-700">{c.description}</td>
+                    <td className="px-3 py-2 text-[var(--ink-soft)] font-medium">{c.number}</td>
+                    <td className="px-3 py-2 text-[var(--ink)]">{c.description}</td>
                     <td className="px-3 py-2 text-center"><input type="radio" name={`c${c.number}`} className="text-green-600 focus:ring-green-500" /></td>
                     <td className="px-3 py-2 text-center"><input type="radio" name={`c${c.number}`} className="text-yellow-600 focus:ring-yellow-500" /></td>
                     <td className="px-3 py-2 text-center"><input type="radio" name={`c${c.number}`} className="text-red-600 focus:ring-red-500" /></td>
@@ -201,12 +201,12 @@ function FormativeEvaluationPreview({
           )}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Nombre</label>
             <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Fecha</label>
             <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
@@ -215,37 +215,37 @@ function FormativeEvaluationPreview({
 
   const renderFormativeRubric = () => (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+      <div className="p-4 rounded-xl bg-gray-50 border border-[var(--border)]">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">📊</span>
-          <h3 className="text-lg font-bold text-gray-900">Rúbrica Analítica Formativa</h3>
+          <h3 className="text-lg font-bold text-[var(--ink)]">Rúbrica Analítica Formativa</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-4">{evaluation.instructions || 'Evalúa cada criterio marcando el nivel alcanzado. Escribe retroalimentación específica.'}</p>
+        <p className="text-sm text-[var(--ink-mid)] mb-4">{evaluation.instructions || 'Evalúa cada criterio marcando el nivel alcanzado. Escribe retroalimentación específica.'}</p>
         <div className="space-y-4">
           {evaluation.criteria?.map((c: any) => (
-            <div key={c.number} className="border border-gray-200 rounded-xl p-4 bg-white">
+            <div key={c.number} className="border border-[var(--border)] rounded-xl p-4 bg-white">
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] flex items-center justify-center text-sm font-bold">{c.number}</span>
-                <h4 className="font-semibold text-gray-800">{c.name}</h4>
+                <h4 className="font-semibold text-[var(--ink)]">{c.name}</h4>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{c.indicator} — {c.skill}</p>
+              <p className="text-xs text-[var(--ink-soft)] mb-3">{c.indicator} — {c.skill}</p>
               <div className="space-y-2">
                 {c.levels?.map((l: any) => (
-                  <label key={l.level} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                  <label key={l.level} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] hover:bg-gray-50 cursor-pointer">
                     <input type="radio" name={`c${c.number}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-800">{l.level}</span>
-                        <span className="text-sm text-gray-500">{l.points} pt</span>
+                        <span className="font-medium text-[var(--ink)]">{l.level}</span>
+                        <span className="text-sm text-[var(--ink-soft)]">{l.points} pt</span>
                       </div>
-                      <p className="text-xs text-gray-600 mt-0.5">{l.description}</p>
+                      <p className="text-xs text-[var(--ink-mid)] mt-0.5">{l.description}</p>
                     </div>
                   </label>
                 ))}
               </div>
               {c.feedbackRequired && (
                 <div className="mt-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Retroalimentación obligatoria:</label>
+                  <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Retroalimentación obligatoria:</label>
                   <textarea
                     className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none resize-none"
                     rows={2}
@@ -261,12 +261,12 @@ function FormativeEvaluationPreview({
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+        <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+          <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Nombre</label>
           <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
         </div>
-        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+        <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+          <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Fecha</label>
           <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
         </div>
       </div>
@@ -275,41 +275,41 @@ function FormativeEvaluationPreview({
 
   const renderTrafficLight = () => (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+      <div className="p-4 rounded-xl bg-gray-50 border border-[var(--border)]">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl">🚦</span>
-          <h3 className="text-lg font-bold text-gray-900">Semáforo de Comprensión</h3>
+          <h3 className="text-lg font-bold text-[var(--ink)]">Semáforo de Comprensión</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-4">{evaluation.instructions || 'Marca el color que representa tu nivel de comprensión para cada aspecto.'}</p>
+        <p className="text-sm text-[var(--ink-mid)] mb-4">{evaluation.instructions || 'Marca el color que representa tu nivel de comprensión para cada aspecto.'}</p>
         <div className="space-y-4">
           {evaluation.aspects?.map((a: any) => (
-            <div key={a.number} className="border border-gray-200 rounded-xl p-4 bg-white">
+            <div key={a.number} className="border border-[var(--border)] rounded-xl p-4 bg-white">
               <div className="flex items-center gap-3 mb-3">
                 <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] flex items-center justify-center text-sm font-bold">{a.number}</span>
-                <p className="font-medium text-gray-800">{a.description}</p>
+                <p className="font-medium text-[var(--ink)]">{a.description}</p>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{a.indicator}</p>
+              <p className="text-xs text-[var(--ink-soft)] mb-3">{a.indicator}</p>
               <div className="grid grid-cols-3 gap-2">
                 {evaluation.colors?.map((col: any) => (
-                  <label key={col.color} className="flex items-center gap-2 p-3 rounded-lg border-2 border-gray-200 hover:border-[var(--primary)] cursor-pointer transition-colors">
+                  <label key={col.color} className="flex items-center gap-2 p-3 rounded-lg border-2 border-[var(--border)] hover:border-[var(--primary)] cursor-pointer transition-colors">
                     <input type="radio" name={`a${a.number}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                     <span className="text-sm font-medium">{col.color}</span>
                   </label>
                 ))}
               </div>
-              <div className="mt-3 p-2 rounded-lg bg-gray-50 text-xs text-gray-600">
+              <div className="mt-3 p-2 rounded-lg bg-gray-50 text-xs text-[var(--ink-mid)]">
                 <strong>Significado:</strong> {evaluation.colors?.map((col: any) => `${col.color}: ${col.meaning} — ${col.action}`).join(' | ')}
               </div>
             </div>
           ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Nombre</label>
             <input type="text" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" placeholder="Tu nombre" />
           </div>
-          <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+          <div className="p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+            <label className="block text-xs font-medium text-[var(--ink-mid)] mb-1">Fecha</label>
             <input type="date" className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none" />
           </div>
         </div>
@@ -318,20 +318,20 @@ function FormativeEvaluationPreview({
   );
 
   const renderDefault = () => (
-    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+    <div className="p-4 rounded-xl bg-gray-50 border border-[var(--border)]">
       <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-xl overflow-auto max-h-[500px]">{JSON.stringify(evaluation, null, 2)}</pre>
     </div>
   );
 
   return (
     <div className="prose prose-sm max-w-none">
-      <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 border border-gray-200">
+      <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 border border-[var(--border)]">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: theme.primary + '20' }}>
           <span className="text-xl">{getSubjectIcon(topic)}</span>
         </div>
         <div>
-          <h2 className="font-bold text-gray-900" style={{ color: `#${theme.text}` }}>{evaluation.title || 'Evaluación Formativa'}</h2>
-          <p className="text-sm text-gray-500">{level} — {subject} — {objectiveCode}</p>
+          <h2 className="font-bold text-[var(--ink)]" style={{ color: `#${theme.text}` }}>{evaluation.title || 'Evaluación Formativa'}</h2>
+          <p className="text-sm text-[var(--ink-soft)]">{level} — {subject} — {objectiveCode}</p>
         </div>
       </div>
 
@@ -341,7 +341,7 @@ function FormativeEvaluationPreview({
         </div>
       )}
 
-      <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
+      <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium" style={{ backgroundColor: theme.primary + '20', color: `#${theme.primary}` }}>
           {evaluation.type?.replace('_', ' ') || 'formativa'}
         </span>
@@ -363,9 +363,9 @@ function FormativeEvaluationPreview({
         </div>
       )}
 
-      <div className="mt-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
-        <p className="text-xs font-medium text-gray-600 mb-2">Datos curriculares:</p>
-        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+      <div className="mt-4 p-3 rounded-lg bg-gray-50 border border-[var(--border)]">
+        <p className="text-xs font-medium text-[var(--ink-mid)] mb-2">Datos curriculares:</p>
+        <div className="grid grid-cols-2 gap-2 text-xs text-[var(--ink-mid)]">
           <span><strong>Nivel:</strong> {level}</span>
           <span><strong>Asignatura:</strong> {subject}</span>
           <span><strong>OA:</strong> {objectiveCode}</span>

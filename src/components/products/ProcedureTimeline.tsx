@@ -30,7 +30,7 @@ function VisualIcon({ className = "w-4 h-4" }: { className?: string }) {
 export function ProcedureTimeline({ procedure, className, style }: ProcedureTimelineProps) {
   if (!procedure || procedure.length === 0) {
     return (
-      <p className="text-gray-500 text-sm italic">No hay pasos de procedimiento definidos.</p>
+      <p className="text-[var(--ink-soft)] text-sm italic">No hay pasos de procedimiento definidos.</p>
     );
   }
 
@@ -67,8 +67,8 @@ function StepItem({ step, index, total }: { step: ProcedureStep; index: number; 
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-2">{instruction}</h4>
+          <div className="bg-white border border-[var(--border)] rounded-lg p-4">
+            <h4 className="font-semibold text-[var(--ink)] mb-2">{instruction}</h4>
             
             <div className="space-y-2 mt-3">
               {teacherSupport && (

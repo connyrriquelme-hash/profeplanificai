@@ -660,9 +660,9 @@ export function SlideLessonPreview({ lesson, onDeckChange, onExportPPTX, onExpor
           Anterior
         </Button>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">{typeLabel(slide.type)} ({currentSlide + 1} de {totalSlides})</span>
+          <span className="text-xs text-[var(--ink-soft)]">{typeLabel(slide.type)} ({currentSlide + 1} de {totalSlides})</span>
           {slide.teacherNotes && (
-            <button onClick={() => setShowNotes(!showNotes)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={() => setShowNotes(!showNotes)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-[var(--ink-mid)] transition-colors">
               {showNotes ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               Notas docentes
             </button>

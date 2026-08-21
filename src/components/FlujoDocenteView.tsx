@@ -83,8 +83,8 @@ function UnidadDidacticaPreview({ unidad }: { unidad: UnidadDidactica }) {
   return (
     <div className="not-prose space-y-3">
       <div>
-        <h3 className="text-base font-bold text-gray-900">{unidad.titulo}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <h3 className="text-base font-bold text-[var(--ink)]">{unidad.titulo}</h3>
+        <p className="text-xs text-[var(--ink-soft)] mt-0.5">
           {unidad.nivel} · {unidad.asignatura} · Metodología: {unidad.metodologiaActiva} · {unidad.clases.length} clase{unidad.clases.length !== 1 ? 's' : ''}
         </p>
       </div>
@@ -95,13 +95,13 @@ function UnidadDidacticaPreview({ unidad }: { unidad: UnidadDidactica }) {
               <span className="w-6 h-6 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-xs font-bold flex items-center justify-center flex-shrink-0">
                 {clase.numero}
               </span>
-              <p className="text-sm font-medium text-gray-900 truncate">{clase.tema}</p>
+              <p className="text-sm font-medium text-[var(--ink)] truncate">{clase.tema}</p>
             </div>
-            <p className="text-xs text-gray-600 mt-1">{clase.objetivoEspecifico}</p>
-            <div className="mt-2 grid gap-1 text-xs text-gray-600">
-              <p><span className="font-semibold text-gray-700">Inicio:</span> {clase.estructuraClase.inicio.descripcion}</p>
-              <p><span className="font-semibold text-gray-700">Desarrollo:</span> {clase.estructuraClase.desarrollo.descripcion}</p>
-              <p><span className="font-semibold text-gray-700">Cierre:</span> {clase.estructuraClase.cierre.descripcion}</p>
+            <p className="text-xs text-[var(--ink-mid)] mt-1">{clase.objetivoEspecifico}</p>
+            <div className="mt-2 grid gap-1 text-xs text-[var(--ink-mid)]">
+              <p><span className="font-semibold text-[var(--ink)]">Inicio:</span> {clase.estructuraClase.inicio.descripcion}</p>
+              <p><span className="font-semibold text-[var(--ink)]">Desarrollo:</span> {clase.estructuraClase.desarrollo.descripcion}</p>
+              <p><span className="font-semibold text-[var(--ink)]">Cierre:</span> {clase.estructuraClase.cierre.descripcion}</p>
             </div>
           </div>
         ))}
@@ -507,8 +507,8 @@ export function FlujoDocenteView() {
               <GraduationCap size={20} className="text-[var(--primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Paso 1: Selecciona el nivel</h2>
-              <p className="text-sm text-gray-500">¿A qué nivel pertenece tu clase?</p>
+              <h2 className="text-lg font-bold text-[var(--ink)]">Paso 1: Selecciona el nivel</h2>
+              <p className="text-sm text-[var(--ink-soft)]">¿A qué nivel pertenece tu clase?</p>
             </div>
           </div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3">
@@ -516,10 +516,10 @@ export function FlujoDocenteView() {
               <button
                 key={c.id}
                 onClick={() => { setSelectedCourse(c); setStep('asignatura'); }}
-                className="p-3 rounded-xl border-2 border-gray-200 hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all text-left"
+                className="p-3 rounded-xl border-2 border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all text-left"
               >
-                <p className="text-sm font-semibold text-gray-800">{c.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{c.objective_count} OA</p>
+                <p className="text-sm font-semibold text-[var(--ink)]">{c.name}</p>
+                <p className="text-xs text-[var(--ink-soft)] mt-0.5">{c.objective_count} OA</p>
               </button>
             ))}
           </div>
@@ -539,8 +539,8 @@ export function FlujoDocenteView() {
               <BookOpenCheck size={20} className="text-[var(--primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Paso 2: Selecciona la asignatura</h2>
-              <p className="text-sm text-gray-500">{selectedCourse?.name} — ¿Qué asignatura?</p>
+              <h2 className="text-lg font-bold text-[var(--ink)]">Paso 2: Selecciona la asignatura</h2>
+              <p className="text-sm text-[var(--ink-soft)]">{selectedCourse?.name} — ¿Qué asignatura?</p>
             </div>
           </div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
@@ -548,10 +548,10 @@ export function FlujoDocenteView() {
               <button
                 key={s.id}
                 onClick={() => { setSelectedSubject(s); setStep('oa'); }}
-                className="p-3 rounded-xl border-2 border-gray-200 hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all text-left"
+                className="p-3 rounded-xl border-2 border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all text-left"
               >
-                <p className="text-sm font-semibold text-gray-800">{s.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.objective_count} OA</p>
+                <p className="text-sm font-semibold text-[var(--ink)]">{s.name}</p>
+                <p className="text-xs text-[var(--ink-soft)] mt-0.5">{s.objective_count} OA</p>
               </button>
             ))}
           </div>
@@ -577,8 +577,8 @@ export function FlujoDocenteView() {
               <Target size={20} className="text-amber-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Paso 3: Selecciona el OA</h2>
-              <p className="text-sm text-gray-500">{selectedCourse?.name} — {selectedSubject?.name}</p>
+              <h2 className="text-lg font-bold text-[var(--ink)]">Paso 3: Selecciona el OA</h2>
+              <p className="text-sm text-[var(--ink-soft)]">{selectedCourse?.name} — {selectedSubject?.name}</p>
             </div>
           </div>
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
@@ -589,12 +589,12 @@ export function FlujoDocenteView() {
                 className={`w-full p-3 rounded-xl border-2 transition-all text-left ${
                   selectedOA?.id === oa.id
                     ? 'border-amber-500 bg-amber-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-[var(--border)] hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-lg flex-shrink-0">{oa.code}</span>
-                  <p className="text-sm text-gray-700 leading-relaxed">{oa.official_text.substring(0, 120)}...</p>
+                  <p className="text-sm text-[var(--ink)] leading-relaxed">{oa.official_text.substring(0, 120)}...</p>
                 </div>
               </button>
             ))}
@@ -604,7 +604,7 @@ export function FlujoDocenteView() {
           )}
           {selectedOA && (
             <div className="mt-4 p-4 bg-gray-50 rounded-xl">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Articulación curricular</h4>
+              <h4 className="text-xs font-semibold text-[var(--ink-soft)] uppercase mb-2">Articulación curricular</h4>
               <div className="flex flex-wrap gap-1.5 mb-3">
                 <Badge color="indigo" size="sm">{selectedOA.course_name}</Badge>
                 <Badge color="teal" size="sm">{selectedOA.subject_name}</Badge>
@@ -613,15 +613,15 @@ export function FlujoDocenteView() {
               </div>
               {indicators.length > 0 && (
                 <div className="mb-2">
-                  <p className="text-xs font-medium text-gray-600 mb-1">Indicadores:</p>
+                  <p className="text-xs font-medium text-[var(--ink-mid)] mb-1">Indicadores:</p>
                   {indicators.slice(0, 3).map((ind, i) => (
-                    <p key={i} className="text-xs text-gray-500">• {ind.substring(0, 80)}...</p>
+                    <p key={i} className="text-xs text-[var(--ink-soft)]">• {ind.substring(0, 80)}...</p>
                   ))}
                 </div>
               )}
               {skills.length > 0 && (
                 <div className="mb-3">
-                  <p className="text-xs font-medium text-gray-600 mb-1">Habilidades:</p>
+                  <p className="text-xs font-medium text-[var(--ink-mid)] mb-1">Habilidades:</p>
                   <div className="flex flex-wrap gap-1">
                     {skills.slice(0, 3).map((sk, i) => (
                       <Badge key={i} color="teal" size="sm">{sk.substring(0, 30)}</Badge>
@@ -647,62 +647,62 @@ export function FlujoDocenteView() {
         {renderStepper()}
         <Card variant="elevated" className="p-6 space-y-5">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Paso 4: Contexto y tema</h2>
-            <p className="text-sm text-gray-500">Personaliza tu recurso (opcional)</p>
+            <h2 className="text-lg font-bold text-[var(--ink)] mb-1">Paso 4: Contexto y tema</h2>
+            <p className="text-sm text-[var(--ink-soft)]">Personaliza tu recurso (opcional)</p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Tema específico</label>
+            <label className="block text-xs font-semibold text-[var(--ink-mid)] mb-1.5">Tema específico</label>
             <input
               value={topic}
               onChange={e => setTopic(e.target.value)}
               placeholder="Ej: Animales vertebrados de Chile"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
+              className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Contexto adicional</label>
+            <label className="block text-xs font-semibold text-[var(--ink-mid)] mb-1.5">Contexto adicional</label>
             <textarea
               value={additionalContext}
               onChange={e => setAdditionalContext(e.target.value)}
               rows={3}
               placeholder="Ej: Curso de 32 estudiantes, 5 con NEE..."
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
+              className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none"
             />
           </div>
 
           <div className="rounded-xl border border-[var(--primary)]/20 bg-[var(--primary-tint)] p-4 space-y-4">
             <div>
-              <p className="text-sm font-semibold text-gray-800">Configuración de tu realidad escolar</p>
-              <p className="text-xs text-gray-500 mt-0.5">Estos datos ajustan tiempos, instrucciones, materiales y formato de salida.</p>
+              <p className="text-sm font-semibold text-[var(--ink)]">Configuración de tu realidad escolar</p>
+              <p className="text-xs text-[var(--ink-soft)] mt-0.5">Estos datos ajustan tiempos, instrucciones, materiales y formato de salida.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <label className="text-xs font-semibold text-gray-600">Duración del bloque
-                <select value={classroomConfig.classDurationMinutes} onChange={e => setClassroomConfig(prev => ({ ...prev, classDurationMinutes: Number(e.target.value) as 45 | 90 | 135 }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal">
+              <label className="text-xs font-semibold text-[var(--ink-mid)]">Duración del bloque
+                <select value={classroomConfig.classDurationMinutes} onChange={e => setClassroomConfig(prev => ({ ...prev, classDurationMinutes: Number(e.target.value) as 45 | 90 | 135 }))} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-normal">
                   <option value={45}>45 minutos</option><option value={90}>90 minutos</option><option value={135}>135 minutos</option>
                 </select>
               </label>
-              <label className="text-xs font-semibold text-gray-600">Estudiantes
-                <input type="number" min={1} max={60} value={classroomConfig.studentCount} onChange={e => setClassroomConfig(prev => ({ ...prev, studentCount: Math.min(60, Math.max(1, Number(e.target.value) || 1)) }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal" />
+              <label className="text-xs font-semibold text-[var(--ink-mid)]">Estudiantes
+                <input type="number" min={1} max={60} value={classroomConfig.studentCount} onChange={e => setClassroomConfig(prev => ({ ...prev, studentCount: Math.min(60, Math.max(1, Number(e.target.value) || 1)) }))} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-normal" />
               </label>
-              <label className="text-xs font-semibold text-gray-600">Organización
-                <select value={classroomConfig.grouping} onChange={e => setClassroomConfig(prev => ({ ...prev, grouping: e.target.value as ClassroomConfiguration['grouping'] }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal">
+              <label className="text-xs font-semibold text-[var(--ink-mid)]">Organización
+                <select value={classroomConfig.grouping} onChange={e => setClassroomConfig(prev => ({ ...prev, grouping: e.target.value as ClassroomConfiguration['grouping'] }))} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-normal">
                   <option value="individual">Individual</option><option value="pairs">Parejas</option><option value="small_groups">Grupos pequeños</option><option value="whole_class">Curso completo</option><option value="stations">Estaciones</option>
                 </select>
               </label>
-              <label className="text-xs font-semibold text-gray-600">Formato de salida
-                <select value={classroomConfig.outputFormat} onChange={() => setClassroomConfig(prev => ({ ...prev, outputFormat: 'word_editable' }))} className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal"><option value="word_editable">Word editable</option></select>
+              <label className="text-xs font-semibold text-[var(--ink-mid)]">Formato de salida
+                <select value={classroomConfig.outputFormat} onChange={() => setClassroomConfig(prev => ({ ...prev, outputFormat: 'word_editable' }))} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-normal"><option value="word_editable">Word editable</option></select>
               </label>
             </div>
-            <label className="block text-xs font-semibold text-gray-600">Recursos disponibles
-              <input value={classroomConfig.availableResources} onChange={e => setClassroomConfig(prev => ({ ...prev, availableResources: e.target.value }))} placeholder="Ej.: pizarra, textos impresos, material concreto..." className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-normal" />
+            <label className="block text-xs font-semibold text-[var(--ink-mid)]">Recursos disponibles
+              <input value={classroomConfig.availableResources} onChange={e => setClassroomConfig(prev => ({ ...prev, availableResources: e.target.value }))} placeholder="Ej.: pizarra, textos impresos, material concreto..." className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-normal" />
             </label>
             <div className="flex flex-col gap-1 text-xs text-[var(--primary-ink)] sm:flex-row sm:items-center sm:justify-between"><span><strong>Recomendación para este OA:</strong> {recommendedLessons} clases de {classroomConfig.classDurationMinutes} minutos.</span><span>{groupingLabel(classroomConfig.grouping)} · {classroomConfig.studentCount} estudiantes</span></div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--border)] bg-gray-50 p-4 space-y-3">
             <div>
-              <p className="text-sm font-semibold text-gray-800">Material de referencia (opcional)</p>
-              <p className="text-xs text-gray-500 mt-0.5">Pega una URL o sube un Word — el texto se agrega al contexto adicional de arriba.</p>
+              <p className="text-sm font-semibold text-[var(--ink)]">Material de referencia (opcional)</p>
+              <p className="text-xs text-[var(--ink-soft)] mt-0.5">Pega una URL o sube un Word — el texto se agrega al contexto adicional de arriba.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2">
@@ -712,7 +712,7 @@ export function FlujoDocenteView() {
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleExtractFromUrl(); } }}
                 placeholder="Pega una URL: página web, recurso MINEDUC, YouTube..."
                 disabled={extracting}
-                className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none disabled:opacity-60"
+                className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none disabled:opacity-60"
               />
               <Button
                 variant="secondary"
@@ -746,7 +746,7 @@ export function FlujoDocenteView() {
             </div>
 
             {extracting && (
-              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+              <p className="text-xs text-[var(--ink-soft)] flex items-center gap-1.5">
                 <Loader2 size={14} className="animate-spin" /> Extrayendo contenido...
               </p>
             )}
@@ -769,7 +769,7 @@ export function FlujoDocenteView() {
 
           {suggestedMethodologies.length > 0 && (
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-2">Metodología sugerida</label>
+              <label className="block text-xs font-semibold text-[var(--ink-mid)] mb-2">Metodología sugerida</label>
               <div className="flex flex-wrap gap-2">
                 {suggestedMethodologies.map(m => (
                   <button
@@ -778,7 +778,7 @@ export function FlujoDocenteView() {
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${
                       selectedMethodology === m.name
                         ? 'border-[var(--primary)] bg-[var(--primary-tint)] text-[var(--primary-ink)]'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        : 'border-[var(--border)] text-[var(--ink-mid)] hover:border-gray-300'
                     }`}
                   >
                     {m.name}
@@ -905,8 +905,8 @@ export function FlujoDocenteView() {
           <div className="w-16 h-16 rounded-3xl bg-[var(--primary-tint)] flex items-center justify-center mx-auto mb-6">
             <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Generando recurso pedagógico...</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-lg font-bold text-[var(--ink)] mb-2">Generando recurso pedagógico...</h3>
+          <p className="text-sm text-[var(--ink-soft)]">
             Estamos creando tu {PRODUCTOS.find(p => p.id === selectedProducto)?.label?.toLowerCase()} alineado al OA {selectedOA?.code}.
           </p>
           <div className="mt-6 flex justify-center gap-1.5">
@@ -917,7 +917,7 @@ export function FlujoDocenteView() {
           <button
             type="button"
             onClick={handleCancelGeneration}
-            className="mt-8 text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2"
+            className="mt-8 text-sm text-gray-400 hover:text-[var(--ink-mid)] underline underline-offset-2"
           >
             Cancelar
           </button>
@@ -974,7 +974,7 @@ export function FlujoDocenteView() {
                 <Check size={20} className="text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Recurso generado</h2>
+                <h2 className="text-lg font-bold text-[var(--ink)]">Recurso generado</h2>
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   <Badge color="indigo" size="sm">{selectedOA?.course_name}</Badge>
                   <Badge color="teal" size="sm">{selectedOA?.subject_name}</Badge>

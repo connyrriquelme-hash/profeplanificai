@@ -64,10 +64,10 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {materials.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Materiales:</h4>
+                <h4 className="text-sm font-semibold text-[var(--ink)] mb-2">Materiales:</h4>
                 <ul className="space-y-1">
                   {materials.map((m, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                    <li key={i} className="flex items-center gap-2 text-sm text-[var(--ink)]">
                       <span className="w-2 h-2 rounded-full bg-teal-400 flex-shrink-0" />
                       {m}
                     </li>
@@ -77,10 +77,10 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
             )}
             {resources.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Recursos:</h4>
+                <h4 className="text-sm font-semibold text-[var(--ink)] mb-2">Recursos:</h4>
                 <ul className="space-y-1">
                   {resources.map((r, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                    <li key={i} className="flex items-center gap-2 text-sm text-[var(--ink)]">
                       <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
                       {r}
                     </li>
@@ -95,7 +95,7 @@ export function ActivityRenderer({ product, className, style }: ActivityRenderer
       {phases.map((phase, index) => {
         const phaseName = phase.name || phase.phase || 'Fase';
         const key = phaseName.toLowerCase();
-        const colorClass = Object.entries(phaseColors).find(([k]) => key.includes(k))?.[1] || 'bg-gray-50 border-gray-200 text-gray-800';
+        const colorClass = Object.entries(phaseColors).find(([k]) => key.includes(k))?.[1] || 'bg-gray-50 border-[var(--border)] text-[var(--ink)]';
         const icon = Object.entries(phaseIcons).find(([k]) => key.includes(k))?.[1] || '📋';
 
         return (

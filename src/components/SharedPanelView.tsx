@@ -141,7 +141,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setSelectedDoc(null); setEditingContent(false); }}
-            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition-all"
+            className="p-2 rounded-xl hover:bg-gray-100 text-[var(--ink-soft)] transition-all"
           >
             <ArrowLeft size={20} />
           </button>
@@ -153,7 +153,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                 const updated = updateDocumentTitle(selectedDoc.id, e.target.value);
                 if (updated) setSelectedDoc(updated);
               }}
-              className="text-xl font-bold text-gray-900 bg-transparent border-none outline-none w-full focus:ring-0 p-0"
+              className="text-xl font-bold text-[var(--ink)] bg-transparent border-none outline-none w-full focus:ring-0 p-0"
               placeholder="Título del documento"
             />
           </div>
@@ -176,7 +176,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
               </div>
               {editingContent ? (
                 <textarea
-                  className="w-full min-h-[300px] p-4 rounded-xl border border-gray-200 text-sm font-sans resize-y outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
+                  className="w-full min-h-[300px] p-4 rounded-xl border border-[var(--border)] text-sm font-sans resize-y outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   placeholder="Escribe el contenido de la planificación..."
@@ -197,16 +197,16 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                 {(selectedDoc.comments || []).map((c) => (
                   <div key={c.id} className="p-3 rounded-xl bg-gray-50 border border-gray-100">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-700">{c.authorName || 'Usuario'}</span>
+                      <span className="text-xs font-semibold text-[var(--ink)]">{c.authorName || 'Usuario'}</span>
                       <span className="text-xs text-gray-400">{formatDate(c.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-600">{c.comment}</p>
+                    <p className="text-sm text-[var(--ink-mid)]">{c.comment}</p>
                   </div>
                 ))}
                 <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
                   <input
                     type="text"
-                    className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
+                    className="flex-1 px-3 py-2 rounded-xl border border-[var(--border)] text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                     placeholder="Escribe un comentario..."
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
@@ -233,7 +233,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
+                    <div className="w-full border-t border-[var(--border)]" />
                   </div>
                   <div className="relative flex justify-center">
                     <span className="bg-white px-2 text-xs text-gray-400">o</span>
@@ -242,7 +242,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
 
                 <button
                   onClick={() => { setShowEmailForm(!showEmailForm); setEmailStatus(null); }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--ink)] hover:bg-gray-50 hover:border-gray-300 transition-all"
                 >
                   <Mail size={15} />
                   Enviar por correo
@@ -255,14 +255,14 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                       value={emailTo}
                       onChange={e => setEmailTo(e.target.value)}
                       placeholder="Correo del destinatario"
-                      className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
+                      className="w-full h-9 px-3 rounded-lg border border-[var(--border)] text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all"
                     />
                     <textarea
                       value={emailMessage}
                       onChange={e => setEmailMessage(e.target.value)}
                       placeholder="Mensaje opcional"
                       rows={2}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all resize-y"
+                      className="w-full px-3 py-2 rounded-lg border border-[var(--border)] text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-tint)] transition-all resize-y"
                     />
                     <Button
                       variant="premium"
@@ -291,15 +291,15 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
               <div className="space-y-2 mt-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Creado</span>
-                  <span className="text-gray-700">{formatDate(selectedDoc.createdAt)}</span>
+                  <span className="text-[var(--ink)]">{formatDate(selectedDoc.createdAt)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Actualizado</span>
-                  <span className="text-gray-700">{formatDate(selectedDoc.updatedAt)}</span>
+                  <span className="text-[var(--ink)]">{formatDate(selectedDoc.updatedAt)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Origen</span>
-                  <span className="text-gray-700">{selectedDoc.sourceType || 'Manual'}</span>
+                  <span className="text-[var(--ink)]">{selectedDoc.sourceType || 'Manual'}</span>
                 </div>
               </div>
             </Card>
@@ -364,7 +364,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                     <IconBadge icon={Share2} size="sm" color="#B5471F" variant="soft" />
                     <Badge color={roleInfo.color} size="sm">{roleInfo.label}</Badge>
                   </div>
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">{doc.title}</h3>
+                  <h3 className="font-semibold text-[var(--ink)] text-sm mb-1 line-clamp-2">{doc.title}</h3>
                   <p className="text-xs text-gray-400 flex-1 line-clamp-2">{doc.content || 'Sin contenido'}</p>
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -374,7 +374,7 @@ export function SharedPanelView({ onNavigate }: SharedPanelViewProps) {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleCopy(doc.shareToken); }}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all"
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[var(--ink-mid)] transition-all"
                         title="Copiar enlace"
                       >
                         {copiedId === doc.shareToken ? <Check size={14} /> : <Link size={14} />}

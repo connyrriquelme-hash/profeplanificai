@@ -50,7 +50,7 @@ export default function InteractiveLessonContainer({ params, onFinish }: Interac
           <h2 className="text-2xl font-bold mb-3" style={{ color: PALETTE.purple }}>
             Lección Interactiva
           </h2>
-          <p className="text-gray-500 mb-2 max-w-sm">
+          <p className="text-[var(--ink-soft)] mb-2 max-w-sm">
             Genera una presentación lúdica de 6 diapositivas para tus estudiantes.
           </p>
           <div className="text-sm text-gray-400 mb-8 space-y-1">
@@ -110,7 +110,7 @@ export default function InteractiveLessonContainer({ params, onFinish }: Interac
           <p className="text-lg font-semibold mb-2" style={{ color: PALETTE.fuchsia }}>
             Error al generar
           </p>
-          <p className="text-sm text-gray-500 mb-6 max-w-sm">{error}</p>
+          <p className="text-sm text-[var(--ink-soft)] mb-6 max-w-sm">{error}</p>
           <div className="flex gap-3 justify-center">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -126,7 +126,7 @@ export default function InteractiveLessonContainer({ params, onFinish }: Interac
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onFinish}
-              className="px-6 py-2.5 rounded-xl font-semibold text-sm text-gray-500 bg-gray-100"
+              className="px-6 py-2.5 rounded-xl font-semibold text-sm text-[var(--ink-soft)] bg-gray-100"
             >
               Cancelar
             </motion.button>

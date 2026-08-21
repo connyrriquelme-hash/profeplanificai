@@ -46,38 +46,38 @@ export default function TrialRequestForm({ className = '' }: TrialRequestFormPro
     return (
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`bg-white rounded-2xl shadow-xl p-8 text-center ${className}`}>
         <CheckCircle2 size={48} className="mx-auto text-emerald-500 mb-4" />
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Solicitud enviada</h3>
-        <p className="text-gray-600 text-sm">Te contactaremos pronto para activar tu prueba institucional.</p>
+        <h3 className="text-xl font-bold text-[var(--ink)] mb-2">Solicitud enviada</h3>
+        <p className="text-[var(--ink-mid)] text-sm">Te contactaremos pronto para activar tu prueba institucional.</p>
       </motion.div>
     );
   }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`bg-white rounded-2xl shadow-xl p-8 ${className}`}>
-      <h2 className="text-xl font-bold text-gray-900 mb-1">Obtén tu prueba gratuita</h2>
-      <p className="text-sm text-gray-500 mb-6">Escribe aquí y te contactaremos para activar una prueba institucional.</p>
+      <h2 className="text-xl font-bold text-[var(--ink)] mb-1">Obtén tu prueba gratuita</h2>
+      <p className="text-sm text-[var(--ink-soft)] mb-6">Escribe aquí y te contactaremos para activar una prueba institucional.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="trial-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <label htmlFor="trial-name" className="block text-sm font-medium text-[var(--ink)] mb-1">Nombre *</label>
           <input id="trial-name" name="name" type="text" autoComplete="name" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Tu nombre completo" />
         </div>
         <div>
-          <label htmlFor="trial-email" className="block text-sm font-medium text-gray-700 mb-1">Correo *</label>
+          <label htmlFor="trial-email" className="block text-sm font-medium text-[var(--ink)] mb-1">Correo *</label>
           <input id="trial-email" name="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="correo@colegio.cl" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="trial-institution" className="block text-sm font-medium text-gray-700 mb-1">Institución / Colegio</label>
+            <label htmlFor="trial-institution" className="block text-sm font-medium text-[var(--ink)] mb-1">Institución / Colegio</label>
             <input id="trial-institution" name="institution" type="text" autoComplete="organization" value={institution} onChange={e => setInstitution(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Nombre del colegio" />
           </div>
           <div>
-            <label htmlFor="trial-role" className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
+            <label htmlFor="trial-role" className="block text-sm font-medium text-[var(--ink)] mb-1">Cargo</label>
             <input id="trial-role" name="role" type="text" autoComplete="organization-title" value={role} onChange={e => setRole(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition" placeholder="Director, Coordinador, etc." />
           </div>
         </div>
         <div>
-          <label htmlFor="trial-message" className="block text-sm font-medium text-gray-700 mb-1">Mensaje (opcional)</label>
+          <label htmlFor="trial-message" className="block text-sm font-medium text-[var(--ink)] mb-1">Mensaje (opcional)</label>
           <textarea id="trial-message" name="message" value={message} onChange={e => setMessage(e.target.value.slice(0, 1000))} rows={3} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition resize-none" placeholder="Cuéntanos sobre tu institución..." />
           <p className="text-xs text-gray-400 mt-1 text-right">{message.length}/1000</p>
         </div>

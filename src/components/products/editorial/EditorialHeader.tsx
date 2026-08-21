@@ -46,7 +46,7 @@ export function EditorialHeader({
 }: EditorialHeaderProps) {
   return (
     <header
-      className={`editorial-header bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${className || ''}`}
+      className={`editorial-header bg-white rounded-xl border border-[var(--border)] shadow-sm overflow-hidden ${className || ''}`}
       style={style}
     >
       {/* Brand bar */}
@@ -68,11 +68,11 @@ export function EditorialHeader({
       <div className="px-4 md:px-6 py-4 md:py-5">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="space-y-1 flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--ink)] leading-tight">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-gray-500 text-base font-medium">{subtitle}</p>
+              <p className="text-[var(--ink-soft)] text-base font-medium">{subtitle}</p>
             )}
           </div>
 
@@ -99,7 +99,7 @@ export function EditorialHeader({
         </div>
 
         {/* Info row */}
-        <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+        <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--ink-mid)]">
           {establishmentName && (
             <span className="flex items-center gap-1.5">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -135,12 +135,12 @@ export function EditorialHeader({
                   {oaCode}
                 </span>
                 {oaText && (
-                  <span className="text-gray-700 text-sm leading-relaxed">{oaText}</span>
+                  <span className="text-[var(--ink)] text-sm leading-relaxed">{oaText}</span>
                 )}
               </div>
             )}
             {topic && !oaCode && (
-              <p className="text-gray-700 text-sm">
+              <p className="text-[var(--ink)] text-sm">
                 <span className="font-semibold">Tema:</span> {topic}
               </p>
             )}

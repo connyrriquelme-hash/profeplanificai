@@ -18,9 +18,9 @@ interface PedagogicalBlockProps {
 }
 
 const variantClasses: Record<string, string> = {
-  default: 'bg-white border-gray-200',
+  default: 'bg-white border-[var(--border)]',
   highlighted: 'bg-[var(--primary-tint)] border-[var(--primary)]/25',
-  muted: 'bg-gray-50 border-gray-200',
+  muted: 'bg-gray-50 border-[var(--border)]',
 };
 
 export function PedagogicalBlock({
@@ -48,7 +48,7 @@ export function PedagogicalBlock({
             <span className="text-lg flex-shrink-0" aria-hidden="true">{icon}</span>
           )}
           {title && (
-            <h3 className="text-sm font-bold text-gray-800">{title}</h3>
+            <h3 className="text-sm font-bold text-[var(--ink)]">{title}</h3>
           )}
         </div>
       )}

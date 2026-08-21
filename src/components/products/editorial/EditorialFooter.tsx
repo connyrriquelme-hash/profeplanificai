@@ -29,7 +29,7 @@ export function EditorialFooter({
 
   return (
     <footer
-      className={`editorial-footer bg-gray-50 border border-gray-200 rounded-lg px-4 md:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 ${className || ''}`}
+      className={`editorial-footer bg-gray-50 border border-[var(--border)] rounded-lg px-4 md:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--ink-soft)] ${className || ''}`}
       style={style}
       role="contentinfo"
     >

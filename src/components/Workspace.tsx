@@ -701,7 +701,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   <div className="font-semibold mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--ink-soft)' }}>
                     Textos escolares
                     {curricularContext.textbookReferences[0]?.sourceType === 'metadata' ? (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-600">Pendiente de validación oficial</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-[var(--ink-mid)]">Pendiente de validación oficial</span>
                     ) : (
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700">Fuente oficial</span>
                     )}
@@ -750,7 +750,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                        complexityAnalysis.complexity === 'media' ? 'Media' :
                        complexityAnalysis.complexity === 'alta' ? 'Alta' : 'Muy alta'}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-gray-600">Recomendación generada por heurística pedagógica</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-[var(--ink-mid)]">Recomendación generada por heurística pedagógica</span>
                   </div>
                 </div>
               )}
@@ -769,7 +769,7 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                     numberOfLessons === n
                       ? 'border-[var(--primary)] bg-[var(--primary-tint)] text-[var(--primary-ink)]'
-                      : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                      : 'border-[var(--border)] bg-white text-[var(--ink-soft)] hover:border-gray-300'
                   }`}
                 >
                   {n}
@@ -843,7 +843,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
         </CollapsibleSection>
 
         <div className="flex items-center justify-between gap-2 p-3 sm:p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex-wrap">
-          <span className="text-xs text-gray-500 font-medium">¿Necesitas complementar este plan?</span>
+          <span className="text-xs text-[var(--ink-soft)] font-medium">¿Necesitas complementar este plan?</span>
           <div className="flex items-center gap-2">
             <button className="small secondary" onClick={() => onNavigate?.('banco-recursos')}>
               Ir a Banco de Recursos
@@ -872,7 +872,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
                     <Share2 size={18} className="text-[var(--primary)]" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-gray-900">Planificación compartida</h3>
+                    <h3 className="text-base font-bold text-[var(--ink)]">Planificación compartida</h3>
                     <p className="text-xs text-gray-400">Copia el enlace para compartir</p>
                   </div>
                 </div>
@@ -886,7 +886,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
                   type="text"
                   value={shareResult.shareUrl}
                   readOnly
-                  className="flex-1 bg-transparent text-xs text-gray-600 outline-none border-none p-0"
+                  className="flex-1 bg-transparent text-xs text-[var(--ink-mid)] outline-none border-none p-0"
                 />
                 <button
                   onClick={handleCopyShareUrl}
@@ -904,7 +904,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
                 </button>
                 <button
                   onClick={() => setShareResult(null)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--ink-mid)] text-sm font-semibold hover:bg-gray-50 transition-all"
                 >
                   Cerrar
                 </button>

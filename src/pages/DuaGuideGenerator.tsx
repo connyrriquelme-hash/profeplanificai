@@ -107,7 +107,7 @@ function SkeletonLoader() {
           </div>
           <div className="h-9 w-40 rounded-2xl bg-slate-200 animate-pulse" />
         </div>
-        <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-5">
+        <div className="mt-4 rounded-2xl bg-gray-50 border border-[var(--border)] p-5">
           <div className="h-3 w-40 rounded bg-slate-200 animate-pulse" />
           <div className="mt-2 h-4 w-full rounded bg-slate-200 animate-pulse" />
           <div className="mt-1 h-4 w-3/4 rounded bg-slate-200 animate-pulse" />
@@ -582,9 +582,9 @@ export function DuaGuideGenerator() {
             </div>
 
             {duaGuide?.contexto_motivacional && (
-              <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-5 print:break-inside-avoid print:bg-white print:border-slate-200 print:p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-600 print:text-black">Contexto Motivacional</p>
-                <p className="mt-2 text-base italic text-gray-800 leading-relaxed print:text-black">{duaGuide.contexto_motivacional}</p>
+              <div className="mt-4 rounded-2xl bg-gray-50 border border-[var(--border)] p-5 print:break-inside-avoid print:bg-white print:border-slate-200 print:p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ink-mid)] print:text-black">Contexto Motivacional</p>
+                <p className="mt-2 text-base italic text-[var(--ink)] leading-relaxed print:text-black">{duaGuide.contexto_motivacional}</p>
               </div>
             )}
 

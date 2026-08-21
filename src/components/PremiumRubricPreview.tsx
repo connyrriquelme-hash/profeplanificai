@@ -10,13 +10,13 @@ function RubricTable({ criteria, levels }: { criteria: RubricCriterion[]; levels
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className="px-3 py-2.5 text-left font-bold text-gray-800 bg-gray-100 border border-gray-200 rounded-tl-lg min-w-[180px]">
+            <th className="px-3 py-2.5 text-left font-bold text-[var(--ink)] bg-gray-100 border border-[var(--border)] rounded-tl-lg min-w-[180px]">
               Criterio
             </th>
             {levels.map((level, i) => (
               <th
                 key={level.id}
-                className="px-3 py-2.5 text-center font-bold text-white border border-gray-200 min-w-[160px]"
+                className="px-3 py-2.5 text-center font-bold text-white border border-[var(--border)] min-w-[160px]"
                 style={{
                   backgroundColor: hexToCss(level.color),
                   borderRadius: i === levels.length - 1 ? '0 8px 0 0' : undefined,
@@ -31,9 +31,9 @@ function RubricTable({ criteria, levels }: { criteria: RubricCriterion[]; levels
         <tbody>
           {criteria.map((criterion, ci) => (
             <tr key={criterion.id} className={ci % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-              <td className="px-3 py-3 border border-gray-200 font-medium text-gray-800 align-top">
+              <td className="px-3 py-3 border border-[var(--border)] font-medium text-[var(--ink)] align-top">
                 <div className="text-sm font-semibold">{criterion.name}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{criterion.description}</div>
+                <div className="text-xs text-[var(--ink-soft)] mt-0.5">{criterion.description}</div>
                 {criterion.weight && (
                   <div className="text-[10px] text-[var(--primary)] mt-1 font-medium">Peso: {criterion.weight}%</div>
                 )}
@@ -41,10 +41,10 @@ function RubricTable({ criteria, levels }: { criteria: RubricCriterion[]; levels
               {levels.map(level => {
                 const indicator = criterion.indicators.find(ind => ind.levelId === level.id);
                 return (
-                  <td key={level.id} className="px-3 py-3 border border-gray-200 text-xs text-gray-700 align-top">
+                  <td key={level.id} className="px-3 py-3 border border-[var(--border)] text-xs text-[var(--ink)] align-top">
                     <div className="leading-relaxed">{indicator?.descriptor || '—'}</div>
                     {indicator?.evidence && (
-                      <div className="mt-1.5 text-[10px] text-gray-500 italic">
+                      <div className="mt-1.5 text-[10px] text-[var(--ink-soft)] italic">
                         Evidencia: {indicator.evidence}
                       </div>
                     )}
@@ -85,8 +85,8 @@ function FeedbackSection({ criteria, levels }: { criteria: RubricCriterion[]; le
                         style={{ backgroundColor: hexToCss(level.color) }}
                       />
                       <div>
-                        <div className="text-[10px] font-semibold text-gray-600">{level.label}:</div>
-                        <div className="text-xs text-gray-700">{indicator.feedbackSuggestion}</div>
+                        <div className="text-[10px] font-semibold text-[var(--ink-mid)]">{level.label}:</div>
+                        <div className="text-xs text-[var(--ink)]">{indicator.feedbackSuggestion}</div>
                       </div>
                     </div>
                   ) : null;
@@ -254,26 +254,26 @@ export default function PremiumRubricPreview({ rubric }: PremiumRubricPreviewPro
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">{rubric.title}</h3>
-          <p className="text-sm text-gray-500">{rubric.subtitle}</p>
+          <h3 className="text-lg font-bold text-[var(--ink)]">{rubric.title}</h3>
+          <p className="text-sm text-[var(--ink-soft)]">{rubric.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-[var(--ink)] transition-colors"
           >
             <Printer size={14} /> Imprimir
           </button>
           <button
             onClick={handleDownloadHTML}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-[var(--ink)] transition-colors"
           >
             <Download size={14} /> Descargar HTML
           </button>
           {!isFullscreen && (
             <button
               onClick={() => setIsFullscreen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-[var(--ink)] transition-colors"
             >
               <Maximize2 size={14} /> Pantalla completa
             </button>
@@ -289,13 +289,13 @@ export default function PremiumRubricPreview({ rubric }: PremiumRubricPreviewPro
         <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">{rubric.totalScore} puntos</span>
       </div>
 
-      <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-600 space-y-1">
+      <div className="p-3 bg-gray-50 rounded-xl text-xs text-[var(--ink-mid)] space-y-1">
         <div><strong>Meta de aprendizaje:</strong> {rubric.learningGoal}</div>
         <div><strong>En lenguaje estudiante:</strong> <em>{rubric.studentFriendlyGoal}</em></div>
         <div><strong>Puntaje:</strong> {rubric.scoringFormula}</div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <RubricTable criteria={rubric.criteria} levels={rubric.levels} />
         </div>
@@ -306,10 +306,10 @@ export default function PremiumRubricPreview({ rubric }: PremiumRubricPreviewPro
       <SelfAssessmentSection selfAssessment={rubric.studentSelfAssessment} />
 
       <div className="mt-4 p-3 bg-gray-50 rounded-xl">
-        <div className="text-xs font-semibold text-gray-600 mb-2">Instrucciones de uso</div>
+        <div className="text-xs font-semibold text-[var(--ink-mid)] mb-2">Instrucciones de uso</div>
         <ol className="list-decimal list-inside space-y-1">
           {rubric.usageInstructions.map((inst, i) => (
-            <li key={i} className="text-xs text-gray-600">{inst}</li>
+            <li key={i} className="text-xs text-[var(--ink-mid)]">{inst}</li>
           ))}
         </ol>
       </div>
@@ -319,11 +319,11 @@ export default function PremiumRubricPreview({ rubric }: PremiumRubricPreviewPro
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 z-50 bg-white overflow-auto">
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-          <span className="text-sm font-bold text-gray-800">Vista previa — Rúbrica Premium</span>
+        <div className="sticky top-0 z-10 bg-white border-b border-[var(--border)] px-6 py-3 flex items-center justify-between">
+          <span className="text-sm font-bold text-[var(--ink)]">Vista previa — Rúbrica Premium</span>
           <button
             onClick={() => setIsFullscreen(false)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-[var(--ink-soft)]"
           >
             <X size={18} />
           </button>
@@ -336,7 +336,7 @@ export default function PremiumRubricPreview({ rubric }: PremiumRubricPreviewPro
   }
 
   return (
-    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+    <div className="bg-gray-50 rounded-xl p-4 border border-[var(--border)]">
       {content}
     </div>
   );

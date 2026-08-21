@@ -154,9 +154,9 @@ export function CopilotTest() {
             </div>
 
             {duaGuide?.contexto_motivacional && (
-              <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-5 print:break-inside-avoid print:bg-white print:border-slate-200 print:p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-600 print:text-black">Contexto Motivacional</p>
-                <p className="mt-2 text-base italic text-gray-800 leading-relaxed print:text-black">{duaGuide.contexto_motivacional}</p>
+              <div className="mt-4 rounded-2xl bg-gray-50 border border-[var(--border)] p-5 print:break-inside-avoid print:bg-white print:border-slate-200 print:p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ink-mid)] print:text-black">Contexto Motivacional</p>
+                <p className="mt-2 text-base italic text-[var(--ink)] leading-relaxed print:text-black">{duaGuide.contexto_motivacional}</p>
               </div>
             )}
 

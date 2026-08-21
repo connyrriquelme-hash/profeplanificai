@@ -46,7 +46,7 @@ export function ScientificNotebookRenderer({
 
   if (!notebook) {
     return (
-      <div className="p-6 text-center text-gray-500">
+      <div className="p-6 text-center text-[var(--ink-soft)]">
         <p>No hay datos de bitácora para mostrar.</p>
       </div>
     );
@@ -93,16 +93,16 @@ export function ScientificNotebookRenderer({
           {/* Introduction Section */}
           <ProductSection title="Introducción" icon="📚">
             <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-[var(--ink)] leading-relaxed">
                 <span className="font-semibold text-[var(--primary-ink)]">¿Qué exploraremos hoy?:</span> {notebook.intro.motivatingQuestion}
               </p>
-              <p className="text-gray-600 text-sm leading-relaxed bg-[var(--primary-tint)] p-3 rounded-lg">
+              <p className="text-[var(--ink-mid)] text-sm leading-relaxed bg-[var(--primary-tint)] p-3 rounded-lg">
                 <span className="font-semibold text-[var(--primary-ink)]">Explicación amigable:</span> {notebook.intro.childFriendlyExplanation}
               </p>
-              <p className="text-gray-600 text-sm leading-relaxed bg-teal-50 p-3 rounded-lg">
+              <p className="text-[var(--ink-mid)] text-sm leading-relaxed bg-teal-50 p-3 rounded-lg">
                 <span className="font-semibold text-teal-700">Instrucción visual:</span> {notebook.intro.visualPrompt}
               </p>
-              <p className="text-gray-600 text-sm leading-relaxed bg-amber-50 p-3 rounded-lg">
+              <p className="text-[var(--ink-mid)] text-sm leading-relaxed bg-amber-50 p-3 rounded-lg">
                 <span className="font-semibold text-amber-700">¿Qué debemos tener en cuenta?:</span> {notebook.intro.priorKnowledgePrompt}
               </p>
             </div>
@@ -148,26 +148,26 @@ export function ScientificNotebookRenderer({
           <ProductSection title="Hipótesis o Respuesta" icon="❓">
             {notebook.metadata.educationGroup === 'prebasica' ? (
               <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <p className="text-gray-700 mb-2">
+                <p className="text-[var(--ink)] mb-2">
                   <span className="font-semibold text-yellow-800">Nota importante:</span> Nivel Prebásica no tiene hipótesis científica formal. 
                   ¡Observa y comparte tus hallazgos!
                 </p>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-[var(--ink-mid)] mt-2">
                   {notebook.hypothesis.prompt || 'No hay hipótesis establecida para este nivel.'}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-gray-700">
+                <p className="text-[var(--ink)]">
                   <span className="font-semibold text-[var(--primary-ink)]">Pregunta:</span> {notebook.hypothesis.prompt}
                 </p>
                 {notebook.hypothesis.sentenceStarter && (
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-[var(--ink-mid)] text-sm">
                     <span className="font-semibold">Pista:</span> {notebook.hypothesis.sentenceStarter}
                   </p>
                 )}
                 {notebook.hypothesis.drawingOption && (
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-[var(--ink-mid)] text-sm">
                     <span className="font-semibold">Visualización opcional:</span> {notebook.hypothesis.drawingOption}
                   </p>
                 )}
@@ -183,19 +183,19 @@ export function ScientificNotebookRenderer({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold text-[var(--primary-ink)] mb-2">¿Antes?</h4>
-              <p className="text-gray-700 text-sm">{notebook.questions.before}</p>
+              <p className="text-[var(--ink)] text-sm">{notebook.questions.before}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold text-[var(--primary-ink)] mb-2">¿Durante?</h4>
-              <p className="text-gray-700 text-sm">{notebook.questions.during}</p>
+              <p className="text-[var(--ink)] text-sm">{notebook.questions.during}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold text-[var(--primary-ink)] mb-2">¿Después?</h4>
-              <p className="text-gray-700 text-sm">{notebook.questions.after}</p>
+              <p className="text-[var(--ink)] text-sm">{notebook.questions.after}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold text-[var(--primary-ink)] mb-2">Nuevas Preguntas:</h4>
-              <ul className="text-gray-700 text-sm list-disc list-inside">
+              <ul className="text-[var(--ink)] text-sm list-disc list-inside">
                 {notebook.questions.newQuestions.map((q: string, idx: number) => (
                   <li key={idx}>{q}</li>
                 ))}
@@ -215,7 +215,7 @@ export function ScientificNotebookRenderer({
             return (
               <div key={key} className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-[var(--primary-ink)] mb-2 capitalize">{label}</h4>
-                <ul className="text-gray-700 text-sm list-disc list-inside">
+                <ul className="text-[var(--ink)] text-sm list-disc list-inside">
                   {data.map((item, idx) => (
                     <li key={idx}>{item}</li>
                   ))}
@@ -252,13 +252,13 @@ export function ScientificNotebookRenderer({
       {/* Curriculum Reference Section */}
       <ProductSection title="Referencia Curricular" icon="📋">
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-700 text-sm">
+          <p className="text-[var(--ink)] text-sm">
             <span className="font-semibold">OA:</span> {notebook.metadata.oaCode} - {notebook.metadata.oaText}
           </p>
-          <p className="text-gray-700 text-sm mt-1">
+          <p className="text-[var(--ink)] text-sm mt-1">
             <span className="font-semibold">Asignatura:</span> {notebook.metadata.subject}
           </p>
-          <p className="text-gray-700 text-sm mt-1">
+          <p className="text-[var(--ink)] text-sm mt-1">
             <span className="font-semibold">Nivel educativo:</span> {notebook.metadata.educationGroup}
           </p>
         </div>

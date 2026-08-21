@@ -415,7 +415,7 @@ export function DocumentEditor({ product, onProductChange, className }: Document
   return (
     <div className={`flex flex-col h-full ${className || ''}`}>
       {/* ── Floating toolbar ─────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 flex items-center gap-0.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm border-b border-gray-200 flex-wrap print:hidden">
+      <div className="sticky top-0 z-10 flex items-center gap-0.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm border-b border-[var(--border)] flex-wrap print:hidden">
         <ToolbarBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="Negrita">
           <Bold className="w-3.5 h-3.5" />
         </ToolbarBtn>
@@ -492,7 +492,7 @@ export function DocumentEditor({ product, onProductChange, className }: Document
               onClick={() => {
                 editor.chain().focus().insertContent('<p><br></p>').run();
               }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 hover:border-gray-400 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium text-gray-400 hover:text-[var(--ink-mid)] bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 hover:border-gray-400 transition-all shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               Añadir bloque

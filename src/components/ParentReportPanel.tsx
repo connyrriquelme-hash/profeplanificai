@@ -521,7 +521,7 @@ export function ParentReportPanel() {
           {sheets.length > 1 && (
             <div className="flex gap-1">
               {sheets.map((s, i) => (
-                <button key={i} onClick={() => setActiveSheet(i)} className={`px-2 py-1 rounded text-[10px] font-medium border ${activeSheet === i ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-gray-300 text-gray-600'}`}>
+                <button key={i} onClick={() => setActiveSheet(i)} className={`px-2 py-1 rounded text-[10px] font-medium border ${activeSheet === i ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-gray-300 text-[var(--ink-mid)]'}`}>
                   Planilla {s.sheetNumber} ({s.students.length})
                 </button>
               ))}
@@ -580,7 +580,7 @@ export function ParentReportPanel() {
               <div key={student.id} className="rounded border p-2" style={{ borderColor: 'var(--line)' }}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>{student.studentName} — {student.achievementLevel}</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded ${student.status === 'generado' ? 'bg-emerald-100 text-emerald-700' : student.status === 'editado' ? 'bg-blue-100 text-blue-700' : student.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded ${student.status === 'generado' ? 'bg-emerald-100 text-emerald-700' : student.status === 'editado' ? 'bg-blue-100 text-blue-700' : student.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-[var(--ink-soft)]'}`}>
                     {student.status === 'generado' ? 'Generado' : student.status === 'editado' ? 'Editado' : student.status === 'error' ? 'Error' : 'Pendiente'}
                   </span>
                 </div>

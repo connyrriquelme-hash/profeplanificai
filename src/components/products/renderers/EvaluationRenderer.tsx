@@ -53,27 +53,27 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
       </div>
 
       {instructions && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-800 mb-1">Instrucciones</h3>
-          <p className="text-gray-700 text-sm">{instructions}</p>
+        <div className="bg-gray-50 border border-[var(--border)] rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-[var(--ink)] mb-1">Instrucciones</h3>
+          <p className="text-[var(--ink)] text-sm">{instructions}</p>
         </div>
       )}
 
       <ProductSection title="Preguntas" icon="❓">
         {questions.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">Sin preguntas definidas.</p>
+          <p className="text-[var(--ink-soft)] text-sm italic">Sin preguntas definidas.</p>
         ) : (
           <div className="space-y-6">
             {questions.map((q, index) => (
-              <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div key={index} className="bg-white border border-[var(--border)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary-tint)] text-[var(--primary-ink)] text-sm font-bold flex items-center justify-center">
                     {index + 1}
                   </span>
                   <div className="flex-1">
-                    <p className="text-gray-800 font-medium text-sm">{q.text || q.question}</p>
+                    <p className="text-[var(--ink)] font-medium text-sm">{q.text || q.question}</p>
                     {(q.score || q.points) && (
-                      <span className="text-xs text-gray-500 mt-1 inline-block">({q.score || q.points} pts)</span>
+                      <span className="text-xs text-[var(--ink-soft)] mt-1 inline-block">({q.score || q.points} pts)</span>
                     )}
 
                     {questionImages[index] && (
@@ -87,11 +87,11 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
 
                     {q.type === 'closed' && (
                       <div className="mt-3 flex gap-4">
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
                           <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Verdadero
                         </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
                           <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Falso
                         </label>
@@ -100,11 +100,11 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
 
                     {q.type === 'verdadero_falso' && (
                       <div className="mt-3 flex gap-4">
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
                           <input type="radio" name={`q-${index}`} value="V" className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Verdadero (V)
                         </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
                           <input type="radio" name={`q-${index}`} value="F" className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                           Falso (F)
                         </label>
@@ -114,7 +114,7 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                     {q.type === 'multiple' && q.options && (
                       <div className="mt-3 space-y-2">
                         {(q.options as string[]).map((option, oi) => (
-                          <label key={oi} className="flex items-center gap-2 text-sm text-gray-700">
+                          <label key={oi} className="flex items-center gap-2 text-sm text-[var(--ink)]">
                             <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                             {option}
                           </label>
@@ -127,7 +127,7 @@ export function EvaluationRenderer({ product, className, style }: EvaluationRend
                         {(q.options as Array<{ text: string; isCorrect: boolean }>).map((option, oi) => {
                           const letter = String.fromCharCode(65 + oi); // 0 -> A, 1 -> B, etc.
                           return (
-                            <label key={oi} className="flex items-center gap-2 text-sm text-gray-700">
+                            <label key={oi} className="flex items-center gap-2 text-sm text-[var(--ink)]">
                               <input type="radio" name={`q-${index}`} className="text-[var(--primary)] focus:ring-[var(--primary)]" />
                               {letter}) {option.text}
                             </label>

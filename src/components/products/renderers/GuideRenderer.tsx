@@ -61,7 +61,7 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
             )}
           </h3>
           <p className="text-amber-900 text-sm font-semibold mb-1">{textoLectura.titulo}</p>
-          <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{textoLectura.cuerpo}</p>
+          <p className="text-[var(--ink)] text-sm whitespace-pre-wrap leading-relaxed">{textoLectura.cuerpo}</p>
         </div>
       )}
 
@@ -74,7 +74,7 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
                 : String(material || '');
               if (!text) return null;
               return (
-                <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                <li key={index} className="flex items-center gap-2 text-sm text-[var(--ink)]">
                   <span className="w-2 h-2 rounded-full bg-teal-400 flex-shrink-0" />
                   {text}
                 </li>
@@ -93,14 +93,14 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
             />
           )}
           <div className="prose prose-sm max-w-none">
-            <p className="text-gray-700 text-sm whitespace-pre-wrap">{section.content}</p>
+            <p className="text-[var(--ink)] text-sm whitespace-pre-wrap">{section.content}</p>
           </div>
           {section.activities && section.activities.length > 0 && (
             <div className="mt-4 space-y-2">
-              <h4 className="text-sm font-semibold text-gray-800">Actividades:</h4>
+              <h4 className="text-sm font-semibold text-[var(--ink)]">Actividades:</h4>
               <ul className="space-y-1">
                 {section.activities.map((activity, ai) => (
-                  <li key={ai} className="flex items-start gap-2 text-sm text-gray-600">
+                  <li key={ai} className="flex items-start gap-2 text-sm text-[var(--ink-mid)]">
                     <span className="text-[var(--primary)] mt-0.5">▸</span>
                     {activity}
                   </li>
@@ -113,7 +113,7 @@ export function GuideRenderer({ product, className, style }: GuideRendererProps)
 
       {evaluation && (
         <ProductSection title="Evaluación" icon="✓">
-          <p className="text-gray-700 text-sm whitespace-pre-wrap">{evaluation}</p>
+          <p className="text-[var(--ink)] text-sm whitespace-pre-wrap">{evaluation}</p>
         </ProductSection>
       )}
 

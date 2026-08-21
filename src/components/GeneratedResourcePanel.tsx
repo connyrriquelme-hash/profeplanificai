@@ -264,7 +264,7 @@ export function GeneratedResourcePanel({ resultText, error, onBack, onSave, onRe
                 <Badge color="indigo" size="sm">Recurso generado</Badge>
                 <Badge color="green" size="sm" dot>Listo para revisar</Badge>
               </div>
-              <h2 className="text-lg font-bold text-gray-900 truncate">{title || 'Recurso pedagógico generado'}</h2>
+              <h2 className="text-lg font-bold text-[var(--ink)] truncate">{title || 'Recurso pedagógico generado'}</h2>
             </div>
           </div>
           <Button variant="ghost" size="sm" iconLeft={Undo2} onClick={onBack}>

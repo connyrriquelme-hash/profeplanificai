@@ -98,7 +98,7 @@ export default function ProductActionBar({ product, onSave, className }: Product
         whileTap={!isBusy ? { scale: 0.95 } : undefined}
         onClick={handleCopy}
         disabled={isBusy}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-40"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-[var(--ink-mid)] hover:bg-gray-200 transition-all disabled:opacity-40"
       >
         {copied ? <Check className="w-3.5 h-3.5" style={{ color: PALETTE.turquoise }} /> : <Copy className="w-3.5 h-3.5" />}
         {copied ? 'Copiado' : 'Copiar'}
@@ -109,7 +109,7 @@ export default function ProductActionBar({ product, onSave, className }: Product
         whileTap={!isBusy ? { scale: 0.95 } : undefined}
         onClick={handlePrint}
         disabled={isBusy}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-40"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-[var(--ink-mid)] hover:bg-gray-200 transition-all disabled:opacity-40"
       >
         <Printer className="w-3.5 h-3.5" />
         Imprimir

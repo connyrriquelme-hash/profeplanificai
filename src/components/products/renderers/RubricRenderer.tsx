@@ -46,7 +46,7 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
 
       <ProductSection title="Rúbrica de Evaluación" icon="📊">
         {criteria.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">Sin criterios definidos.</p>
+          <p className="text-[var(--ink-soft)] text-sm italic">Sin criterios definidos.</p>
         ) : (
           <div className="space-y-4">
             {criterionImages.length > 0 && (
@@ -60,10 +60,10 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
             <div className="overflow-x-auto">
               <table className="w-full border-collapse" role="grid" aria-label="Rúbrica">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[200px]">Criterio</th>
+                  <tr className="bg-gray-50 border-b border-[var(--border)]">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[var(--ink-mid)] uppercase min-w-[200px]">Criterio</th>
                     {levels.map((level, i) => (
-                      <th key={i} scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase min-w-[150px]">{level}</th>
+                      <th key={i} scope="col" className="px-4 py-3 text-center text-xs font-semibold text-[var(--ink-mid)] uppercase min-w-[150px]">{level}</th>
                     ))}
                   </tr>
                 </thead>
@@ -71,15 +71,15 @@ export function RubricRenderer({ product, className, style }: RubricRendererProp
                   {criteria.map((criterion, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-gray-800">{criterion.name}</div>
+                        <div className="text-sm font-medium text-[var(--ink)]">{criterion.name}</div>
                         {criterion.description && (
-                          <div className="text-xs text-gray-500 mt-1">{criterion.description}</div>
+                          <div className="text-xs text-[var(--ink-soft)] mt-1">{criterion.description}</div>
                         )}
                       </td>
                       {criterion.levels.map((level, li) => (
-                        <td key={li} className="px-4 py-3 text-sm text-gray-700 text-center border-l border-gray-100">
-                          <div className="font-medium text-gray-800">{level.name}</div>
-                          <div className="text-xs text-gray-500 mt-1">{level.description}</div>
+                        <td key={li} className="px-4 py-3 text-sm text-[var(--ink)] text-center border-l border-gray-100">
+                          <div className="font-medium text-[var(--ink)]">{level.name}</div>
+                          <div className="text-xs text-[var(--ink-soft)] mt-1">{level.description}</div>
                           <div className="text-xs font-semibold text-[var(--primary)] mt-1">{level.score} pts</div>
                         </td>
                       ))}

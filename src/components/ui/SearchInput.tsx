@@ -22,7 +22,7 @@ export function SearchInput({ value, onChange, placeholder = 'Buscar...', classN
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded-lg bg-white border border-gray-200 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] focus:bg-white transition-all shadow-sm ${
+        className={`w-full rounded-lg bg-white border border-[var(--border)] text-sm text-[var(--ink)] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] focus:bg-white transition-all shadow-sm ${
           compact ? 'h-9 pl-9 pr-8 text-xs' : 'h-10 pl-10 pr-10'
         }`}
       />
