@@ -12,7 +12,7 @@ function parseStructured(raw: string): Record<string, unknown> {
 }
 
 function getGeminiModel(env: AIEnv): string {
-  return env.AI_DEFAULT_MODEL_GEMINI || 'gemini-2.5-flash';
+  return env.AI_DEFAULT_MODEL_GEMINI || 'gemini-3.6-flash';
 }
 
 export async function statusProviders(env: AIEnv): Promise<{ providers: Record<ProviderName, ProviderStatus>; recommended: ProviderName }> {

@@ -37,7 +37,7 @@ Devuelve SOLO JSON válido, sin markdown, escapando correctamente comillas doble
 export async function generateActivityWithAI(env: AIEnv, objective: ObjectiveContext, request: ActivityRequest): Promise<AIActivityResponse> {
   const prompt = promptFor(objective, request);
   if (env.GEMINI_API_KEY) {
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-3.6-flash';
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: .45, responseMimeType: 'application/json', maxOutputTokens: 5000 } }),

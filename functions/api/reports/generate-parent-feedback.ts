@@ -133,7 +133,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     // Try Gemini
     if (context.env.GEMINI_API_KEY) {
       try {
-        const model = 'gemini-2.5-flash';
+        const model = 'gemini-3.6-flash';
         const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

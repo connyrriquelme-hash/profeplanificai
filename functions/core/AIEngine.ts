@@ -206,9 +206,11 @@ export interface CallAIConValidacionOptions {
 // alias "gemini-pro-latest" (-> gemini-3.1-pro) devuelve limit:0 en el free
 // tier de la API key real de esta cuenta — los modelos "pro" simplemente no
 // están habilitados sin billing en Google Cloud. El alias "gemini-flash-latest"
-// devolvió 503 (modelo preview saturado); "gemini-2.5-flash" fijo sí responde
-// 200 contra el servidor real, con cupo gratuito y contexto largo (1M tokens).
-const GEMINI_MODEL = 'gemini-2.5-flash';
+// devolvió 503 (modelo preview saturado). "gemini-2.5-flash" funcionó por un
+// tiempo pero Google también lo retiró — confirmado contra el servidor real:
+// error 404 "This model models/gemini-2.5-flash is no longer available to
+// new users. Please update your code to use models/gemini-3.6-flash".
+const GEMINI_MODEL = 'gemini-3.6-flash';
 
 // Llama a la API REST de Gemini (Google AI Studio) directamente por fetch,
 // sin SDK — mismo criterio que env.AI.run(): un solo intento, sin retry

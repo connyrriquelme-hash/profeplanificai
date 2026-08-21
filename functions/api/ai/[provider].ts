@@ -19,7 +19,7 @@ export async function onRequestPost(context: EventContext<Env, string, { provide
 
     if (provider === 'gemini') {
       if (!context.env.GEMINI_API_KEY) return Response.json({ error: 'Gemini no configurado en el servidor' }, { status: 503 });
-      const selected = model || 'gemini-2.5-flash';
+      const selected = model || 'gemini-3.6-flash';
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selected)}:generateContent?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt || 'Eres especialista en educación chilena.' }] }, contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.65, maxOutputTokens: 5000 } }),
