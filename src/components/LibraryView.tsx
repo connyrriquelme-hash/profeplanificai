@@ -349,19 +349,19 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
         return (
           <div key={s.key} className="flex items-center flex-shrink-0">
             <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl transition-all duration-200 ${
-              isActive ? 'bg-indigo-50 text-indigo-700 shadow-sm' : isPast ? 'text-gray-500' : 'text-gray-400'
+              isActive ? 'bg-[var(--primary-tint)] text-[var(--primary-ink)] shadow-sm' : isPast ? 'text-[var(--ink-soft)]' : 'text-gray-400'
             }`}>
               <div className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors duration-200 ${
-                isActive ? 'bg-indigo-600 text-white shadow-sm' : isPast ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 text-gray-300'
+                isActive ? 'bg-[var(--primary)] text-white shadow-sm' : isPast ? 'bg-gray-100 text-[var(--ink-soft)]' : 'bg-gray-50 text-gray-300'
               }`}>
                 {isPast ? <Check size={14} strokeWidth={3} /> : <Icon size={14} strokeWidth={2.25} />}
               </div>
-              <span className={`text-xs font-semibold whitespace-nowrap hidden sm:inline ${isActive ? 'text-indigo-700' : ''}`}>
+              <span className={`text-xs font-semibold whitespace-nowrap hidden sm:inline ${isActive ? 'text-[var(--primary-ink)]' : ''}`}>
                 {s.label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className={`w-6 h-px mx-1 ${isPast || isActive ? 'bg-indigo-200' : 'bg-gray-200'}`} />
+              <div className={`w-6 h-px mx-1 ${isPast || isActive ? 'bg-[var(--primary)]/25' : 'bg-gray-200'}`} />
             )}
           </div>
         );
@@ -373,7 +373,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
 
   const renderHub = () => (
     <div className="w-full">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--primary)] to-[var(--accent-honey)] p-7 sm:p-10 mb-10 shadow-xl shadow-indigo-200/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--primary)] to-[var(--accent-honey)] p-7 sm:p-10 mb-10 shadow-[0_20px_25px_-5px_rgba(181,71,31,0.25),0_8px_10px_-6px_rgba(181,71,31,0.2)]">
         <div className="absolute inset-0 bg-noise opacity-[0.06]" />
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3" />
         <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/[0.03] rounded-full translate-y-1/3 -translate-x-1/4" />
@@ -384,7 +384,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight mb-3">
               Biblioteca Creativa
             </h1>
-            <p className="text-indigo-200 text-sm sm:text-base max-w-xl leading-relaxed mb-6">
+            <p className="text-white/80 text-sm sm:text-base max-w-xl leading-relaxed mb-6">
               Crea clases, fichas, evaluaciones y recursos inclusivos alineados al currículum chileno.
             </p>
             <Button
@@ -412,15 +412,15 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
           <Card key={tipo} variant="interactive" onClick={() => handleHubSelect(tipo)} className="relative p-5">
             {badge && <Badge color={badge === 'Popular' ? 'indigo' : 'teal'} size="sm" className="absolute top-3 right-3">{badge}</Badge>}
             <IconBadge icon={Icon} size="lg" color={color} variant="gradient" className="mb-4" />
-            <h3 className="text-sm font-semibold text-gray-900 mb-1.5">{label}</h3>
-            <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+            <h3 className="text-sm font-semibold text-[var(--ink)] mb-1.5">{label}</h3>
+            <p className="text-xs text-[var(--ink-soft)] leading-relaxed">{desc}</p>
           </Card>
         ))}
       </div>
 
       {isBannerVisible && (
         <Card variant="elevated" className="relative p-5 sm:p-6">
-          <button className="absolute top-3 right-3 p-1 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all" onClick={() => setIsBannerVisible(false)} aria-label="Cerrar">
+          <button className="absolute top-3 right-3 p-1 rounded-xl text-gray-400 hover:text-[var(--ink-mid)] hover:bg-gray-100 transition-all" onClick={() => setIsBannerVisible(false)} aria-label="Cerrar">
             <X size={16} />
           </button>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
@@ -448,7 +448,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
           <Card variant="default" className="p-5 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nivel</label>
+                <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1.5">Nivel</label>
                 <select value={selectedCourseId || level} onChange={e => {
                   const val = e.target.value;
                   const d1c = d1Courses.find((c: any) => c.id === val);
@@ -467,14 +467,14 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                   setSelectedSkill('');
                   setFallbackIndicators([]);
                   setFallbackSkills([]);
-                }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                }} className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none transition-all">
                   <option value="">Seleccionar nivel...</option>
                   {d1Courses.filter(c => (c.objective_count || 0) > 0).map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.objective_count} OA)</option>)}
                 </select>
               </div>
               {level && (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Asignatura</label>
+                  <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1.5">Asignatura</label>
                   <select value={selectedSubjectId || subject} onChange={e => {
                     const val = e.target.value;
                     const d1s = d1Subjects.find((s: any) => s.id === val);
@@ -491,7 +491,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                     setSelectedSkill('');
                     setFallbackIndicators([]);
                     setFallbackSkills([]);
-                  }} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                  }} className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none transition-all">
                     <option value="">Seleccionar asignatura...</option>
                     {d1Subjects.map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.objective_count})</option>)}
                   </select>
@@ -500,7 +500,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
             </div>
             {level && subject && (
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Buscar OA</label>
+                <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1.5">Buscar OA</label>
                 <SearchInput value={oaSearch} onChange={setOaSearch} placeholder="Buscar por código o texto..." />
               </div>
             )}
@@ -518,19 +518,19 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                   key={oa.id}
                   variant={selectedOA?.id === oa.id ? 'interactive' : 'default'}
                   onClick={() => handleSelectOA(oa)}
-                  className={`p-4 ${selectedOA?.id === oa.id ? 'border-indigo-500 bg-indigo-50/50 ring-1 ring-indigo-500' : ''}`}
+                  className={`p-4 ${selectedOA?.id === oa.id ? 'border-[var(--primary)] bg-[var(--primary-tint)] ring-1 ring-[var(--primary)]' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Target size={14} className="text-indigo-500 flex-shrink-0" strokeWidth={2.25} />
-                        <span className="inline-block text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-lg">{oa.code}</span>
+                        <Target size={14} className="text-[var(--primary)] flex-shrink-0" strokeWidth={2.25} />
+                        <span className="inline-block text-xs font-bold text-[var(--primary)] bg-[var(--primary-tint)] px-2 py-0.5 rounded-lg">{oa.code}</span>
                       </div>
-                      <p className="text-sm text-gray-800 leading-relaxed line-clamp-2">{oa.text}</p>
-                      {oa.axis && <span className="inline-block text-xs text-gray-500 mt-1">Eje: {oa.axis}</span>}
+                      <p className="text-sm text-[var(--ink)] leading-relaxed line-clamp-2">{oa.text}</p>
+                      {oa.axis && <span className="inline-block text-xs text-[var(--ink-soft)] mt-1">Eje: {oa.axis}</span>}
                     </div>
                     {selectedOA?.id === oa.id && (
-                      <span className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Check size={14} className="text-white" strokeWidth={3} />
                       </span>
                     )}
@@ -544,19 +544,19 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
         <div className="lg:col-span-2">
           {selectedOA ? (
             <div className="space-y-4 sticky top-4">
-              <Card variant="elevated" className="p-5 bg-gradient-to-br from-indigo-50/50 to-white">
+              <Card variant="elevated" className="p-5 bg-gradient-to-br from-[var(--primary-tint)] to-white">
                 <div className="flex items-center gap-2 mb-4">
-                  <BookOpenCheck size={18} className="text-indigo-600" strokeWidth={2.25} />
-                  <h3 className="text-sm font-semibold text-indigo-700 uppercase tracking-wider">Articulación curricular</h3>
+                  <BookOpenCheck size={18} className="text-[var(--primary)]" strokeWidth={2.25} />
+                  <h3 className="text-sm font-semibold text-[var(--primary-ink)] uppercase tracking-wider">Articulación curricular</h3>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <span className="text-xs text-gray-500 font-medium">OA seleccionado</span>
-                    <p className="text-sm font-medium text-gray-800 mt-0.5">{selectedOA.code} — {selectedOA.text}</p>
+                    <span className="text-xs text-[var(--ink-soft)] font-medium">OA seleccionado</span>
+                    <p className="text-sm font-medium text-[var(--ink)] mt-0.5">{selectedOA.code} — {selectedOA.text}</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Indicador de evaluación</label>
-                    <select value={selectedIndicator} onChange={e => setSelectedIndicator(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
+                    <label className="block text-xs font-semibold text-[var(--ink-mid)] mb-1.5">Indicador de evaluación</label>
+                    <select value={selectedIndicator} onChange={e => setSelectedIndicator(e.target.value)} className="w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition-all">
                       <option value="">Seleccionar indicador...</option>
                       {displayedIndicators.map((ind, i) => (
                         <option key={i} value={ind}>
@@ -569,8 +569,8 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Habilidad</label>
-                    <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
+                    <label className="block text-xs font-semibold text-[var(--ink-mid)] mb-1.5">Habilidad</label>
+                    <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} className="w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition-all">
                       <option value="">Seleccionar habilidad...</option>
                       {displayedSkills.map((sk, i) => (
                         <option key={i} value={sk}>
@@ -583,7 +583,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                     )}
                   </div>
                   <div className="pt-4 border-t border-gray-100">
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Resumen curricular</h4>
+                    <h4 className="text-xs font-semibold text-[var(--ink-soft)] uppercase mb-2">Resumen curricular</h4>
                     <div className="flex flex-wrap gap-1.5">
                       <Badge color="indigo" size="sm">{level}</Badge>
                       <Badge color="teal" size="sm">{subject}</Badge>
@@ -598,11 +598,11 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
               </Card>
             </div>
           ) : (
-            <Card variant="default" className="p-8 border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-center min-h-[300px]">
+            <Card variant="default" className="p-8 border-2 border-dashed border-[var(--border)] bg-gray-50/50 flex flex-col items-center justify-center text-center min-h-[300px]">
               <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
                 <BookOpenCheck size={28} className="text-gray-300" strokeWidth={2.25} />
               </div>
-              <p className="text-sm text-gray-500 max-w-xs">Selecciona un nivel, asignatura y OA para ver la articulación curricular.</p>
+              <p className="text-sm text-[var(--ink-soft)] max-w-xs">Selecciona un nivel, asignatura y OA para ver la articulación curricular.</p>
             </Card>
           )}
         </div>
@@ -618,17 +618,17 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
       <div className="space-y-5">
         <Card variant="default" className="p-5 sm:p-6 space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tema del recurso</label>
-            <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ej: La fotosíntesis en plantas nativas chilenas" className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+            <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1.5">Tema del recurso</label>
+            <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ej: La fotosíntesis en plantas nativas chilenas" className="w-full rounded-2xl border border-[var(--border)] px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none transition-all" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Contexto adicional (opcional)</label>
-            <textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} rows={4} placeholder="Ej: Curso de 32 estudiantes, 5 con NEE, 2 descendidos. Interés por actividades al aire libre." className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-none" />
+            <label className="block text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-1.5">Contexto adicional (opcional)</label>
+            <textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} rows={4} placeholder="Ej: Curso de 32 estudiantes, 5 con NEE, 2 descendidos. Interés por actividades al aire libre." className="w-full rounded-2xl border border-[var(--border)] px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] outline-none transition-all resize-none" />
           </div>
         </Card>
 
         <Card variant="default" className="p-5">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Resumen de tu selección</h4>
+          <h4 className="text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mb-3">Resumen de tu selección</h4>
           <div className="flex flex-wrap gap-2">
             {level && <Badge color="indigo" size="md">{level}</Badge>}
             {subject && <Badge color="teal" size="md">{subject}</Badge>}
@@ -637,15 +637,15 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
           </div>
         </Card>
 
-        <Card variant="default" className="p-6 border-2 border-dashed border-gray-200 bg-gray-50/50">
+        <Card variant="default" className="p-6 border-2 border-dashed border-[var(--border)] bg-gray-50/50">
           <div className="flex items-center justify-center gap-8 mb-4">
             {[
               { icon: FileText, label: 'Subir archivo' },
               { icon: Search, label: 'Pegar enlace' },
               { icon: BookOpenCheck, label: 'Recurso existente' },
             ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex flex-col items-center gap-2 text-gray-400 hover:text-indigo-600 cursor-pointer transition-colors">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+              <div key={label} className="flex flex-col items-center gap-2 text-gray-400 hover:text-[var(--primary)] cursor-pointer transition-colors">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-[var(--border)] flex items-center justify-center shadow-sm">
                   <Icon size={20} strokeWidth={2.25} />
                 </div>
                 <span className="text-xs font-medium">{label}</span>
@@ -725,18 +725,18 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
               key={opt.id}
               variant="interactive"
               onClick={() => setRefineOptions(prev => ({ ...prev, [opt.id]: !prev[opt.id] }))}
-              className={`p-4 flex items-start gap-3 ${isSelected ? 'border-indigo-500 bg-indigo-50/50 ring-1 ring-indigo-500' : ''}`}
+              className={`p-4 flex items-start gap-3 ${isSelected ? 'border-[var(--primary)] bg-[var(--primary-tint)] ring-1 ring-[var(--primary)]' : ''}`}
             >
-              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200 ${isSelected ? 'bg-indigo-600 border-indigo-600 shadow-sm' : 'border-gray-300'}`}>
+              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200 ${isSelected ? 'bg-[var(--primary)] border-[var(--primary)] shadow-sm' : 'border-gray-300'}`}>
                 {isSelected && <Check size={14} className="text-white" strokeWidth={3} />}
               </div>
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[var(--primary-tint)] text-[var(--primary)]' : 'bg-gray-100 text-gray-400'}`}>
                   <Icon size={16} strokeWidth={2.25} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-gray-800">{opt.label}</h4>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{opt.desc}</p>
+                  <h4 className="text-sm font-semibold text-[var(--ink)]">{opt.label}</h4>
+                  <p className="text-xs text-[var(--ink-soft)] mt-0.5 leading-relaxed">{opt.desc}</p>
                 </div>
               </div>
             </Card>
@@ -766,7 +766,7 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
               key={st.id}
               variant="interactive"
               onClick={() => setDesignStyle(st.id)}
-              className={`p-0 overflow-hidden ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}`}
+              className={`p-0 overflow-hidden ${isSelected ? 'ring-2 ring-[var(--primary)] ring-offset-2' : ''}`}
             >
               <div className="h-20 flex items-center justify-center gap-2" style={{ backgroundColor: st.bg }}>
                 <div className="w-10 h-10 rounded-xl shadow-sm flex items-center justify-center" style={{ backgroundColor: st.swatch, border: `1px solid ${st.border}` }}>
@@ -774,8 +774,8 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
                 </div>
               </div>
               <div className="p-3 bg-white">
-                <h4 className="text-xs font-semibold text-gray-800">{st.name}</h4>
-                <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{st.desc}</p>
+                <h4 className="text-xs font-semibold text-[var(--ink)]">{st.name}</h4>
+                <p className="text-[11px] text-[var(--ink-soft)] mt-0.5 line-clamp-2 leading-relaxed">{st.desc}</p>
               </div>
             </Card>
           );
@@ -795,16 +795,16 @@ export function LibraryView({ onNavigate }: LibraryViewProps) {
   const renderGenerating = () => (
     <div className="max-w-lg mx-auto flex flex-col items-center justify-center py-20">
       <Card variant="elevated" className="p-10 text-center w-full">
-        <div className="w-16 h-16 rounded-3xl bg-indigo-100 flex items-center justify-center mx-auto mb-6">
-          <Loader2 size={32} className="text-indigo-600 animate-spin" />
+        <div className="w-16 h-16 rounded-3xl bg-[var(--primary-tint)] flex items-center justify-center mx-auto mb-6">
+          <Loader2 size={32} className="text-[var(--primary)] animate-spin" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Generando recurso pedagógico...</h3>
-        <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto">
+        <h3 className="text-lg font-bold text-[var(--ink)] mb-2">Generando recurso pedagógico...</h3>
+        <p className="text-sm text-[var(--ink-soft)] leading-relaxed max-w-sm mx-auto">
           Estamos alineando tu recurso al currículum chileno y preparando una propuesta lista para usar.
         </p>
         <div className="mt-6 flex justify-center gap-1.5">
           {[0, 1, 2, 3, 4].map(i => (
-            <div key={i} className="w-2 h-2 rounded-full bg-indigo-300 animate-bounce" style={{ animationDelay: `${i * 0.15}s`, animationDuration: '0.8s' }} />
+            <div key={i} className="w-2 h-2 rounded-full bg-[var(--primary)]/50 animate-bounce" style={{ animationDelay: `${i * 0.15}s`, animationDuration: '0.8s' }} />
           ))}
         </div>
       </Card>
