@@ -8,7 +8,11 @@ interface Env {
   STABILITY_API_KEY?: string;
 }
 
-const SDXL_MODEL = '@cf/stabilityai/stable-diffusion-xl-base-1.0';
+// Cloudflare Workers AI de mayor calidad disponible (reemplaza SDXL base 1.0,
+// que quedaba atras de Flux/DALL-E en calidad). Se usa solo como ultimo
+// recurso: generateImage() ya prueba OpenAI/Fal/Replicate/Stability primero
+// segun que secrets esten configurados.
+const CLOUDFLARE_FALLBACK_MODEL = '@cf/black-forest-labs/flux-1-schnell';
 
 function bytesToDataUrl(bytes: Uint8Array): string {
   let binary = '';
@@ -51,34 +55,45 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       return Response.json({ ok: false, code: 'prompt_too_long', message: 'El prompt es demasiado largo (máx. 2000 caracteres).' }, { status: 400 });
     }
 
-    if (context.env.AI) {
+    // Preferimos los proveedores externos configurados (OpenAI DALL-E 3, Fal
+    // Flux Pro, etc.) porque dan mejor calidad que el modelo de Workers AI.
+    // Cloudflare AI (Flux Schnell) queda como respaldo si ninguno esta
+    // configurado o todos fallan, no como opcion primaria.
+    try {
+      const result = await generateImage(context.env, prompt);
+      return Response.json({
+        ok: true,
+        imageUrl: result.imageUrl,
+        provider: result.provider,
+        model: result.model,
+      });
+    } catch (externalErr) {
+      if (!context.env.AI) throw externalErr;
+
       const safePrompt = buildSafeImagePrompt(prompt);
-      const result = await context.env.AI.run(SDXL_MODEL, { prompt: safePrompt });
-      let imageBytes: Uint8Array;
-      if (result instanceof ReadableStream) {
-        imageBytes = await streamToBytes(result);
-      } else if (result instanceof ArrayBuffer) {
-        imageBytes = new Uint8Array(result);
+      const result = await context.env.AI.run(CLOUDFLARE_FALLBACK_MODEL, { prompt: safePrompt });
+      let imageBase64: string;
+      if (result && typeof result === 'object' && 'image' in result && typeof (result as { image: unknown }).image === 'string') {
+        imageBase64 = `data:image/jpeg;base64,${(result as { image: string }).image}`;
       } else {
-        imageBytes = result as Uint8Array;
+        let imageBytes: Uint8Array;
+        if (result instanceof ReadableStream) {
+          imageBytes = await streamToBytes(result);
+        } else if (result instanceof ArrayBuffer) {
+          imageBytes = new Uint8Array(result);
+        } else {
+          imageBytes = result as Uint8Array;
+        }
+        imageBase64 = bytesToDataUrl(imageBytes);
       }
-      const imageBase64 = bytesToDataUrl(imageBytes);
 
       return Response.json({
         ok: true,
         imageUrl: imageBase64,
         provider: 'cloudflare-ai',
-        model: SDXL_MODEL,
+        model: CLOUDFLARE_FALLBACK_MODEL,
       });
     }
-
-    const result = await generateImage(context.env, prompt);
-    return Response.json({
-      ok: true,
-      imageUrl: result.imageUrl,
-      provider: result.provider,
-      model: result.model,
-    });
   } catch (err) {
     if (err instanceof ProviderNotConfiguredError) {
       return Response.json({ ok: false, code: 'provider_not_configured', message: err.message });
