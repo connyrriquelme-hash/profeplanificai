@@ -1,9 +1,28 @@
+import { z } from 'zod';
 import { requireAuthContext, requireActiveAuthContext, requirePermissionContext, requireInstitutionMatchContext } from '../../../_lib/auth-adapter';
 
 interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
 }
+
+// logo_url acepta un data: URL (el logo se sube desde el navegador, sin R2
+// configurado todavia) o una URL http(s) normal. 300KB cubre un logo PNG/SVG
+// tipico ya en base64 sin dejar crecer la fila de forma descontrolada.
+const UpdateInstitutionSchema = z.object({
+  name: z.string().trim().min(2).max(200).optional(),
+  rbd: z.string().trim().max(20).optional(),
+  region: z.string().trim().max(100).optional(),
+  commune: z.string().trim().max(100).optional(),
+  contact_name: z.string().trim().max(150).optional(),
+  contact_email: z.string().trim().email('Correo de contacto inválido').max(320).optional().or(z.literal('')),
+  contact_phone: z.string().trim().max(30).optional(),
+  logo_url: z.string().trim().max(300_000, 'El logo es demasiado pesado (máx. ~300KB)').refine(
+    (v) => v === '' || v.startsWith('data:image/') || v.startsWith('https://') || v.startsWith('http://'),
+    'El logo debe ser una imagen (data URL) o una URL http(s)',
+  ).optional(),
+  primary_color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'Color inválido (formato #RRGGBB)').optional().or(z.literal('')),
+});
 
 export async function onRequestGet(context: EventContext<Env>): Promise<Response> {
   try {
@@ -45,15 +64,11 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
     await requireInstitutionMatchContext(context.request, env, context.params.id as string);
 
     const { id } = context.params;
-    const body = await context.request.json() as {
-      name?: string;
-      rbd?: string;
-      region?: string;
-      commune?: string;
-      contact_name?: string;
-      contact_email?: string;
-      contact_phone?: string;
-    };
+    const parsed = UpdateInstitutionSchema.safeParse(await context.request.json());
+    if (!parsed.success) {
+      return Response.json({ error: parsed.error.issues[0]?.message || 'Datos inválidos' }, { status: 400 });
+    }
+    const body = parsed.data;
 
     const updates: string[] = [];
     const values: (string | number)[] = [];
@@ -65,6 +80,8 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
     if (body.contact_name !== undefined) { updates.push('contact_name = ?'); values.push(body.contact_name); }
     if (body.contact_email !== undefined) { updates.push('contact_email = ?'); values.push(body.contact_email); }
     if (body.contact_phone !== undefined) { updates.push('contact_phone = ?'); values.push(body.contact_phone); }
+    if (body.logo_url !== undefined) { updates.push('logo_url = ?'); values.push(body.logo_url); }
+    if (body.primary_color !== undefined) { updates.push('primary_color = ?'); values.push(body.primary_color); }
 
     if (updates.length === 0) {
       return Response.json({ error: 'No hay campos para actualizar' }, { status: 400 });

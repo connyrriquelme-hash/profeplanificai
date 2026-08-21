@@ -23,6 +23,16 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
     const sessionMeta = await getSessionMetadataFromRequest(context.request, env);
 
+    let institutionBranding: { logoUrl: string | null; primaryColor: string | null } | null = null;
+    if (authContext.institutionId) {
+      const row = await context.env.DB.prepare(
+        'SELECT logo_url, primary_color FROM institutions WHERE id = ?'
+      ).bind(authContext.institutionId).first<{ logo_url: string | null; primary_color: string | null }>();
+      if (row) {
+        institutionBranding = { logoUrl: row.logo_url, primaryColor: row.primary_color };
+      }
+    }
+
     return Response.json({
       user: {
         id: authContext.userId,
@@ -33,6 +43,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
         institutionId: authContext.institutionId,
         institutionalRole: authContext.role,
         permissions: authContext.permissions,
+        institutionBranding,
         scope: authContext.scope ? {
           courseIds: authContext.scope.courseIds,
           subjectIds: authContext.scope.subjectIds,

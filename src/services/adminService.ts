@@ -13,6 +13,8 @@ export interface Institution {
   contact_phone: string | null;
   status: string;
   plan: string;
+  logo_url: string | null;
+  primary_color: string | null;
   created_at: string;
   updated_at: string | null;
   member_count?: number;
@@ -80,7 +82,7 @@ export async function getInstitution(id: string): Promise<Institution> {
   return data.institution;
 }
 
-export async function updateInstitution(id: string, data: Partial<Pick<Institution, 'name' | 'rbd' | 'region' | 'commune' | 'contact_name' | 'contact_email' | 'contact_phone' | 'status' | 'plan'>>): Promise<void> {
+export async function updateInstitution(id: string, data: Partial<Pick<Institution, 'name' | 'rbd' | 'region' | 'commune' | 'contact_name' | 'contact_email' | 'contact_phone' | 'status' | 'plan' | 'logo_url' | 'primary_color'>>): Promise<void> {
   await api.patch(`/api/admin/institutions/${id}`, data);
 }
 

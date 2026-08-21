@@ -43,6 +43,9 @@ export default function AdminPanelView() {
     weekday: 1, start_time: '08:00', end_time: '09:30', block_type: 'lectivo', room: '', starts_on: '', ends_on: '',
   });
   const [showNewTemplate, setShowNewTemplate] = useState(false);
+  const [brandColor, setBrandColor] = useState('#B5471F');
+  const [brandLogoPreview, setBrandLogoPreview] = useState<string | null>(null);
+  const [savingBrand, setSavingBrand] = useState(false);
 
   const loadInstitutions = useCallback(async () => {
     try {
@@ -90,8 +93,37 @@ export default function AdminPanelView() {
     if (selectedInst) {
       loadMembers(selectedInst.id);
       loadTemplates(selectedInst.id);
+      setBrandColor(selectedInst.primary_color || '#B5471F');
+      setBrandLogoPreview(selectedInst.logo_url || null);
     }
   }, [selectedInst, loadMembers, loadTemplates]);
+
+  const handleLogoFileChange = (file: File | null) => {
+    if (!file) { setBrandLogoPreview(null); return; }
+    if (file.size > 300_000) {
+      setError('El logo pesa demasiado (máx. ~300KB). Usa una imagen más liviana.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setBrandLogoPreview(typeof reader.result === 'string' ? reader.result : null);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveBrand = async () => {
+    if (!selectedInst) return;
+    setSavingBrand(true);
+    try {
+      await updateInstitution(selectedInst.id, { primary_color: brandColor, logo_url: brandLogoPreview || '' });
+      const updated = { ...selectedInst, primary_color: brandColor, logo_url: brandLogoPreview };
+      setSelectedInst(updated);
+      setInstitutions(prev => prev.map(i => i.id === updated.id ? updated : i));
+      setMsg('Marca institucional guardada. Se aplicará a los materiales generados por docentes de este colegio.');
+    } catch (e) {
+      setError('Error al guardar la marca: ' + (e instanceof Error ? e.message : 'desconocido'));
+    } finally {
+      setSavingBrand(false);
+    }
+  };
 
   const handleCreateInstitution = async () => {
     if (!newInst.name.trim()) { setError('Nombre requerido'); return; }
@@ -297,6 +329,55 @@ export default function AdminPanelView() {
           <p className="muted" style={{ fontSize: 12 }}>
             {[selectedInst.region, selectedInst.commune].filter(Boolean).join(', ')} · Plan: {selectedInst.plan} · Estado: {selectedInst.status}
           </p>
+        </div>
+      )}
+
+      {selectedInst && tab === 'instituciones' && (
+        <div className="card" style={{ marginTop: 14 }}>
+          <h3 style={{ marginBottom: 4 }}>Marca institucional</h3>
+          <p className="muted" style={{ fontSize: 12, marginBottom: 14 }}>
+            El logo y color se aplican a los materiales que generen los docentes de este colegio.
+          </p>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Logo</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 10, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#fafafa' }}>
+                  {brandLogoPreview ? (
+                    <img src={brandLogoPreview} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <Building2 size={22} style={{ color: 'var(--muted)' }} />
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    onChange={e => handleLogoFileChange(e.target.files?.[0] || null)}
+                    style={{ fontSize: 12 }}
+                  />
+                  {brandLogoPreview && (
+                    <button className="secondary" onClick={() => setBrandLogoPreview(null)} style={{ fontSize: 11, alignSelf: 'flex-start' }}>Quitar logo</button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Color primario</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} style={{ width: 40, height: 32, padding: 0, border: '1px solid var(--border)', borderRadius: 6 }} />
+                <input
+                  type="text"
+                  value={brandColor}
+                  onChange={e => setBrandColor(e.target.value)}
+                  style={{ padding: '6px 10px', fontSize: 13, width: 100 }}
+                />
+              </div>
+            </div>
+          </div>
+          <button className="primary" onClick={handleSaveBrand} disabled={savingBrand} style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Check size={14} /> {savingBrand ? 'Guardando…' : 'Guardar marca'}
+          </button>
         </div>
       )}
 

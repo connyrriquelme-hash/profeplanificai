@@ -10,6 +10,7 @@ export interface User {
   institutionalRole?: 'super_admin' | 'institution_admin' | 'coordinator' | 'teacher' | 'student';
   permissions?: string[];
   institutionId?: string;
+  institutionBranding?: { logoUrl: string | null; primaryColor: string | null } | null;
 }
 
 interface AuthContextType {

@@ -5,6 +5,7 @@ Displays the main header with title, subtitle, and metadata.
 
 import React from 'react';
 import { ImagePlus, Loader2, RefreshCw } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ProductHeaderProps {
   title: string;
@@ -43,9 +44,16 @@ export function ProductHeader({
   isGeneratingCoverImage,
   coverImageError,
 }: ProductHeaderProps) {
+  const { user } = useAuth();
+  const branding = user?.institutionBranding;
+  const brandColor = branding?.primaryColor || undefined;
+
   return (
     <header className={`product-header overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-md print:shadow-none ${className || ''}`} style={style}>
-      <div className="h-1.5 bg-gradient-to-r from-[var(--primary)] to-[var(--accent-honey)] print:hidden" />
+      <div
+        className={`h-1.5 print:hidden ${brandColor ? '' : 'bg-gradient-to-r from-[var(--primary)] to-[var(--accent-honey)]'}`}
+        style={brandColor ? { background: brandColor } : undefined}
+      />
       {coverImageUrl && (
         <div className="relative">
           <img src={coverImageUrl} alt="" className="w-full h-40 md:h-52 object-cover" />
@@ -80,9 +88,16 @@ export function ProductHeader({
       <div className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
-          <span className="inline-flex items-center rounded-full bg-[var(--primary-tint)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--primary-ink)] print:bg-transparent print:px-0">
-            ProfePlanificAI
-          </span>
+          {branding?.logoUrl ? (
+            <img src={branding.logoUrl} alt="Logo del colegio" className="h-8 max-w-[160px] object-contain object-left" />
+          ) : (
+            <span
+              className="inline-flex items-center rounded-full bg-[var(--primary-tint)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--primary-ink)] print:bg-transparent print:px-0"
+              style={brandColor ? { background: `${brandColor}1a`, color: brandColor } : undefined}
+            >
+              ProfePlanificAI
+            </span>
+          )}
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--ink)] tracking-tight">{title}</h1>
           {subtitle && (
             <p className="text-[var(--ink-soft)] text-base">{subtitle}</p>
