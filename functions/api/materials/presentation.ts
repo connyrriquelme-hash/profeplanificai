@@ -164,7 +164,12 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
         { masterTemplate },
       );
       if (deck._fallbackReason) {
-        deckGenerationWarning = `La IA no pudo generar el contenido según la plantilla y se usó un esquema genérico. Motivo: ${deck._fallbackReason}`;
+        // Diagnostico temporal: NVIDIA_API_KEY esta confirmado como secret
+        // encriptado (wrangler pages secret list) pero no aparece intentado
+        // en la cadena de proveedores del error -- typeof/length ayudan a
+        // confirmar si context.env.NVIDIA_API_KEY llega o no a este handler.
+        const nvidiaDiag = `typeof=${typeof context.env.NVIDIA_API_KEY}, length=${typeof context.env.NVIDIA_API_KEY === 'string' ? context.env.NVIDIA_API_KEY.length : 'n/a'}`;
+        deckGenerationWarning = `La IA no pudo generar el contenido según la plantilla y se usó un esquema genérico. Motivo: ${deck._fallbackReason} [NVIDIA_API_KEY diag: ${nvidiaDiag}]`;
       }
       pptDeck = deck;
       slides = pptDeckToLegacySlides(deck);
