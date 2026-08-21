@@ -9,7 +9,7 @@
  * - 'ppt': Slide grid for PPT presentations
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import {
   Presentation,
   Save,
   Loader2,
+  Palette,
 } from 'lucide-react';
 import { DocumentEditor } from './DocumentEditor';
 import { AICopilotSidebar } from './AICopilotSidebar';
@@ -28,6 +29,11 @@ import { QualityReviewPanel } from './QualityReviewPanel';
 import { PresentacionRenderer } from '../products/renderers/PresentacionRenderer';
 import type { PedagogicalProduct } from '../products/types';
 import { exportProductToWord, exportProductToPptx } from '../../services/productExportService';
+
+// Konva/react-konva son pesados (~300KB) y solo los necesita quien entra a
+// modo "Diseño"; cargarlos eager infla el chunk del workspace aunque nunca
+// se abra el editor visual.
+const ProductCanvasEditor = lazy(() => import('../products/canvas/ProductCanvasEditor').then(m => ({ default: m.ProductCanvasEditor })));
 
 const PALETTE = {
   primary: '#B5471F',
@@ -70,6 +76,7 @@ export function WorkspaceLayout({
   const [isDirty, setIsDirty] = useState(false);
   const [exportingWord, setExportingWord] = useState(false);
   const [exportingPptx, setExportingPptx] = useState(false);
+  const [contentMode, setContentMode] = useState<'content' | 'diseno'>('content');
 
   // Avisa antes de cerrar/recargar la pestaña si hay cambios sin guardar
   // (edicion manual o de la IA que el docente aun no exporto/guardo).
@@ -264,8 +271,42 @@ export function WorkspaceLayout({
       {/* ── Workspace body: 70/30 split ──────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Content area (70%) */}
-        <div className="flex-[7] min-w-0 overflow-y-auto bg-slate-100">
-          {mode === 'ppt' ? (
+        <div className="flex-[7] min-w-0 overflow-y-auto bg-slate-100 flex flex-col">
+          <div className="flex items-center gap-1 p-1 m-3 mb-0 w-fit bg-white border border-[var(--border)] rounded-lg print:hidden">
+            <button
+              type="button"
+              onClick={() => setContentMode('content')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                contentMode === 'content'
+                  ? 'bg-slate-100 text-[var(--ink)]'
+                  : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
+              }`}
+            >
+              {mode === 'ppt' ? <Presentation className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
+              {mode === 'ppt' ? 'Presentación' : 'Documento'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setContentMode('diseno')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                contentMode === 'diseno'
+                  ? 'bg-slate-100 text-[var(--ink)]'
+                  : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <Palette className="w-3.5 h-3.5" />
+              Diseño
+            </button>
+          </div>
+
+          {contentMode === 'diseno' ? (
+            <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--ink-mute)]"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando editor de diseño…</div>}>
+              <ProductCanvasEditor
+                product={activeProduct}
+                onProductChange={handleProductChange}
+              />
+            </Suspense>
+          ) : mode === 'ppt' ? (
             <div className="p-4">
               <PresentacionRenderer product={activeProduct} />
             </div>
