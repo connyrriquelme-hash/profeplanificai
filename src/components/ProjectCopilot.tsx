@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Bot, Loader2, AlertCircle, Clock, CheckCircle2, Printer, Save } from 'lucide-react';
+import { Bot, Loader2, AlertCircle, AlertTriangle, Clock, CheckCircle2, Printer, Save } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import type { CopilotProjectResult } from '../types/copilot';
 import { saveToBank } from '../services/bankService';
@@ -203,6 +203,12 @@ export function ProjectCopilot({ onNavigate }: ProjectCopilotProps) {
 
       {result && result.plan && (
         <div className="space-y-6">
+          {result.usedFallback && (
+            <div className="no-print flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
+              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+              <span>La IA no respondió a tiempo, así que esta planificación se generó en modo de respaldo (contenido más genérico). Puedes intentar generar de nuevo.</span>
+            </div>
+          )}
           <div className="no-print flex items-center gap-3">
             <button
               type="button"

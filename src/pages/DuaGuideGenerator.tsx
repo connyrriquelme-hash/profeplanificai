@@ -557,6 +557,13 @@ export function DuaGuideGenerator() {
             <p className="mt-1 text-sm text-black">Documento de apoyo docente para revisión, ajuste y uso profesional.</p>
           </div>
 
+          {result.usedFallback && (
+            <div className="print:hidden flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+              <span aria-hidden="true">⚠️</span>
+              <span>La IA no respondió a tiempo, así que esta guía se generó en modo de respaldo (contenido más genérico). Puedes intentar generar de nuevo.</span>
+            </div>
+          )}
+
           <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm print:break-inside-avoid print:rounded-none print:border-slate-300 print:p-0 print:pb-4 print:shadow-none">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>

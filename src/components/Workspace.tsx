@@ -4,7 +4,6 @@ import { Play, Sparkles, Plus, Search, CheckCircle, Loader, Share2, Link, Check,
 import { useProject, type ProjectData } from '../contexts/ProjectContext';
 import { niveles, getAsignaturas, getOAs, type CurriculumItem } from '../data/curriculumData';
 import { AIAssistant, type PedagogicalContext } from './AIAssistant';
-import { generarConIA } from '../services/aiService';
 import { saveRecurso, generateId } from '../services/storageService';
 import { shareFromWorkspace } from '../services/sharedDocumentService';
 import { api } from '../services/apiClient';
@@ -12,7 +11,8 @@ import { getCurricularContext, analyzeObjectiveComplexity, buildPedagogicalPromp
 import type { CurricularContext, ComplexityAnalysis } from '../services/curricularPlanningService';
 import { fetchObjectives, fetchCourses, fetchSubjects } from '../services/objectiveService';
 import type { D1ObjectiveRow, CourseRow, SubjectRow } from '../services/objectiveService';
-import { cleanGeneratedPlanText } from '../services/curricularPlanningService';
+import { cleanGeneratedPlanText, serializePlanificacionToText } from '../services/curricularPlanningService';
+import { generateMaterial } from '../services/materialGeneratorService';
 import { extractShortObjectiveCode, resolveObjectiveRealPayload, resolveObjectiveRealCode, type RichCurriculumItem } from '../services/curriculumMappingService';
 
 interface WorkspaceProps {
@@ -310,22 +310,34 @@ export function Workspace({ onNavigate }: WorkspaceProps) {
         numberOfLessons,
         theme: lessonTheme || undefined,
       });
-      const result = await generarConIA({
-        tipo: 'planificacion',
-        nivel: selectedNivel,
-        asignatura: selectedAsignatura,
-        oa: selectedOA.oa_texto,
-        habilidad: selectedHabilidad,
-        promptExt: pedagogicalPrompt,
-        estilo: 'completo',
-        duracion: '90 min',
-        onStatus: () => {},
-      });
-      const raw = result.texto || generarFallbackEstructura(numberOfLessons);
-      const cleaned = cleanGeneratedPlanText(raw);
+      // Misma logica/motor que Flujo Docente (PlanificacionEngine via
+      // /api/materials/generate?type=planificacion), en vez del generador
+      // cliente generico (generarConIA/aiService.ts) que este Espacio de
+      // Trabajo usaba antes y que caia con facilidad en su fallback local
+      // (texto siempre generico, sin OA/contexto chileno real).
+      const res = await generateMaterial(
+        {
+          level: selectedNivel,
+          subject: selectedAsignatura,
+          objectiveCode: resolveObjectiveRealCode(selectedOA) || '',
+          objectiveText: selectedOA.oa_texto,
+          indicators: selectedOA.indicadores.filter((_, i) => selectedInds.has(i)),
+          skills: curricularContext?.skills?.map(s => s.text) || [selectedHabilidad || selectedOA.habilidades[0] || ''],
+          topic: lessonTheme || selectedOA.oa_texto,
+          additionalContext: pedagogicalPrompt,
+          recommendedLessons: numberOfLessons,
+        },
+        'planificacion',
+      );
+
+      if (!res.ok || !res.planificacion) {
+        throw new Error(res.error || 'No se pudo generar la planificación.');
+      }
+
+      const cleaned = cleanGeneratedPlanText(serializePlanificacionToText(res.planificacion));
       setEstructuraClase(cleaned);
       updateProjectField('inicio', cleaned);
-      showToast(`Secuencia de ${numberOfLessons} clase(s) generada con IA.`);
+      showToast(res.usedFallback ? 'La IA no respondió a tiempo: se generó en modo de respaldo.' : `Secuencia de ${numberOfLessons} clase(s) generada con IA.`);
     } catch {
       const fallback = cleanGeneratedPlanText(generarFallbackEstructura(numberOfLessons));
       setEstructuraClase(fallback);

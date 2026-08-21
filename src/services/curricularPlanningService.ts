@@ -192,6 +192,42 @@ function getFallbackComplexity(params: {
   return { complexity, recommendedLessons, rationale, suggestedSequence };
 }
 
+export function serializePlanificacionToText(planificacion: {
+  unit: string;
+  classes: { number: number; objective: string; opening: string; development: string; closure: string; duration: string; materials: string[]; assessment: string }[];
+  methodology: string;
+  dua: string[];
+  evaluation: string;
+}): string {
+  const parts: string[] = [`Unidad: ${planificacion.unit}`, `Metodología: ${planificacion.methodology}`, ''];
+
+  for (const clase of planificacion.classes) {
+    parts.push(`CLASE ${clase.number} (${clase.duration})`);
+    parts.push(`Objetivo: ${clase.objective}`);
+    parts.push('');
+    parts.push('Inicio:');
+    parts.push(clase.opening);
+    parts.push('');
+    parts.push('Desarrollo:');
+    parts.push(clase.development);
+    parts.push('');
+    parts.push('Cierre:');
+    parts.push(clase.closure);
+    parts.push('');
+    parts.push(`Materiales: ${clase.materials.join(', ')}`);
+    parts.push(`Evaluación de la clase: ${clase.assessment}`);
+    parts.push('');
+  }
+
+  parts.push('Adecuaciones DUA:');
+  planificacion.dua.forEach((item) => parts.push(`- ${item}`));
+  parts.push('');
+  parts.push('Evaluación de la unidad:');
+  parts.push(planificacion.evaluation);
+
+  return parts.join('\n').trim();
+}
+
 export function cleanGeneratedPlanText(text: string): string {
   return text
     .replace(/\*\*(.+?)\*\*/g, '$1')

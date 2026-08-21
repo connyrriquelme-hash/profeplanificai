@@ -68,6 +68,7 @@ export interface CopilotProjectResult {
   plan: PedagogicalPlan;
   duaGuide: DuaGuide;
   data: PedagogicalPlan & DuaGuide;
+  usedFallback?: boolean;
 }
 
 export interface VocabularioTermino {

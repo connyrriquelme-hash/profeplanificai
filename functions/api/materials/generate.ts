@@ -6,7 +6,7 @@ import { getAuthenticatedUserId } from '../../_lib/auth';
 
 interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string }
 
-interface GenerateRequest {
+export interface GenerateRequest {
   level: string;
   subject: string;
   objectiveCode: string;
@@ -27,7 +27,7 @@ interface GenerateRequest {
   outputFormat?: string;
 }
 
-function getContextFromD1(db: D1Database, req: GenerateRequest): Promise<any> {
+export function getContextFromD1(db: D1Database, req: GenerateRequest): Promise<any> {
   return Promise.all([
     db.prepare(`SELECT o.*, c.name as course_name, s.name as subject_name, a.name as axis_name
       FROM objectives o LEFT JOIN courses c ON o.course_id = c.id LEFT JOIN subjects s ON o.subject_id = s.id LEFT JOIN axes a ON a.id = o.axis_id
@@ -37,7 +37,7 @@ function getContextFromD1(db: D1Database, req: GenerateRequest): Promise<any> {
   ]);
 }
 
-function buildMaterialPrompt(type: string, req: GenerateRequest, context: any): string {
+export function buildMaterialPrompt(type: string, req: GenerateRequest, context: any): string {
   const [objective, indicators, methodologies] = context;
   const obj = objective as any || {};
   const indList = (indicators as any)?.results?.map((i: any) => i.indicator_text).filter(Boolean) || [];

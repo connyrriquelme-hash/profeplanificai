@@ -1,8 +1,12 @@
 import { AIEngine } from '../core/AIEngine';
 import { PedagogicalEngine } from '../core/PedagogicalEngine';
+import { generatePlanificacion } from '../core/PlanificacionEngine';
+import { getContextFromD1, buildMaterialPrompt, type GenerateRequest } from './materials/generate';
 import type { AIEngineEnv, PedagogicalEngineEnv } from '../core/types';
 
-interface GenerateProjectEnv extends PedagogicalEngineEnv, AIEngineEnv {}
+interface GenerateProjectEnv extends PedagogicalEngineEnv, AIEngineEnv {
+  DB: D1Database;
+}
 
 interface GenerateProjectRequest {
   nivel?: string;
@@ -124,6 +128,52 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
     };
 
     const plan = await PedagogicalEngine.buildPlan(context.env, nivel, asignatura, tema, curriculumContext);
+
+    // PedagogicalEngine.buildPlan() arma estructura_clase con texto fijo
+    // interpolado (nunca IA) -- ver auditoria de "Espacio de Trabajo/Project
+    // Copilot generan contenido generico". Acá reemplazamos esa parte con el
+    // MISMO motor real que usa Flujo Docente (generatePlanificacion +
+    // buildMaterialPrompt/getContextFromD1 de materials/generate.ts), tomando
+    // la primera clase generada como la clase única que pide este formulario.
+    let usedFallback = false;
+    if (context.env.DB) {
+      try {
+        const planificacionReq: GenerateRequest = {
+          level: nivel,
+          subject: asignatura,
+          objectiveCode: selectedObjectiveCode,
+          objectiveText: curriculumContext.objectiveText,
+          indicators: curriculumContext.indicators,
+          skills: [...curriculumContext.skills, ...curriculumContext.curricularSkills],
+          topic: tema,
+        };
+        const ctx = await getContextFromD1(context.env.DB, planificacionReq);
+        const prompt = buildMaterialPrompt('planificacion', planificacionReq, ctx);
+        const { planificacion, usedFallback: fallbackUsada } = await generatePlanificacion(
+          context.env,
+          prompt,
+          {
+            level: nivel,
+            subject: asignatura,
+            objectiveText: curriculumContext.objectiveText,
+            topic: tema,
+            indicators: curriculumContext.indicators,
+          },
+        );
+        usedFallback = fallbackUsada;
+        const primeraClase = planificacion.classes[0];
+        if (primeraClase) {
+          plan.estructura_clase = {
+            inicio: { tiempo_minutos: 15, descripcion: primeraClase.opening },
+            desarrollo: { tiempo_minutos: 60, descripcion: primeraClase.development },
+            cierre: { tiempo_minutos: 15, descripcion: primeraClase.closure },
+          };
+        }
+      } catch (error) {
+        console.error('[generate-project] generatePlanificacion error, se mantiene estructura_clase base:', error);
+      }
+    }
+
     const duaGuide = await AIEngine.generateDuaGuide(context.env, plan);
 
     // DIAGNOSTIC LOGS
@@ -180,6 +230,7 @@ export async function onRequestPost(context: EventContext<GenerateProjectEnv>): 
       ok: true,
       plan,
       duaGuide,
+      usedFallback,
       data: {
         ...plan,
         ...duaGuide,

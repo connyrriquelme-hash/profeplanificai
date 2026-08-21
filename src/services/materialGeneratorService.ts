@@ -12,6 +12,7 @@ export type FormativeEvaluationType =
 
 import type { ClassroomScientificNotebook } from '../types/scientificNotebook';
 import type { UnidadDidactica, MetodologiaActiva } from '../../schemas/UnidadDidacticaSchema';
+import type { Planificacion } from '../../schemas/PlanificacionSchema';
 import { api } from './apiClient';
 
 export interface MaterialRequest {
@@ -52,6 +53,7 @@ export interface MaterialResult {
   slides?: unknown[];
   pptDeck?: unknown;
   unidad?: UnidadDidactica;
+  planificacion?: Planificacion;
   prompt?: string;
   context?: unknown;
   quality?: {
