@@ -277,7 +277,6 @@ export async function generateEvaluacionEscrita(
     return enrich(data, fallback, input);
   } catch (error) {
     console.error('[EvaluacionEscritaEngine] generateEvaluacionEscrita error:', error);
-    (fallback as any)._diagError = error instanceof Error ? error.message : String(error);
     return fallback;
   }
 }
