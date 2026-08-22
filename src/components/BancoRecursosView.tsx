@@ -74,7 +74,15 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
     }
     try {
       const parsed = JSON.parse(detail.content);
-      setEditedProduct(normalizeProduct(parsed, detail.type));
+      // Contenido guardado por WorkspaceLayout (ej. tras una edición
+      // anterior desde aquí mismo, o desde Flujo Docente) ya viene como
+      // PedagogicalProduct completo -- normalizeProduct() no tiene un caso
+      // para eso y lo re-envuelve como producto generico (type/metadata
+      // duplicados, .data anidando el objeto entero). Si ya trae la forma
+      // correcta, se usa tal cual.
+      const isAlreadyProduct = parsed && typeof parsed === 'object'
+        && typeof parsed.type === 'string' && parsed.metadata && parsed.data;
+      setEditedProduct(isAlreadyProduct ? (parsed as PedagogicalProduct) : normalizeProduct(parsed, detail.type));
     } catch {
       setEditedProduct(null);
     }
