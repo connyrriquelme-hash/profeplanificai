@@ -1,6 +1,6 @@
 import { generarConIA } from './aiService';
 import { generateEvalAvanzado } from './localGenerator';
-import { generateFormativeEvaluation, generateRubric, type MaterialRequest } from './materialGeneratorService';
+import { generateFormativeEvaluation, generateRubric, generateEvaluation as generateEvaluacionEscritaAPI, type MaterialRequest } from './materialGeneratorService';
 
 // Formas minimas (duck-typed) de lo que devuelven los engines reales de
 // functions/core/{TicketSalidaEngine,ListaCotejoEngine,RubricaEngine}.ts a
@@ -78,6 +78,53 @@ function serializePremiumRubric(r: EnginePremiumRubric): string {
   r.formativeFeedbackQuestions.forEach((q) => parts.push(`- ${q}`));
   parts.push('', r.studentSelfAssessment.title);
   r.studentSelfAssessment.prompts.forEach((p) => parts.push(`- ${p}`));
+  return parts.join('\n');
+}
+
+interface EngineEvaluationQuestion {
+  number: number;
+  type: 'alternativa' | 'verdadero_falso' | 'desarrollo';
+  text: string;
+  options?: { text: string; isCorrect: boolean }[];
+  score: number;
+  indicator: string;
+  answer?: 'V' | 'F';
+  justification_if_false?: string;
+  teacher_rubric?: { criteria: string[]; sample_answer: string; scoring_guide: string };
+}
+
+interface EngineEvaluacionEscrita {
+  title: string;
+  instructions: string;
+  questions: EngineEvaluationQuestion[];
+  usedFallback: boolean;
+}
+
+function serializeEvaluacionEscrita(r: EngineEvaluacionEscrita): string {
+  const parts = [r.title, '', r.instructions, ''];
+  r.questions.forEach((q) => {
+    parts.push(`${q.number}. (${q.score} pts) ${q.text}`);
+    if (q.type === 'alternativa' && q.options) {
+      q.options.forEach((o, i) => parts.push(`   ${String.fromCharCode(65 + i)}) ${o.text}`));
+    } else if (q.type === 'verdadero_falso') {
+      parts.push('   [ ] Verdadero   [ ] Falso');
+    } else if (q.teacher_rubric) {
+      parts.push('   (Desarrollo — ver pauta para el docente)');
+    }
+    parts.push('');
+  });
+  parts.push('Pauta de corrección (docente):');
+  r.questions.forEach((q) => {
+    if (q.type === 'alternativa' && q.options) {
+      const letter = String.fromCharCode(65 + q.options.findIndex((o) => o.isCorrect));
+      parts.push(`${q.number}. Correcta: ${letter}`);
+    } else if (q.type === 'verdadero_falso') {
+      parts.push(`${q.number}. Correcta: ${q.answer}${q.justification_if_false ? ` — ${q.justification_if_false}` : ''}`);
+    } else if (q.teacher_rubric) {
+      parts.push(`${q.number}. Respuesta modelo: ${q.teacher_rubric.sample_answer}`);
+      parts.push(`   Criterios: ${q.teacher_rubric.criteria.join('; ')}`);
+    }
+  });
   return parts.join('\n');
 }
 
@@ -267,7 +314,7 @@ export async function generateEvaluation(params: {
   // misma logica solicitada para la pestaña Evaluaciones. El resto (prueba
   // escrita, SIMCE, etc.) todavia no tiene un engine equivalente, asi que
   // sigue por el camino legacy (generarConIA + fallback local) mas abajo.
-  if (typeKey === 'ticket' || typeKey === 'cotejo' || typeKey === 'rubrica') {
+  if (typeKey === 'ticket' || typeKey === 'cotejo' || typeKey === 'rubrica' || typeKey === 'formativa' || typeKey === 'prueba_escrita' || typeKey === 'simce') {
     try {
       const req: MaterialRequest = {
         level: params.course,
@@ -293,12 +340,28 @@ export async function generateEvaluation(params: {
           onStatus(lista.usedFallback ? 'La IA no respondió a tiempo: modo de respaldo.' : 'Generado con IA.', lista.usedFallback ? 'warn' : 'ok');
           return cleanEvaluationText(serializeListaCotejo(lista));
         }
-      } else {
+      } else if (typeKey === 'rubrica') {
         const res = await generateRubric(req);
         const rubrica = res.rubric as EnginePremiumRubric | undefined;
         if (res.ok && rubrica) {
           onStatus(rubrica.usedFallback ? 'La IA no respondió a tiempo: modo de respaldo.' : 'Generado con IA.', rubrica.usedFallback ? 'warn' : 'ok');
           return cleanEvaluationText(serializePremiumRubric(rubrica));
+        }
+      } else {
+        // formativa / prueba_escrita / simce -> EvaluacionEscritaEngine via
+        // /api/materials/evaluation (antes 100% texto fijo, ver auditoría).
+        const tipo = params.evaluationType === 'diagnostica'
+          ? 'diagnostica'
+          : (params.evaluationType === 'simce' || params.evaluationType === 'simce_breve')
+            ? 'simce'
+            : (params.evaluationType === 'sumativa' || params.evaluationType === 'banco_preguntas')
+              ? 'sumativa'
+              : 'formativa';
+        const res = await generateEvaluacionEscritaAPI({ ...req, type: tipo, questionCount: params.numberOfQuestions } as MaterialRequest);
+        const evalEscrita = (res as { evaluation?: EngineEvaluacionEscrita }).evaluation;
+        if (res.ok && evalEscrita) {
+          onStatus(evalEscrita.usedFallback ? 'La IA no respondió a tiempo: modo de respaldo.' : 'Generado con IA.', evalEscrita.usedFallback ? 'warn' : 'ok');
+          return cleanEvaluationText(serializeEvaluacionEscrita(evalEscrita));
         }
       }
     } catch {

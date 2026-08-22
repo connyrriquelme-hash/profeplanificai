@@ -4,6 +4,7 @@ export interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
   GEMINI_API_KEY?: string;
+  GROQ_API_KEY?: string;
   OPENROUTER_API_KEY?: string;
   HUGGINGFACE_API_KEY?: string;
   AI_DEFAULT_MODEL_GEMINI?: string;

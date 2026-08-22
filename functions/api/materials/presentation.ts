@@ -33,7 +33,7 @@ interface PresentationRequest {
   }>;
 }
 
-interface OldSlide {
+export interface OldSlide {
   type: string;
   title: string;
   subtitle?: string;
@@ -44,7 +44,7 @@ interface OldSlide {
   speakerNotes?: string;
 }
 
-function pptDeckToLegacySlides(deck: PptDeck): OldSlide[] {
+export function pptDeckToLegacySlides(deck: PptDeck): OldSlide[] {
   return deck.slides.flatMap((slide: PptDeckSlide): OldSlide[] => {
     // teacherNotes solo existe en las 7 variantes que lo definen en el
     // schema (todas menos comparison/quiz/verdadero_falso, que lo cargan

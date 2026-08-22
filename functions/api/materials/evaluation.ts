@@ -1,8 +1,20 @@
 import { generateEducationalImage, type ImageEnv } from '../../_lib/images';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 import { getAuthenticatedUserId } from '../../_lib/auth';
+import { generateEvaluacionEscrita, type EvaluacionEscritaQuestion, type EvaluacionEscritaTipo } from '../../core/EvaluacionEscritaEngine';
+import type { AIEngineEnv } from '../../core/types';
 
-interface Env { DB: D1Database; JWT_SECRET?: string; AI?: ImageEnv['AI']; ENABLE_IMAGE_AI?: string; IMAGE_PROVIDER_ORDER?: string; HF_API_TOKEN?: string; IMAGE_CACHE_TTL_DAYS?: string }
+interface Env {
+  DB: D1Database;
+  JWT_SECRET?: string;
+  AI?: ImageEnv['AI'];
+  GEMINI_API_KEY?: string;
+  GROQ_API_KEY?: string;
+  ENABLE_IMAGE_AI?: string;
+  IMAGE_PROVIDER_ORDER?: string;
+  HF_API_TOKEN?: string;
+  IMAGE_CACHE_TTL_DAYS?: string;
+}
 
 interface EvaluationRequest {
   level: string;
@@ -14,7 +26,16 @@ interface EvaluationRequest {
   topic: string;
   questionCount?: number;
   difficulty?: string;
-  type?: 'formativa' | 'sumativa' | 'diagnostica';
+  type?: EvaluacionEscritaTipo;
+}
+
+function correctAnswerLetter(q: EvaluacionEscritaQuestion): string {
+  if (q.type === 'alternativa' && q.options) {
+    const idx = q.options.findIndex((o) => o.isCorrect);
+    return idx >= 0 ? String.fromCharCode(65 + idx) : 'A';
+  }
+  if (q.type === 'verdadero_falso') return q.answer || 'V';
+  return 'Respuesta modelo (ver pauta)';
 }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
@@ -31,11 +52,59 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `SELECT o.*, c.name as course_name, s.name as subject_name FROM objectives o LEFT JOIN courses c ON o.course_id = c.id LEFT JOIN subjects s ON o.subject_id = s.id WHERE o.code = ?`
     ).bind(body.objectiveCode).first();
 
-    const indicators = await db.prepare(
+    const indicatorsRows = await db.prepare(
       `SELECT ci.indicator_text FROM curriculum_indicators ci WHERE ci.oa_code = ? LIMIT 10`
     ).bind(body.objectiveCode).all();
+    const indText = ((indicatorsRows as any)?.results || []).map((i: any) => i.indicator_text).filter(Boolean);
 
-    const evaluation = buildEvaluation(body, objective as any, (indicators as any)?.results || []);
+    // Mismo motor real que ya usa Flujo Docente para el resto de los
+    // productos (callAIConValidacion con cascada Workers AI → Gemini →
+    // Groq). Antes este endpoint SIEMPRE devolvía texto fijo interpolado
+    // ("Alternativa correcta"/"Pregunta de selección múltiple sobre X" para
+    // cualquier tema), sin llamar nunca a un proveedor de IA.
+    const generated = await generateEvaluacionEscrita(
+      { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY, GROQ_API_KEY: context.env.GROQ_API_KEY } as AIEngineEnv,
+      {
+        level: body.level,
+        subject: body.subject,
+        objectiveCode: body.objectiveCode,
+        objectiveText: body.objectiveText || body.topic || '',
+        topic: body.topic || body.objectiveText || '',
+        indicators: (body.indicators && body.indicators.length ? body.indicators : indText),
+        tipo: body.type || 'formativa',
+        questionCount: body.questionCount,
+      },
+    );
+
+    const ctx = (objective as any)?.course_name || body.level;
+    const subj = (objective as any)?.subject_name || body.subject;
+
+    const evaluation: any = {
+      metadata: {
+        course: ctx,
+        subject: subj,
+        unit: body.topic || body.objectiveCode,
+        oa: body.objectiveCode,
+        total_score: generated.totalPoints,
+        type: body.type || 'formativa',
+      },
+      title: generated.title,
+      instructions: generated.instructions,
+      questions: generated.questions,
+      answerKey: {
+        summary: 'Pauta de corrección: revisa cada pregunta según el puntaje indicado y la justificación cuando corresponda.',
+        question_answers: generated.questions.map((q) => ({
+          number: q.number,
+          correct_answer: correctAnswerLetter(q),
+          explanation: q.type === 'desarrollo'
+            ? q.teacher_rubric?.sample_answer || 'Ver pauta de desarrollo.'
+            : (q.justification_if_false || 'Respuesta correcta según el OA evaluado.'),
+        })),
+        total_points: generated.totalPoints,
+      },
+      usedFallback: generated.usedFallback,
+    };
+
     const quality = validatePedagogicalProduct(evaluation, {
       objectiveCode: body.objectiveCode,
       objectiveText: body.objectiveText,
@@ -46,16 +115,16 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const questionImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
     const imageTitles: string[] = [];
 
-    for (const q of (evaluation as any).questions || []) {
-      if (q.type === 'open' || q.type === 'true_false') {
+    for (const q of evaluation.questions || []) {
+      if (q.type === 'desarrollo' || q.type === 'verdadero_falso') {
         try {
           const result = await generateEducationalImage({
             grade: body.level,
             subject: body.subject,
             oa: body.objectiveText || body.topic || body.objectiveCode,
             resourceTitle: body.topic || 'Evaluación',
-            slideTitle: q.question?.slice(0, 100) || 'Pregunta de evaluación',
-            slideContent: q.question?.slice(0, 300) || '',
+            slideTitle: q.text?.slice(0, 100) || 'Pregunta de evaluación',
+            slideContent: q.text?.slice(0, 300) || '',
           }, imageEnv);
           if (result.ok) {
             questionImages.push({ url: result.url, alt: `Imagen: Pregunta ${q.number}`, source: result.source, attribution: result.attribution || '' });
@@ -68,8 +137,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     if (questionImages.length > 0) {
-      (evaluation as any).images = questionImages;
-      (evaluation as any).imageTitles = imageTitles;
+      evaluation.images = questionImages;
+      evaluation.imageTitles = imageTitles;
     }
 
     const resourceId = `eval_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -90,88 +159,8 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Evaluación generada para ${body.objectiveCode}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, evaluation, quality, context: { objective, indicators: (indicators as any)?.results || [] } });
+    return Response.json({ ok: true, resourceId, evaluation, quality, context: { objective, indicators: (indicatorsRows as any)?.results || [] } });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar evaluación', details: err.message }, { status: 500 });
   }
-}
-
-function buildEvaluation(req: EvaluationRequest, objective: any, indicators: any[]): any {
-  const ctx = objective?.course_name || req.level;
-  const subj = objective?.subject_name || req.subject;
-  const count = Math.min(req.questionCount || 10, 20);
-  const indText = indicators.map((i: any) => i.indicator_text).filter(Boolean);
-  const scorePerQuestion = 2;
-  const totalScore = count * scorePerQuestion;
-
-  const questions: any[] = [];
-  const types = ['alternativa', 'verdadero_falso', 'desarrollo'];
-
-  for (let i = 0; i < count; i++) {
-    const type = types[i % types.length];
-    const indicator = indText[i % indText.length] || 'Comprensión del OA';
-
-    if (type === 'alternativa') {
-      questions.push({
-        number: i + 1,
-        type: 'alternativa',
-        text: `Pregunta de selección múltiple sobre ${req.topic || req.objectiveCode}.`,
-        options: [
-          { text: 'Alternativa correcta', isCorrect: true },
-          { text: 'Alternativa incorrecta plausible', isCorrect: false },
-          { text: 'Alternativa incorrecta plausible', isCorrect: false },
-          { text: 'Alternativa incorrecta plausible', isCorrect: false },
-        ],
-        score: scorePerQuestion,
-        indicator,
-        skill: 'Comprensión',
-      });
-    } else if (type === 'verdadero_falso') {
-      questions.push({
-        number: i + 1,
-        type: 'verdadero_falso',
-        text: `Afirmación verdadera sobre ${req.topic || req.objectiveCode}.`,
-        answer: 'V',
-        score: scorePerQuestion,
-        indicator,
-        skill: 'Análisis',
-      });
-    } else {
-      questions.push({
-        number: i + 1,
-        type: 'desarrollo',
-        text: `Explica con tus propias palabras: ${req.topic || req.objectiveCode}.`,
-        score: scorePerQuestion * 2,
-        indicator,
-        skill: 'Expresión',
-        teacher_rubric: {
-          criteria: ['Comprensión del concepto', 'Uso correcto del vocabulario'],
-          sample_answer: `Respuesta modelo sobre ${req.topic || req.objectiveCode}.`,
-          scoring_guide: '1 punto por cada criterio satisfactoriamente cumplido.',
-        },
-      });
-    }
-  }
-
-  return {
-    metadata: {
-      course: ctx,
-      subject: subj,
-      unit: req.topic || req.objectiveCode,
-      oa: req.objectiveCode,
-      total_score: totalScore,
-      type: req.type || 'formativa',
-    },
-    instructions: `Lee atentamente cada pregunta. En las de selección múltiple, marca solo una alternativa. En las de verdadero o falso, indica V o F con justificación si es falso. En las de desarrollo, escribe tu respuesta de forma clara y ordenada.`,
-    questions,
-    answerKey: {
-      summary: `Pauta de corrección: cada pregunta de selección múltiple y V/F suma ${scorePerQuestion} puntos. Las de desarrollo suman ${scorePerQuestion * 2} puntos.`,
-      question_answers: questions.map((q: any) => ({
-        number: q.number,
-        correct_answer: q.type === 'alternativa' ? 'A' : q.type === 'verdadero_falso' ? q.answer : 'Respuesta modelo',
-        explanation: `Respuesta correcta según el OA evaluado.`,
-      })),
-      total_points: totalScore,
-    },
-  };
 }
