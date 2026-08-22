@@ -144,7 +144,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       `Rúbrica premium generada para ${body.objectiveCode}`
     ).run();
 
-    return Response.json({ ok: true, resourceId, rubric, quality, _diagHasAI: Boolean(context.env.AI), _diagHasGemini: Boolean(context.env.GEMINI_API_KEY), _diagHasGroq: Boolean(context.env.GROQ_API_KEY) });
+    return Response.json({ ok: true, resourceId, rubric, quality });
   } catch (err: any) {
     return Response.json({ error: 'Error al generar rúbrica', details: err.message }, { status: 500 });
   }
