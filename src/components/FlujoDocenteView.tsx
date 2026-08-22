@@ -839,11 +839,11 @@ export function FlujoDocenteView() {
       },
       {
         label: 'Aula',
-        items: PRODUCTOS.filter(p => ['guia_estudiante', 'presentacion', 'bitacora_cientifica'].includes(p.id)),
+        items: PRODUCTOS.filter(p => ['guia_estudiante', 'guia_dua', 'presentacion', 'bitacora_cientifica'].includes(p.id)),
       },
       {
         label: 'Evaluación',
-        items: PRODUCTOS.filter(p => ['evaluation_exit_ticket', 'evaluation_321', 'evaluation_checklist', 'evaluation_formative_rubric', 'evaluation_traffic_light', 'rubrica'].includes(p.id)),
+        items: PRODUCTOS.filter(p => ['evaluation_exit_ticket', 'evaluation_321', 'evaluation_checklist', 'evaluation_formative_rubric', 'evaluation_traffic_light', 'rubrica', 'evaluacion'].includes(p.id)),
       },
     ];
 
