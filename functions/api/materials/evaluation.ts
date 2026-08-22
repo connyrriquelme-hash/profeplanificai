@@ -104,6 +104,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       },
       usedFallback: generated.usedFallback,
       _diagError: (generated as any)._diagError,
+      _diagHasGroq: Boolean(context.env.GROQ_API_KEY),
     };
 
     const quality = validatePedagogicalProduct(evaluation, {
