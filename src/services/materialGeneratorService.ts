@@ -54,6 +54,7 @@ export interface MaterialResult {
   pptDeck?: unknown;
   unidad?: UnidadDidactica;
   planificacion?: Planificacion;
+  duaGuide?: unknown;
   prompt?: string;
   context?: unknown;
   quality?: {
@@ -104,6 +105,10 @@ export async function generateMaterial(req: MaterialRequest, type: string, signa
 
 export async function generateBitacoraCientifica(req: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
   return postJSON('/api/materials/bitacora-cientifica', req, signal);
+}
+
+export async function generateDuaGuideProduct(req: MaterialRequest, signal?: AbortSignal): Promise<MaterialResult> {
+  return postJSON('/api/materials/dua-guide', req, signal);
 }
 
 export interface UnidadDidacticaRequest {

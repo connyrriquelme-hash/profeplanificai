@@ -317,6 +317,61 @@ export function normalizeUnidadDidactica(raw: unknown): PedagogicalProduct | nul
  * Generic fallback normalizer: wraps any raw product into PedagogicalProduct
  * Uses selectedProducto to determine type, puts all data in data field
  */
+/**
+ * Normaliza un DuaGuide crudo (AIEngine.generateDuaGuide, ver
+ * functions/core/types.ts) al shape que espera DUAGuideRenderer:
+ * {sections: {principle, strategies}[], principles, learningBarriers,
+ * inclusiveAssessment}. DuaGuide no tiene esos campos -- tiene
+ * principios_dua.{representacion,accion_expresion,implicacion} (el marco
+ * DUA) y nivel_apoyo/nivel_estandar/nivel_desafio (la diferenciación en 3
+ * niveles, el valor real de este engine) -- se mapean ambos a secciones
+ * para no perder contenido generado.
+ */
+export function normalizeDuaGuide(raw: unknown): PedagogicalProduct | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (!Array.isArray(r.nivel_apoyo) && !Array.isArray(r.nivel_estandar) && !Array.isArray(r.nivel_desafio) && !r.principios_dua) {
+    return null;
+  }
+
+  const principiosDua = (r.principios_dua as Record<string, unknown>) || {};
+  const asStringArray = (v: unknown): string[] => Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+
+  const sections: { principle: string; strategies: string[] }[] = [
+    { principle: 'Nivel de Apoyo', strategies: asStringArray(r.nivel_apoyo) },
+    { principle: 'Nivel Estándar', strategies: asStringArray(r.nivel_estandar) },
+    { principle: 'Nivel Desafío', strategies: asStringArray(r.nivel_desafio) },
+    { principle: 'Representación', strategies: asStringArray(principiosDua.representacion) },
+    { principle: 'Acción y Expresión', strategies: asStringArray(principiosDua.accion_expresion) },
+    { principle: 'Implicación', strategies: asStringArray(principiosDua.implicacion) },
+  ].filter((s) => s.strategies.length > 0);
+
+  const evalInclusiva = (r.evaluacion_formativa_inclusiva as Record<string, unknown>) || {};
+  const inclusiveAssessment = [
+    ...asStringArray(evalInclusiva.evidencias),
+    ...asStringArray(evalInclusiva.preguntas_retroalimentacion),
+    ...asStringArray(evalInclusiva.lista_cotejo),
+    ...asStringArray(evalInclusiva.retroalimentacion_docente),
+  ].join('\n');
+
+  return {
+    type: 'guia_dua',
+    metadata: {
+      title: typeof r.titulo_guia === 'string' ? r.titulo_guia : 'Guía DUA',
+      subtitle: typeof r.contexto_motivacional === 'string' ? r.contexto_motivacional : undefined,
+      oaText: typeof r.oa_a_trabajar === 'string' ? r.oa_a_trabajar : undefined,
+    },
+    data: {
+      sections,
+      principles: ['Representación', 'Acción y Expresión', 'Implicación'],
+      learningBarriers: asStringArray(r.barreras_posibles),
+      inclusiveAssessment: inclusiveAssessment || undefined,
+      adecuaciones: asStringArray(r.adecuaciones_apoyos),
+      cierre: asStringArray(r.cierre_inclusivo),
+    },
+  };
+}
+
 export function normalizeGeneric(raw: unknown, selectedProducto: string): PedagogicalProduct | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const r = raw as Record<string, unknown>;
@@ -363,6 +418,7 @@ export function normalizeProduct(raw: unknown, selectedProducto?: string): Pedag
   // Guides: use selectedProducto to determine type (guides have no `type` field)
   if (selectedProducto === 'guia_estudiante') return normalizeGuide(raw, 'guia_estudiante');
   if (selectedProducto === 'guia_docente') return normalizeGuide(raw, 'guia_docente');
+  if (selectedProducto === 'guia_dua') return normalizeDuaGuide(raw);
 
   // Planificacion (has planificacion wrapper or direct structure)
   const planificacion = normalizePlanificacion(raw);

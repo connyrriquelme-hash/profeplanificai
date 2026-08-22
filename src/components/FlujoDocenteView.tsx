@@ -10,7 +10,7 @@ import {
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, generateUnidadDidactica, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
+import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, generateUnidadDidactica, generateDuaGuideProduct, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
 import { api } from '../services/apiClient';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
@@ -34,7 +34,9 @@ const GENERATION_TIMEOUT_MS = 60_000;
 const PRODUCTOS = [
   { id: 'guia_estudiante', label: 'Guía Estudiante', icon: FileText, color: '#B5471F' }, // --primary
   { id: 'guia_docente', label: 'Guía Docente', icon: BookOpenCheck, color: '#7C2F13' }, // --primary-ink
+  { id: 'guia_dua', label: 'Guía DUA', icon: GraduationCap, color: '#6B5B4E' }, // --ink-soft
   { id: 'planificacion', label: 'Planificación', icon: Layers3, color: '#E9A13B' }, // --accent-honey
+  { id: 'evaluacion', label: 'Prueba Escrita / SIMCE', icon: ClipboardList, color: '#8A5A00' }, // --warn-ink
   { id: 'evaluation_exit_ticket', label: 'Ticket de Salida', icon: ClipboardCheck, color: '#9A3A17' }, // --primary-hover
   { id: 'evaluation_321', label: 'Formato 3-2-1', icon: ClipboardCheck, color: '#8A5A00' }, // --warn-ink
   { id: 'evaluation_checklist', label: 'Lista de Cotejo', icon: ClipboardList, color: '#5B7B5E' }, // --success
@@ -330,6 +332,10 @@ export function FlujoDocenteView() {
       recommendedLessons,
       outputFormat: classroomConfig.outputFormat,
       masterTemplateId: selectedProducto === 'presentacion' && selectedMasterTemplateId ? selectedMasterTemplateId : undefined,
+      // 'evaluacion' aquí es prueba escrita/SIMCE (EvaluacionEscritaEngine) --
+      // distinta de evaluation_exit_ticket/checklist/etc. (evaluación
+      // formativa). Sin esto el motor asume 'formativa' por defecto.
+      type: selectedProducto === 'evaluacion' ? 'sumativa' : undefined,
     };
 
     try {
@@ -384,6 +390,9 @@ export function FlujoDocenteView() {
           case 'presentacion':
             res = await generatePresentation(req, signal);
             break;
+          case 'guia_dua':
+            res = await generateDuaGuideProduct(req, signal);
+            break;
           default:
             res = await generateMaterial(req, selectedProducto, signal);
         }
@@ -400,6 +409,8 @@ export function FlujoDocenteView() {
           setResult(res.unidad);
         } else if (selectedProducto === 'presentacion' && res.pptDeck) {
           setResult(res.pptDeck);
+        } else if (selectedProducto === 'guia_dua' && res.duaGuide) {
+          setResult(res.duaGuide);
         } else {
           setResult(res.guide || res.evaluation || res.rubric || res.slides || res);
         }
