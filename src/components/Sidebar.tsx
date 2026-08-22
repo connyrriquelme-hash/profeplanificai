@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { LayoutDashboard, FolderKanban, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, Bot, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, GraduationCap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../utils/roles';
 
@@ -26,12 +26,14 @@ const menuSections = [
       { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
       { id: 'flujo-docente', label: 'Flujo Docente', icon: Route },
       { id: 'mis-clases', label: 'Mis Clases', icon: Sparkles },
-      { id: 'workspace', label: 'Espacio de Trabajo', icon: FolderKanban },
       { id: 'unidades-didacticas', label: 'Unidades Didacticas', icon: BookOpen },
       { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
       { id: 'dua-guide', label: 'Guía DUA (Multinivel)', icon: BookOpen },
-      { id: 'project-copilot', label: 'Project Copilot', icon: Bot },
       { id: 'reportes', label: 'Reportes', icon: BarChart2 },
+      // 'workspace' (Espacio de Trabajo) y 'project-copilot' quedan ocultos
+      // del menú -- redundantes con Flujo Docente (mismo OA -> planificación)
+      // -- pero sus rutas siguen registradas en App.tsx sin cambios, código
+      // intacto por si hay que revertir. Ver conversación 2026-08-22.
     ],
   },
   {
