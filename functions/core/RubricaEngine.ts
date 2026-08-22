@@ -1266,7 +1266,6 @@ export async function generateRubricaContent(
     return enrichRubrica(data, fallback, isLowerLevel(input.level));
   } catch (error) {
     console.error('[RubricaEngine] generateRubricaContent error:', error);
-    (fallback as any)._diagError = error instanceof Error ? error.message : String(error);
     return fallback;
   }
 }
