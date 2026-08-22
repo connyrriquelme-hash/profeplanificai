@@ -62,9 +62,15 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     });
 
     const resourceId = `dua_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    // 'guia_dua' no está en el CHECK constraint de generated_resources.type
+    // (planificacion/guia_estudiante/guia_docente/evaluacion/rubrica/
+    // ticket_salida/actividad_dua/presentacion/otro) -- usa 'otro', el
+    // catch-all que el propio schema provee para esto. No afecta al
+    // frontend: FlujoDocenteView usa selectedProducto, no este campo, para
+    // decidir el normalizador.
     await context.env.DB.prepare(
       `INSERT INTO generated_resources (id, title, type, content, content_json, level, subject, objective_code, user_id, indicators_used_json, skills_used_json, prompt_used, created_at, updated_at)
-       VALUES (?, ?, 'guia_dua', ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+       VALUES (?, ?, 'otro', ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       resourceId,
       duaGuide.titulo_guia || `Guía DUA: ${body.objectiveCode}`,
