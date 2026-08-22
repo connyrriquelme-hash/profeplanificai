@@ -14,6 +14,10 @@ import ProductPreview from './ProductPreview';
 import { buildNormalizedProduct } from '../utils/productNormalizer';
 import { deserializeSlidesFromSave, getLocalSlideDecks } from '../services/slideSaveService';
 import type { SlideLesson } from '../types/slideLesson';
+import { WorkspaceLayout } from './workspace/WorkspaceLayout';
+import { normalizeProduct } from './products/normalizers';
+import type { PedagogicalProduct } from './products/types';
+import { api } from '../services/apiClient';
 
 type Tab = 'planificaciones' | 'recursos' | 'evaluaciones';
 
@@ -51,10 +55,45 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
   const [filterLevel, setFilterLevel] = useState('');
   const [detail, setDetail] = useState<Resource | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [editedProduct, setEditedProduct] = useState<PedagogicalProduct | null>(null);
 
   useEffect(() => {
     if (initialTab) setActiveTab(initialTab);
   }, [initialTab]);
+
+  // Recursos generados con contenido JSON estructurado (Flujo Docente, Mis
+  // Clases) se pueden editar in-situ con WorkspaceLayout -- mismo componente
+  // que ya usa Flujo Docente tras generar un producto. Los recursos con
+  // contenido markdown plano (ej. texto libre guardado desde Mis Clases)
+  // no normalizan a un PedagogicalProduct y se quedan en el preview de
+  // solo lectura existente.
+  useEffect(() => {
+    if (!detail) {
+      setEditedProduct(null);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(detail.content);
+      setEditedProduct(normalizeProduct(parsed, detail.type));
+    } catch {
+      setEditedProduct(null);
+    }
+  }, [detail]);
+
+  const handleSaveEditedResource = async () => {
+    if (!detail || !editedProduct) return;
+    await api.post('/api/resources', {
+      title: detail.title,
+      type: detail.type,
+      content: JSON.stringify(editedProduct),
+      level: detail.level,
+      subject: detail.subject,
+      objectiveCode: detail.objective_code,
+      objectiveText: detail.objective_text,
+    });
+    await fetchResources();
+    setDetail(null);
+  };
 
   useEffect(() => {
     if (activeTab === 'recursos' || activeTab === 'planificaciones' || activeTab === 'evaluaciones') fetchResources();
@@ -353,7 +392,20 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                     </p>
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                       <button
-                        onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Los items 'cloud' vienen de resource_bank (via
+                          // useResources) y tienen el mismo id -- se pueden
+                          // abrir en el espacio de edición inline. Los items
+                          // 'local' viven solo en ProjectContext (library),
+                          // sin contraparte en el backend, asi que siguen
+                          // yendo a Workspace.tsx (unica pantalla que los edita).
+                          if (isCloud) {
+                            const res = resources.find((r) => r.id === item.id);
+                            if (res) { setDetail(res); return; }
+                          }
+                          onNavigate?.('workspace');
+                        }}
                         className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] px-2.5 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all"
                       >
                         Ver
@@ -451,7 +503,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                       {formatDate(r.created_at)}
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
+                      onClick={(e) => { e.stopPropagation(); setDetail(r); }}
                       className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] px-2 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all"
                     >
                       Ver
@@ -497,7 +549,7 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
                         {formatDate(r.created_at)}
                       </div>
                       <button
-                        onClick={(e) => { e.stopPropagation(); onNavigate?.('workspace'); }}
+                        onClick={(e) => { e.stopPropagation(); setDetail(r); }}
                         className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] px-2 py-1 rounded-lg hover:bg-[var(--primary-tint)] transition-all"
                       >
                         Ver
@@ -511,7 +563,25 @@ export function BancoRecursosView({ initialTab, onNavigate }: BancoRecursosViewP
         </>
       )}
 
-      {detail && (
+      {detail && editedProduct && (
+        // WorkspaceLayout es una superficie a pantalla completa (mismo
+        // componente que usa Flujo Docente tras generar un producto, con
+        // su propia barra: volver/deshacer/rehacer/exportar/guardar) --
+        // no se anida dentro del modal de preview de mas abajo, que es
+        // para el caso de solo lectura (contenido markdown plano).
+        <div className="fixed inset-0 z-50">
+          <WorkspaceLayout
+            product={editedProduct}
+            resourceId={detail.id}
+            onBack={() => setDetail(null)}
+            onSave={handleSaveEditedResource}
+            onProductChange={setEditedProduct}
+            className="h-full"
+          />
+        </div>
+      )}
+
+      {detail && !editedProduct && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-8 overflow-y-auto" onClick={() => setDetail(null)}>
           <div className={detail.type === 'presentacion_clase_visual' ? 'max-w-5xl w-full animate-fade-in' : 'max-w-2xl w-full animate-fade-in'} onClick={e => e.stopPropagation()}>
           <Card
