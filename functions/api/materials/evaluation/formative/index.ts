@@ -6,7 +6,7 @@ import type { AIEngineEnv } from '../../../../core/types';
 import { validatePedagogicalProduct } from '../../../../_lib/pedagogicalQualityGate';
 import { getAuthenticatedUserId } from '../../../../_lib/auth';
 
-interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string }
+interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string; GROQ_API_KEY?: string }
 
 interface FormativeEvaluationRequest {
   level: string;
@@ -112,7 +112,7 @@ async function buildExitTicketAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const ticket = await generateTicketSalida({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, ticketInput);
+  const ticket = await generateTicketSalida({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY, GROQ_API_KEY: env.GROQ_API_KEY } as AIEngineEnv, ticketInput);
 
   return {
     title: ticket.title,
@@ -150,7 +150,7 @@ async function build321FormatAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const formato = await generateFormato321({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, formatoInput);
+  const formato = await generateFormato321({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY, GROQ_API_KEY: env.GROQ_API_KEY } as AIEngineEnv, formatoInput);
 
   return {
     title: formato.title,
@@ -189,7 +189,7 @@ async function buildChecklistAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const lista = await generateListaCotejo({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, checklistInput);
+  const lista = await generateListaCotejo({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY, GROQ_API_KEY: env.GROQ_API_KEY } as AIEngineEnv, checklistInput);
 
   return {
     title: lista.title,
@@ -282,7 +282,7 @@ async function buildTrafficLightAI(
     topic: req.topic,
     indicators: indicators.map((i: any) => i.indicator_text).filter(Boolean),
   };
-  const semaforo = await generateSemaforo({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY } as AIEngineEnv, semaforoInput);
+  const semaforo = await generateSemaforo({ AI: env.AI, GEMINI_API_KEY: env.GEMINI_API_KEY, GROQ_API_KEY: env.GROQ_API_KEY } as AIEngineEnv, semaforoInput);
 
   return {
     title: semaforo.title,

@@ -69,11 +69,13 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
       ? body.seccionIndex
       : undefined;
 
-    // Inyectar explícitamente GEMINI_API_KEY para que callAIConValidacion
-    // en GuiaEditEngine tenga el fallback a Gemini 2.5 Flash disponible.
+    // Inyectar explícitamente GEMINI_API_KEY/GROQ_API_KEY para que
+    // callAIConValidacion en GuiaEditEngine tenga ambos fallbacks
+    // disponibles si Workers AI falla o agota su cupo.
     const aiEnv: AIEngineEnv = {
       AI: context.env.AI,
       GEMINI_API_KEY: context.env.GEMINI_API_KEY,
+      GROQ_API_KEY: context.env.GROQ_API_KEY,
     };
 
     const result = await editSeccionGuia(aiEnv, {

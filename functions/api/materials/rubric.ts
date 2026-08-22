@@ -19,6 +19,7 @@ interface Env {
   JWT_SECRET?: string;
   AI?: ImageEnv['AI'];
   GEMINI_API_KEY?: string;
+  GROQ_API_KEY?: string;
   ENABLE_IMAGE_AI?: string;
   IMAGE_PROVIDER_ORDER?: string;
   HF_API_TOKEN?: string;
@@ -78,7 +79,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const rubric = context.env.AI
       ? await generateRubricaContent(
-          { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY },
+          { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY, GROQ_API_KEY: context.env.GROQ_API_KEY },
           contextInput,
           await fetchRubricaCurricularContext(db, body.objectiveCode, officialObjectiveText, officialIndicators),
         )

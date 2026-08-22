@@ -43,7 +43,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     }
 
     const lessonData = await generateInteractiveLesson(
-      { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
+      { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY, GROQ_API_KEY: context.env.GROQ_API_KEY } as AIEngineEnv,
       body,
     );
 

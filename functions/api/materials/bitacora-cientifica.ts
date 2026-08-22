@@ -3,7 +3,7 @@ import type { AIEngineEnv } from '../../core/types';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string }
+interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string; GROQ_API_KEY?: string }
 
 interface BitacoraCientificaRequest {
   level: string;
@@ -50,7 +50,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       topic: body.topic,
       indicators: (indicators as any)?.results?.map((i: any) => i.indicator_text).filter(Boolean) || [],
     };
-    const consignasIA = await generateBitacora({ AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv, bitacoraInput);
+    const consignasIA = await generateBitacora({ AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY, GROQ_API_KEY: context.env.GROQ_API_KEY } as AIEngineEnv, bitacoraInput);
 
     const evaluation = { ...baseBitacora, consignasIA };
     const quality = validatePedagogicalProduct(evaluation, {

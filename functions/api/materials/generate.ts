@@ -4,7 +4,7 @@ import type { AIEngineEnv } from '../../core/types';
 import { validatePedagogicalProduct } from '../../_lib/pedagogicalQualityGate';
 import { getAuthenticatedUserId } from '../../_lib/auth';
 
-interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string }
+interface Env { DB: D1Database; JWT_SECRET?: string; AI?: Ai; GEMINI_API_KEY?: string; GROQ_API_KEY?: string }
 
 export interface GenerateRequest {
   level: string;
@@ -453,7 +453,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     if (type === 'planificacion') {
       const { planificacion, usedFallback } = await generatePlanificacion(
-        { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY } as AIEngineEnv,
+        { AI: context.env.AI, GEMINI_API_KEY: context.env.GEMINI_API_KEY, GROQ_API_KEY: context.env.GROQ_API_KEY } as AIEngineEnv,
         prompt,
         {
           level: body.level,
