@@ -16,7 +16,6 @@ import { StatusBar } from './shared/StatusBar';
 import { MaterialList } from './shared/MaterialList';
 import { Stepper } from './shared/Stepper';
 import { ClipboardCheck, Sparkles, Send, Printer, Download, Copy, Check, CopyPlus, Edit3, FileText, ClipboardEdit, ArrowRight, ArrowLeft, BookOpen, GraduationCap, FileCheck2, Search, Loader, Eye, ClipboardList, Plus, Share2, Link, X } from 'lucide-react';
-import { AdaptarPanel } from './AdaptarPanel';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
@@ -991,27 +990,16 @@ export function EvaluacionesView({ onNavigate }: EvaluacionesViewProps) {
         </div>
       )}
 
-      <AdaptarPanel
-        item={selectedOA ? {
-          id: selectedOA.oa_id,
-          fuente: 'oficial',
-          nivel: selectedNivel as any,
-          curso: selectedCurso?.name || selectedNivel,
-          asignatura: selectedAsignatura,
-          eje: '',
-          oa: selectedOA.oa_texto,
-          habilidad: habilidad,
-          indicadores: indicadores,
-          conocimientos: [],
-          actitudes: [],
-          palabrasClave: [],
-          actividadesSugeridas: [],
-          evaluacionesSugeridas: [],
-          recursos: [],
-        } : null}
-        contenidoOriginal={output}
-        onStatus={(msg, type) => { setStatus(msg); setStatusType(type || ''); }}
-      />
+      {output && (
+        <Card className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <SectionHeader icon={GraduationCap} iconColor="#7C2F13" title="¿Necesitas diferenciar por niveles?" description="Genera una guía DUA (apoyo/estándar/desafío) para este mismo OA" />
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => onNavigate('dua-guide')}>
+            Ir a Guía DUA
+          </Button>
+        </Card>
+      )}
 
       {selectedAsignatura && selectedOA && extSources.length > 0 && (
         <Card className="mb-6">

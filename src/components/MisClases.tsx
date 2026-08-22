@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BookOpen, BookOpenCheck, BookMarked, CalendarDays, ChevronLeft, ChevronRight,
+  ArrowRight, BookOpen, BookOpenCheck, BookMarked, CalendarDays, ChevronLeft, ChevronRight,
   Clock, FileDown, GraduationCap, ListChecks, Loader2, Plus, Printer,
   Save, Sparkles, Trash2, X,
 } from 'lucide-react';
@@ -100,7 +100,11 @@ function fmtH(total: number) { const h = Math.floor(total / 60); const m = total
 const LC = 'block text-[11px] font-black tracking-wide uppercase text-slate-500 mb-1';
 const IC = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all';
 
-export function MisClases() {
+interface MisClasesProps {
+  onNavigate?: (view: string) => void;
+}
+
+export function MisClases({ onNavigate }: MisClasesProps) {
   const { user, activeInstitutionId } = useAuth();
   const { getOptions } = useConfigOptions();
   const cfgMethodologies = getOptions('methodologies');
@@ -833,12 +837,17 @@ export function MisClases() {
         {rightTab === 'recursos' && (<div>
           <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Recursos con IA</h3>
-            <p className="text-sm text-slate-500">{hasOA ? 'Cada recurso usa el contexto curricular guardado: nivel, asignatura y OA seleccionados.' : 'Genera recursos usando nivel y asignatura. Seleccionar OA mejora la alineacion curricular.'}</p>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
-              {[['Guia de aprendizaje', 'guia', 'resource'], ['Ficha de trabajo', 'ficha_trabajo', 'resource'], ['Actividad pedagogica', 'actividad_pedagogica', 'resource'], ['Recurso DUA', 'recurso_dua', 'resource'], ['Reforzamiento', 'reforzamiento', 'resource'], ['Extension para avanzados', 'extension_avanzados', 'resource'], ['Material para apoderados', 'material_apoderados', 'resource'], ['Banco de preguntas', 'banco_preguntas', 'resource'], ['Crear presentacion', 'presentation', 'presentation'], ['Crear ticket de salida', 'ticket', 'evaluation']].map(([label, action, kind]) => (
-                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Genera con contexto D1' : 'Genera con curso y asignatura'}</p></button>
-              ))}
-            </div>
+            <p className="text-sm text-slate-500">Para guías, fichas, presentaciones, tickets y otros recursos con IA, usa Flujo Docente — mismo motor endurecido, con mejor calidad y respaldo de 3 proveedores.</p>
+            <button
+              onClick={() => onNavigate?.('flujo-docente')}
+              className="rounded-2xl border border-[var(--primary)] bg-[var(--primary-tint)] p-4 text-left hover:brightness-95 transition-all flex items-center justify-between gap-3"
+            >
+              <div>
+                <p className="text-sm font-bold text-[var(--primary-ink)]">Generar en Flujo Docente</p>
+                <p className="text-xs text-[var(--primary-ink)]/70 mt-1">Guías, fichas, presentaciones, tickets de salida y más</p>
+              </div>
+              <ArrowRight size={16} className="text-[var(--primary-ink)] flex-shrink-0" />
+            </button>
 
             {bankResources.length > 0 && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/30 p-5 mt-4">
@@ -877,11 +886,17 @@ export function MisClases() {
         {rightTab === 'evaluacion' && (<div>
           <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Evaluaciones con IA</h3>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
-              {[['Crear evaluacion', 'evaluacion', 'evaluation'], ['Crear rubrica', 'rubrica', 'evaluation'], ['Crear pauta', 'pauta', 'evaluation'], ['Crear evaluacion tipo SIMCE', 'simce', 'evaluation'], ['Crear retroalimentacion', 'retroalimentacion', 'evaluation']].map(([label, action, kind]) => (
-                <button key={action} disabled={loading} onClick={() => void generate(String(action), kind as any)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left hover:border-[var(--primary)] hover:bg-[var(--primary-tint)] transition-all disabled:opacity-50"><p className="text-sm font-bold text-slate-800">{label}</p><p className="text-xs text-slate-500 mt-1">{hasOA ? 'Basado en el OA seleccionado' : 'Genera con curso y asignatura'}</p></button>
-              ))}
-            </div>
+            <p className="text-sm text-slate-500">Para evaluaciones, rúbricas, pautas y pruebas tipo SIMCE, usa la pestaña Evaluaciones — motor con IA real y validación de calidad.</p>
+            <button
+              onClick={() => onNavigate?.('evaluaciones')}
+              className="rounded-2xl border border-[var(--primary)] bg-[var(--primary-tint)] p-4 text-left hover:brightness-95 transition-all flex items-center justify-between gap-3"
+            >
+              <div>
+                <p className="text-sm font-bold text-[var(--primary-ink)]">Generar en Evaluaciones</p>
+                <p className="text-xs text-[var(--primary-ink)]/70 mt-1">Evaluación, rúbrica, ticket, SIMCE y más</p>
+              </div>
+              <ArrowRight size={16} className="text-[var(--primary-ink)] flex-shrink-0" />
+            </button>
           </div>
         </div>)}
 

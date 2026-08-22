@@ -9,21 +9,18 @@ import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { AppShell } from './components/ui/AppShell';
 import { MobileBottomNav } from './components/ui/MobileBottomNav';
-import { DocumentGeneratorFlow } from './components/DocumentGeneratorFlow';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ActiveLessonProvider } from './contexts/ActiveLessonContext';
 
 const DashboardView = lazy(() => import('./components/DashboardView').then(m => ({ default: m.DashboardView })));
 const WorkspaceView = lazy(() => import('./components/WorkspaceView').then(m => ({ default: m.WorkspaceView })));
 const CurriculumCloudView = lazy(() => import('./components/CurriculumCloudView').then(m => ({ default: m.CurriculumCloudView })));
-const LibraryView = lazy(() => import('./components/LibraryView').then(m => ({ default: m.LibraryView })));
 const BancoRecursosView = lazy(() => import('./components/BancoRecursosView').then(m => ({ default: m.BancoRecursosView })));
 const EvaluacionesView = lazy(() => import('./components/EvaluacionesView').then(m => ({ default: m.EvaluacionesView })));
 const SharedPanelView = lazy(() => import('./components/SharedPanelView').then(m => ({ default: m.SharedPanelView })));
 const SharedDocumentPublicView = lazy(() => import('./components/SharedDocumentPublicView').then(m => ({ default: m.SharedDocumentPublicView })));
 const UnidadesDidacticasView = lazy(() => import('./components/UnidadesDidacticasView').then(m => ({ default: m.UnidadesDidacticasView })));
 const FlujoDocenteView = lazy(() => import('./components/FlujoDocenteView').then(m => ({ default: m.FlujoDocenteView })));
-const AgenteView = lazy(() => import('./components/AgenteView').then(m => ({ default: m.AgenteView })));
 const MisClases = lazy(() => import('./components/MisClases').then(m => ({ default: m.MisClases })));
 const ReportesView = lazy(() => import('./components/ReportesView').then(m => ({ default: m.ReportesView })));
 const AdminView = lazy(() => import('./components/AdminView'));
@@ -136,15 +133,11 @@ function AppContent() {
       case 'workspace':
         return <WorkspaceView onNavigate={handleViewChange} />;
       case 'mis-clases':
-        return <MisClases />;
+        return <MisClases onNavigate={handleViewChange} />;
       case 'generador':
-        return <MisClases />;
+        return <MisClases onNavigate={handleViewChange} />;
       case 'banco':
         return <CurriculumCloudView />;
-      case 'agente':
-        return <AgenteView onNavigate={handleViewChange} />;
-      case 'biblioteca-creativa':
-        return <LibraryView onNavigate={handleViewChange} />;
       case 'evaluaciones':
         return <EvaluacionesView onNavigate={handleViewChange} />;
       case 'banco-recursos':

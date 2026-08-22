@@ -262,8 +262,6 @@ export type ViewType =
   | 'evaluaciones'
   | 'banco'
   | 'banco-recursos'
-  | 'agente'
-  | 'biblioteca-creativa'
   | 'panel-compartido'
   | 'unidades-didacticas'
   | 'reportes'
