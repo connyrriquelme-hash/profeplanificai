@@ -11,6 +11,7 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { generateGuide, generateEvaluation, generateFormativeEvaluation, generateBitacoraCientifica, generateRubric, generatePresentation, generateMaterial, generateUnidadDidactica, generateDuaGuideProduct, type MaterialRequest, type MaterialResult, type FormativeEvaluationType } from '../services/materialGeneratorService';
+import { generateIndicators } from '../services/curricularPlanningService';
 import { api } from '../services/apiClient';
 import PremiumRubricPreview from './PremiumRubricPreview';
 import type { PremiumRubric } from '../utils/premiumRubricModel';
@@ -23,6 +24,13 @@ import { PPT_MASTER_TEMPLATES_META } from '../../schemas/pptMasterTemplatesMeta'
 import type { MetodologiaActiva } from '../../schemas/UnidadDidacticaSchema';
 import type { UnidadDidactica } from '../../schemas/UnidadDidacticaSchema';
 import { defaultClassroomConfiguration, groupingLabel, recommendLessonCount, type ClassroomConfiguration } from '../utils/pedagogicalHeuristics';
+import { SuggestedResourcesPanel } from './shared/SuggestedResourcesPanel';
+
+const EVALUACION_PRODUCT_IDS = new Set([
+  'evaluacion', 'evaluacion_simce', 'evaluacion_diagnostica',
+  'evaluation_exit_ticket', 'evaluation_321', 'evaluation_checklist',
+  'evaluation_formative_rubric', 'rubrica', 'evaluation_traffic_light',
+]);
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
@@ -135,6 +143,7 @@ export function FlujoDocenteView() {
   const [objectives, setObjectives] = useState<D1Objective[]>([]);
   const [indicators, setIndicators] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
+  const [generatingIndicators, setGeneratingIndicators] = useState(false);
   const [methodologies, setMethodologies] = useState<Array<{ id?: string; name: string; subject_fits?: boolean }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -231,6 +240,30 @@ export function FlujoDocenteView() {
       .then(sk => setSkills((sk.data || []).map((s: Record<string, unknown>) => (typeof s.official_text === 'string' ? s.official_text : typeof s.text === 'string' ? s.text : ''))))
       .catch(() => {});
   }, []);
+
+  // Portado de EvaluacionesView: cuando el OA no trae indicadores oficiales
+  // en el currículum (curso/asignatura con cobertura parcial), permite
+  // generarlos con IA en vez de dejar al docente sin nada que seleccionar.
+  const handleGenerateIndicators = useCallback(async () => {
+    if (!selectedOA) return;
+    setGeneratingIndicators(true);
+    try {
+      const generated = await generateIndicators({
+        objectiveId: selectedOA.id,
+        objectiveCode: selectedOA.code,
+        objectiveText: selectedOA.official_text,
+        course: selectedOA.course_name,
+        subject: selectedOA.subject_name,
+      });
+      if (generated.length > 0) {
+        setIndicators(generated.map(i => i.text));
+      } else {
+        toast.error('No se pudieron generar indicadores para este OA.');
+      }
+    } finally {
+      setGeneratingIndicators(false);
+    }
+  }, [selectedOA]);
 
   // Agrega al final de additionalContext en vez de reemplazarlo — el
   // docente puede haber escrito contexto propio antes de pegar la URL o
@@ -663,12 +696,25 @@ export function FlujoDocenteView() {
                 <Badge color="amber" size="sm">{selectedOA.code}</Badge>
                 {selectedOA.axis_name && <Badge color="slate" size="sm">{selectedOA.axis_name}</Badge>}
               </div>
-              {indicators.length > 0 && (
+              {indicators.length > 0 ? (
                 <div className="mb-2">
                   <p className="text-xs font-medium text-[var(--ink-mid)] mb-1">Indicadores:</p>
                   {indicators.slice(0, 3).map((ind, i) => (
                     <p key={i} className="text-xs text-[var(--ink-soft)]">• {ind.substring(0, 80)}...</p>
                   ))}
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <p className="text-xs text-[var(--ink-soft)] mb-1.5">Este OA no tiene indicadores oficiales cargados.</p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    iconLeft={Sparkles}
+                    onClick={handleGenerateIndicators}
+                    disabled={generatingIndicators}
+                  >
+                    {generatingIndicators ? 'Generando...' : 'Generar indicadores sugeridos'}
+                  </Button>
                 </div>
               )}
               {skills.length > 0 && (
@@ -914,6 +960,17 @@ export function FlujoDocenteView() {
               </div>
             ))}
           </div>
+
+          {selectedOA && selectedProducto && EVALUACION_PRODUCT_IDS.has(selectedProducto) && (
+            <div className="mt-8">
+              <SuggestedResourcesPanel
+                course={selectedOA.course_name}
+                subject={selectedOA.subject_name}
+                objectiveCode={selectedOA.code}
+                evaluationType={selectedProducto}
+              />
+            </div>
+          )}
 
           {selectedProducto && (
             <div className="mt-8 p-5 bg-[var(--primary-tint)] rounded-xl">
