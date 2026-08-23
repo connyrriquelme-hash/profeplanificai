@@ -36,16 +36,27 @@ const PRODUCTOS = [
   { id: 'guia_docente', label: 'Guía Docente', icon: BookOpenCheck, color: '#7C2F13' }, // --primary-ink
   { id: 'guia_dua', label: 'Guía DUA', icon: GraduationCap, color: '#6B5B4E' }, // --ink-soft
   { id: 'planificacion', label: 'Planificación', icon: Layers3, color: '#E9A13B' }, // --accent-honey
-  { id: 'evaluacion', label: 'Prueba Escrita / SIMCE', icon: ClipboardList, color: '#8A5A00' }, // --warn-ink
+  { id: 'evaluacion', label: 'Prueba Escrita', icon: ClipboardList, color: '#8A5A00' }, // --warn-ink
+  { id: 'evaluacion_simce', label: 'Evaluación tipo SIMCE', icon: ClipboardList, color: '#8A5A00' }, // --warn-ink
+  { id: 'evaluacion_diagnostica', label: 'Evaluación Diagnóstica', icon: ClipboardList, color: '#8A5A00' }, // --warn-ink
   { id: 'evaluation_exit_ticket', label: 'Ticket de Salida', icon: ClipboardCheck, color: '#9A3A17' }, // --primary-hover
   { id: 'evaluation_321', label: 'Formato 3-2-1', icon: ClipboardCheck, color: '#8A5A00' }, // --warn-ink
   { id: 'evaluation_checklist', label: 'Lista de Cotejo', icon: ClipboardList, color: '#5B7B5E' }, // --success
-  { id: 'evaluation_formative_rubric', label: 'Rúbrica Analítica', icon: ClipboardList, color: '#2E4630' }, // --success-ink
+  { id: 'evaluation_formative_rubric', label: 'Rúbrica Formativa', icon: ClipboardList, color: '#2E4630' }, // --success-ink
+  { id: 'rubrica', label: 'Rúbrica Premium', icon: ClipboardList, color: '#2E4630' }, // --success-ink
   { id: 'evaluation_traffic_light', label: 'Semáforo', icon: ClipboardCheck, color: '#6B5B4E' }, // --ink-soft
   { id: 'bitacora_cientifica', label: 'Bitácora Científica IA', icon: Microscope, color: '#5A483A' }, // --ink-mid
   { id: 'presentacion', label: 'Presentación PPT', icon: Presentation, color: '#E9A13B' }, // --accent-honey
   { id: 'serie_lecciones', label: 'Serie de Lecciones', icon: BookOpen, color: '#33261C' }, // --ink
 ];
+
+// Los 3 productos de prueba escrita comparten backend (EvaluacionEscritaEngine
+// vía /api/materials/evaluation) y solo difieren en el `type` que reciben.
+const EVALUACION_ESCRITA_TYPE: Record<string, 'sumativa' | 'diagnostica' | 'simce' | undefined> = {
+  evaluacion: 'sumativa',
+  evaluacion_diagnostica: 'diagnostica',
+  evaluacion_simce: 'simce',
+};
 
 // Etiquetas del preview de PPT: antes se derivaban de slide.layout con un
 // simple replace(/_/g, ' ') + CSS capitalize, mostrando el nombre del layout
@@ -332,10 +343,11 @@ export function FlujoDocenteView() {
       recommendedLessons,
       outputFormat: classroomConfig.outputFormat,
       masterTemplateId: selectedProducto === 'presentacion' && selectedMasterTemplateId ? selectedMasterTemplateId : undefined,
-      // 'evaluacion' aquí es prueba escrita/SIMCE (EvaluacionEscritaEngine) --
-      // distinta de evaluation_exit_ticket/checklist/etc. (evaluación
-      // formativa). Sin esto el motor asume 'formativa' por defecto.
-      type: selectedProducto === 'evaluacion' ? 'sumativa' : undefined,
+      // Los 3 productos de prueba escrita (EvaluacionEscritaEngine) comparten
+      // el mismo endpoint/case en el switch de abajo y solo difieren en este
+      // campo -- distinta de evaluation_exit_ticket/checklist/etc. (evaluación
+      // formativa, engines propios). Sin esto el motor asume 'formativa'.
+      type: EVALUACION_ESCRITA_TYPE[selectedProducto],
     };
 
     try {
@@ -382,6 +394,8 @@ export function FlujoDocenteView() {
             res = await generateGuide(req, selectedProducto as 'guia_estudiante' | 'guia_docente', signal);
             break;
           case 'evaluacion':
+          case 'evaluacion_diagnostica':
+          case 'evaluacion_simce':
             res = await generateEvaluation(req, signal);
             break;
           case 'rubrica':
@@ -843,7 +857,7 @@ export function FlujoDocenteView() {
       },
       {
         label: 'Evaluación',
-        items: PRODUCTOS.filter(p => ['evaluation_exit_ticket', 'evaluation_321', 'evaluation_checklist', 'evaluation_formative_rubric', 'evaluation_traffic_light', 'rubrica', 'evaluacion'].includes(p.id)),
+        items: PRODUCTOS.filter(p => ['evaluation_exit_ticket', 'evaluation_321', 'evaluation_checklist', 'evaluation_formative_rubric', 'evaluation_traffic_light', 'rubrica', 'evaluacion', 'evaluacion_simce', 'evaluacion_diagnostica'].includes(p.id)),
       },
     ];
 

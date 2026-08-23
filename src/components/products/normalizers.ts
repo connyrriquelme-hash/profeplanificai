@@ -372,6 +372,63 @@ export function normalizeDuaGuide(raw: unknown): PedagogicalProduct | null {
   };
 }
 
+/**
+ * Normaliza un PremiumRubric crudo (RubricaEngine.ts, generateRubric() via
+ * /api/materials/rubric) al shape que espera RubricRenderer:
+ * {levels: string[], criteria: {name, description, weight, levels:
+ * {name, description, score}[]}[]}. PremiumRubric no tiene ese shape --
+ * tiene levels: {id,label,score,color,description}[] (columnas de la
+ * rúbrica) y criteria[].indicators: {levelId, descriptor, evidence}[]
+ * (una fila por criterio, un descriptor por nivel, enlazados por id) --
+ * se cruzan indicators con levels por levelId para armar cada celda.
+ */
+export function normalizePremiumRubric(raw: unknown): PedagogicalProduct | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (!Array.isArray(r.criteria) || !Array.isArray(r.levels)) return null;
+
+  const premiumLevels = r.levels as Array<{ id: string; label: string; score: number }>;
+
+  const criteria = (r.criteria as Array<{
+    name: string;
+    description?: string;
+    weight?: number;
+    indicators?: Array<{ levelId: string; descriptor: string; evidence?: string }>;
+  }>).map((c) => ({
+    name: c.name,
+    description: c.description,
+    weight: c.weight,
+    levels: premiumLevels.map((pl) => {
+      const indicator = (c.indicators || []).find((i) => i.levelId === pl.id);
+      return {
+        name: pl.label,
+        description: indicator ? `${indicator.descriptor}${indicator.evidence ? ` — Evidencia: ${indicator.evidence}` : ''}` : '',
+        score: pl.score,
+      };
+    }),
+  }));
+
+  return {
+    type: 'rubrica',
+    metadata: {
+      title: typeof r.title === 'string' ? r.title : 'Rúbrica',
+      subtitle: typeof r.subtitle === 'string' ? r.subtitle : undefined,
+      level: typeof r.nivel === 'string' ? r.nivel : undefined,
+      subject: typeof r.asignatura === 'string' ? r.asignatura : undefined,
+      oaText: typeof r.oa === 'string' ? r.oa : undefined,
+    },
+    data: {
+      description: typeof r.learningGoal === 'string' ? r.learningGoal : undefined,
+      levels: premiumLevels.map((l) => l.label),
+      criteria,
+      totalScore: r.totalScore,
+      scoringFormula: r.scoringFormula,
+      usageInstructions: r.usageInstructions,
+      inclusiveAdjustments: r.inclusiveAdjustments,
+    },
+  };
+}
+
 export function normalizeGeneric(raw: unknown, selectedProducto: string): PedagogicalProduct | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const r = raw as Record<string, unknown>;
@@ -419,6 +476,7 @@ export function normalizeProduct(raw: unknown, selectedProducto?: string): Pedag
   if (selectedProducto === 'guia_estudiante') return normalizeGuide(raw, 'guia_estudiante');
   if (selectedProducto === 'guia_docente') return normalizeGuide(raw, 'guia_docente');
   if (selectedProducto === 'guia_dua') return normalizeDuaGuide(raw);
+  if (selectedProducto === 'rubrica') return normalizePremiumRubric(raw);
 
   // Planificacion (has planificacion wrapper or direct structure)
   const planificacion = normalizePlanificacion(raw);
