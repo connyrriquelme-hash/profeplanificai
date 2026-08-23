@@ -120,6 +120,25 @@ function renderGuideSections(sections: unknown[]): string {
     const section = sections[i] as Record<string, unknown>;
     if (!section || typeof section !== 'object') continue;
 
+    // Guía DUA (normalizeDuaGuide) usa {principle, strategies} en vez de
+    // {title, content, activities} -- shape distinto al de guías genéricas
+    // que comparten este mismo campo `sections`. Sin esto, la sección se
+    // veía como "Seccion N" vacía (title/content/activities no existían).
+    if (typeof section.principle === 'string') {
+      const strategies = Array.isArray(section.strategies) ? section.strategies : [];
+      parts.push(`<h2 style="font-size:1rem;font-weight:700;color:#1E293B;margin-top:24px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E2E8F0">${escapeHtml(section.principle)}</h2>`);
+      if (strategies.length > 0) {
+        parts.push(`<ul style="margin:0;padding-left:20px">`);
+        for (const s of strategies) {
+          if (typeof s === 'string') {
+            parts.push(`<li style="font-size:0.85rem;color:#334155;line-height:1.6;margin-bottom:2px">${escapeHtml(s)}</li>`);
+          }
+        }
+        parts.push(`</ul>`);
+      }
+      continue;
+    }
+
     const title = typeof section.title === 'string' ? section.title : `Seccion ${i + 1}`;
     const content = typeof section.content === 'string' ? section.content : '';
     const activities = Array.isArray(section.activities) ? section.activities : [];
@@ -302,7 +321,10 @@ function htmlFromValue(value: unknown): string {
           .filter(([, v]) => v !== null && v !== undefined && v !== '');
         return entries.map(([k, v]) => {
           const label = formatFieldLabel(k);
-          const val = Array.isArray(v) ? v.map(i => escapeHtml(String(i))).join(', ') : escapeHtml(String(v));
+          // v puede ser un array/objeto anidado (p.ej. criteria[].levels en
+          // Rúbrica Premium) -- stringificarlo directo daba "[object Object]".
+          // htmlFromValue ya sabe recorrer cualquier forma recursivamente.
+          const val = (typeof v === 'object' && v !== null) ? htmlFromValue(v) : escapeHtml(String(v));
           return `<li style="font-size:0.85rem;color:#334155;line-height:1.6"><strong>${label}:</strong> ${val}</li>`;
         }).join('');
       }
