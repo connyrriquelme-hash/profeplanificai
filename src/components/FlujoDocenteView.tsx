@@ -26,7 +26,11 @@ import { defaultClassroomConfiguration, groupingLabel, recommendLessonCount, typ
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
-const GENERATION_TIMEOUT_MS = 60_000;
+// 120s: Rúbrica Premium (contenido IA + hasta 3+ imágenes por criterio,
+// incluso en paralelo desde el fix de rubric.ts) se midió en vivo en ~83s
+// en el peor caso -- 60s se quedaba corto y el frontend abortaba una
+// generación que el backend igual terminaba completando bien.
+const GENERATION_TIMEOUT_MS = 120_000;
 
 // Paleta cálida educativa: tonos tomados directo de los tokens del tema
 // (.theme-calida en index.css) en vez de un arcoíris genérico de Tailwind —
