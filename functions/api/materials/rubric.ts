@@ -93,12 +93,15 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
           skills: contextInput.clientSkills,
         });
 
-    // Generate images for rubric criteria
+    // Generate images for rubric criteria. En paralelo (antes secuencial):
+    // cada criterio es independiente y, aunque images.ts ya tiene timeout
+    // por proveedor (ver fix de hoy), un rubric de 5-8 criterios en
+    // secuencia igual podía acumular minuto y medio+ de latencia total,
+    // superando el timeout de 60s del frontend (FlujoDocenteView.tsx)
+    // aunque el backend terminara respondiendo bien.
     const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
-    const criterionImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
-    const imageTitles: string[] = [];
-
-    for (const criterion of (rubric as any).criteria || []) {
+    const criteriaList = (rubric as any).criteria || [];
+    const imageResults = await Promise.all(criteriaList.map(async (criterion: any) => {
       try {
         const result = await generateEducationalImage({
           grade: nivel,
@@ -109,13 +112,15 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
           slideContent: (criterion.indicators || []).map((i: any) => i.descriptor).join('. ').slice(0, 300),
         }, imageEnv);
         if (result.ok) {
-          criterionImages.push({ url: result.url, alt: `Ilustración: ${criterion.name}`, source: result.source, attribution: result.attribution || '' });
-          imageTitles.push(criterion.name || 'Criterio');
+          return { image: { url: result.url, alt: `Ilustración: ${criterion.name}`, source: result.source, attribution: result.attribution || '' }, title: criterion.name || 'Criterio' };
         }
       } catch {
         // Image generation failure is non-fatal
       }
-    }
+      return null;
+    }));
+    const criterionImages = imageResults.filter((r): r is NonNullable<typeof r> => r !== null).map((r) => r.image);
+    const imageTitles = imageResults.filter((r): r is NonNullable<typeof r> => r !== null).map((r) => r.title);
 
     if (criterionImages.length > 0) {
       (rubric as any).images = criterionImages;

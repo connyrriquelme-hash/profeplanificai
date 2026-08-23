@@ -110,31 +110,32 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       objectiveText: body.objectiveText,
       productType: 'evaluacion',
     });
-    // Generate images for open-ended questions
+    // Generate images for open-ended questions. En paralelo: cada pregunta
+    // es independiente, y en secuencia una evaluación con varias preguntas
+    // desarrollo/verdadero_falso podía acumular demasiada latencia total
+    // (mismo problema resuelto para rubric.ts).
     const imageEnv: ImageEnv = { DB: context.env.DB, AI: context.env.AI, ENABLE_IMAGE_AI: context.env.ENABLE_IMAGE_AI, IMAGE_PROVIDER_ORDER: context.env.IMAGE_PROVIDER_ORDER, HF_API_TOKEN: context.env.HF_API_TOKEN, IMAGE_CACHE_TTL_DAYS: context.env.IMAGE_CACHE_TTL_DAYS };
-    const questionImages: Array<{ url: string; alt: string; source: string; attribution: string }> = [];
-    const imageTitles: string[] = [];
-
-    for (const q of evaluation.questions || []) {
-      if (q.type === 'desarrollo' || q.type === 'verdadero_falso') {
-        try {
-          const result = await generateEducationalImage({
-            grade: body.level,
-            subject: body.subject,
-            oa: body.objectiveText || body.topic || body.objectiveCode,
-            resourceTitle: body.topic || 'Evaluación',
-            slideTitle: q.text?.slice(0, 100) || 'Pregunta de evaluación',
-            slideContent: q.text?.slice(0, 300) || '',
-          }, imageEnv);
-          if (result.ok) {
-            questionImages.push({ url: result.url, alt: `Imagen: Pregunta ${q.number}`, source: result.source, attribution: result.attribution || '' });
-            imageTitles.push(`Pregunta ${q.number}`);
-          }
-        } catch {
-          // Image generation failure is non-fatal
+    const imageableQuestions = (evaluation.questions || []).filter((q) => q.type === 'desarrollo' || q.type === 'verdadero_falso');
+    const questionImageResults = await Promise.all(imageableQuestions.map(async (q) => {
+      try {
+        const result = await generateEducationalImage({
+          grade: body.level,
+          subject: body.subject,
+          oa: body.objectiveText || body.topic || body.objectiveCode,
+          resourceTitle: body.topic || 'Evaluación',
+          slideTitle: q.text?.slice(0, 100) || 'Pregunta de evaluación',
+          slideContent: q.text?.slice(0, 300) || '',
+        }, imageEnv);
+        if (result.ok) {
+          return { image: { url: result.url, alt: `Imagen: Pregunta ${q.number}`, source: result.source, attribution: result.attribution || '' }, title: `Pregunta ${q.number}` };
         }
+      } catch {
+        // Image generation failure is non-fatal
       }
-    }
+      return null;
+    }));
+    const questionImages = questionImageResults.filter((r): r is NonNullable<typeof r> => r !== null).map((r) => r.image);
+    const imageTitles = questionImageResults.filter((r): r is NonNullable<typeof r> => r !== null).map((r) => r.title);
 
     if (questionImages.length > 0) {
       evaluation.images = questionImages;
