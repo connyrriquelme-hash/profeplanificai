@@ -454,6 +454,25 @@ function escapeHtml(value: string): string {
   return escapeXml(value);
 }
 
+// Límite por proveedor: 12s. Ningún tryXxx() de este archivo pasa
+// AbortSignal a sus fetch() -- un proveedor externo que se cuelga (sin
+// responder ni fallar) bloquea toda la cadena indefinidamente, y como
+// rubric.ts/evaluation.ts llaman esto en un loop secuencial por criterio/
+// pregunta, un solo proveedor colgado deja el endpoint entero sin
+// responder nunca (confirmado en vivo: /api/materials/rubric colgado
+// >2min). Mismo patrón que conTimeout() en AIEngine.ts -- Promise.race
+// contra un timer real, no AbortSignal (que no cubre un fetch ya resuelto
+// pero con el body colgado).
+const IMAGE_PROVIDER_TIMEOUT_MS = 12000;
+
+function conTimeoutImage<T>(promesa: Promise<T>, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), IMAGE_PROVIDER_TIMEOUT_MS);
+    promesa.then((value) => { clearTimeout(timer); resolve(value); })
+      .catch(() => { clearTimeout(timer); resolve(fallback); });
+  });
+}
+
 export async function generateEducationalImage(input: unknown, env: ImageEnv): Promise<EducationalImageResult> {
   const context = normalizeImageContext(input);
   const prompt = buildEducationalImagePrompt(context);
@@ -470,11 +489,11 @@ export async function generateEducationalImage(input: unknown, env: ImageEnv): P
 
   let result: EducationalImageResult | null = null;
   for (const provider of order) {
-    if (provider === 'wikimedia') result = await tryWikimedia(context, prompt, cacheKey);
-    if (provider === 'cloudflare-ai') result = await tryCloudflareAI(env, context, prompt, cacheKey);
-    if (provider === 'sdxl') result = await trySdxl(env, prompt, cacheKey);
-    if (provider === 'pollinations') result = await tryPollinations(context, prompt, cacheKey);
-    if (provider === 'huggingface' || provider === 'hf') result = await tryHuggingFace(env, prompt, cacheKey);
+    if (provider === 'wikimedia') result = await conTimeoutImage(tryWikimedia(context, prompt, cacheKey), null);
+    if (provider === 'cloudflare-ai') result = await conTimeoutImage(tryCloudflareAI(env, context, prompt, cacheKey), null);
+    if (provider === 'sdxl') result = await conTimeoutImage(trySdxl(env, prompt, cacheKey), null);
+    if (provider === 'pollinations') result = await conTimeoutImage(tryPollinations(context, prompt, cacheKey), null);
+    if (provider === 'huggingface' || provider === 'hf') result = await conTimeoutImage(tryHuggingFace(env, prompt, cacheKey), null);
     if (provider === 'svg') result = svgFallback(context, prompt, cacheKey);
     if (result) break;
   }
