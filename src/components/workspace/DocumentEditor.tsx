@@ -46,8 +46,9 @@ const PALETTE = {
   purple: '#7F58A6',
 } as const;
 
-/** Convert product data to HTML for Tiptap */
-function productToHtml(product: PedagogicalProduct): string {
+/** Convert product data to HTML for Tiptap. También la usan Compartir/Copiar
+ * en WorkspaceLayout.tsx para serializar el producto a texto/HTML fuera del editor. */
+export function productToHtml(product: PedagogicalProduct): string {
   const { metadata, data, type } = product;
 
   // Si el docente ya editó el documento a mano, esa version manda:

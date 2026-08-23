@@ -22,13 +22,28 @@ import {
   Save,
   Loader2,
   Palette,
+  Share2,
+  Copy,
+  Check,
+  Link as LinkIcon,
+  X,
 } from 'lucide-react';
-import { DocumentEditor } from './DocumentEditor';
+import { DocumentEditor, productToHtml } from './DocumentEditor';
 import { AICopilotSidebar } from './AICopilotSidebar';
 import { QualityReviewPanel } from './QualityReviewPanel';
 import { PresentacionRenderer } from '../products/renderers/PresentacionRenderer';
 import type { PedagogicalProduct } from '../products/types';
 import { exportProductToWord, exportProductToPptx } from '../../services/productExportService';
+import { shareFromWorkspace } from '../../services/sharedDocumentService';
+import { api } from '../../services/apiClient';
+
+/** HTML del producto -> texto plano, para Compartir/Copiar (que no quieren
+ * markup, solo el contenido legible como lo ve el docente). */
+function productToPlainText(product: PedagogicalProduct): string {
+  const div = document.createElement('div');
+  div.innerHTML = productToHtml(product);
+  return (div.innerText || div.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+}
 
 // Konva/react-konva son pesados (~300KB) y solo los necesita quien entra a
 // modo "Diseño"; cargarlos eager infla el chunk del workspace aunque nunca
@@ -77,6 +92,9 @@ export function WorkspaceLayout({
   const [exportingWord, setExportingWord] = useState(false);
   const [exportingPptx, setExportingPptx] = useState(false);
   const [contentMode, setContentMode] = useState<'content' | 'diseno'>('content');
+  const [sharing, setSharing] = useState(false);
+  const [shareResult, setShareResult] = useState<{ shareUrl: string; copied: boolean } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Avisa antes de cerrar/recargar la pestaña si hay cambios sin guardar
   // (edicion manual o de la IA que el docente aun no exporto/guardo).
@@ -141,6 +159,59 @@ export function WorkspaceLayout({
       console.error('Error exporting PPTX:', err);
     } finally {
       setExportingPptx(false);
+    }
+  }, [activeProduct]);
+
+  const handleShare = useCallback(async () => {
+    setSharing(true);
+    try {
+      const { doc, shareUrl } = shareFromWorkspace({
+        title: activeProduct.metadata.title || 'Sin titulo',
+        content: productToPlainText(activeProduct),
+        nivel: activeProduct.metadata.level,
+        asignatura: activeProduct.metadata.subject,
+        oa: activeProduct.metadata.oaText || activeProduct.metadata.oaCode,
+      });
+      try {
+        await api.post('/api/data/shared-documents', {
+          id: doc.id,
+          shareToken: doc.shareToken,
+          ownerName: 'Docente',
+          title: doc.title,
+          content: doc.content,
+          sourceType: doc.sourceType,
+          sourceId: doc.sourceId,
+          visibility: 'shared',
+          permission: doc.permission,
+        });
+      } catch {
+        // Sincronizacion a la nube fallo -- el link local (shareFromWorkspace,
+        // ya persistido) sigue funcionando para quien tenga este navegador.
+      }
+      setShareResult({ shareUrl, copied: false });
+    } finally {
+      setSharing(false);
+    }
+  }, [activeProduct]);
+
+  const handleCopyShareUrl = useCallback(async () => {
+    if (!shareResult) return;
+    try {
+      await navigator.clipboard.writeText(shareResult.shareUrl);
+      setShareResult(r => (r ? { ...r, copied: true } : r));
+      setTimeout(() => setShareResult(r => (r ? { ...r, copied: false } : r)), 2000);
+    } catch {
+      // Clipboard no disponible -- el input readOnly con el link sigue visible para copiar a mano.
+    }
+  }, [shareResult]);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(productToPlainText(activeProduct));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard no disponible -- sin fallback visual, el docente puede seleccionar el texto a mano.
     }
   }, [activeProduct]);
 
@@ -247,6 +318,25 @@ export function WorkspaceLayout({
             {exportingPptx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Presentation className="w-3.5 h-3.5" />}
             <span className="hidden lg:inline">PPTX</span>
           </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--ink-mid)] hover:bg-gray-100 transition-colors"
+            title="Copiar contenido"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+            <span className="hidden lg:inline">{copied ? 'Copiado' : 'Copiar'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            disabled={sharing}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--ink-mid)] hover:bg-gray-100 transition-colors disabled:opacity-50"
+            title="Compartir"
+          >
+            {sharing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+            <span className="hidden lg:inline">Compartir</span>
+          </button>
           <div className="h-5 w-px bg-gray-200 mx-1" />
           <motion.button
             type="button"
@@ -335,6 +425,50 @@ export function WorkspaceLayout({
           />
         </div>
       </div>
+
+      {shareResult && (
+        <div className="fixed inset-0 bg-black/25 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShareResult(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: PALETTE.primaryTint }}>
+                  <Share2 size={18} style={{ color: PALETTE.primary }} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[var(--ink)]">Recurso compartido</h3>
+                  <p className="text-xs text-gray-400">Copia el enlace para compartir</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShareResult(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100 mb-4">
+              <LinkIcon size={14} className="text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                value={shareResult.shareUrl}
+                readOnly
+                className="flex-1 bg-transparent text-xs text-[var(--ink-mid)] outline-none border-none p-0"
+              />
+              <button
+                type="button"
+                onClick={handleCopyShareUrl}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${shareResult.copied ? 'bg-green-100 text-green-700' : 'bg-[var(--primary-tint)] text-[var(--primary-ink)] hover:brightness-95'}`}
+              >
+                {shareResult.copied ? <><Check size={12} className="inline mr-1" />Copiado</> : 'Copiar'}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShareResult(null)}
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--ink-mid)] text-sm font-semibold hover:bg-gray-50 transition-all"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
