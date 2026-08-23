@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { LayoutDashboard, ClipboardCheck, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Boxes, Share2, Menu, X, Sparkles, BookOpen, BarChart2, LogOut, Route, PanelLeftClose, PanelLeftOpen, Shield, GraduationCap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../utils/roles';
 
@@ -27,7 +27,6 @@ const menuSections = [
       { id: 'flujo-docente', label: 'Flujo Docente', icon: Route },
       { id: 'mis-clases', label: 'Mis Clases', icon: Sparkles },
       { id: 'unidades-didacticas', label: 'Unidades Didacticas', icon: BookOpen },
-      { id: 'evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck },
       { id: 'dua-guide', label: 'Guía DUA (Multinivel)', icon: BookOpen },
       { id: 'reportes', label: 'Reportes', icon: BarChart2 },
       // 'workspace' (Espacio de Trabajo) y 'project-copilot' quedan ocultos

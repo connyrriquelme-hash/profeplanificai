@@ -1,4 +1,4 @@
-import { LayoutDashboard, Sparkles, FolderKanban, ClipboardCheck, LibraryBig, BookOpen, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, Sparkles, FolderKanban, Route, LibraryBig, BookOpen, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { isAdminUser, ADMIN_ONLY_VIEW_IDS } from '../../utils/roles';
 
@@ -11,7 +11,7 @@ const allBottomNavItems = [
   { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
   { id: 'mis-clases', label: 'Clases', icon: Sparkles },
   { id: 'unidades-didacticas', label: 'Unidades', icon: BookOpen },
-  { id: 'evaluaciones', label: 'Evaluar', icon: ClipboardCheck },
+  { id: 'flujo-docente', label: 'Generar', icon: Route },
   { id: 'reportes', label: 'Reportes', icon: BarChart2 },
 ];
 

@@ -860,7 +860,7 @@ endpoint OA: /api/objectives?course=${selectedCurso?.code || ''}&subject=${selec
             <button className="small secondary" onClick={() => onNavigate?.('banco-recursos')}>
               Ir a Banco de Recursos
             </button>
-            <button className="small secondary" onClick={() => onNavigate?.('evaluaciones')}>
+            <button className="small secondary" onClick={() => onNavigate?.('flujo-docente')}>
               Crear evaluación
             </button>
           </div>

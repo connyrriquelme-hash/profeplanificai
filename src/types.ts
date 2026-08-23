@@ -259,7 +259,6 @@ export type ViewType =
   | 'generador'
   | 'mis-clases'
   | 'flujo-docente'
-  | 'evaluaciones'
   | 'banco'
   | 'banco-recursos'
   | 'panel-compartido'

@@ -1,4 +1,4 @@
-import { ClipboardCheck, LibraryBig, Boxes, NotebookPen } from 'lucide-react';
+import { Route, LibraryBig, Boxes, NotebookPen } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,7 +8,7 @@ interface DashboardViewProps {
 
 const QUICK_ACTIONS = [
   { view: 'mis-clases', icon: NotebookPen, tint: 'var(--primary-tint)', iconColor: 'var(--primary-ink)', title: 'Mis Clases', desc: 'Organiza tu semana, planifica por OA y guarda recursos automáticamente.' },
-  { view: 'evaluaciones', icon: ClipboardCheck, tint: 'var(--warn-bg)', iconColor: 'var(--warn-ink)', title: 'Crear evaluación', desc: 'Crea evaluaciones formativas, sumativas o tipo SIMCE.' },
+  { view: 'flujo-docente', icon: Route, tint: 'var(--warn-bg)', iconColor: 'var(--warn-ink)', title: 'Flujo Docente', desc: 'Genera evaluaciones, guías, rúbricas y más, paso a paso.' },
   { view: 'banco', icon: LibraryBig, tint: '#E6EEE3', iconColor: 'var(--success-ink)', title: 'Explorar OA', desc: 'Navega los Objetivos de Aprendizaje del Currículum Nacional.' },
   { view: 'banco-recursos', icon: Boxes, tint: 'var(--primary-tint)', iconColor: 'var(--primary-ink)', title: 'Banco de Recursos', desc: 'Revisa y gestiona todos tus materiales generados.' },
 ];

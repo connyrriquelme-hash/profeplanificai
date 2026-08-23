@@ -16,7 +16,6 @@ const DashboardView = lazy(() => import('./components/DashboardView').then(m => 
 const WorkspaceView = lazy(() => import('./components/WorkspaceView').then(m => ({ default: m.WorkspaceView })));
 const CurriculumCloudView = lazy(() => import('./components/CurriculumCloudView').then(m => ({ default: m.CurriculumCloudView })));
 const BancoRecursosView = lazy(() => import('./components/BancoRecursosView').then(m => ({ default: m.BancoRecursosView })));
-const EvaluacionesView = lazy(() => import('./components/EvaluacionesView').then(m => ({ default: m.EvaluacionesView })));
 const SharedPanelView = lazy(() => import('./components/SharedPanelView').then(m => ({ default: m.SharedPanelView })));
 const SharedDocumentPublicView = lazy(() => import('./components/SharedDocumentPublicView').then(m => ({ default: m.SharedDocumentPublicView })));
 const UnidadesDidacticasView = lazy(() => import('./components/UnidadesDidacticasView').then(m => ({ default: m.UnidadesDidacticasView })));
@@ -138,8 +137,6 @@ function AppContent() {
         return <MisClases onNavigate={handleViewChange} />;
       case 'banco':
         return <CurriculumCloudView />;
-      case 'evaluaciones':
-        return <EvaluacionesView onNavigate={handleViewChange} />;
       case 'banco-recursos':
         return <BancoRecursosView initialTab={viewState?.tab as any} onNavigate={handleViewChange} />;
       case 'panel-compartido':

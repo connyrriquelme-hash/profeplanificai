@@ -886,13 +886,13 @@ export function MisClases({ onNavigate }: MisClasesProps) {
         {rightTab === 'evaluacion' && (<div>
           <div className="space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Evaluaciones con IA</h3>
-            <p className="text-sm text-slate-500">Para evaluaciones, rúbricas, pautas y pruebas tipo SIMCE, usa la pestaña Evaluaciones — motor con IA real y validación de calidad.</p>
+            <p className="text-sm text-slate-500">Para evaluaciones, rúbricas, pautas y pruebas tipo SIMCE, usa Flujo Docente — motor con IA real y validación de calidad.</p>
             <button
-              onClick={() => onNavigate?.('evaluaciones')}
+              onClick={() => onNavigate?.('flujo-docente')}
               className="rounded-2xl border border-[var(--primary)] bg-[var(--primary-tint)] p-4 text-left hover:brightness-95 transition-all flex items-center justify-between gap-3"
             >
               <div>
-                <p className="text-sm font-bold text-[var(--primary-ink)]">Generar en Evaluaciones</p>
+                <p className="text-sm font-bold text-[var(--primary-ink)]">Generar en Flujo Docente</p>
                 <p className="text-xs text-[var(--primary-ink)]/70 mt-1">Evaluación, rúbrica, ticket, SIMCE y más</p>
               </div>
               <ArrowRight size={16} className="text-[var(--primary-ink)] flex-shrink-0" />
