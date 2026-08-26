@@ -138,7 +138,16 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.45, maxOutputTokens: 1024 },
+              generationConfig: {
+                temperature: 0.45,
+                maxOutputTokens: 2048,
+                // Sin esto, gemini-3.6-flash gasta el budget de tokens en
+                // "thinking" interno antes del JSON visible, dejando
+                // content.parts vacío o incompleto -> caía siempre al
+                // fallback determinístico. Mismo fix ya aplicado en
+                // AIEngine.ts (ver callGemini()).
+                thinkingConfig: { thinkingBudget: 0 },
+              },
             }),
           }
         );
