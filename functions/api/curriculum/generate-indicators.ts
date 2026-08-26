@@ -155,13 +155,21 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
         const data = await response.json() as any;
         if (response.ok && data?.candidates?.[0]?.content?.parts) {
           const raw = data.candidates[0].content.parts.map((p: any) => p.text || '').join('');
-          const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
-          if (Array.isArray(parsed) && parsed.length >= 2) {
-            indicators = parsed.slice(0, 5);
+          try {
+            const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+            if (Array.isArray(parsed) && parsed.length >= 2) {
+              indicators = parsed.slice(0, 5);
+            } else {
+              console.error('[generate-indicators] parsed no es array >=2:', raw.slice(0, 300));
+            }
+          } catch (parseErr) {
+            console.error('[generate-indicators] JSON.parse fallo. raw:', raw.slice(0, 300), 'error:', parseErr);
           }
+        } else {
+          console.error('[generate-indicators] Gemini respuesta inesperada. status:', response.status, 'body:', JSON.stringify(data).slice(0, 500));
         }
-      } catch {
-        // fall through to deterministic
+      } catch (err) {
+        console.error('[generate-indicators] excepcion llamando a Gemini:', err instanceof Error ? err.message : err);
       }
     }
 
