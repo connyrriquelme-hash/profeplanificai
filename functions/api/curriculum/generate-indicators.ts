@@ -159,17 +159,18 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
             const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
             if (Array.isArray(parsed) && parsed.length >= 2) {
               indicators = parsed.slice(0, 5);
-            } else {
-              console.error('[generate-indicators] parsed no es array >=2:', raw.slice(0, 300));
             }
-          } catch (parseErr) {
-            console.error('[generate-indicators] JSON.parse fallo. raw:', raw.slice(0, 300), 'error:', parseErr);
+          } catch {
+            // JSON invalido -> cae a generateDeterministicIndicators() abajo.
           }
         } else {
-          console.error('[generate-indicators] Gemini respuesta inesperada. status:', response.status, 'body:', JSON.stringify(data).slice(0, 500));
+          // Logueado para poder diagnosticar caidas silenciosas al fallback
+          // (p.ej. 429 RESOURCE_EXHAUSTED por creditos de Gemini agotados,
+          // visto en producción) sin tener que adivinar la causa cada vez.
+          console.error('[generate-indicators] Gemini respondió sin contenido usable. status:', response.status, 'error:', data?.error?.message || JSON.stringify(data).slice(0, 300));
         }
       } catch (err) {
-        console.error('[generate-indicators] excepcion llamando a Gemini:', err instanceof Error ? err.message : err);
+        console.error('[generate-indicators] excepción llamando a Gemini:', err instanceof Error ? err.message : err);
       }
     }
 
