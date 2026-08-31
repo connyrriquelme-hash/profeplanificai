@@ -1,4 +1,5 @@
 import { getAuthenticatedUserId } from '../../_lib/auth';
+import { extractWorkersAIText } from '../../_lib/workersAI';
 
 interface Env {
   JWT_SECRET: string;
@@ -28,11 +29,7 @@ export async function onRequestPost(context: EventContext<Env, string, { provide
         temperature: 0.65,
         max_tokens: 5000,
       }) as unknown;
-      const content = typeof result === 'string'
-        ? result
-        : typeof (result as { response?: unknown })?.response === 'string'
-          ? (result as { response: string }).response
-          : '';
+      const content = extractWorkersAIText(result);
       return Response.json({ content });
     }
 

@@ -1,4 +1,5 @@
 import { getAuthenticatedUserId } from '../../_lib/auth';
+import { extractWorkersAIText } from '../../_lib/workersAI';
 
 interface Env {
   JWT_SECRET: string;
@@ -67,11 +68,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
           temperature: 0.4,
           max_tokens: 4096,
         }) as unknown;
-        aiResponse = typeof result === 'string'
-          ? result
-          : typeof (result as { response?: unknown })?.response === 'string'
-            ? (result as { response: string }).response
-            : '';
+        aiResponse = extractWorkersAIText(result);
       } catch (err) {
         console.error('[mutate-json] Workers AI falló:', err instanceof Error ? err.message : err);
       }
