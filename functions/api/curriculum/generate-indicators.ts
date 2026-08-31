@@ -131,6 +131,18 @@ Genera 3 a 5 indicadores de evaluacion observables y pedagogicos derivados de es
 Devuelve SOLO un array JSON valido de strings, sin markdown ni explicaciones.
 Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
 
+        // Diagnostico temporal: confirmar que gemini-3.6-flash esta
+        // realmente disponible para esta API key antes de asumir que el
+        // 400 INVALID_ARGUMENT viene de thinkingConfig.
+        try {
+          const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`);
+          const modelsData = await modelsRes.json() as any;
+          const names = (modelsData?.models || []).map((m: any) => m.name).filter((n: string) => n?.includes('flash') || n?.includes('pro'));
+          console.error('[generate-indicators] modelos disponibles (flash/pro):', JSON.stringify(names));
+        } catch (e) {
+          console.error('[generate-indicators] fallo listando modelos:', e instanceof Error ? e.message : e);
+        }
+
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`,
           {

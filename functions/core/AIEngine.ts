@@ -404,11 +404,10 @@ export async function callAIConValidacion<T>(
         break;
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        // Temporal: cuando un provider anterior falla pero uno posterior
-        // responde, este error quedaba invisible (solo se loguea si TODOS
-        // fallan). Diagnosticando si Gemini falla silenciosamente en el
-        // mismo request que generate-indicators.ts (que sí falla con 400
-        // INVALID_ARGUMENT en producción tras agregar thinkingConfig).
+        // Antes esto quedaba invisible cuando un provider anterior fallaba
+        // pero uno posterior en la cascada respondía bien (solo se logueaba
+        // si TODOS fallaban) -- así se puede ver que, por ejemplo, Gemini
+        // está fallando en cada request aunque Groq/Workers AI lo tapen.
         console.error(`[AIEngine] provider ${providers[i].name} falló (fallback al siguiente):`, msg);
         erroresProveedores.push(`${providers[i].name}: ${msg}`);
         providerDesdeIndice = i + 1;
