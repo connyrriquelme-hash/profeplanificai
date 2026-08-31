@@ -111,6 +111,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const textForGeneration = objective?.official_text || objectiveText || objectiveCode || '';
 
     let indicators: string[] = [];
+    let _debugRaw: unknown = null;
 
     // Workers AI en vez de Gemini directo: mismo modelo que ya usa
     // AIEngine.ts para JSON estructurado (RubricaEngine.ts), confirmado
@@ -147,6 +148,8 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
           : typeof (result as { response?: unknown })?.response === 'string'
             ? (result as { response: string }).response
             : '';
+
+        _debugRaw = { resultType: typeof result, resultKeys: result && typeof result === 'object' ? Object.keys(result as object) : null, raw: raw.slice(0, 500), rawResultJson: JSON.stringify(result).slice(0, 500) };
 
         try {
           const match = raw.match(/\[[\s\S]*\]/);
@@ -205,6 +208,7 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
       })),
       source: persisted ? 'generated' : 'generated_temporary',
       persisted,
+      _debugRaw,
     });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
