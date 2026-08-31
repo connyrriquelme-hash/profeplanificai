@@ -403,7 +403,14 @@ export async function callAIConValidacion<T>(
         respondio = true;
         break;
       } catch (error) {
-        erroresProveedores.push(`${providers[i].name}: ${error instanceof Error ? error.message : String(error)}`);
+        const msg = error instanceof Error ? error.message : String(error);
+        // Temporal: cuando un provider anterior falla pero uno posterior
+        // responde, este error quedaba invisible (solo se loguea si TODOS
+        // fallan). Diagnosticando si Gemini falla silenciosamente en el
+        // mismo request que generate-indicators.ts (que sí falla con 400
+        // INVALID_ARGUMENT en producción tras agregar thinkingConfig).
+        console.error(`[AIEngine] provider ${providers[i].name} falló (fallback al siguiente):`, msg);
+        erroresProveedores.push(`${providers[i].name}: ${msg}`);
         providerDesdeIndice = i + 1;
       }
     }
