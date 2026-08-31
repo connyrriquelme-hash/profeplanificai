@@ -454,16 +454,22 @@ function escapeHtml(value: string): string {
   return escapeXml(value);
 }
 
-// Límite por proveedor: 12s. Ningún tryXxx() de este archivo pasa
+// Límite por proveedor: 6s (antes 12s). Ningún tryXxx() de este archivo pasa
 // AbortSignal a sus fetch() -- un proveedor externo que se cuelga (sin
 // responder ni fallar) bloquea toda la cadena indefinidamente, y como
-// rubric.ts/evaluation.ts llaman esto en un loop secuencial por criterio/
-// pregunta, un solo proveedor colgado deja el endpoint entero sin
-// responder nunca (confirmado en vivo: /api/materials/rubric colgado
-// >2min). Mismo patrón que conTimeout() en AIEngine.ts -- Promise.race
-// contra un timer real, no AbortSignal (que no cubre un fetch ya resuelto
-// pero con el body colgado).
-const IMAGE_PROVIDER_TIMEOUT_MS = 12000;
+// rubric.ts/evaluation.ts llaman esto en paralelo por criterio/pregunta
+// (Promise.all), el peor caso real es ~2 proveedores reales (wikimedia +
+// pollinations; cloudflare-ai/huggingface resuelven casi instantáneo si no
+// están configurados) x este timeout. Bajado de 12s a 6s tras confirmar en
+// vivo (múltiples pruebas de Rúbrica Premium, distintos OA) que wikimedia y
+// pollinations NUNCA producen una imagen usable para contenido pedagógico
+// tipo criterio-de-rúbrica -- siempre cae a svg-fallback igual, así que
+// pagar 12s completos por intento no compraba nada; la generación total
+// llegó a superar los 120s del timeout del frontend (confirmado: request
+// abortado con net::ERR_ABORTED). Mismo patrón que conTimeout() en
+// AIEngine.ts -- Promise.race contra un timer real, no AbortSignal (que no
+// cubre un fetch ya resuelto pero con el body colgado).
+const IMAGE_PROVIDER_TIMEOUT_MS = 6000;
 
 function conTimeoutImage<T>(promesa: Promise<T>, fallback: T): Promise<T> {
   return new Promise((resolve) => {
