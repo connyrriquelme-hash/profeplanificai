@@ -34,11 +34,13 @@ const EVALUACION_PRODUCT_IDS = new Set([
 
 type FlujoStep = 'nivel' | 'asignatura' | 'oa' | 'contexto' | 'producto' | 'generando' | 'resultado';
 
-// 120s: Rúbrica Premium (contenido IA + hasta 3+ imágenes por criterio,
-// incluso en paralelo desde el fix de rubric.ts) se midió en vivo en ~83s
-// en el peor caso -- 60s se quedaba corto y el frontend abortaba una
-// generación que el backend igual terminaba completando bien.
-const GENERATION_TIMEOUT_MS = 120_000;
+// 150s: Rúbrica Premium (contenido IA + hasta 5 imágenes por criterio en
+// paralelo) se ha medido en vivo entre ~85s y ~110s según el OA -- variaba
+// lo suficiente como para que 120s siguiera abortando ocasionalmente una
+// generación que el backend igual terminaba completando bien (confirmado:
+// net::ERR_ABORTED en una prueba real con 5 criterios). El margen extra
+// no afecta a productos más rápidos, que igual terminan mucho antes.
+const GENERATION_TIMEOUT_MS = 150_000;
 
 // Paleta cálida educativa: tonos tomados directo de los tokens del tema
 // (.theme-calida en index.css) en vez de un arcoíris genérico de Tailwind —
