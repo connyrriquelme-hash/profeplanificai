@@ -111,6 +111,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const textForGeneration = objective?.official_text || objectiveText || objectiveCode || '';
 
     let indicators: string[] = [];
+    let debugInfo: Record<string, unknown> | null = null;
 
     if (context.env.GEMINI_API_KEY) {
       try {
@@ -138,9 +139,9 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
           const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`);
           const modelsData = await modelsRes.json() as any;
           const names = (modelsData?.models || []).map((m: any) => m.name).filter((n: string) => n?.includes('flash') || n?.includes('pro'));
-          console.error('[generate-indicators] modelos disponibles (flash/pro):', JSON.stringify(names));
+          debugInfo = { ...(debugInfo || {}), availableModels: names };
         } catch (e) {
-          console.error('[generate-indicators] fallo listando modelos:', e instanceof Error ? e.message : e);
+          debugInfo = { ...(debugInfo || {}), modelsListError: e instanceof Error ? e.message : String(e) };
         }
 
         const response = await fetch(
@@ -180,9 +181,11 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
           // (p.ej. 429 RESOURCE_EXHAUSTED por creditos de Gemini agotados,
           // visto en producción) sin tener que adivinar la causa cada vez.
           console.error('[generate-indicators] Gemini respondió sin contenido usable. status:', response.status, 'error:', JSON.stringify(data?.error || data).slice(0, 800));
+          debugInfo = { ...(debugInfo || {}), geminiStatus: response.status, geminiError: data?.error || data };
         }
       } catch (err) {
         console.error('[generate-indicators] excepción llamando a Gemini:', err instanceof Error ? err.message : err);
+        debugInfo = { ...(debugInfo || {}), exception: err instanceof Error ? err.message : String(err) };
       }
     }
 
@@ -227,6 +230,7 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
       })),
       source: persisted ? 'generated' : 'generated_temporary',
       persisted,
+      _debug: debugInfo,
     });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });
