@@ -167,7 +167,7 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
           // Logueado para poder diagnosticar caidas silenciosas al fallback
           // (p.ej. 429 RESOURCE_EXHAUSTED por creditos de Gemini agotados,
           // visto en producción) sin tener que adivinar la causa cada vez.
-          console.error('[generate-indicators] Gemini respondió sin contenido usable. status:', response.status, 'error:', data?.error?.message || JSON.stringify(data).slice(0, 300));
+          console.error('[generate-indicators] Gemini respondió sin contenido usable. status:', response.status, 'error:', JSON.stringify(data?.error || data).slice(0, 800));
         }
       } catch (err) {
         console.error('[generate-indicators] excepción llamando a Gemini:', err instanceof Error ? err.message : err);
