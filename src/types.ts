@@ -1,4 +1,4 @@
-export type Provider = 'local' | 'gemini' | 'openrouter' | 'huggingface';
+export type Provider = 'local' | 'workers-ai' | 'gemini' | 'openrouter' | 'huggingface';
 
 export interface AIConfig {
   provider: Provider;

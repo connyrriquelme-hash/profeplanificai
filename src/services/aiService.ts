@@ -331,9 +331,9 @@ export async function generarConIA(opts: GenAIOpts): Promise<{ ok: boolean; text
 
     const cfg: AIConfig = (() => {
       try {
-        return JSON.parse(localStorage.getItem('planificaia_cfg') || '{"provider":"gemini","model":"gemini-2.5-flash","apiKey":""}');
+        return JSON.parse(localStorage.getItem('planificaia_cfg') || '{"provider":"workers-ai","model":"","apiKey":""}');
       } catch {
-        return { provider: 'gemini' as const, model: 'gemini-2.5-flash', apiKey: '' };
+        return { provider: 'workers-ai' as const, model: '', apiKey: '' };
       }
     })();
 

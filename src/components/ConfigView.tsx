@@ -9,6 +9,7 @@ interface ConfigViewProps {
 
 const PROVIDERS: { value: Provider; label: string }[] = [
   { value: 'local', label: 'Local sin clave' },
+  { value: 'workers-ai', label: 'Workers AI (Cloudflare, sin clave)' },
   { value: 'gemini', label: 'Gemini API' },
   { value: 'openrouter', label: 'OpenRouter' },
   { value: 'huggingface', label: 'Hugging Face Router' },

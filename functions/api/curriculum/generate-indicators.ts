@@ -1,6 +1,6 @@
 interface Env {
   DB: D1Database;
-  GEMINI_API_KEY?: string;
+  AI?: { run: (model: string, input: unknown) => Promise<unknown> };
 }
 
 const SUBJECT_PROMPTS: Record<string, string> = {
@@ -111,9 +111,13 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     const textForGeneration = objective?.official_text || objectiveText || objectiveCode || '';
 
     let indicators: string[] = [];
-    let debugInfo: Record<string, unknown> | null = null;
 
-    if (context.env.GEMINI_API_KEY) {
+    // Workers AI en vez de Gemini directo: mismo modelo que ya usa
+    // AIEngine.ts para JSON estructurado (RubricaEngine.ts), confirmado
+    // funcionando en producción. Gemini se sacó de este endpoint porque su
+    // llamada directa devolvía 400 INVALID_ARGUMENT de forma consistente
+    // (ver historial) mientras Workers AI respondía bien.
+    if (context.env.AI) {
       try {
         const prompt = `Eres una docente chilena experta en curriculo nacional y evaluacion educativa.
 
@@ -132,54 +136,31 @@ Genera 3 a 5 indicadores de evaluacion observables y pedagogicos derivados de es
 Devuelve SOLO un array JSON valido de strings, sin markdown ni explicaciones.
 Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
 
-        // Diagnostico temporal: confirmar que gemini-3.6-flash esta
-        // realmente disponible para esta API key antes de asumir que el
-        // 400 INVALID_ARGUMENT viene de thinkingConfig.
+        const result = await context.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.45,
+          max_tokens: 1024,
+        }) as unknown;
+
+        const raw = typeof result === 'string'
+          ? result
+          : typeof (result as { response?: unknown })?.response === 'string'
+            ? (result as { response: string }).response
+            : '';
+
         try {
-          const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`);
-          const modelsData = await modelsRes.json() as any;
-          const names = (modelsData?.models || []).map((m: any) => m.name).filter((n: string) => n?.includes('flash') || n?.includes('pro'));
-          debugInfo = { ...(debugInfo || {}), availableModels: names };
-        } catch (e) {
-          debugInfo = { ...(debugInfo || {}), modelsListError: e instanceof Error ? e.message : String(e) };
-        }
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(context.env.GEMINI_API_KEY)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.45,
-                maxOutputTokens: 2048,
-              },
-            }),
+          const match = raw.match(/\[[\s\S]*\]/);
+          const parsed = JSON.parse((match ? match[0] : raw).replace(/```json|```/g, '').trim());
+          if (Array.isArray(parsed) && parsed.length >= 2) {
+            indicators = parsed.filter((x): x is string => typeof x === 'string').slice(0, 5);
+          } else {
+            console.error('[generate-indicators] Workers AI no devolvió un array usable:', raw.slice(0, 300));
           }
-        );
-
-        const data = await response.json() as any;
-        if (response.ok && data?.candidates?.[0]?.content?.parts) {
-          const raw = data.candidates[0].content.parts.map((p: any) => p.text || '').join('');
-          try {
-            const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
-            if (Array.isArray(parsed) && parsed.length >= 2) {
-              indicators = parsed.slice(0, 5);
-            }
-          } catch {
-            // JSON invalido -> cae a generateDeterministicIndicators() abajo.
-          }
-        } else {
-          // Logueado para poder diagnosticar caidas silenciosas al fallback
-          // (p.ej. 429 RESOURCE_EXHAUSTED por creditos de Gemini agotados,
-          // visto en producción) sin tener que adivinar la causa cada vez.
-          console.error('[generate-indicators] Gemini respondió sin contenido usable. status:', response.status, 'error:', JSON.stringify(data?.error || data).slice(0, 800));
-          debugInfo = { ...(debugInfo || {}), geminiStatus: response.status, geminiError: data?.error || data };
+        } catch {
+          console.error('[generate-indicators] Workers AI no devolvió JSON válido:', raw.slice(0, 300));
         }
       } catch (err) {
-        console.error('[generate-indicators] excepción llamando a Gemini:', err instanceof Error ? err.message : err);
-        debugInfo = { ...(debugInfo || {}), exception: err instanceof Error ? err.message : String(err) };
+        console.error('[generate-indicators] excepción llamando a Workers AI:', err instanceof Error ? err.message : err);
       }
     }
 
@@ -224,7 +205,6 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
       })),
       source: persisted ? 'generated' : 'generated_temporary',
       persisted,
-      _debug: debugInfo,
     });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : 'Error interno' }, { status: 500 });

@@ -2,8 +2,8 @@ import { getAuthenticatedUserId } from '../../_lib/auth';
 
 interface Env {
   JWT_SECRET: string;
-  GEMINI_API_KEY?: string;
-  OPENROUTER_API_KEY?: string;
+  AI?: { run: (model: string, input: unknown) => Promise<unknown> };
+  GROQ_API_KEY?: string;
 }
 
 interface SlideMutationRequest {
@@ -46,62 +46,66 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
       return Response.json({ error: 'Presentación requerida' }, { status: 400 });
     }
 
-    // Try Gemini first, fallback to OpenRouter
-    const provider = context.env.GEMINI_API_KEY ? 'gemini' : 'openrouter';
-    const apiKey = provider === 'gemini' ? context.env.GEMINI_API_KEY : context.env.OPENROUTER_API_KEY;
-
-    if (!apiKey) {
+    if (!context.env.AI && !context.env.GROQ_API_KEY) {
       return Response.json({ error: 'Proveedor de IA no configurado' }, { status: 503 });
     }
 
     const userPrompt = `Presentación actual:\n${JSON.stringify(presentation, null, 2)}\n\nInstrucción del usuario: ${instruction}\n\nDevuelve el JSON modificado:`;
 
-    let aiResponse: string;
+    // Workers AI primero (gratis, sin dependencia de API key externa),
+    // Groq como respaldo. Gemini se sacó de aquí: su llamada directa
+    // devolvía 400 INVALID_ARGUMENT de forma consistente en producción.
+    let aiResponse = '';
 
-    if (provider === 'gemini') {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: MUTATION_SYSTEM_PROMPT }] },
-            contents: [{ parts: [{ text: userPrompt }] }],
-            generationConfig: { temperature: 0.4, maxOutputTokens: 8000 },
-          }),
-        }
-      );
-      const data = await r.json() as Record<string, unknown>;
-      if (!r.ok) {
-        const err = data?.error as Record<string, unknown> | undefined;
-        return Response.json({ error: err?.message || 'Error Gemini' }, { status: 502 });
-      }
-      const candidates = data?.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      aiResponse = (candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('\n');
-    } else {
-      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'openrouter/auto',
+    if (context.env.AI) {
+      try {
+        const result = await context.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
           messages: [
             { role: 'system', content: MUTATION_SYSTEM_PROMPT },
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.4,
-          max_tokens: 8000,
-        }),
-      });
-      const data = await r.json() as Record<string, unknown>;
-      if (!r.ok) {
-        const err = data?.error as Record<string, unknown> | undefined;
-        return Response.json({ error: err?.message || 'Error del proveedor' }, { status: 502 });
+          max_tokens: 4096,
+        }) as unknown;
+        aiResponse = typeof result === 'string'
+          ? result
+          : typeof (result as { response?: unknown })?.response === 'string'
+            ? (result as { response: string }).response
+            : '';
+      } catch (err) {
+        console.error('[mutate-json] Workers AI falló:', err instanceof Error ? err.message : err);
       }
-      const choices = data?.choices as Array<{ message?: { content?: string } }>;
-      aiResponse = choices?.[0]?.message?.content || '';
+    }
+
+    if (!aiResponse.trim() && context.env.GROQ_API_KEY) {
+      try {
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${context.env.GROQ_API_KEY}` },
+          body: JSON.stringify({
+            model: 'openai/gpt-oss-120b',
+            messages: [
+              { role: 'system', content: MUTATION_SYSTEM_PROMPT },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.4,
+            max_tokens: 8000,
+          }),
+        });
+        const data = await r.json() as Record<string, unknown>;
+        if (r.ok) {
+          const choices = data?.choices as Array<{ message?: { content?: string } }>;
+          aiResponse = choices?.[0]?.message?.content || '';
+        } else {
+          console.error('[mutate-json] Groq falló:', JSON.stringify(data?.error || data).slice(0, 300));
+        }
+      } catch (err) {
+        console.error('[mutate-json] excepción llamando a Groq:', err instanceof Error ? err.message : err);
+      }
+    }
+
+    if (!aiResponse.trim()) {
+      return Response.json({ error: 'Ningún proveedor de IA pudo procesar la instrucción. Intenta de nuevo.' }, { status: 502 });
     }
 
     // Parse the AI response as JSON
