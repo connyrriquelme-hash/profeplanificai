@@ -56,7 +56,7 @@ async function handleRequest(context: EventContext<Env>): Promise<Response> {
   // tras la auditoría de hoy: eran rutas de generación con costo de IA (o
   // escritura a D1) sin ninguna protección, ni en middleware ni en el
   // archivo -- ver commit correspondiente para el detalle de cada endpoint.
-  const protectedRoute = /^\/api\/(data|resources(?:\/|$)|materials(?:\/|$)|agents?(?:\/|$)|copilot(?:\/|$)|ai(?:\/|$)|images(?:\/|$)|generate-activity(?:\/|$)|generate-project(?:\/|$)|creative-image(?:\/|$)|library(?:\/|$)|evaluation-resources(?:\/|$)|my-classes(?:\/|$)|lessons(?:\/|$))/.test(path)
+  const protectedRoute = /^\/api\/(data|resources(?:\/|$)|materials(?:\/|$)|ai(?:\/|$)|images(?:\/|$)|generate-project(?:\/|$)|creative-image(?:\/|$)|library(?:\/|$)|evaluation-resources(?:\/|$)|my-classes(?:\/|$)|lessons(?:\/|$))/.test(path)
     || (/^\/api\/admin(?:\/|$)/.test(path) && !/^\/api\/admin\/import-/.test(path));
   if (protectedRoute) {
     const auth = request.headers.get('Authorization');
