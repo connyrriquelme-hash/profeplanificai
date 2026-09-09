@@ -61,7 +61,16 @@ function validateProductSpecificRules(product: Record<string, unknown>, productT
 
   if (productType === 'rubrica' || productType === 'evaluation_formative_rubric') {
     if (criteria.length < 3) addIssue(issues, 'rubric_criteria', 'error', 'La rúbrica debe tener al menos tres criterios observables.');
-    if (criteria.some((criterion) => !criterion || typeof criterion !== 'object' || !Array.isArray((criterion as Record<string, unknown>).levels))) {
+    // Rúbrica Premium (RubricaEngine.ts, productType 'rubrica') guarda los
+    // niveles por criterio en indicators[] (cada indicator referencia un
+    // levelId contra el arreglo `levels` de nivel superior), NO en un campo
+    // `levels` propio del criterio -- ese shape solo lo usa
+    // evaluation_formative_rubric. Antes este check siempre buscaba
+    // `.levels` para ambos tipos, así que TODA Rúbrica Premium marcaba
+    // "sin niveles de desempeño" y quedaba bloqueada (75/100), sin importar
+    // qué tan completo estuviera el contenido real.
+    const levelsField = productType === 'rubrica' ? 'indicators' : 'levels';
+    if (criteria.some((criterion) => !criterion || typeof criterion !== 'object' || !Array.isArray((criterion as Record<string, unknown>)[levelsField]))) {
       addIssue(issues, 'rubric_levels', 'error', 'Cada criterio de la rúbrica debe tener niveles de desempeño.');
     }
   }

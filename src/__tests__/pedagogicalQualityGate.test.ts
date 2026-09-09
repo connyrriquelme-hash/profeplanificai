@@ -62,4 +62,31 @@ describe('validatePedagogicalProduct', () => {
     expect(report.issues.some((issue) => issue.code === 'rubric_levels')).toBe(true);
     expect(report.status).toBe('blocked');
   });
+
+  it('accepts a Rúbrica Premium (productType "rubrica") whose criteria carry levels via indicators[], not .levels', () => {
+    // Bug real encontrado hoy: RubricaEngine.ts (RubricCriterion) guarda los
+    // niveles de cada criterio en `indicators` (cada uno con levelId +
+    // descriptor + evidence), no en un campo `.levels` propio -- ese shape
+    // solo existe en evaluation_formative_rubric. El check antes buscaba
+    // `.levels` para AMBOS tipos, así que toda Rúbrica Premium real quedaba
+    // "blocked" (75/100) con "Cada criterio... debe tener niveles de
+    // desempeño" sin importar qué tan completo estuviera el contenido.
+    const report = validatePedagogicalProduct({
+      title: 'Rúbrica Premium',
+      criteria: [
+        { id: 'c1', name: 'Clasificación', description: 'Clasifica seres vivos', weight: 30, indicators: [
+          { levelId: 'avanzado', descriptor: 'Clasifica con precisión', evidence: 'Árbol de clasificación', feedbackSuggestion: '' },
+          { levelId: 'adecuado', descriptor: 'Clasifica de forma básica', evidence: 'Lista simple', feedbackSuggestion: '' },
+        ] },
+        { id: 'c2', name: 'Explicación', description: 'Explica la estructura celular', weight: 40, indicators: [
+          { levelId: 'avanzado', descriptor: 'Explica con detalle', evidence: 'Explicación escrita', feedbackSuggestion: '' },
+        ] },
+        { id: 'c3', name: 'Comunicación', description: 'Comunica evidencias', weight: 30, indicators: [
+          { levelId: 'avanzado', descriptor: 'Comunica con claridad', evidence: 'Presentación oral', feedbackSuggestion: '' },
+        ] },
+      ],
+    }, { productType: 'rubrica' });
+
+    expect(report.issues.some((issue) => issue.code === 'rubric_levels')).toBe(false);
+  });
 });
