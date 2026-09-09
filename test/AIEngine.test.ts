@@ -120,6 +120,20 @@ describe('resolveAIResponseText', () => {
     expect(resultado).toBe(JSON.stringify({ anidado: true }));
   });
 
+  it('debe extraer choices[0].message.content (forma estilo OpenAI de @cf/meta/llama-3.3-70b-instruct-fp8-fast) en vez de stringificar el wrapper completo', () => {
+    // Bug real encontrado en producción: esta función solo miraba
+    // .response, así que para esta forma devolvía JSON.stringify(todo el
+    // wrapper) -- ese texto SÍ pasaba JSON.parse() (parseaba como
+    // {choices:[...]}), pero fallaba el schema.safeParse() del engine
+    // porque no tenía la forma esperada, y como env.AI.run() nunca lanzó
+    // excepción, los 3 reintentos pegaban contra el mismo proveedor con el
+    // mismo resultado -- nunca cascadeaba a Gemini/Groq.
+    const textoOriginal = '{"titulo":"Rúbrica generada","criterios":[]}';
+    const respuestaEstiloOpenAI = { choices: [{ message: { content: textoOriginal } }], response: null };
+    const resultado = resolveAIResponseText(respuestaEstiloOpenAI);
+    expect(resultado).toBe(textoOriginal);
+  });
+
   it('debe stringify-ar el objeto completo cuando no existe el campo .response', () => {
     const objetoSinResponse = { otraCosa: 'valor' };
     const resultado = resolveAIResponseText(objetoSinResponse);

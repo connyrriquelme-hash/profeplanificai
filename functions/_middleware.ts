@@ -48,7 +48,15 @@ async function handleRequest(context: EventContext<Env>): Promise<Response> {
   }
 
   const path = new URL(request.url).pathname;
-  const protectedRoute = /^\/api\/(data|resources(?:\/|$)|materials(?:\/|$)|agents?(?:\/|$)|copilot(?:\/|$)|ai\/generate(?:\/|$)|images(?:\/|$)|generate-activity(?:\/|$)|my-classes(?:\/|$)|lessons(?:\/|$))/.test(path)
+  // ai(?:\/|$) en vez de solo ai\/generate: defensa en profundidad para
+  // /api/ai/mutate-json y /api/ai/[provider], que ya validan auth en el
+  // propio archivo -- esto evita que un cambio futuro en esos archivos deje
+  // la ruta sin protección, mismo patrón que ya cubría ai/generate.
+  // evaluation-resources/generate-project/creative-image/library se agregan
+  // tras la auditoría de hoy: eran rutas de generación con costo de IA (o
+  // escritura a D1) sin ninguna protección, ni en middleware ni en el
+  // archivo -- ver commit correspondiente para el detalle de cada endpoint.
+  const protectedRoute = /^\/api\/(data|resources(?:\/|$)|materials(?:\/|$)|agents?(?:\/|$)|copilot(?:\/|$)|ai(?:\/|$)|images(?:\/|$)|generate-activity(?:\/|$)|generate-project(?:\/|$)|creative-image(?:\/|$)|library(?:\/|$)|evaluation-resources(?:\/|$)|my-classes(?:\/|$)|lessons(?:\/|$))/.test(path)
     || (/^\/api\/admin(?:\/|$)/.test(path) && !/^\/api\/admin\/import-/.test(path));
   if (protectedRoute) {
     const auth = request.headers.get('Authorization');

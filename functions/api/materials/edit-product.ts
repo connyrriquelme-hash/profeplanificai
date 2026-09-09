@@ -66,18 +66,25 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     });
 
     // If resourceId provided, save updated content to D1
+    let persisted = !body.resourceId; // sin resourceId no hay nada que persistir -> no es una falla
     if (body.resourceId) {
       try {
         await db.prepare(
           `UPDATE generated_resources SET content = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
         ).bind(JSON.stringify(result.producto), new Date().toISOString(), String(body.resourceId), userId).run();
+        persisted = true;
       } catch (d1Err) {
+        // Antes esto se tragaba en silencio y igual devolvía ok:true -- el
+        // docente veía "editado con éxito" en la UI pero el cambio nunca se
+        // guardó, y al recargar la página volvía a la versión vieja.
         console.error('[edit-product] D1 save error:', d1Err);
       }
     }
 
     return jsonResponse({
       ok: true,
+      persisted,
+      warning: persisted ? undefined : 'La edición se aplicó pero no se pudo guardar. Vuelve a intentar guardar antes de salir.',
       productoModificado: result.producto,
       explicacion: result.explicacion,
       camposModificados: result.camposModificados,

@@ -1,4 +1,6 @@
-interface Env { DB: D1Database; GEMINI_API_KEY?: string; AI?: { run: (model: string, input: unknown) => Promise<any> } }
+import { getAuthenticatedUserId } from '../../_lib/auth';
+
+interface Env { DB: D1Database; GEMINI_API_KEY?: string; AI?: { run: (model: string, input: unknown) => Promise<any> }; JWT_SECRET: string }
 
 interface GenerateRequest {
   indicatorId?: string;
@@ -166,6 +168,9 @@ function mockResources(indicator: any, resourceType: string): Record<string, any
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
+    if (!(await getAuthenticatedUserId(context.request, context.env.JWT_SECRET))) {
+      return Response.json({ error: 'Sesión inválida o expirada' }, { status: 401 });
+    }
     const body = await context.request.json() as GenerateRequest;
     const indicatorId = body.indicatorId || body.indicator_id;
     const resourceType = body.resourceType || body.generate_types?.[0] || 'actividad';

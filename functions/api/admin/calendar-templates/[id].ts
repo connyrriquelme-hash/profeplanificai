@@ -53,7 +53,7 @@ export async function onRequestPatch(context: EventContext<Env>): Promise<Respon
     values.push(id as string);
 
     await context.env.DB.prepare(
-      `UPDATE calendar_templates SET ${updates.join(', ')} WHERE id = ?`
+      `UPDATE institution_calendar_templates SET ${updates.join(', ')} WHERE id = ?`
     ).bind(...values).run();
 
     await logAdminAction(context.env, authContext.userId, 'update_calendar_template', 'calendar_template', id as string, body);
@@ -75,14 +75,14 @@ export async function onRequestDelete(context: EventContext<Env>): Promise<Respo
     const { id } = context.params;
 
     const template = await context.env.DB.prepare(
-      'SELECT id, name, institution_id FROM calendar_templates WHERE id = ?'
+      'SELECT id, name, institution_id FROM institution_calendar_templates WHERE id = ?'
     ).bind(id).first<{ id: string; name: string; institution_id: string }>();
 
     if (!template) {
       return Response.json({ error: 'Template no encontrado' }, { status: 404 });
     }
 
-    await context.env.DB.prepare('DELETE FROM calendar_templates WHERE id = ?').bind(id).run();
+    await context.env.DB.prepare('DELETE FROM institution_calendar_templates WHERE id = ?').bind(id).run();
 
     await logAdminAction(context.env, authContext.userId, 'delete_calendar_template', 'calendar_template', id as string, {
       name: template.name,

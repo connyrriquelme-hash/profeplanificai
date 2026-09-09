@@ -136,6 +136,8 @@ export function AICopilotSidebar({
     try {
       const response = await api.post<{
         ok: boolean;
+        persisted?: boolean;
+        warning?: string;
         productoModificado: Record<string, unknown>;
         explicacion: string;
         camposModificados: string[];
@@ -149,7 +151,7 @@ export function AICopilotSidebar({
         const aiMsg: ChatMessage = {
           id: `ai-${Date.now()}`,
           role: 'ai',
-          content: response.explicacion,
+          content: response.warning ? `${response.explicacion}\n\n⚠️ ${response.warning}` : response.explicacion,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiMsg]);

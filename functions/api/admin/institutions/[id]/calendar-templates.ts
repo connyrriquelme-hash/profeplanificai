@@ -16,7 +16,7 @@ export async function onRequestGet(context: EventContext<Env>): Promise<Response
 
     const { id } = context.params;
     const { results } = await context.env.DB.prepare(
-      'SELECT * FROM calendar_templates WHERE institution_id = ? ORDER BY created_at DESC'
+      'SELECT * FROM institution_calendar_templates WHERE institution_id = ? ORDER BY created_at DESC'
     ).bind(id).all();
 
     return Response.json({ templates: results });
@@ -56,7 +56,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
 
     const templateId = crypto.randomUUID();
     await context.env.DB.prepare(
-      `INSERT INTO calendar_templates
+      `INSERT INTO institution_calendar_templates
        (id, institution_id, name, description, school_year, level_id, subject_id, weekday, start_time, end_time, block_type, room, starts_on, ends_on)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(

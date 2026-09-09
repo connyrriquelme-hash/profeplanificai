@@ -1,8 +1,10 @@
 import { extractWorkersAIText } from '../../_lib/workersAI';
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
 interface Env {
   DB: D1Database;
   AI?: { run: (model: string, input: unknown) => Promise<unknown> };
+  JWT_SECRET: string;
 }
 
 const SUBJECT_PROMPTS: Record<string, string> = {
@@ -50,6 +52,9 @@ function generateIndicatorsFromSubject(text: string, subject?: string): string[]
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
   try {
+    if (!(await getAuthenticatedUserId(context.request, context.env.JWT_SECRET))) {
+      return Response.json({ error: 'Sesión inválida o expirada' }, { status: 401 });
+    }
     const body = await context.request.json() as {
       objectiveId?: string;
       objectiveCode?: string;
@@ -91,7 +96,7 @@ export async function onRequestPost(context: EventContext<Env>): Promise<Respons
     if (objective) {
       persisted = true;
       const existing = await context.env.DB.prepare(
-        'SELECT id, indicator_text, order_index, source_type, source_name FROM objective_indicators WHERE objective_id = ? ORDER BY order_index'
+        'SELECT id, indicator_text, order_index, source_type, source_name FROM objective_indicator_texts WHERE objective_id = ? ORDER BY order_index'
       ).bind(objective.id).all<any>();
 
       if (existing.results.length > 0 && !force) {
@@ -178,7 +183,7 @@ Ejemplo: ["Indicador 1.", "Indicador 2.", "Indicador 3."]`;
     if (persisted && objective) {
       const insertStmts = indicators.map((text, i) =>
         context.env.DB.prepare(
-          'INSERT INTO objective_indicators (id, objective_id, indicator_text, order_index, source_url, source_type, source_name) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO objective_indicator_texts (id, objective_id, indicator_text, order_index, source_url, source_type, source_name) VALUES (?, ?, ?, ?, ?, ?, ?)'
         ).bind(
           crypto.randomUUID(),
           objective.id,

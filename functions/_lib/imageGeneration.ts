@@ -13,9 +13,15 @@ interface ImageGenResult {
   warning?: string;
 }
 
+// Ningún fetch() de este archivo tenía timeout -- un proveedor externo que
+// se cuelga a mitad de respuesta bloquea toda la cadena indefinidamente,
+// incluso el fallback gratuito de Pollinations al final nunca se alcanza.
+// Mismo bug ya arreglado en functions/_lib/images.ts.
+const IMAGE_PROVIDER_TIMEOUT_MS = 25000;
+
 async function urlToBase64(url: string): Promise<string> {
   if (url.startsWith('data:')) return url;
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`No se pudo descargar la imagen (${response.status})`);
   const blob = await response.arrayBuffer();
   const type = response.headers.get('content-type') || 'image/jpeg';
@@ -47,6 +53,7 @@ async function generateWithOpenAI(env: ImageEnv, prompt: string): Promise<ImageG
       method: 'POST',
       headers: { 'Authorization': `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model, prompt, n: 1, size, quality: model === 'dall-e-3' ? 'standard' : undefined }),
+      signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
     });
     const data = await response.json() as any;
     if (!response.ok) throw new Error(data?.error?.message || `OpenAI respondió ${response.status}`);
@@ -93,6 +100,7 @@ async function generateWithGemini(env: ImageEnv, prompt: string): Promise<ImageG
         instances: [{ prompt }],
         parameters: { sampleCount: 1, aspectRatio: '16:9' },
       }),
+      signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
     },
   );
   const data = await response.json() as any;
@@ -110,6 +118,7 @@ async function generateWithFal(env: ImageEnv, prompt: string): Promise<ImageGenR
     method: 'POST',
     headers: { 'Authorization': `Key ${env.FAL_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt, num_images: 1, safety_check: false, output_format: 'jpeg' }),
+    signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
   });
   const data = await response.json() as any;
   if (!response.ok) throw new Error(data?.error?.message || `FAL respondió ${response.status}`);
@@ -120,10 +129,14 @@ async function generateWithFal(env: ImageEnv, prompt: string): Promise<ImageGenR
 
 async function generateWithReplicate(env: ImageEnv, prompt: string): Promise<ImageGenResult | null> {
   if (!env.REPLICATE_API_TOKEN) return null;
+  // 'Prefer: wait=60' le pide al servidor mantener la conexión abierta
+  // hasta 60s a proposito -- el timeout tiene que ser mayor a eso, no el
+  // IMAGE_PROVIDER_TIMEOUT_MS generico de 25s que usan los demas proveedores.
   const createRes = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-dev/predictions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`, 'Content-Type': 'application/json', 'Prefer': 'wait=60' },
     body: JSON.stringify({ input: { prompt, num_outputs: 1, aspect_ratio: '16:9', output_format: 'jpeg' } }),
+    signal: AbortSignal.timeout(65000),
   });
   const prediction = await createRes.json() as any;
   if (!createRes.ok) throw new Error(prediction?.detail || `Replicate respondió ${createRes.status}`);
@@ -133,7 +146,7 @@ async function generateWithReplicate(env: ImageEnv, prompt: string): Promise<Ima
   } else if (prediction.urls?.get) {
     for (let i = 0; i < 30; i++) {
       await new Promise(r => setTimeout(r, 2000));
-      const statusRes = await fetch(prediction.urls.get, { headers: { 'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}` } });
+      const statusRes = await fetch(prediction.urls.get, { headers: { 'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}` }, signal: AbortSignal.timeout(10000) });
       const status = await statusRes.json() as any;
       if (status.status === 'succeeded') { imageUrl = status.output?.[0]; break; }
       if (status.status === 'failed') throw new Error(status.error || 'Replicate: generación fallida');
@@ -156,6 +169,7 @@ async function generateWithStability(env: ImageEnv, prompt: string): Promise<Ima
       fd.append('aspect_ratio', '16:9');
       return fd;
     })(),
+    signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
   });
   const data = await response.json() as any;
   if (!response.ok) throw new Error(data?.message || `Stability respondió ${response.status}`);

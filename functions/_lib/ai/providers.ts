@@ -1,5 +1,12 @@
 import type { AIEnv, ProviderName, ProviderResult, ProviderStatus } from './types';
 import { getMaxOutputTokens } from './limits';
+import { extractWorkersAIText } from '../workersAI';
+
+// Ningún fetch() de este archivo tenía timeout -- un proveedor externo que
+// se cuelga a mitad de respuesta bloquea toda la cadena de orchestrator.ts
+// indefinidamente (mismo bug ya arreglado en functions/_lib/images.ts y
+// functions/core/AIEngine.ts).
+const PROVIDER_TIMEOUT_MS = 20000;
 
 function parseStructured(raw: string): Record<string, unknown> {
   try {
@@ -59,7 +66,10 @@ async function callWorkersAI(env: AIEnv, prompt: string): Promise<ProviderResult
     response_format: { type: 'json_object' },
     max_tokens: getMaxOutputTokens(),
   });
-  const raw = String((data as Record<string, unknown>)?.response || data);
+  // Antes hacía String(data?.response || data) -- para la forma estilo
+  // OpenAI que devuelve este mismo modelo (choices[0].message.content),
+  // .response es undefined y terminaba stringificando el wrapper entero.
+  const raw = extractWorkersAIText(data);
   return { ok: true, content: raw, model, provider: 'workers-ai', structured: parseStructured(raw) };
 }
 
@@ -72,8 +82,12 @@ async function callGemini(apiKey: string, prompt: string, env: AIEnv): Promise<P
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.45, maxOutputTokens: getMaxOutputTokens() },
+        // thinkingConfig: mismo fix que AIEngine.ts::callGemini() -- sin
+        // esto, los modelos gemini-3.x gastan el budget de tokens en
+        // "thinking" interno antes del JSON visible.
+        generationConfig: { temperature: 0.45, maxOutputTokens: getMaxOutputTokens(), thinkingConfig: { thinkingBudget: 0 } },
       }),
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     },
   );
   const data = await response.json() as Record<string, unknown>;
@@ -98,6 +112,7 @@ async function callOpenRouter(apiKey: string, prompt: string): Promise<ProviderR
       max_tokens: getMaxOutputTokens(),
       temperature: 0.45,
     }),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
   const data = await response.json() as Record<string, unknown>;
   if (!response.ok) {
@@ -116,6 +131,7 @@ async function callHuggingFace(apiKey: string, prompt: string): Promise<Provider
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: getMaxOutputTokens(), temperature: 0.45, return_full_text: false } }),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
   const data = await response.json() as Record<string, unknown> | Array<Record<string, unknown>>;
   if (!response.ok) {

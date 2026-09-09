@@ -1,4 +1,5 @@
 import { mockActivity, parseActivityJson, type ActivityRequest, type ActivityResult } from './activity';
+import { extractWorkersAIText } from './workersAI';
 
 interface AIEnv {
   GEMINI_API_KEY?: string;
@@ -34,23 +35,43 @@ Devuelve SOLO JSON válido, sin markdown, escapando correctamente comillas doble
 {"titulo":"","objetivo":"","inicio":"","desarrollo":"","cierre":"","materiales":[],"evaluacion":[],"rubrica":[{"criterio":"","niveles":[]}],"adecuaciones_dua":[],"indicadores":[],"preguntas":[{"enunciado":"","alternativas":[],"respuesta":""}]}`;
 }
 
+// Antes: Gemini primero sin try/catch -- si GEMINI_API_KEY estaba
+// configurada y Gemini fallaba, la excepción se propagaba y el bloque
+// env.AI (que sí funciona) nunca se alcanzaba, pese a estar escrito justo
+// abajo. Ahora Workers AI va primero (gratis, sin dependencia de una key
+// externa que hoy está fallando en producción -- ver AIEngine.ts), Gemini
+// como respaldo solo si Workers AI no está disponible o falla.
 export async function generateActivityWithAI(env: AIEnv, objective: ObjectiveContext, request: ActivityRequest): Promise<AIActivityResponse> {
   const prompt = promptFor(objective, request);
-  if (env.GEMINI_API_KEY) {
-    const model = 'gemini-3.6-flash';
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: .45, responseMimeType: 'application/json', maxOutputTokens: 5000 } }),
-    });
-    const data = await response.json() as any;
-    if (!response.ok) throw new Error(data?.error?.message || `Gemini respondió ${response.status}`);
-    const raw = (data?.candidates?.[0]?.content?.parts || []).map((part: any) => part.text || '').join('');
-    return { result: parseActivityJson(raw), provider: 'gemini', model, prompt };
-  }
+
   if (env.AI) {
-    const model = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-    const data = await env.AI.run(model, { prompt, response_format: { type: 'json_object' }, max_tokens: 5000 });
-    return { result: parseActivityJson(String(data?.response || data)), provider: 'workers-ai', model, prompt };
+    try {
+      const model = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+      const data = await env.AI.run(model, { prompt, response_format: { type: 'json_object' }, max_tokens: 5000 });
+      const raw = extractWorkersAIText(data);
+      if (raw) return { result: parseActivityJson(raw), provider: 'workers-ai', model, prompt };
+    } catch {
+      // cae a Gemini/mock abajo
+    }
   }
-  return { result: mockActivity(objective, request), provider: 'mock', model: 'deterministic-local', warning: 'IA no configurada. Se generó una estructura pedagógica base; configura GEMINI_API_KEY o Workers AI para contenido enriquecido.', prompt };
+
+  if (env.GEMINI_API_KEY) {
+    try {
+      const model = 'gemini-3.6-flash';
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: .45, responseMimeType: 'application/json', maxOutputTokens: 5000, thinkingConfig: { thinkingBudget: 0 } } }),
+        signal: AbortSignal.timeout(20000),
+      });
+      const data = await response.json() as any;
+      if (response.ok) {
+        const raw = (data?.candidates?.[0]?.content?.parts || []).map((part: any) => part.text || '').join('');
+        if (raw) return { result: parseActivityJson(raw), provider: 'gemini', model, prompt };
+      }
+    } catch {
+      // cae a mock abajo
+    }
+  }
+
+  return { result: mockActivity(objective, request), provider: 'mock', model: 'deterministic-local', warning: 'IA no disponible en este momento. Se generó una estructura pedagógica base.', prompt };
 }

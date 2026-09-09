@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { AIEngineEnv, DuaGuide, LessonContent, PedagogicalPlan } from './types';
 import { getExpertContext, getExpertEvaluationContext, getProfePlanificAIContext } from './ExpertKnowledge';
+import { extractWorkersAIText } from '../_lib/workersAI';
 
 const MODEL = '@cf/meta/llama-3.2-3b-instruct';
 
@@ -153,20 +154,37 @@ export function extractJsonFromText(raw: string): string {
   return candidate;
 }
 
-// env.AI.run(...) con mensajes de chat puede resolver a un string plano o a
-// { response: "<texto plano del modelo>" } — confirmado con evidencia real
-// contra el servidor que, para el MISMO binding y modelo
-// (@cf/meta/llama-3.2-3b-instruct), la forma varía de una llamada a otra de
-// manera no determinista. Si .response ya es un string, hay que devolverlo
-// tal cual: volver a hacerle JSON.stringify() lo escapa una segunda vez
-// (comillas/backslashes) y rompe el JSON.parse posterior en
-// extractJsonFromText. Solo se stringifica cuando .response no es un string
-// (forma inesperada) o cuando el campo no existe.
+// env.AI.run(...) con mensajes de chat no devuelve una forma consistente:
+// un string plano, { response: "..." } (modelos chat pequeños como
+// @cf/meta/llama-3.2-3b-instruct, y varía de una llamada a otra de forma no
+// determinista para el MISMO binding/modelo -- confirmado contra el
+// servidor real), o forma estilo OpenAI { choices: [{ message: { content:
+// "..." } }] } (@cf/meta/llama-3.3-70b-instruct-fp8-fast, el modelo que
+// varios engines fuerzan explícitamente para JSON estructurado rico -- ver
+// GROQ_MODEL/model 70B más abajo). Bug real encontrado en producción: como
+// esta función solo miraba `.response`, para el modelo 70B `inner` era
+// `undefined`, entonces caía a JSON.stringify(response) -- stringifica TODO
+// el wrapper {choices:[...]}, que igual pasa JSON.parse() (extractJsonFromText
+// lo acepta como JSON válido) pero después falla el schema.safeParse()
+// porque no tiene la forma esperada. Como env.AI.run() nunca lanzó excepción,
+// el índice de proveedor tampoco avanzaba (ver providerDesdeIndice más abajo)
+// -- los 3 reintentos pegaban contra el MISMO proveedor con el MISMO bug,
+// nunca llegaban a probar Gemini/Groq, y el engine caía en silencio a su
+// plantilla determinística sin ningún error visible. extractWorkersAIText()
+// (functions/_lib/workersAI.ts) ya cubre ambas formas; se reutiliza aquí en
+// vez de reimplementar la extracción dos veces.
 export function resolveAIResponseText(response: unknown): string {
   if (typeof response === 'string') return response;
+  const extracted = extractWorkersAIText(response);
+  if (extracted) return extracted;
   if (typeof response === 'object' && response !== null) {
+    // .response existe pero no es string (forma realmente inesperada, no
+    // uno de los dos casos que extractWorkersAIText ya sabe manejar):
+    // se stringifica solo esa parte, igual que antes -- stringificar el
+    // wrapper completo aquí sería otra regresión silenciosa como la que
+    // se está arreglando.
     const inner = (response as Record<string, unknown>).response;
-    return typeof inner === 'string' ? inner : JSON.stringify(inner ?? response);
+    return JSON.stringify(inner ?? response);
   }
   return String(response);
 }

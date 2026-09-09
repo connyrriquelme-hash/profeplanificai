@@ -1,16 +1,9 @@
-interface Env { DB: D1Database }
+import { getAuthenticatedUserId } from '../../_lib/auth';
 
-function getUserId(context: EventContext<Env>): string | null {
-  const auth = context.request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  try {
-    const payload = JSON.parse(atob(auth.slice(7).split('.')[1]));
-    return payload.sub || null;
-  } catch { return null; }
-}
+interface Env { DB: D1Database; JWT_SECRET: string }
 
 export async function onRequestPost(context: EventContext<Env>): Promise<Response> {
-  const auth = getUserId(context);
+  const auth = await getAuthenticatedUserId(context.request, context.env.JWT_SECRET);
   if (!auth) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
   try {

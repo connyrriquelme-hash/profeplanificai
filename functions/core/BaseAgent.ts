@@ -1,4 +1,5 @@
 import type { ContextEngineConfig, PedagogicalContext } from './ContextEngine';
+import { extractWorkersAIText } from '../_lib/workersAI';
 
 export interface AgentConfig {
   model?: string;
@@ -132,7 +133,11 @@ export abstract class BaseAgent<T = any> {
       max_tokens: this.maxTokens,
     });
 
-    return typeof response === 'string' ? response : JSON.stringify(response);
+    // Bug del mismo tipo que resolveAIResponseText() en AIEngine.ts: antes
+    // hacía JSON.stringify(response) directo, que para la forma
+    // {choices:[{message:{content:"..."}}]} (modelos grandes de Workers AI)
+    // stringifica todo el wrapper en vez de extraer el texto real.
+    return extractWorkersAIText(response) || (typeof response === 'string' ? response : JSON.stringify(response));
   }
 
   protected parseResponse(raw: string): any {
